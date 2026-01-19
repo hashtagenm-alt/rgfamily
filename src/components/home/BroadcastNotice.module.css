@@ -170,6 +170,10 @@
 
 /* Responsive Banner */
 @media (max-width: 768px) {
+  .section {
+    padding: var(--space-4);
+  }
+
   .item {
     flex-direction: column;
     min-height: auto;
@@ -190,6 +194,10 @@
 }
 
 @media (max-width: 480px) {
+  .section {
+    padding: var(--space-3);
+  }
+
   .itemThumbnail,
   .itemLogo {
     height: 160px;

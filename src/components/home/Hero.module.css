@@ -214,7 +214,7 @@
 /* 반응형 - 모바일 */
 @media (max-width: 768px) {
   .container {
-    aspect-ratio: 1500 / 550;
+    aspect-ratio: 1500 / 500;
   }
 
   .logoTitle {
@@ -239,12 +239,15 @@
   .indicators {
     bottom: 0.75rem;
   }
+  .logoArea {
+    padding: 1rem 1.5rem;
+  }
 }
 
 /* 반응형 - 작은 모바일 */
 @media (max-width: 480px) {
   .container {
-    aspect-ratio: 1500 / 600;
+    aspect-ratio: 1500 / 520;
   }
 
   .logoTitleRG {

@@ -12,7 +12,7 @@ import {
   Loader,
 } from '@mantine/core'
 import CalendarGrid from './CalendarGrid'
-import EventList from './EventList'
+import EventDetailModal from './EventDetailModal'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -131,20 +131,14 @@ export default function Calendar() {
         )}
       </div>
 
-      {/* Selected Date Events */}
+      {/* Selected Date Events Modal */}
       <AnimatePresence>
         {selectedDate && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            <EventList
-              date={selectedDate}
-              events={selectedDateEvents}
-              onClose={() => setSelectedDate(null)}
-            />
-          </motion.div>
+          <EventDetailModal
+            date={selectedDate}
+            events={selectedDateEvents}
+            onClose={() => setSelectedDate(null)}
+          />
         )}
       </AnimatePresence>
       </Stack>
