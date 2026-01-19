@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { RankingItem } from "@/types/common";
@@ -79,24 +79,10 @@ export default function RankingFullList({
               )}
             </div>
 
-            {/* User Info & Stats */}
+            {/* User Info */}
             <div className={styles.infoSection}>
               <div className={styles.nameRow}>
                 <span className={styles.name}>{item.donorName}</span>
-                <div className={styles.statsRow}>
-                  {item.donationCount !== undefined && (
-                    <span className={styles.stat}>
-                      <Heart size={12} />
-                      {item.donationCount}회
-                    </span>
-                  )}
-                  {item.messageCount !== undefined && item.messageCount > 0 && (
-                    <span className={styles.stat}>
-                      <MessageCircle size={12} />
-                      {item.messageCount}
-                    </span>
-                  )}
-                </div>
               </div>
 
               {/* Gauge Bar with Glow Dot */}

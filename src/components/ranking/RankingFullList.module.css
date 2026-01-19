@@ -237,7 +237,6 @@
 .nameRow {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -249,8 +248,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
+  max-width: 100%;
 }
 
 .gold .name {
@@ -260,26 +258,6 @@
 /* 2,3위 Elite 이름 (동일) */
 .elite .name {
   color: var(--text-primary);
-}
-
-/* Stats Row */
-.statsRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-shrink: 0;
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-}
-
-.stat svg {
-  color: var(--text-muted);
 }
 
 /* Gauge Bar */
@@ -380,12 +358,12 @@
     height: 32px;
   }
 
-  .name {
-    font-size: var(--text-sm);
+  .initials {
+    font-size: var(--text-xs);
   }
 
-  .statsRow {
-    display: none;
+  .name {
+    font-size: var(--text-sm);
   }
 
   .amount {
@@ -393,6 +371,46 @@
   }
 
   .gaugeContainer {
-    height: 4px;
+    height: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .item {
+    grid-template-columns: 32px 28px 1fr;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .rank {
+    font-size: 12px;
+    width: 24px;
+  }
+
+  .gold .rank,
+  .elite .rank {
+    font-size: var(--text-sm);
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-width: 1.5px;
+  }
+
+  .initials {
+    font-size: 10px;
+  }
+
+  .name {
+    font-size: 13px;
+  }
+
+  .gaugeContainer {
+    height: 3px;
+  }
+
+  .hoverArrow {
+    display: none;
   }
 }
