@@ -65,36 +65,54 @@
   border: 1px solid var(--card-border);
   border-radius: 8px;
   overflow: hidden;
+  width: 100%;
+  table-layout: fixed;
 }
 
 .pledgeTableHeader {
-  display: grid;
-  grid-template-columns: 40px minmax(60px, auto) 1fr;
+  display: flex;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   background: var(--surface);
   border-bottom: 1px solid var(--card-border);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+.pledgeColRank {
+  width: 32px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.pledgeColTitle {
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.pledgeColContent {
+  flex: 1;
+  min-width: 0;
+}
+
 .pledgeTableBody {
   display: flex;
   flex-direction: column;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
 }
 
 .pledgeRow {
-  display: grid;
-  grid-template-columns: 40px minmax(60px, auto) 1fr;
+  display: flex;
   gap: 0.5rem;
-  padding: 0.75rem;
+  padding: 0.6rem 0.75rem;
   border-bottom: 1px solid var(--card-border);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   transition: background 0.2s ease;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .pledgeRow:last-child {
@@ -118,21 +136,29 @@
 }
 
 .pledgeRankCell {
-  font-size: 0.9rem;
+  width: 32px;
+  flex-shrink: 0;
+  font-size: 0.85rem;
   text-align: center;
 }
 
 .pledgeTitleCell {
+  width: 48px;
+  flex-shrink: 0;
   font-weight: 600;
   color: var(--color-primary);
   word-break: break-word;
   line-height: 1.4;
+  font-size: 0.7rem;
 }
 
 .pledgeContentCell {
+  flex: 1;
+  min-width: 0;
   color: var(--text-secondary);
   word-break: break-word;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .pledgeText {
@@ -156,9 +182,22 @@
     padding: 0.5rem;
   }
 
-  .pledgeTableHeader,
+  .pledgeColRank,
+  .pledgeRankCell {
+    width: 28px;
+  }
+
+  .pledgeColTitle,
+  .pledgeTitleCell {
+    width: 40px;
+    font-size: 0.65rem;
+  }
+
+  .pledgeTableHeader {
+    font-size: 0.6rem;
+  }
+
   .pledgeRow {
-    grid-template-columns: 36px minmax(50px, auto) 1fr;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
 }
