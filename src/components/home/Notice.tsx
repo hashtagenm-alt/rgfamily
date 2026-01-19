@@ -129,8 +129,8 @@ export default function Notice() {
                 <Image
                   src="/assets/logo/rg_logo_flat.png"
                   alt="RG"
-                  width={24}
-                  height={24}
+                  width={48}
+                  height={48}
                   style={{
                     objectFit: "contain",
                     filter: "brightness(0) invert(1)",
