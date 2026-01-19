@@ -25,19 +25,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setMounted(true);
-      // Get saved theme from localStorage or system preference
+      // Get saved theme from localStorage, default to dark
       const savedTheme = localStorage.getItem("theme") as Theme | null;
       if (savedTheme) {
+        // 사용자가 이전에 선택한 테마 사용
         setThemeState(savedTheme);
         document.documentElement.setAttribute("data-theme", savedTheme);
       } else {
-        // Check system preference
-        const prefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches;
-        const initialTheme = prefersDark ? "dark" : "light";
-        setThemeState(initialTheme);
-        document.documentElement.setAttribute("data-theme", initialTheme);
+        // 저장된 테마가 없으면 항상 다크모드로 시작
+        setThemeState("dark");
+        document.documentElement.setAttribute("data-theme", "dark");
       }
     }, 0);
 
