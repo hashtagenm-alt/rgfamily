@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User } from "lucide-react";
+import { User, Trophy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { RankingItem } from "@/types/common";
@@ -43,6 +43,17 @@ export default function RankingList({
     if (rank === 3) return styles.rank3;
     return "";
   };
+
+  // 빈 상태 처리
+  if (rankings.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <Trophy size={48} className={styles.emptyIcon} />
+        <p className={styles.emptyText}>아직 랭킹 데이터가 없습니다</p>
+        <span className={styles.emptySubtext}>시즌이 시작되면 순위가 표시됩니다</span>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.list}>
