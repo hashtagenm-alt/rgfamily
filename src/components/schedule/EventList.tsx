@@ -100,29 +100,30 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                 style={{ borderLeft: `4px solid ${color}` }}
               >
                 <ThemeIcon
-                  size={40}
+                  size={48}
                   radius="md"
                   style={{ backgroundColor: color }}
                   className="flex-shrink-0"
                 >
-                  <Icon size={16} />
+                  <Icon size={20} />
                 </ThemeIcon>
 
                 <div className="flex-1 min-w-0">
-                  <Group gap="xs" mb="xs">
+                  <Group gap="xs" mb="sm">
                     <Badge
-                      size="sm"
+                      size="md"
                       variant="light"
                       style={{
-                        backgroundColor: `${color}20`,
+                        backgroundColor: `${color}25`,
                         color: color,
+                        fontWeight: 600,
                       }}
                     >
                       {EVENT_LABELS[event.eventType]}
                     </Badge>
                     {event.unit && (
                       <Badge
-                        size="sm"
+                        size="md"
                         variant="light"
                         className={
                           event.unit === 'crew'
@@ -135,12 +136,12 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                     )}
                   </Group>
 
-                  <Text fw={600} className="text-[var(--text-primary)] mb-1">
+                  <Text size="lg" fw={700} className="text-[var(--text-primary)] mb-2">
                     {event.title}
                   </Text>
 
                   {event.description && (
-                    <Text size="sm" c="dimmed" className="mb-2 leading-relaxed">
+                    <Text size="md" c="dimmed" className="mb-3 leading-relaxed">
                       {event.description}
                     </Text>
                   )}
@@ -148,8 +149,8 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                   <Group gap="md">
                     {!event.isAllDay && (
                       <Group gap="xs" className="text-[var(--text-muted)]">
-                        <Clock size={14} />
-                        <Text size="sm">
+                        <Clock size={16} />
+                        <Text size="md" fw={500}>
                           {formatTime(event.startDatetime)}
                           {event.endDatetime && ` - ${formatTime(event.endDatetime)}`}
                         </Text>
@@ -157,8 +158,8 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                     )}
                     {event.isAllDay && (
                       <Group gap="xs" className="text-[var(--text-muted)]">
-                        <Clock size={14} />
-                        <Text size="sm">하루 종일</Text>
+                        <Clock size={16} />
+                        <Text size="md" fw={500}>하루 종일</Text>
                       </Group>
                     )}
                   </Group>
