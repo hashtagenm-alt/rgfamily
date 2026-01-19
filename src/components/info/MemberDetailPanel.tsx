@@ -136,6 +136,21 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
         </div>
       </div>
 
+      {/* 라이브 CTA - 상단 */}
+      {member.is_live && member.social_links?.pandatv && (
+        <div className={styles.liveCtaTop}>
+          <a
+            href={getPandaTvUrl(member.social_links.pandatv)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.watchBtn}
+          >
+            <Radio size={18} />
+            지금 방송 보러가기
+          </a>
+        </div>
+      )}
+
       {/* 2컬럼 콘텐츠: 프로필/소셜 | 공약표 */}
       <div className={styles.mainContent}>
         {/* 왼쪽: 프로필 + 소셜 */}
@@ -317,20 +332,6 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
         </div>
       </div>
 
-      {/* 하단 CTA */}
-      {member.is_live && member.social_links?.pandatv && (
-        <div className={styles.footer}>
-          <a
-            href={getPandaTvUrl(member.social_links.pandatv)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.watchBtn}
-          >
-            <Radio size={18} />
-            지금 방송 보러가기
-          </a>
-        </div>
-      )}
     </motion.div>
   )
 }

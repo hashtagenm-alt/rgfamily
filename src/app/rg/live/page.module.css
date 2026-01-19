@@ -365,7 +365,7 @@
    Offline Section
    ======================================= */
 .offlineSection {
-  padding: var(--space-5);
+  padding: var(--space-4);
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
@@ -756,7 +756,7 @@
    ======================================= */
 @media (max-width: 1024px) {
   .mainLayout.panelOpen .sidePanel {
-    width: 340px;
+    width: 420px;
   }
 
   .grid {
