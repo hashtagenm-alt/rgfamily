@@ -38,7 +38,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Shimmer effect */
+/* Shimmer effect - Subtle */
 .barFill::after {
   content: '';
   position: absolute;
@@ -49,10 +49,10 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.1) 50%,
     transparent 100%
   );
-  animation: shimmer 2s infinite;
+  animation: shimmer 3s infinite;
   border-radius: 9999px;
 }
 
@@ -71,8 +71,8 @@
   left: 0;
   height: 100%;
   border-radius: 9999px;
-  filter: blur(6px);
-  opacity: 0.6;
+  filter: blur(4px);
+  opacity: 0.15;
 }
 
 /* Info */
@@ -128,12 +128,12 @@
 
 /* Hover state */
 .container:hover .barFill::after {
-  animation-duration: 1s;
+  animation-duration: 2s;
 }
 
 .container:hover .glow {
-  opacity: 0.8;
-  filter: blur(8px);
+  opacity: 0.25;
+  filter: blur(5px);
 }
 
 /* Count-up animation support */
@@ -141,11 +141,11 @@
   transition: width var(--duration-slower) var(--ease-bounce);
 }
 
-/* Pulse effect for top ranks */
+/* Pulse effect for top ranks - Subtle */
 .gold .barFill,
 .silver .barFill,
 .bronze .barFill {
-  animation: pulseGlow 2s ease-in-out infinite alternate;
+  animation: pulseGlow 3s ease-in-out infinite alternate;
 }
 
 @keyframes pulseGlow {
@@ -153,6 +153,6 @@
     filter: brightness(1);
   }
   100% {
-    filter: brightness(1.1);
+    filter: brightness(1.05);
   }
 }

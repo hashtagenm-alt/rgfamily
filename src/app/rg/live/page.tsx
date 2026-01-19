@@ -283,12 +283,6 @@ function MemberDetailModal({ member, onClose }: { member: LiveMember; onClose: (
               {member.is_live ? "LIVE" : "오프라인"}
             </span>
           </div>
-          <div className={styles.statusItem}>
-            <span className={styles.statusLabel}>소속</span>
-            <span className={styles.statusValue}>
-              {member.unit === 'excel' ? '한국 엑셀방송' : '중국 단보방송'}
-            </span>
-          </div>
         </div>
 
         {/* Social Links */}

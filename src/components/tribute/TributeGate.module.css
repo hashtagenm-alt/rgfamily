@@ -10,14 +10,14 @@
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
-  background: radial-gradient(circle at center, rgba(253, 104, 186, 0.15), transparent 50%),
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 50%),
               linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
   cursor: pointer;
 }
 
 .gateIcon {
-  color: var(--color-primary, #fd68ba);
-  filter: drop-shadow(0 0 30px rgba(253, 104, 186, 0.5));
+  color: var(--text-primary, #e4e4e7);
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.15));
   animation: float 3s ease-in-out infinite;
 }
 
@@ -26,7 +26,7 @@
   font-weight: 700;
   letter-spacing: 0.5em;
   color: #fff;
-  text-shadow: 0 0 20px rgba(253, 104, 186, 0.5);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
 }
 
 .gateSubtext {
@@ -92,7 +92,7 @@
 
 /* Light Mode */
 :global([data-theme='light']) .gateOverlay {
-  background: radial-gradient(circle at center, rgba(253, 104, 186, 0.1), transparent 50%),
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.03), transparent 50%),
               linear-gradient(180deg, #f8f8f8 0%, #ffffff 100%);
 }
 
