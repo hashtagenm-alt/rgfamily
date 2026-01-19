@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useLiveRoster } from "@/lib/hooks";
-import type { LiveMember, UnitFilter } from "@/types/organization";
-import { ArrowLeft, Radio, Youtube, Instagram, ExternalLink, X, Users, FileText, Calendar } from "lucide-react";
+import { MemberDetailModal } from "@/components/info/MemberDetailModal";
+import type { OrgMember, UnitFilter } from "@/types/organization";
+import { ArrowLeft, Radio, Users, FileText, Calendar } from "lucide-react";
 import styles from "./page.module.css";
 
 // PandaTV ID로 URL 생성
@@ -14,15 +15,14 @@ const getPandaTvUrl = (id: string) => `https://www.pandalive.co.kr/play/${id}`;
 
 export default function LivePage() {
   const { members, isLoading } = useLiveRoster({ realtime: true });
-  const [selectedMember, setSelectedMember] = useState<LiveMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<OrgMember | null>(null);
   const [unitFilter, setUnitFilter] = useState<UnitFilter>('all');
 
   // Filter by unit
   const unitFilteredMembers = useMemo(() => {
-    const filtered = unitFilter === 'all'
+    return unitFilter === 'all'
       ? members
       : members.filter((member) => member.unit === unitFilter);
-    return filtered as LiveMember[];
   }, [members, unitFilter]);
 
   // Separate live and offline members
@@ -228,141 +228,5 @@ export default function LivePage() {
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-function MemberDetailModal({ member, onClose }: { member: LiveMember; onClose: () => void }) {
-  return (
-    <motion.div
-      className={styles.modalOverlay}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-    >
-      <motion.div
-        className={styles.modal}
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button className={styles.modalClose} onClick={onClose}>
-          <X size={24} />
-        </button>
-
-        {/* Header */}
-        <div className={styles.modalHeader}>
-          <div className={`${styles.modalAvatarWrapper} ${member.is_live ? styles.isLive : ''}`}>
-            {member.is_live && (
-              <span className={styles.modalLiveBadge}>LIVE</span>
-            )}
-            <div className={styles.modalAvatar}>
-              {member.image_url ? (
-                <Image
-                  src={member.image_url}
-                  alt={member.name}
-                  fill
-                  className={styles.modalAvatarImage}
-                  unoptimized
-                />
-              ) : (
-                <div className={styles.modalAvatarPlaceholder}>
-                  {member.name.charAt(0)}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.modalInfo}>
-            <span className={styles.modalUnit} data-unit={member.unit}>
-              {member.unit === 'excel' ? 'EXCEL UNIT' : 'CREW UNIT'}
-            </span>
-            <h2 className={styles.modalName}>{member.name}</h2>
-            <span className={styles.modalRole}>{member.role}</span>
-          </div>
-        </div>
-
-        {/* Status */}
-        <div className={styles.modalStatus}>
-          <div className={styles.statusItem}>
-            <span className={styles.statusLabel}>상태</span>
-            <span className={`${styles.statusValue} ${member.is_live ? styles.statusLive : ''}`}>
-              {member.is_live ? "LIVE" : "오프라인"}
-            </span>
-          </div>
-        </div>
-
-        {/* Social Links */}
-        {member.social_links && Object.keys(member.social_links).length > 0 && (
-          <div className={styles.modalSocial}>
-            <h3 className={styles.modalSectionTitle}>소셜 링크</h3>
-            <div className={styles.modalSocialGrid}>
-              {member.social_links.pandatv && (
-                <a
-                  href={getPandaTvUrl(member.social_links.pandatv)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.modalSocialLink}
-                >
-                  <Radio size={20} />
-                  <span>팬더티비</span>
-                  <ExternalLink size={14} className={styles.linkIcon} />
-                </a>
-              )}
-              {member.social_links.chzzk && (
-                <a
-                  href={member.social_links.chzzk}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.modalSocialLink}
-                >
-                  <ExternalLink size={20} />
-                  <span>치지직</span>
-                  <ExternalLink size={14} className={styles.linkIcon} />
-                </a>
-              )}
-              {member.social_links.youtube && (
-                <a
-                  href={member.social_links.youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.modalSocialLink}
-                >
-                  <Youtube size={20} />
-                  <span>유튜브</span>
-                  <ExternalLink size={14} className={styles.linkIcon} />
-                </a>
-              )}
-              {member.social_links.instagram && (
-                <a
-                  href={member.social_links.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.modalSocialLink}
-                >
-                  <Instagram size={20} />
-                  <span>인스타그램</span>
-                  <ExternalLink size={14} className={styles.linkIcon} />
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Watch Button */}
-        {member.is_live && member.social_links?.pandatv && (
-          <a
-            href={getPandaTvUrl(member.social_links.pandatv)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.watchButton}
-          >
-            <Radio size={18} />
-            지금 방송 보러가기
-          </a>
-        )}
-      </motion.div>
-    </motion.div>
   );
 }
