@@ -19,7 +19,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 // 임시 YouTube Shorts (세로형 영상)
 const sampleShorts = [
   {
-    title: '[엑셀부] 리나 하이라이트',
+    title: '[엑셀부] 린아 하이라이트',
     video_url: 'https://www.youtube.com/shorts/dQw4w9WgXcQ',
     thumbnail_url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     content_type: 'shorts',
