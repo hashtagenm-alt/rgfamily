@@ -1,21 +1,50 @@
 /**
- * 시그니처 이미지 Supabase 업로드 스크립트
+ * 시그니처 이미지 Cloudinary 업로드 스크립트
  * 사용법: npx tsx scripts/upload-signatures.ts
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { v2 as cloudinary } from 'cloudinary'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as dotenv from 'dotenv'
 
-const SUPABASE_URL = 'https://titqtnobfapyjvairgqy.supabase.co'
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpdHF0bm9iZmFweWp2YWlyZ3F5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODc5NDQyNSwiZXhwIjoyMDg0MzcwNDI1fQ.M6mlPiqgRruYCd4jXBcIOsYIhtqgvJmGmzg6l3KakwU'
+// .env.local에서 환경변수 로드
+dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+// Service Role Key를 사용하여 RLS 우회 (관리자 작업용)
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('❌ Supabase 환경변수가 설정되지 않았습니다.')
+  process.exit(1)
+}
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY가 없어 anon key를 사용합니다. RLS로 인해 삽입이 실패할 수 있습니다.')
+}
+
+// Cloudinary 설정
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
+
+if (!process.env.CLOUDINARY_CLOUD_NAME) {
+  console.error('❌ Cloudinary 환경변수가 설정되지 않았습니다.')
+  process.exit(1)
+}
+
+console.log('🔗 Supabase URL:', SUPABASE_URL)
+console.log('🔗 Cloudinary:', process.env.CLOUDINARY_CLOUD_NAME)
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: false }
 })
 
 const SIGNATURES_FOLDER = '/Users/bagjaeseog/Downloads/RG시그 리뉴얼/rg 리뉴얼 시그 최종'
-const BUCKET_NAME = 'signatures'
 
 interface SignatureFile {
   fileName: string
@@ -32,90 +61,41 @@ function extractSigNumber(fileName: string): number | null {
   return match ? parseInt(match[1], 10) : null
 }
 
-// 시그니처 제목 생성
+// 시그니처 제목 생성 (숫자만)
 function generateTitle(sigNumber: number): string {
-  // 특별한 번호들은 별도 처리
-  const specialTitles: Record<number, string> = {
-    666: '악마의 시그',
-    777: '럭키 세븐',
-    1000: '천 시그',
-    2000: '이천 시그',
-    2222: '투투투투',
-    3000: '삼천 시그',
-    3333: '쓰리쓰리',
-    4444: '사사사사',
-    5000: '오천 시그',
-    6666: '육육육육',
-    7000: '칠천 시그',
-    7777: '럭키 세븐세븐',
-    9999: '구구구구',
-    10000: '만 시그',
-    30000: '삼만 시그',
-    50000: '오만 시그',
-    70000: '칠만 시그',
-    100000: '십만 시그',
-    200000: '이십만 시그',
-    300000: '삼십만 시그',
-  }
-
-  return specialTitles[sigNumber] || `시그니처 ${sigNumber}`
+  return String(sigNumber)
 }
 
-async function ensureBucketExists() {
-  console.log('📦 Storage 버킷 확인 중...')
-
-  const { data: buckets, error } = await supabase.storage.listBuckets()
-
-  if (error) {
-    console.error('버킷 목록 조회 실패:', error)
-    return false
-  }
-
-  const exists = buckets?.some(b => b.name === BUCKET_NAME)
-
-  if (!exists) {
-    console.log('📦 signatures 버킷 생성 중...')
-    const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-      public: true,
-      fileSizeLimit: 52428800 // 50MB
-    })
-
-    if (createError) {
-      console.error('버킷 생성 실패:', createError)
-      return false
-    }
-    console.log('✅ signatures 버킷 생성 완료')
-  } else {
-    console.log('✅ signatures 버킷 존재 확인')
-  }
-
-  return true
-}
-
+// Cloudinary에 이미지 업로드
 async function uploadFile(file: SignatureFile): Promise<string | null> {
-  const fileBuffer = fs.readFileSync(file.filePath)
-  const storagePath = `${file.sigNumber}.${file.extension}`
+  const isGif = file.extension === 'gif'
 
-  const contentType = file.extension === 'gif' ? 'image/gif' : 'image/png'
-
-  const { data, error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .upload(storagePath, fileBuffer, {
-      contentType,
-      upsert: true
+  try {
+    const result = await cloudinary.uploader.upload(file.filePath, {
+      folder: 'rg-family/signatures',
+      public_id: `sig-${file.sigNumber}`,
+      overwrite: true,
+      resource_type: 'image',
+      ...(isGif
+        ? {
+            // GIF: 애니메이션 유지, 리사이즈만
+            transformation: [
+              { width: 400, height: 400, crop: 'fill' }
+            ]
+          }
+        : {
+            // PNG: 최적화 적용
+            transformation: [
+              { width: 400, height: 400, crop: 'fill' },
+              { quality: 'auto', fetch_format: 'auto' }
+            ]
+          })
     })
-
-  if (error) {
-    console.error(`  ❌ 업로드 실패 [${file.sigNumber}]:`, error.message)
+    return result.secure_url
+  } catch (err) {
+    console.error(`  ❌ Cloudinary 업로드 실패 [${file.sigNumber}]:`, err)
     return null
   }
-
-  // Public URL 생성
-  const { data: urlData } = supabase.storage
-    .from(BUCKET_NAME)
-    .getPublicUrl(storagePath)
-
-  return urlData.publicUrl
 }
 
 async function upsertSignature(sigNumber: number, thumbnailUrl: string) {
@@ -148,8 +128,7 @@ async function upsertSignature(sigNumber: number, thumbnailUrl: string) {
         title,
         description: '',
         thumbnail_url: thumbnailUrl,
-        unit: 'excel', // 기본값
-        is_group: false
+        unit: 'excel' // 기본값
       })
 
     if (error) {
@@ -162,16 +141,9 @@ async function upsertSignature(sigNumber: number, thumbnailUrl: string) {
 }
 
 async function main() {
-  console.log('🚀 시그니처 이미지 업로드 시작')
+  console.log('🚀 시그니처 이미지 업로드 시작 (Cloudinary)')
   console.log(`📁 소스 폴더: ${SIGNATURES_FOLDER}`)
   console.log('')
-
-  // 버킷 확인/생성
-  const bucketReady = await ensureBucketExists()
-  if (!bucketReady) {
-    console.error('❌ 버킷 준비 실패. 종료합니다.')
-    process.exit(1)
-  }
 
   // 파일 목록 읽기
   const files = fs.readdirSync(SIGNATURES_FOLDER)

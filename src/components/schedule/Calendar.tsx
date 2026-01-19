@@ -106,7 +106,7 @@ export default function Calendar() {
             <div
               key={day}
               className={`py-5 px-3 text-center text-base font-bold uppercase tracking-wider bg-[var(--surface)] ${
-                index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-[var(--text-primary)]'
+                index === 0 ? 'text-[#ef4444]' : index === 6 ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'
               }`}
             >
               {day}
