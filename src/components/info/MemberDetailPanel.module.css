@@ -377,8 +377,8 @@
 
 .pledgeTableHeader {
   display: grid;
-  grid-template-columns: 40px 60px 1fr;
-  gap: 0.25rem;
+  grid-template-columns: 36px minmax(50px, auto) 1fr;
+  gap: 0.4rem;
   padding: 0.35rem 0.5rem;
   background: var(--card-bg);
   border-bottom: 1px solid var(--card-border);
@@ -396,12 +396,13 @@
 
 .pledgeRow {
   display: grid;
-  grid-template-columns: 40px 60px 1fr;
-  gap: 0.25rem;
-  padding: 0.4rem 0.5rem;
+  grid-template-columns: 36px minmax(50px, auto) 1fr;
+  gap: 0.4rem;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--card-border);
   font-size: 0.7rem;
   transition: background 0.2s ease;
+  align-items: start;
 }
 
 .pledgeRow:last-child {
@@ -432,16 +433,13 @@
 .pledgeTitleCell {
   font-weight: 600;
   color: var(--color-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .pledgeContentCell {
   color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.4;
 }
 
 .pledgeText {
@@ -510,7 +508,7 @@
 
   .pledgeTableHeader,
   .pledgeRow {
-    grid-template-columns: 35px 50px 1fr;
+    grid-template-columns: 32px minmax(45px, auto) 1fr;
     font-size: 0.65rem;
   }
 }
@@ -656,7 +654,7 @@
 
   .pledgeTableHeader,
   .pledgeRow {
-    grid-template-columns: 30px 45px 1fr;
-    gap: 0.15rem;
+    grid-template-columns: 28px minmax(40px, auto) 1fr;
+    gap: 0.2rem;
   }
 }
