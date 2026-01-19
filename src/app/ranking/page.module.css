@@ -211,7 +211,7 @@
 .seasonLive {
   width: 8px;
   height: 8px;
-  background: var(--live-color, #00d4ff);
+  background: var(--live-color, #ef4444);
   border-radius: 50%;
   animation: livePulse 1.5s ease-in-out infinite;
 }
