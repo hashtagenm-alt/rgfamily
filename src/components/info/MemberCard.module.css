@@ -44,6 +44,18 @@
   background: linear-gradient(90deg, transparent, var(--color-pink), transparent);
 }
 
+/* Selected State */
+.memberCard.selected {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-bg);
+}
+
+.memberCard.selected::before {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, var(--color-pink), transparent);
+}
+
 /* ============================================
    Size Variants - 대폭 확대
    ============================================ */

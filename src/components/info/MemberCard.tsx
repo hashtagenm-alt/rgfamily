@@ -38,15 +38,16 @@ interface MemberCardProps {
   member: OrgMember
   size: 'large' | 'medium' | 'small'
   onClick: () => void
+  isSelected?: boolean
 }
 
-export function MemberCard({ member, size, onClick }: MemberCardProps) {
+export function MemberCard({ member, size, onClick, isSelected }: MemberCardProps) {
   // Check if member is a leader (대표, 부장, 팀장)
   const isLeader = ['대표', '부장', '팀장'].includes(member.role)
 
   return (
     <motion.div
-      className={`${styles.memberCard} ${styles[size]}`}
+      className={`${styles.memberCard} ${styles[size]} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       whileHover={{ y: -4 }}
       initial={{ opacity: 0, scale: 0.9 }}

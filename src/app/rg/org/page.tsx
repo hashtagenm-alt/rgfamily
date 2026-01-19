@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { useOrganization } from "@/lib/hooks";
 import {
   MemberCard,
-  MemberDetailModal,
+  MemberDetailPanel,
   type OrgMember,
 } from "@/components/info";
 import styles from "./page.module.css";
@@ -105,122 +105,133 @@ export default function OrganizationPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className={styles.loading}>
-          <div className={styles.spinner} />
-          <span>조직도를 불러오는 중...</span>
+      {/* Main Layout - Content + Side Panel */}
+      <div className={`${styles.mainLayout} ${selectedMember ? styles.panelOpen : ''}`}>
+        {/* Content Area */}
+        <div className={styles.contentArea}>
+          {isLoading ? (
+            <div className={styles.loading}>
+              <div className={styles.spinner} />
+              <span>조직도를 불러오는 중...</span>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeUnit}
+                className={styles.content}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* Section: Leaders */}
+                {topLeaders.length > 0 && (
+                  <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                      <h2 className={styles.sectionTitle}>{getLeaderTitle()}</h2>
+                      <span className={styles.sectionCount}>{topLeaders.length}명</span>
+                    </div>
+                    <div className={`${styles.grid} ${styles.gridLeaders}`}>
+                      {topLeaders.map((member, index) => (
+                        <motion.div
+                          key={member.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          <MemberCard
+                            member={member}
+                            size="large"
+                            onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                            isSelected={selectedMember?.id === member.id}
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Section: Managers */}
+                {middleManagers.length > 0 && (
+                  <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                      <h2 className={styles.sectionTitle}>팀장</h2>
+                      <span className={styles.sectionCount}>{middleManagers.length}명</span>
+                    </div>
+                    <div className={`${styles.grid} ${styles.gridManagers}`}>
+                      {middleManagers.map((member, index) => (
+                        <motion.div
+                          key={member.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                        >
+                          <MemberCard
+                            member={member}
+                            size="medium"
+                            onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                            isSelected={selectedMember?.id === member.id}
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Section: Members */}
+                {regularMembers.length > 0 && (
+                  <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                      <h2 className={styles.sectionTitle}>멤버</h2>
+                      <span className={styles.sectionCount}>{regularMembers.length}명</span>
+                    </div>
+                    <div className={`${styles.grid} ${styles.gridMembers}`}>
+                      {regularMembers.map((member, index) => (
+                        <motion.div
+                          key={member.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.02 }}
+                        >
+                          <MemberCard
+                            member={member}
+                            size="small"
+                            onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                            isSelected={selectedMember?.id === member.id}
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Empty State */}
+                {topLeaders.length === 0 &&
+                  middleManagers.length === 0 &&
+                  regularMembers.length === 0 && (
+                    <div className={styles.emptyState}>
+                      <Users size={48} />
+                      <p>해당 유닛에 멤버가 없습니다.</p>
+                    </div>
+                  )}
+              </motion.div>
+            </AnimatePresence>
+          )}
+          <Footer />
         </div>
-      ) : (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeUnit}
-            className={styles.content}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* Section: Leaders */}
-            {topLeaders.length > 0 && (
-              <section className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>{getLeaderTitle()}</h2>
-                  <span className={styles.sectionCount}>{topLeaders.length}명</span>
-                </div>
-                <div className={`${styles.grid} ${styles.gridLeaders}`}>
-                  {topLeaders.map((member, index) => (
-                    <motion.div
-                      key={member.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <MemberCard
-                        member={member}
-                        size="large"
-                        onClick={() => setSelectedMember(member)}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
+
+        {/* Side Panel */}
+        <div className={styles.sidePanel}>
+          <AnimatePresence>
+            {selectedMember && (
+              <MemberDetailPanel
+                member={selectedMember}
+                onClose={() => setSelectedMember(null)}
+              />
             )}
-
-            {/* Section: Managers */}
-            {middleManagers.length > 0 && (
-              <section className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>팀장</h2>
-                  <span className={styles.sectionCount}>{middleManagers.length}명</span>
-                </div>
-                <div className={`${styles.grid} ${styles.gridManagers}`}>
-                  {middleManagers.map((member, index) => (
-                    <motion.div
-                      key={member.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                    >
-                      <MemberCard
-                        member={member}
-                        size="medium"
-                        onClick={() => setSelectedMember(member)}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Section: Members */}
-            {regularMembers.length > 0 && (
-              <section className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>멤버</h2>
-                  <span className={styles.sectionCount}>{regularMembers.length}명</span>
-                </div>
-                <div className={`${styles.grid} ${styles.gridMembers}`}>
-                  {regularMembers.map((member, index) => (
-                    <motion.div
-                      key={member.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.02 }}
-                    >
-                      <MemberCard
-                        member={member}
-                        size="small"
-                        onClick={() => setSelectedMember(member)}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Empty State */}
-            {topLeaders.length === 0 &&
-              middleManagers.length === 0 &&
-              regularMembers.length === 0 && (
-                <div className={styles.emptyState}>
-                  <Users size={48} />
-                  <p>해당 유닛에 멤버가 없습니다.</p>
-                </div>
-              )}
-          </motion.div>
-        </AnimatePresence>
-      )}
-
-      {/* Member Detail Modal */}
-      <AnimatePresence>
-        {selectedMember && (
-          <MemberDetailModal
-            member={selectedMember}
-            onClose={() => setSelectedMember(null)}
-          />
-        )}
-      </AnimatePresence>
-      <Footer />
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }

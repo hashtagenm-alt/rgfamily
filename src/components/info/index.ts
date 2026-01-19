@@ -1,6 +1,7 @@
 // Info Components
 export { MemberCard, type OrgMember } from './MemberCard'
 export { MemberDetailModal } from './MemberDetailModal'
+export { MemberDetailPanel } from './MemberDetailPanel'
 export { default as OrgTree } from './OrgTree'
 export { default as SigCard } from './SigCard'
 export { default as SigDetailModal } from './SigDetailModal'

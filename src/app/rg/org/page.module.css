@@ -159,6 +159,34 @@
 }
 
 /* =======================================
+   Main Layout - Content + Side Panel
+   ======================================= */
+.mainLayout {
+  display: flex;
+  min-height: calc(100vh - 200px);
+  transition: all 0.3s ease;
+}
+
+.contentArea {
+  flex: 1;
+  min-width: 0;
+  transition: all 0.3s ease;
+}
+
+.sidePanel {
+  width: 0;
+  overflow: hidden;
+  background: var(--card-bg);
+  border-left: 1px solid var(--card-border);
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+}
+
+.mainLayout.panelOpen .sidePanel {
+  width: 380px;
+}
+
+/* =======================================
    Content Area
    ======================================= */
 .content {
@@ -279,6 +307,34 @@
 /* =======================================
    Responsive
    ======================================= */
+@media (max-width: 1024px) {
+  .mainLayout.panelOpen .sidePanel {
+    width: 340px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainLayout {
+    flex-direction: column;
+  }
+
+  .sidePanel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 0;
+    z-index: 200;
+    border-left: none;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .mainLayout.panelOpen .sidePanel {
+    width: 100%;
+    max-width: 380px;
+  }
+}
+
 @media (max-width: 768px) {
   .pageNav {
     padding: var(--space-2) var(--space-4);

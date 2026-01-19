@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useLiveRoster } from "@/lib/hooks";
-import { MemberDetailModal } from "@/components/info/MemberDetailModal";
+import { MemberDetailPanel } from "@/components/info/MemberDetailPanel";
 import type { OrgMember, UnitFilter } from "@/types/organization";
 import { ArrowLeft, Radio, Users, FileText, Calendar } from "lucide-react";
 import styles from "./page.module.css";
