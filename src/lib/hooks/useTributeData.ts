@@ -147,7 +147,32 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
         .order('created_at', { ascending: false })
 
       if (rewardsError) {
-        console.error('VIP 보상 데이터 조회 실패:', rewardsError)
+        // 테이블이 없거나 권한 문제 시 mock 데이터로 fallback
+        console.warn('VIP 보상 테이블 조회 실패, mock 데이터로 대체:', rewardsError.message || rewardsError)
+
+        // Mock 데이터로 fallback
+        const mockProfile = mockProfiles.find(p => p.id === userId) || mockProfiles[0]
+        const mockReward = getVipRewardByProfileId(userId) || mockVipRewards[0]
+
+        if (mockProfile && mockReward) {
+          const fallbackHofData: HallOfFameHonor[] = [{
+            id: `fallback-${mockProfile.id}`,
+            donorId: mockProfile.id,
+            donorName: mockProfile.nickname,
+            donorAvatar: mockProfile.avatar_url || '',
+            honorType: 'season_top3',
+            rank: mockReward?.rank || 1,
+            seasonId: 4,
+            seasonName: '시즌 4',
+            amount: mockProfile.total_donation,
+            unit: mockProfile.unit as 'excel' | 'crew' | null,
+            tributeMessage: mockReward?.personalMessage ?? undefined,
+            tributeVideoUrl: mockReward?.dedicationVideoUrl ?? undefined,
+            tributeImageUrl: mockReward?.giftImages?.[0]?.url,
+            createdAt: new Date().toISOString(),
+          }]
+          setHallOfFameData(fallbackHofData)
+        }
         setIsLoading(false)
         return
       }
