@@ -254,6 +254,7 @@
   border: 3px solid #ef4444;
   padding: 2px;
   background: var(--surface);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
 }
 
 .avatarInner {
@@ -267,17 +268,28 @@
 
 .liveBadge {
   position: absolute;
-  bottom: -4px;
+  bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 2px 8px;
-  background: var(--surface);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.2rem 0.55rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), var(--surface));
   border-radius: var(--radius-full);
-  font-size: 0.625rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
   color: #ef4444;
+  z-index: 3;
   letter-spacing: 0.5px;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+:global([data-theme="dark"]) .liveBadge {
+  background: linear-gradient(180deg, rgba(24, 24, 27, 0.95), rgba(9, 9, 11, 0.95));
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .liveCardInfo {
