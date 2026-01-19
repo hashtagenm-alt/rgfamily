@@ -3,9 +3,8 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useRanking } from '@/lib/hooks/useRanking'
-import { RankingPodium, RankingFullList, SeasonSelector } from '@/components/ranking'
-import { Calendar, ArrowLeft, Trophy, Clock, Star, ChevronDown, Sparkles, Users, Heart, Award, TrendingUp, Archive } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { RankingPodium, RankingFullList } from '@/components/ranking'
+import { Calendar, ArrowLeft, Trophy, Users, Heart, TrendingUp, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import styles from './page.module.css'
 
@@ -36,10 +35,6 @@ export default function SeasonRankingPage() {
   const router = useRouter()
   const listRef = useRef<HTMLDivElement>(null)
 
-  const scrollToList = () => {
-    listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
   const {
     rankings,
     seasons,
@@ -52,7 +47,7 @@ export default function SeasonRankingPage() {
     setUnitFilter,
   } = useRanking()
 
-  // "current"인 경우 현재 활성 시즌 ID 사용, 아니면 숫자로 변환
+  // "current"인 경우 현재 활성 시즌 ID 사용
   const seasonId = useMemo(() => {
     if (params.id === 'current') {
       return currentSeason?.id || null
@@ -72,9 +67,9 @@ export default function SeasonRankingPage() {
     return seasons.find(s => s.id === seasonId) || null
   }, [seasons, seasonId])
 
-  // 날짜 포맷 (년월일)
+  // 날짜 포맷
   const formatSeasonDate = (dateStr: string) =>
-    formatDate(dateStr, { year: 'numeric', month: 'long', day: 'numeric' })
+    formatDate(dateStr, { year: 'numeric', month: 'short', day: 'numeric' })
 
   // 시즌 남은 일수 계산
   const daysRemaining = useMemo(() => {
@@ -85,27 +80,18 @@ export default function SeasonRankingPage() {
     return diff > 0 ? diff : 0
   }, [selectedSeason])
 
-  // TOP 50으로 제한
+  // TOP 50
   const top50 = rankings.slice(0, 50)
   const top3 = top50.slice(0, 3)
 
-  // 시즌 통계 계산
+  // 시즌 통계
   const seasonStats = useMemo(() => {
     if (rankings.length === 0) return null
-
     const totalAmount = rankings.reduce((sum, r) => sum + r.totalAmount, 0)
     const participantCount = rankings.length
     const avgAmount = Math.round(totalAmount / participantCount)
-    const topAmount = rankings[0]?.totalAmount || 0
-
-    return {
-      totalAmount,
-      participantCount,
-      avgAmount,
-      topAmount
-    }
+    return { totalAmount, participantCount, avgAmount }
   }, [rankings])
-
 
   // 시즌을 찾을 수 없는 경우
   if (!isLoading && seasons.length > 0 && !selectedSeason) {
@@ -113,11 +99,11 @@ export default function SeasonRankingPage() {
       <main className={styles.main}>
         <div className={styles.container}>
           <div className={styles.notFound}>
-            <Trophy size={48} />
+            <Trophy size={40} />
             <h2>시즌을 찾을 수 없습니다</h2>
-            <p>존재하지 않는 시즌이거나 삭제된 시즌입니다.</p>
+            <p>존재하지 않는 시즌입니다.</p>
             <Link href="/ranking" className={styles.backButton}>
-              전체 랭킹으로 이동
+              전체 랭킹으로
             </Link>
           </div>
         </div>
@@ -127,164 +113,62 @@ export default function SeasonRankingPage() {
 
   return (
     <main className={styles.main}>
-      {/* Minimal Navigation Bar */}
-      <nav className={styles.pageNav}>
-        <Link href="/ranking" className={styles.backBtn}>
-          <ArrowLeft size={18} />
-        </Link>
-        <div className={styles.navTitle}>
-          <Sparkles size={14} />
-          <span>SEASON</span>
-        </div>
-        <Link href="/ranking/vip" className={styles.vipBtn}>
-          <Trophy size={14} />
-          <span>VIP</span>
-        </Link>
-      </nav>
-
-      {/* Premium Hero Section - Green Theme (Season) */}
-      <div className={styles.hero}>
-        {/* Ambient Orbs */}
-        <div className={styles.ambientOrbs}>
-          <motion.div
-            className={`${styles.orb} ${styles.orbPrimary}`}
-            animate={{
-              x: [0, 25, 0],
-              y: [0, -15, 0],
-            }}
-            transition={{
-              duration: 18,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <motion.div
-            className={`${styles.orb} ${styles.orbSecondary}`}
-            animate={{
-              x: [0, -15, 0],
-              y: [0, 20, 0],
-            }}
-            transition={{
-              duration: 22,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-        </div>
-
-        <motion.div
-          className={styles.heroContent}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.span
-            className={`${styles.heroBadge} ${selectedSeason?.is_active ? styles.activeBadge : styles.archiveBadgeHero}`}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-          >
-            {selectedSeason?.is_active && <span className={styles.liveDot} />}
-            <span>{selectedSeason?.name || 'SEASON'}</span>
-          </motion.span>
-          <motion.h1
-            className={styles.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            RANKINGS
-          </motion.h1>
-          {selectedSeason && (
-            <motion.div
-              className={styles.seasonMeta}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-            >
-              <span className={styles.dateRange}>
-                <Calendar size={14} />
-                {formatSeasonDate(selectedSeason.start_date)} ~ {selectedSeason.end_date ? formatSeasonDate(selectedSeason.end_date) : '진행 중'}
-              </span>
-              {selectedSeason.is_active && daysRemaining !== null && daysRemaining > 0 && (
-                <span className={styles.daysLeft}>D-{daysRemaining}</span>
+      {/* Compact Header */}
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <div className={styles.headerLeft}>
+            <Link href="/ranking" className={styles.backBtn}>
+              <ArrowLeft size={16} />
+            </Link>
+            <div className={styles.titleArea}>
+              <h1 className={styles.pageTitle}>
+                {selectedSeason?.name || 'Season'}
+                {selectedSeason?.is_active && <span className={styles.liveDot} />}
+              </h1>
+              {selectedSeason && (
+                <span className={styles.dateRange}>
+                  <Calendar size={12} />
+                  {formatSeasonDate(selectedSeason.start_date)} - {selectedSeason.end_date ? formatSeasonDate(selectedSeason.end_date) : '진행중'}
+                  {daysRemaining !== null && daysRemaining > 0 && (
+                    <span className={styles.daysLeft}>D-{daysRemaining}</span>
+                  )}
+                </span>
               )}
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* Scroll Indicator */}
-        <motion.button
-          onClick={scrollToList}
-          className={styles.scrollIndicator}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, y: [0, 8, 0] }}
-          transition={{
-            opacity: { delay: 1 },
-            y: { duration: 1.5, repeat: Infinity }
-          }}
-        >
-          <ChevronDown size={24} />
-        </motion.button>
-      </div>
+            </div>
+          </div>
+          <Link href="/ranking/vip" className={styles.vipLink}>
+            <Trophy size={14} />
+            <span>VIP</span>
+            <ChevronRight size={14} />
+          </Link>
+        </div>
+      </header>
 
       <div className={styles.container}>
-        {/* Season Stats Summary */}
+        {/* Quick Stats Bar */}
         {seasonStats && (
-          <motion.section
-            className={styles.statsSection}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <Heart size={18} />
-                </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{formatAmountShort(seasonStats.totalAmount)}</span>
-                  <span className={styles.statLabel}>총 후원</span>
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <Users size={18} />
-                </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{seasonStats.participantCount}</span>
-                  <span className={styles.statLabel}>참여자</span>
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <TrendingUp size={18} />
-                </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{formatAmountShort(seasonStats.avgAmount)}</span>
-                  <span className={styles.statLabel}>평균</span>
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <Award size={18} />
-                </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{formatAmountShort(seasonStats.topAmount)}</span>
-                  <span className={styles.statLabel}>1위 기록</span>
-                </div>
-              </div>
+          <div className={styles.statsBar}>
+            <div className={styles.statItem}>
+              <Heart size={14} />
+              <span className={styles.statValue}>{formatAmountShort(seasonStats.totalAmount)}</span>
+              <span className={styles.statLabel}>총 후원</span>
             </div>
-            {!selectedSeason?.is_active && (
-              <div className={styles.archiveBadge}>
-                <Archive size={14} />
-                <span>아카이브 시즌</span>
-              </div>
-            )}
-          </motion.section>
+            <div className={styles.divider} />
+            <div className={styles.statItem}>
+              <Users size={14} />
+              <span className={styles.statValue}>{seasonStats.participantCount}</span>
+              <span className={styles.statLabel}>참여자</span>
+            </div>
+            <div className={styles.divider} />
+            <div className={styles.statItem}>
+              <TrendingUp size={14} />
+              <span className={styles.statValue}>{formatAmountShort(seasonStats.avgAmount)}</span>
+              <span className={styles.statLabel}>평균</span>
+            </div>
+          </div>
         )}
 
-        {/* Minimal Filters */}
+        {/* Filters */}
         <div className={styles.filters}>
           <div className={styles.seasonTabs}>
             {seasons.map((season) => (
@@ -294,20 +178,20 @@ export default function SeasonRankingPage() {
                 className={`${styles.seasonTab} ${season.id === seasonId ? styles.active : ''}`}
               >
                 {season.name}
-                {season.is_active && <span className={styles.dot} />}
+                {season.is_active && <span className={styles.activeDot} />}
               </button>
             ))}
           </div>
 
           <div className={styles.unitFilter}>
-            {(['excel', 'crew', 'all'] as const).map((unit) => (
+            {(['all', 'excel', 'crew'] as const).map((unit) => (
               <button
                 key={unit}
                 onClick={() => setUnitFilter(unit)}
-                className={`${styles.unitButton} ${unitFilter === unit ? styles.active : ''}`}
+                className={`${styles.unitBtn} ${unitFilter === unit ? styles.active : ''}`}
                 data-unit={unit}
               >
-                {unit === 'excel' ? 'EXCEL' : unit === 'crew' ? 'CREW' : 'ALL'}
+                {unit === 'all' ? 'ALL' : unit.toUpperCase()}
               </button>
             ))}
           </div>
@@ -316,25 +200,24 @@ export default function SeasonRankingPage() {
         {isLoading ? (
           <div className={styles.loading}>
             <div className={styles.spinner} />
-            <span>랭킹을 불러오는 중...</span>
           </div>
         ) : rankings.length === 0 ? (
           <div className={styles.empty}>
-            <Trophy size={48} />
-            <p>이 시즌의 후원 데이터가 없습니다</p>
+            <Trophy size={32} />
+            <p>이 시즌의 데이터가 없습니다</p>
           </div>
         ) : (
           <>
-            {/* Top 3 Podium */}
+            {/* Podium */}
             <section className={styles.podiumSection}>
               <RankingPodium items={top3} />
             </section>
 
-            {/* Full Ranking List */}
-            <section ref={listRef} className={styles.fullListSection}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Season Rankings</h2>
-                <span className={styles.sectionBadge}>TOP 50</span>
+            {/* Full List */}
+            <section ref={listRef} className={styles.listSection}>
+              <div className={styles.listHeader}>
+                <span className={styles.listTitle}>전체 랭킹</span>
+                <span className={styles.listCount}>TOP {Math.min(50, rankings.length)}</span>
               </div>
               <RankingFullList
                 rankings={top50}

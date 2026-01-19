@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { PageLayout } from "@/components/layout";
 import Navbar from "@/components/Navbar";
-import { Hero, LiveMembers, BroadcastNotice } from "@/components/home";
+import { Hero, LiveMembers, BroadcastNotice, Shorts, VOD } from "@/components/home";
 import Footer from "@/components/Footer";
+import SectionSkeleton from "@/components/ui/SectionSkeleton";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -21,6 +23,20 @@ export default function Home() {
               <LiveMembers />
               <BroadcastNotice />
             </div>
+          </section>
+
+          {/* Shorts Section */}
+          <section className={styles.section}>
+            <Suspense fallback={<SectionSkeleton type="shorts" />}>
+              <Shorts />
+            </Suspense>
+          </section>
+
+          {/* VOD Section */}
+          <section className={styles.section}>
+            <Suspense fallback={<SectionSkeleton type="vod" />}>
+              <VOD />
+            </Suspense>
           </section>
         </div>
 
