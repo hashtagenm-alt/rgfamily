@@ -62,10 +62,10 @@ export default function EventList({ date, events, onClose }: EventListProps) {
     <Paper
       p="lg"
       radius="lg"
-      className="bg-[var(--card-bg)] border border-[var(--card-border)]"
+      className="bg-(--card-bg)] border border-(--card-border)]"
     >
-      <Group justify="space-between" align="center" mb="lg" pb="md" className="border-b border-[var(--card-border)]">
-        <Text size="lg" fw={700} className="text-[var(--text-primary)]">
+      <Group justify="space-between" align="center" mb="lg" pb="md" className="border-b border-(--card-border)]">
+        <Text size="lg" fw={700} className="text-(--text-primary)]">
           {formattedDate}
         </Text>
         <ActionIcon
@@ -73,7 +73,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
           variant="subtle"
           size="lg"
           radius="xl"
-          className="bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] transition-all"
+          className="bg-(--surface)] text-(--text-muted)] hover:bg-(--surface-hover)] hover:text-(--text-primary)] transition-all"
         >
           <X size={20} />
         </ActionIcon>
@@ -81,7 +81,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
 
       {events.length === 0 ? (
         <Stack align="center" justify="center" py="xl" gap="md">
-          <Calendar size={48} strokeWidth={1} className="text-[var(--text-muted)]" />
+          <Calendar size={48} strokeWidth={1} className="text-(--text-muted)]" />
           <Text c="dimmed">등록된 일정이 없습니다</Text>
         </Stack>
       ) : (
@@ -96,7 +96,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex gap-4 p-5 bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-sm transition-all hover:bg-[var(--surface-hover)] hover:shadow-md"
+                className="flex gap-4 p-5 bg-(--surface)] border border-(--card-border)] rounded-xl shadow-sm transition-all hover:bg-(--surface-hover)] hover:shadow-md"
                 style={{ borderLeft: `3px solid ${color}` }}
               >
                 <ThemeIcon
@@ -127,8 +127,8 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                         variant="light"
                         className={
                           event.unit === 'crew'
-                            ? 'bg-[var(--overlay-medium)] text-[var(--text-secondary)]'
-                            : 'bg-[var(--overlay-medium)] text-[var(--text-secondary)]'
+                            ? 'bg-(--overlay-medium)] text-(--text-secondary)]'
+                            : 'bg-(--overlay-medium)] text-(--text-secondary)]'
                         }
                       >
                         {event.unit === 'excel' ? '엑셀부' : '크루부'}
@@ -136,7 +136,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                     )}
                   </Group>
 
-                  <Text size="lg" fw={700} className="text-[var(--text-primary)] mb-2">
+                  <Text size="lg" fw={700} className="text-(--text-primary)] mb-2">
                     {event.title}
                   </Text>
 
@@ -148,7 +148,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
 
                   <Group gap="md">
                     {!event.isAllDay && (
-                      <Group gap="xs" className="text-[var(--text-muted)]">
+                      <Group gap="xs" className="text-(--text-muted)]">
                         <Clock size={16} />
                         <Text size="md" fw={500}>
                           {formatTime(event.startDatetime)}
@@ -157,7 +157,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                       </Group>
                     )}
                     {event.isAllDay && (
-                      <Group gap="xs" className="text-[var(--text-muted)]">
+                      <Group gap="xs" className="text-(--text-muted)]">
                         <Clock size={16} />
                         <Text size="md" fw={500}>하루 종일</Text>
                       </Group>

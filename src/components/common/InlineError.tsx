@@ -19,16 +19,16 @@ interface InlineErrorProps {
 export function InlineError({ message, onRetry, className = '' }: InlineErrorProps) {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-6 rounded-lg bg-[var(--color-error-bg)] border border-[var(--color-error-border)] ${className}`}
+      className={`flex flex-col items-center justify-center p-6 rounded-lg bg-(--color-error-bg)] border border-(--color-error-border)] ${className}`}
     >
-      <AlertTriangle className="w-8 h-8 text-[var(--color-error)] mb-3" />
-      <p className="text-[var(--text-secondary)] text-center mb-4">
+      <AlertTriangle className="w-8 h-8 text-(--color-error)] mb-3" />
+      <p className="text-(--text-secondary)] text-center mb-4">
         {message}
       </p>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-error)] text-white rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 px-4 py-2 bg-(--color-error)] text-white rounded-lg hover:opacity-90 transition-opacity"
         >
           <RefreshCw className="w-4 h-4" />
           다시 시도

@@ -29,9 +29,9 @@ export function LoadingState({
   return (
     <div className={`flex flex-col items-center justify-center p-6 ${className}`}>
       <Loader2
-        className={`${sizeClasses[size]} text-[var(--text-muted)] animate-spin mb-3`}
+        className={`${sizeClasses[size]} text-(--text-muted)] animate-spin mb-3`}
       />
-      <p className="text-[var(--text-muted)] text-sm">{message}</p>
+      <p className="text-(--text-muted)] text-sm">{message}</p>
     </div>
   )
 }

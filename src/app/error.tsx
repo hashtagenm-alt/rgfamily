@@ -28,7 +28,7 @@ export default function Error({ error, reset }: ErrorProps) {
   }, [error])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+    <div className="min-h-screen flex items-center justify-center bg-(--background)]">
       <div className="text-center px-4">
         <div className="mb-6">
           <span className="text-6xl">😵</span>
@@ -55,7 +55,7 @@ export default function Error({ error, reset }: ErrorProps) {
         <div className="flex gap-4 justify-center">
           <button
             onClick={reset}
-            className="px-6 py-3 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--primary-deep)] transition-colors"
+            className="px-6 py-3 bg-(--color-primary)] text-white rounded-lg hover:bg-(--primary-deep)] transition-colors"
           >
             다시 시도
           </button>

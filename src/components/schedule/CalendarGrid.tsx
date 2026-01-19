@@ -43,7 +43,7 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
   }
 
   return (
-    <div className="grid grid-cols-7 gap-0.5 bg-[var(--divider)]">
+    <div className="grid grid-cols-7 gap-0.5 bg-(--divider)">
         {days.map((day, index) => {
           const isSelected = isSameDay(day.date, selectedDate)
           const hasEvents = day.events.length > 0
@@ -55,12 +55,12 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
               onClick={() => onSelectDate(day.date)}
               className={`
                 min-h-[140px] md:min-h-[130px] sm:min-h-[100px] flex flex-col p-3
-                bg-[var(--card-bg)] border-none cursor-pointer relative text-left
+                bg-(--card-bg) border-none cursor-pointer relative text-left
                 transition-all duration-200
-                hover:bg-[var(--surface)]
+                hover:bg-(--surface)
                 ${!day.isCurrentMonth ? 'opacity-40' : ''}
-                ${day.isToday ? 'bg-[var(--overlay-medium)]' : ''}
-                ${isSelected ? 'bg-[var(--surface)] shadow-[inset_0_0_0_2px_var(--text-primary)]' : ''}
+                ${day.isToday ? 'bg-(--overlay-medium)' : ''}
+                ${isSelected ? 'bg-(--surface) shadow-[inset_0_0_0_2px_var(--text-primary)]' : ''}
               `}
               style={hasEvents && !isSelected && !day.isToday ? { background: cellBackground } : undefined}
               whileHover={{ scale: 1.005 }}
@@ -69,8 +69,8 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
               <span
                 className={`
                   text-lg font-bold mb-2 inline-flex items-center justify-center
-                  min-w-[38px] min-h-[38px] rounded-full text-[var(--text-primary)]
-                  ${day.isToday ? 'bg-[var(--text-primary)] !text-[var(--background)] font-bold shadow-md' : ''}
+                  min-w-[38px] min-h-[38px] rounded-full text-(--text-primary)
+                  ${day.isToday ? 'bg-(--text-primary) text-(--background)! font-bold shadow-md' : ''}
                 `}
               >
                 {day.date.getDate()}
@@ -93,7 +93,7 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
                     </div>
                   ))}
                   {day.events.length > 3 && (
-                    <span className="text-sm text-[var(--text-secondary)] font-semibold pl-1">
+                    <span className="text-sm text-(--text-secondary) font-semibold pl-1">
                       +{day.events.length - 3}개 더보기
                     </span>
                   )}
@@ -113,7 +113,7 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
                     />
                   ))}
                   {day.events.length > 4 && (
-                    <span className="text-sm text-[var(--text-secondary)] font-bold">
+                    <span className="text-sm text-(--text-secondary) font-bold">
                       +{day.events.length - 4}
                     </span>
                   )}

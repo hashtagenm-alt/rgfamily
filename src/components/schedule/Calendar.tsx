@@ -47,7 +47,7 @@ export default function Calendar() {
             variant="subtle"
             size="xl"
             radius="xl"
-            className="border border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] hover:border-[var(--card-border-hover)] transition-all"
+            className="border border-(--card-border)] bg-(--surface)] text-(--text-muted)] hover:bg-(--surface-hover)] hover:text-(--text-primary)] hover:border-(--card-border-hover)] transition-all"
           >
             <ChevronLeft size={24} />
           </ActionIcon>
@@ -60,7 +60,7 @@ export default function Calendar() {
             <Text
               size="xl"
               fw={800}
-              className="min-w-[200px] text-center text-[var(--text-primary)] tracking-wide text-2xl"
+              className="min-w-[200px] text-center text-(--text-primary)] tracking-wide text-2xl"
             >
               {monthYear}
             </Text>
@@ -71,7 +71,7 @@ export default function Calendar() {
             variant="subtle"
             size="xl"
             radius="xl"
-            className="border border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] hover:border-[var(--card-border-hover)] transition-all"
+            className="border border-(--card-border)] bg-(--surface)] text-(--text-muted)] hover:bg-(--surface-hover)] hover:text-(--text-primary)] hover:border-(--card-border-hover)] transition-all"
           >
             <ChevronRight size={24} />
           </ActionIcon>
@@ -90,23 +90,23 @@ export default function Calendar() {
             radius="xl"
             size="sm"
             classNames={{
-              root: 'bg-[var(--surface)] border border-[var(--card-border)]',
-              indicator: 'bg-[var(--text-primary)]',
-              label: 'text-[var(--text-muted)] data-[active]:text-[var(--background)] font-semibold',
+              root: 'bg-(--surface)] border border-(--card-border)]',
+              indicator: 'bg-(--text-primary)]',
+              label: 'text-(--text-muted)] data-[active]:text-(--background)] font-semibold',
             }}
           />
         </Group>
       </Stack>
 
       {/* Calendar Container (Weekdays + Grid) */}
-      <div className="rounded-2xl overflow-hidden border border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+      <div className="rounded-2xl overflow-hidden border border-(--card-border)] bg-(--card-bg)] shadow-sm">
         {/* Weekday Labels */}
-        <div className="grid grid-cols-7 gap-0.5 bg-[var(--divider)]">
+        <div className="grid grid-cols-7 gap-0.5 bg-(--divider)]">
           {WEEKDAYS.map((day, index) => (
             <div
               key={day}
-              className={`py-4 px-3 text-center text-sm font-semibold uppercase tracking-wider bg-[var(--surface)] ${
-                index === 0 ? 'text-[#ef4444]' : index === 6 ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'
+              className={`py-4 px-3 text-center text-sm font-semibold uppercase tracking-wider bg-(--surface)] ${
+                index === 0 ? 'text-[#ef4444]' : index === 6 ? 'text-(--text-secondary)]' : 'text-(--text-primary)]'
               }`}
             >
               {day}
@@ -116,7 +116,7 @@ export default function Calendar() {
 
         {/* Calendar Grid */}
         {isLoading ? (
-          <div className="bg-[var(--card-bg)] p-12">
+          <div className="bg-(--card-bg)] p-12">
             <Stack align="center" justify="center" gap="lg">
               <Loader color="gray" size="lg" />
               <Text c="dimmed">일정을 불러오는 중...</Text>

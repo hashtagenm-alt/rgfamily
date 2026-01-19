@@ -14,10 +14,10 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+    <div className="min-h-screen flex items-center justify-center bg-(--background)]">
       <div className="text-center px-4">
         <div className="mb-6">
-          <span className="text-8xl font-bold text-[var(--color-primary)]">
+          <span className="text-8xl font-bold text-(--color-primary)]">
             404
           </span>
         </div>
@@ -35,7 +35,7 @@ export default function NotFound() {
         <div className="flex gap-4 justify-center flex-wrap">
           <Link
             href="/"
-            className="px-6 py-3 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--primary-deep)] transition-colors"
+            className="px-6 py-3 bg-(--color-primary)] text-white rounded-lg hover:bg-(--primary-deep)] transition-colors"
           >
             홈으로 이동
           </Link>
@@ -58,15 +58,15 @@ export default function NotFound() {
         <div className="mt-12 text-gray-500 text-sm">
           <p>자주 찾는 페이지</p>
           <div className="flex gap-4 justify-center mt-2 flex-wrap">
-            <Link href="/ranking/vip" className="hover:text-[var(--color-primary)]">
+            <Link href="/ranking/vip" className="hover:text-(--color-primary)]">
               VIP 라운지
             </Link>
             <span>·</span>
-            <Link href="/schedule" className="hover:text-[var(--color-primary)]">
+            <Link href="/schedule" className="hover:text-(--color-primary)]">
               일정
             </Link>
             <span>·</span>
-            <Link href="/community/free" className="hover:text-[var(--color-primary)]">
+            <Link href="/community/free" className="hover:text-(--color-primary)]">
               커뮤니티
             </Link>
           </div>
