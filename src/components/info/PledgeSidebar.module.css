@@ -16,10 +16,36 @@
   padding: 1rem;
   border-bottom: 1px solid var(--card-border);
   background: var(--surface);
+  position: relative;
 }
 
 .sidebarHeader svg {
   color: var(--color-primary);
+}
+
+/* 닫기 버튼 */
+.closeBtn {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: white;
 }
 
 .sidebarTitle {

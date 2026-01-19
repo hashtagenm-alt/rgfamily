@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import {
   Radio, Youtube, Instagram, ExternalLink,
-  User, Heart, Cake, Ruler, Droplet
+  User, Heart, Cake, Ruler, Droplet, X
 } from 'lucide-react'
 import type { OrgMember } from './MemberCard'
 import styles from './ProfileSidebar.module.css'
@@ -13,6 +13,7 @@ const getPandaTvUrl = (id: string) => `https://www.pandalive.co.kr/play/${id}`
 
 interface ProfileSidebarProps {
   member: OrgMember | null
+  onClose?: () => void
 }
 
 const hasProfileInfo = (member: OrgMember) => {
@@ -21,7 +22,7 @@ const hasProfileInfo = (member: OrgMember) => {
   return !!(info.mbti || info.blood_type || info.height || info.weight || info.birthday)
 }
 
-export function ProfileSidebar({ member }: ProfileSidebarProps) {
+export function ProfileSidebar({ member, onClose }: ProfileSidebarProps) {
   const hasSocial = member?.social_links && Object.keys(member.social_links).length > 0
   const hasProfile = member ? hasProfileInfo(member) : false
 
@@ -32,6 +33,13 @@ export function ProfileSidebar({ member }: ProfileSidebarProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
     >
+      {/* 닫기 버튼 */}
+      {member && onClose && (
+        <button className={styles.closeBtn} onClick={onClose} title="닫기">
+          <X size={18} />
+        </button>
+      )}
+
       {!member ? (
         <div className={styles.emptyState}>
           <User size={32} />

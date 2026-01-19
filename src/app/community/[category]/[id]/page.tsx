@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Eye, Calendar, User, MessageSquare, Send } from 'lucide-react'
@@ -37,6 +37,17 @@ export default function PostDetailPage({
 }) {
   const { category, id } = use(params)
   const router = useRouter()
+
+  // ID가 유효한 숫자인지 검증
+  const postId = parseInt(id)
+  if (isNaN(postId) || postId <= 0) {
+    notFound()
+  }
+
+  // category가 유효한 게시판 타입인지 검증
+  if (!['free', 'vip'].includes(category)) {
+    notFound()
+  }
   const supabase = useSupabaseContext()
   const { user, profile } = useAuthContext()
   const [post, setPost] = useState<PostDetail | null>(null)
@@ -52,7 +63,7 @@ export default function PostDetailPage({
     const { data: postData, error: postError } = await supabase
       .from('posts')
       .select('*, profiles!author_id(id, nickname, avatar_url)')
-      .eq('id', parseInt(id))
+      .eq('id', postId)
       .single()
 
     if (postError || !postData) {
@@ -65,7 +76,7 @@ export default function PostDetailPage({
     await supabase
       .from('posts')
       .update({ view_count: (postData.view_count || 0) + 1 })
-      .eq('id', parseInt(id))
+      .eq('id', postId)
 
     const postProfile = postData.profiles as JoinedProfile | null
     setPost({
@@ -83,7 +94,7 @@ export default function PostDetailPage({
     const { data: commentsData } = await supabase
       .from('comments')
       .select('*, profiles!author_id(id, nickname, avatar_url)')
-      .eq('post_id', parseInt(id))
+      .eq('post_id', postId)
       .order('created_at', { ascending: true })
 
     setComments(
@@ -101,7 +112,7 @@ export default function PostDetailPage({
     )
 
     setIsLoading(false)
-  }, [supabase, id])
+  }, [supabase, postId])
 
   useEffect(() => {
     fetchPost()
@@ -114,7 +125,7 @@ export default function PostDetailPage({
     setIsSubmitting(true)
 
     const { error } = await supabase.from('comments').insert({
-      post_id: parseInt(id),
+      post_id: postId,
       author_id: user.id,
       content: newComment.trim(),
     })

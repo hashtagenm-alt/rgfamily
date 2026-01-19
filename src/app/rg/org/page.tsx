@@ -108,7 +108,7 @@ export default function OrganizationPage() {
         {/* Left Sidebar - Pledge */}
         <div className={styles.leftSidebar}>
           <AnimatePresence mode="wait">
-            <PledgeSidebar member={selectedMember} />
+            <PledgeSidebar member={selectedMember} onClose={() => setSelectedMember(null)} />
           </AnimatePresence>
         </div>
 
@@ -228,7 +228,7 @@ export default function OrganizationPage() {
         {/* Right Sidebar - Profile/Social */}
         <div className={styles.rightSidebar}>
           <AnimatePresence mode="wait">
-            <ProfileSidebar member={selectedMember} />
+            <ProfileSidebar member={selectedMember} onClose={() => setSelectedMember(null)} />
           </AnimatePresence>
         </div>
       </div>

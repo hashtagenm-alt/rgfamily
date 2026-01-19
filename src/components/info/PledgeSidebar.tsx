@@ -1,12 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Target } from 'lucide-react'
+import { Target, X } from 'lucide-react'
 import type { OrgMember } from './MemberCard'
 import styles from './PledgeSidebar.module.css'
 
 interface PledgeSidebarProps {
   member: OrgMember | null
+  onClose?: () => void
 }
 
 interface PledgeRow {
@@ -49,7 +50,7 @@ const getRankIcon = (rank: string) => {
   return `${rank}등`
 }
 
-export function PledgeSidebar({ member }: PledgeSidebarProps) {
+export function PledgeSidebar({ member, onClose }: PledgeSidebarProps) {
   const hasPledge = !!member?.profile_info?.position_pledge
 
   return (
@@ -62,6 +63,11 @@ export function PledgeSidebar({ member }: PledgeSidebarProps) {
       <div className={styles.sidebarHeader}>
         <Target size={16} />
         <h3 className={styles.sidebarTitle}>공약표</h3>
+        {member && onClose && (
+          <button className={styles.closeBtn} onClick={onClose} title="닫기">
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       <div className={styles.sidebarContent}>

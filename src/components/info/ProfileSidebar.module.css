@@ -1,12 +1,40 @@
 /* ProfileSidebar - 오른쪽 사이드바 (프로필/소셜) */
 
 .sidebar {
+  position: relative;
   height: 100%;
   background: var(--card-bg);
   border-left: 1px solid var(--card-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* 닫기 버튼 */
+.closeBtn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.closeBtn:hover {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: white;
+  transform: scale(1.05);
 }
 
 /* 빈 상태 */

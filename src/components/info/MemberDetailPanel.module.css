@@ -15,26 +15,28 @@
 /* 닫기 버튼 */
 .closeBtn {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 32px;
-  height: 32px;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  border: none;
-  border-radius: 50%;
-  color: white;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
-  z-index: 10;
-  backdrop-filter: blur(8px);
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .closeBtn:hover {
-  background: rgba(0, 0, 0, 0.6);
-  transform: scale(1.1);
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: white;
+  transform: scale(1.05);
 }
 
 /* ==================== 컴팩트 헤더 ==================== */
