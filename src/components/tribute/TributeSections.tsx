@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import {
   Heart,
   Play,
@@ -11,9 +12,7 @@ import {
   Video,
   ImageIcon,
   Download,
-  Sparkles,
   Trophy,
-  Upload,
   MessageSquare,
   Send,
   User,
@@ -22,6 +21,8 @@ import {
 import type { HallOfFameHonor } from '@/lib/mock'
 import { formatAmount } from '@/lib/utils/format'
 import { useGuestbook } from '@/lib/hooks'
+import { useAuthContext } from '@/lib/context'
+import VipSignatureGallery from './VipSignatureGallery'
 import styles from './TributeSections.module.css'
 
 interface TributeSectionsProps {
@@ -31,6 +32,20 @@ interface TributeSectionsProps {
 
 export default function TributeSections({ honor, allHonors }: TributeSectionsProps) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+  const { user, profile } = useAuthContext()
+  const router = useRouter()
+
+  // 본인 또는 관리자인지 체크
+  const isOwner =
+    user?.id === honor.donorId ||
+    profile?.role === 'admin' ||
+    profile?.role === 'superadmin'
+
+  // 잠긴 시그니처 클릭 시 안내
+  const handleLockedClick = () => {
+    // 추후 로그인 유도 또는 안내 모달 표시 가능
+    console.log('VIP 전용 콘텐츠입니다.')
+  }
 
   return (
     <div className={styles.container}>
@@ -61,10 +76,12 @@ export default function TributeSections({ honor, allHonors }: TributeSectionsPro
         legacyImage={honor.tributeImageUrl}
       />
 
-      {/* VIP Signatures */}
-      <TributeSignaturesSection
+      {/* VIP Signatures - Luxury Gallery */}
+      <VipSignatureGallery
         donorName={honor.donorName}
         signatures={honor.exclusiveSignatures}
+        isOwner={isOwner}
+        onLockedClick={handleLockedClick}
       />
 
       {/* Guestbook Section */}
@@ -292,62 +309,6 @@ function TributeGallerySection({
         <h3>감사 포토</h3>
         <p>아직 등록된 감사 사진이 없습니다</p>
         <span className={styles.adminHint}>Admin에서 이미지를 업로드할 수 있습니다</span>
-      </div>
-    </motion.section>
-  )
-}
-
-// Signatures Section
-function TributeSignaturesSection({
-  donorName,
-  signatures,
-}: {
-  donorName: string
-  signatures?: HallOfFameHonor['exclusiveSignatures']
-}) {
-  if (signatures && signatures.length > 0) {
-    return (
-      <motion.section
-        className={styles.secretSection}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <div className={styles.secretHeader}>
-          <div className={styles.secretBadge}>
-            <Sparkles size={16} />
-            <span>VIP SECRET</span>
-          </div>
-          <h2>VIP Exclusive Signature Reactions</h2>
-          <p>{donorName}님을 위한 전용 시그니처 리액션</p>
-        </div>
-        <div className={styles.signaturesGrid}>
-          {signatures.map((sig) => (
-            <div key={sig.id} className={styles.signatureCard}>
-              <div className={styles.signaturePlaceholder}>
-                <Video size={24} />
-                <span className={styles.signatureName}>{sig.memberName}</span>
-                <Play size={16} className={styles.playIcon} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.section>
-    )
-  }
-
-  return (
-    <motion.section
-      className={styles.emptySection}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-    >
-      <div className={styles.emptySectionContent}>
-        <Sparkles size={32} />
-        <h3>VIP 전용 시그니처</h3>
-        <p>아직 등록된 시그니처 리액션이 없습니다</p>
-        <span className={styles.adminHint}>Admin에서 시그니처를 업로드할 수 있습니다</span>
       </div>
     </motion.section>
   )
