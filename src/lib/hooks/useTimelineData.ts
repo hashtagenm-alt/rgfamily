@@ -27,13 +27,13 @@ export const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  founding: '#4ade80',
-  milestone: '#f472b6',
-  event: '#60a5fa',
-  member: '#fbbf24',
+  founding: '#71717a',
+  milestone: '#6b7280',
+  event: '#52525b',
+  member: '#8b8b8b',
 }
 
-export const SEASON_COLORS = ['#fd68ba', '#60a5fa', '#4ade80', '#fbbf24', '#a78bfa']
+export const SEASON_COLORS = ['#71717a', '#52525b', '#6b7280', '#8b8b8b', '#3f3f46']
 
 // 시간 필터 타입
 export type TimeFilter = 'all' | 'past' | 'upcoming'
@@ -45,7 +45,7 @@ export const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
 }
 
 export const getCategoryColor = (category: string | null): string => {
-  return CATEGORY_COLORS[category || ''] || '#fd68ba'
+  return CATEGORY_COLORS[category || ''] || '#71717a'
 }
 
 export const getSeasonColor = (seasonIndex: number): string => {

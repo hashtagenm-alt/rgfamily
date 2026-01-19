@@ -75,7 +75,7 @@ export default function LoginPage() {
           background: "var(--background)",
         }}
       >
-        <Loader color="pink" size="lg" />
+        <Loader color="gray" size="lg" />
       </Box>
     );
   }
@@ -99,7 +99,7 @@ export default function LoginPage() {
           width: "100%",
           maxWidth: 420,
           backdropFilter: "blur(10px)",
-          boxShadow: "0 0 40px rgba(253, 104, 186, 0.15)",
+          boxShadow: "0 0 24px rgba(0, 0, 0, 0.15)",
         }}
       >
         <Stack align="center" mb="xl">
@@ -113,10 +113,10 @@ export default function LoginPage() {
           >
             RG FAMILY
           </Anchor>
-          <Title order={2} ta="center" c="pink">
+          <Title order={2} ta="center" c="dark">
             로그인
           </Title>
-          <Text c="pink.2" size="sm" ta="center">
+          <Text c="dimmed" size="sm" ta="center">
             RG 패밀리에 오신 것을 환영합니다
           </Text>
         </Stack>
@@ -137,7 +137,7 @@ export default function LoginPage() {
             <TextInput
               label="이메일 / 아이디"
               placeholder="이메일 또는 아이디"
-              leftSection={<IconMail size={18} stroke={1.5} color="var(--mantine-color-pink-4)" />}
+              leftSection={<IconMail size={18} stroke={1.5} color="var(--text-tertiary)" />}
               key={form.key("email")}
               {...form.getInputProps("email")}
               autoComplete="username"
@@ -148,7 +148,7 @@ export default function LoginPage() {
             <PasswordInput
               label="비밀번호"
               placeholder="비밀번호를 입력하세요"
-              leftSection={<IconLock size={18} stroke={1.5} color="var(--mantine-color-pink-4)" />}
+              leftSection={<IconLock size={18} stroke={1.5} color="var(--text-tertiary)" />}
               key={form.key("password")}
               {...form.getInputProps("password")}
               autoComplete="current-password"
@@ -161,7 +161,7 @@ export default function LoginPage() {
               fullWidth
               size="md"
               radius="md"
-              color="pink"
+              color="dark"
               loading={form.submitting}
               loaderProps={{ type: "dots" }}
               mt="sm"
@@ -170,20 +170,20 @@ export default function LoginPage() {
             </Button>
 
             <Text ta="center" size="xs" c="dimmed">
-              <Anchor component={Link} href="/find-email" c="pink.3" size="xs">
+              <Anchor component={Link} href="/find-email" c="dimmed" size="xs">
                 아이디 찾기
               </Anchor>
               {" | "}
-              <Anchor component={Link} href="/forgot-password" c="pink.3" size="xs">
+              <Anchor component={Link} href="/forgot-password" c="dimmed" size="xs">
                 비밀번호 찾기
               </Anchor>
             </Text>
           </Stack>
         </form>
 
-        <Text ta="center" mt="xl" size="sm" c="pink.2">
+        <Text ta="center" mt="xl" size="sm" c="dimmed">
           아직 계정이 없으신가요?{" "}
-          <Anchor component={Link} href="/signup" fw={600} c="pink">
+          <Anchor component={Link} href="/signup" fw={600} c="dark">
             회원가입
           </Anchor>
         </Text>

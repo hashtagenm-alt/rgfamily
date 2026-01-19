@@ -70,7 +70,7 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
           parent_id: member.parent_id,
           image_url: member.image_url,
           social_links: (member.social_links || undefined) as OrgMember['social_links'],
-          profile_info: member.profile_info || undefined,
+          profile_info: (member.profile_info || undefined) as OrgMember['profile_info'],
           is_live: isLive,
         }
       })

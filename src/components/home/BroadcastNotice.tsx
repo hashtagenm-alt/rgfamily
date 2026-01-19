@@ -28,11 +28,13 @@ export default function BroadcastNotice() {
     fetchNotices()
   }, [])
 
-  const formatDate = (dateStr: string) => {
+  const formatDateTime = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleDateString('ko-KR', {
+    return date.toLocaleString('ko-KR', {
       month: 'short',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     })
   }
 
@@ -65,7 +67,7 @@ export default function BroadcastNotice() {
             <span className={styles.liveIcon}>
               <Radio size={16} />
             </span>
-            방송 공지 (BJ알림)
+            방송 공지
           </h3>
           <div className={styles.line} />
         </div>
@@ -82,7 +84,7 @@ export default function BroadcastNotice() {
             <span className={styles.liveIcon}>
               <Radio size={16} />
             </span>
-            방송 공지 (BJ알림)
+            방송 공지
           </h3>
           <div className={styles.line} />
         </div>
@@ -98,7 +100,7 @@ export default function BroadcastNotice() {
           <span className={styles.liveIcon}>
             <Radio size={16} />
           </span>
-          방송 공지 (BJ알림)
+          방송 공지
         </h3>
         <div className={styles.line} />
         <a
@@ -118,22 +120,10 @@ export default function BroadcastNotice() {
             className={styles.item}
             onClick={() => handleClick(notice)}
           >
-            {/* Thumbnail - Left */}
-            <div className={styles.itemThumbnail}>
-              <Image
-                src={notice.imgMainSrc || '/assets/logo/rg_logo_3d_pink.png'}
-                alt="방송 공지 이미지"
-                fill
-                sizes="(max-width: 768px) 100vw, 35vw"
-                style={{ objectFit: notice.imgMainSrc ? 'cover' : 'contain' }}
-                unoptimized
-              />
-            </div>
             {/* Content - Right */}
             <div className={styles.itemContent}>
               <div className={styles.tagRow}>
-                <span className={styles.tag}>BJ알림</span>
-                <span className={styles.date}>{formatDate(notice.insertDateTime)}</span>
+                <span className={styles.date}>{formatDateTime(notice.insertDateTime)}</span>
               </div>
               <p className={styles.content}>
                 {parseContent(notice.contents)}
@@ -141,6 +131,17 @@ export default function BroadcastNotice() {
               <span className={styles.more}>
                 PandaLive에서 보기 <ExternalLink size={12} />
               </span>
+            </div>
+            {/* Thumbnail - Right */}
+            <div className={styles.itemThumbnail}>
+              <Image
+                src={notice.imgMainSrc || '/assets/logo/rg_logo_3d_pink.png'}
+                alt="방송 공지 이미지"
+                fill
+                sizes="(max-width: 768px) 100vw, 35vw"
+                style={{ objectFit: 'contain', objectPosition: 'center' }}
+                unoptimized
+              />
             </div>
           </div>
         ))}

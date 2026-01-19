@@ -15,7 +15,7 @@
  * 브랜드 컬러 기반 그라디언트 배경
  */
 export const getPlaceholderAvatar = (seed: string): string => {
-  const colors = ['fd68ba', 'fe9bd2', 'ff5c8d', 'e91e8c', 'd63384']
+  const colors = ['52525b', '71717a', '3f3f46', '27272a', '18181b']
   const bgColor = colors[seed.length % colors.length]
   const name = seed.replace(/[^a-zA-Z가-힣]/g, '').slice(0, 2).toUpperCase() || 'RG'
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${bgColor}&color=ffffff&size=200&font-size=0.4&bold=true`
@@ -53,7 +53,7 @@ export const getMemberAvatar = (seed: string): string => {
  * VIP/프리미엄 프로필용
  */
 export const getVipAvatar = (seed: string): string =>
-  `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}&backgroundColor=fd68ba,fe9bd2,ff5c8d&size=200`
+  `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}&backgroundColor=52525b,71717a,3f3f46&size=200`
 
 // ============================================
 // Thumbnail Generators
@@ -90,7 +90,7 @@ export const getPicsumThumbnail = (id: number, width = 640, height = 360): strin
  */
 export const getGradientPlaceholder = (
   text: string,
-  colors: [string, string] = ['fd68ba', '4a0418'],
+  colors: [string, string] = ['52525b', '18181b'],
   size: [number, number] = [600, 400]
 ): string =>
   `https://placehold.co/${size[0]}x${size[1]}/${colors[0]}/${colors[1]}?text=${encodeURIComponent(text)}&font=roboto`
@@ -111,7 +111,7 @@ export const getMemberCharacterImage = (seed: string): string =>
  */
 export const getBannerBackground = (id: number): string => {
   const patterns = [
-    'linear-gradient(135deg, #fd68ba 0%, #4a0418 50%, #000 100%)',
+    'linear-gradient(135deg, #52525b 0%, #18181b 50%, #000 100%)',
     'linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 50%, #000 100%)',
     'linear-gradient(135deg, #4a1c6b 0%, #1a0a2e 50%, #000 100%)',
     'linear-gradient(135deg, #2d1810 0%, #1a0a05 50%, #000 100%)',
@@ -126,7 +126,7 @@ export const getBannerBackground = (id: number): string => {
 /**
  * 타임라인 이벤트 이미지
  */
-export const getTimelinePlaceholder = (text: string, color: string = 'fd68ba'): string =>
+export const getTimelinePlaceholder = (text: string, color: string = '52525b'): string =>
   `https://placehold.co/600x400/${color}/ffffff?text=${encodeURIComponent(text)}&font=roboto`
 
 // ============================================

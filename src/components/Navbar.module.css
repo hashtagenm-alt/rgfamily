@@ -9,6 +9,11 @@
   display: flex;
   align-items: center;
   transition: var(--transition-theme);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset -1px 0 0 rgba(255, 255, 255, 0.04),
+    0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
 .container {
@@ -24,10 +29,15 @@
 .logo {
   display: flex;
   align-items: center;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .logo :global(img) {
-  height: 50px;
+  height: 64px;
   object-fit: contain;
   transition: transform 0.2s;
 }
@@ -39,7 +49,7 @@
 /* Navigation Links */
 .links {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
@@ -51,8 +61,8 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.625rem 0.875rem;
-  font-size: 0.8rem;
+  padding: 0.625rem 1.1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-secondary);
   background: transparent;
@@ -379,10 +389,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: var(--color-pink);
-  border: none;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
   border-radius: 8px;
-  color: white;
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -390,7 +400,8 @@
 }
 
 .loginBtn:hover {
-  background: var(--color-pink-light);
+  background: var(--surface-hover);
+  border-color: var(--color-pink-border);
   transform: translateY(-1px);
 }
 
@@ -559,9 +570,10 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: var(--color-pink);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
   border-radius: 10px;
-  color: white;
+  color: var(--text-primary);
   font-size: 0.8rem;
   font-weight: 600;
   transition: all 0.2s;
@@ -570,7 +582,7 @@
 .mobileProfileBtn {
   background: var(--surface-hover);
   color: var(--text-primary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--card-border);
 }
 
 .mobileLoginBtn:hover,
@@ -595,16 +607,16 @@
 }
 
 .mobileLogoutBtn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: var(--surface-hover);
+  border-color: var(--card-border);
+  color: var(--text-primary);
 }
 
 /* Responsive */
 @media (max-width: 1280px) {
   .link {
     padding: 0.5rem 0.625rem;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
   }
 
   .actions {

@@ -298,10 +298,10 @@
 /* 1위 Badge - Gold Champion */
 .rank1 .rankBadge {
   padding: 8px 16px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffec8b 50%, #daa520 100%);
-  border: none;
+  background: var(--metallic-gold-bg);
+  border: 1px solid var(--metallic-gold-border);
   color: #1a1a1a;
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+  box-shadow: none;
 }
 
 .rank1 .rankNumber {
@@ -311,21 +311,21 @@
 /* 2위 Badge - Silver */
 .rank2 .rankBadge {
   padding: 6px 14px;
-  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 50%, #a0a0a0 100%);
-  border: none;
+  background: var(--metallic-silver-bg);
+  border: 1px solid var(--metallic-silver-border);
   color: #1a1a1a;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 0 20px rgba(192, 192, 192, 0.5);
+  backdrop-filter: blur(6px);
+  box-shadow: none;
 }
 
 /* 3위 Badge - Bronze */
 .rank3 .rankBadge {
   padding: 6px 14px;
-  background: linear-gradient(135deg, #cd7f32 0%, #e09050 50%, #a06020 100%);
-  border: none;
+  background: var(--metallic-bronze-bg);
+  border: 1px solid var(--metallic-bronze-border);
   color: #1a1a1a;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 0 20px rgba(205, 127, 50, 0.5);
+  backdrop-filter: blur(6px);
+  box-shadow: none;
 }
 
 /* =======================================
@@ -359,44 +359,20 @@
 /* 1위 - Gold Bar */
 .rank1 .top {
   height: 8px;
-  background: linear-gradient(90deg,
-    #b8860b 0%,
-    #ffd700 25%,
-    #ffec8b 50%,
-    #ffd700 75%,
-    #b8860b 100%
-  );
-  box-shadow:
-    0 0 25px rgba(255, 215, 0, 0.8),
-    0 2px 12px rgba(255, 215, 0, 0.6);
+  background: var(--metallic-gold-border);
+  box-shadow: none;
 }
 
 /* 2위 - Silver Bar */
 .rank2 .top {
-  background: linear-gradient(90deg,
-    #606060 0%,
-    #a0a0a0 25%,
-    #e8e8e8 50%,
-    #a0a0a0 75%,
-    #606060 100%
-  );
-  box-shadow:
-    0 0 20px rgba(192, 192, 192, 0.6),
-    0 2px 10px rgba(192, 192, 192, 0.4);
+  background: var(--metallic-silver-border);
+  box-shadow: none;
 }
 
 /* 3위 - Bronze Bar */
 .rank3 .top {
-  background: linear-gradient(90deg,
-    #804020 0%,
-    #cd7f32 25%,
-    #e09050 50%,
-    #cd7f32 75%,
-    #804020 100%
-  );
-  box-shadow:
-    0 0 20px rgba(205, 127, 50, 0.6),
-    0 2px 10px rgba(205, 127, 50, 0.4);
+  background: var(--metallic-bronze-border);
+  box-shadow: none;
 }
 
 /* Front Face - Glass Card */
@@ -424,34 +400,22 @@
 .rank1 .front {
   min-height: 140px;
   padding: 2.5rem 1.5rem 2rem;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 215, 0, 0.1) 0%,
-    var(--glass-bg) 30%
-  );
-  border-color: rgba(255, 215, 0, 0.35);
+  background: var(--glass-bg);
+  border-color: var(--metallic-gold-border);
 }
 
 /* 2위 - Silver Glass */
 .rank2 .front {
   min-height: 115px;
-  background: linear-gradient(
-    180deg,
-    rgba(192, 192, 192, 0.1) 0%,
-    var(--glass-bg) 30%
-  );
-  border-color: rgba(192, 192, 192, 0.25);
+  background: var(--glass-bg);
+  border-color: var(--metallic-silver-border);
 }
 
 /* 3위 - Bronze Glass */
 .rank3 .front {
   min-height: 115px;
-  background: linear-gradient(
-    180deg,
-    rgba(205, 127, 50, 0.1) 0%,
-    var(--glass-bg) 30%
-  );
-  border-color: rgba(205, 127, 50, 0.25);
+  background: var(--glass-bg);
+  border-color: var(--metallic-bronze-border);
 }
 
 /* User Info */

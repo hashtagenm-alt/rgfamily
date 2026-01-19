@@ -19,7 +19,8 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         // RG Family custom variants
-        pink: "bg-[#fd68ba] text-white shadow hover:bg-[#fb37a3]",
+        pink:
+          "bg-[var(--color-pink)] text-white shadow hover:bg-[var(--color-pink-light)]",
         gold: "bg-gradient-to-r from-[#ffd700] to-[#fdb931] text-black shadow hover:opacity-90",
         live: "bg-[#00d4ff] text-black shadow hover:bg-[#00b8e6]",
       },

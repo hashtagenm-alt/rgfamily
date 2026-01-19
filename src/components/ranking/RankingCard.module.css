@@ -18,14 +18,14 @@
 
 .card {
   position: relative;
-  background: var(--card-bg-gradient);
+  background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-2xl);
   padding: var(--space-8) var(--space-6);
   text-align: center;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: var(--shadow-lg), var(--inset-highlight);
+  box-shadow: var(--shadow-md);
 }
 
 .card::before {
@@ -45,96 +45,60 @@
 
 .card:hover {
   border-color: var(--item-border-hover);
-  box-shadow: var(--shadow-lg), var(--inset-highlight-hover);
+  box-shadow: var(--shadow-md);
   transform: translateY(-6px);
 }
 
 /* Rank variants - Premium Metallic */
 .gold {
-  background: linear-gradient(
-    165deg,
-    var(--metallic-gold-bg) 0%,
-    var(--card-bg-dark) 30%,
-    var(--metallic-gold-bg) 100%
-  );
+  background: var(--card-bg);
   border-color: var(--metallic-gold-border);
   border-width: 2px;
 }
 
 .gold::before {
-  background: linear-gradient(
-    90deg,
-    transparent 5%,
-    var(--metallic-gold) 50%,
-    transparent 95%
-  );
-  opacity: 0.8;
-  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--highlight-line), transparent);
+  opacity: 0.6;
+  height: 1px;
 }
 
 .gold:hover {
   border-color: var(--metallic-gold);
-  box-shadow: var(--shadow-lg), 0 0 50px var(--metallic-gold-glow),
-    0 0 80px rgba(255, 215, 0, 0.2),
-    inset 0 1px 0 var(--metallic-gold-bg);
+  box-shadow: var(--shadow-md);
 }
 
 .silver {
-  background: linear-gradient(
-    165deg,
-    var(--metallic-silver-bg) 0%,
-    var(--card-bg-dark) 30%,
-    var(--metallic-silver-bg) 100%
-  );
+  background: var(--card-bg);
   border-color: var(--metallic-silver-border);
   border-width: 2px;
 }
 
 .silver::before {
-  background: linear-gradient(
-    90deg,
-    transparent 5%,
-    var(--metallic-silver) 50%,
-    transparent 95%
-  );
-  opacity: 0.7;
-  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--highlight-line), transparent);
+  opacity: 0.6;
+  height: 1px;
 }
 
 .silver:hover {
   border-color: var(--metallic-silver);
-  box-shadow: var(--shadow-lg), 0 0 50px var(--metallic-silver-glow),
-    0 0 80px rgba(192, 192, 192, 0.2),
-    inset 0 1px 0 var(--metallic-silver-bg);
+  box-shadow: var(--shadow-md);
 }
 
 .bronze {
-  background: linear-gradient(
-    165deg,
-    var(--metallic-bronze-bg) 0%,
-    var(--card-bg-dark) 30%,
-    var(--metallic-bronze-bg) 100%
-  );
+  background: var(--card-bg);
   border-color: var(--metallic-bronze-border);
   border-width: 2px;
 }
 
 .bronze::before {
-  background: linear-gradient(
-    90deg,
-    transparent 5%,
-    var(--metallic-bronze) 50%,
-    transparent 95%
-  );
-  opacity: 0.7;
-  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--highlight-line), transparent);
+  opacity: 0.6;
+  height: 1px;
 }
 
 .bronze:hover {
   border-color: var(--metallic-bronze);
-  box-shadow: var(--shadow-lg), 0 0 50px var(--metallic-bronze-glow),
-    0 0 80px rgba(205, 127, 50, 0.2),
-    inset 0 1px 0 var(--metallic-bronze-bg);
+  box-shadow: var(--shadow-md);
 }
 
 /* Rank Badge */
@@ -148,17 +112,17 @@
 
 .gold .rankBadge {
   color: var(--metallic-gold);
-  filter: drop-shadow(0 0 8px var(--metallic-gold-glow));
+  filter: none;
 }
 
 .silver .rankBadge {
   color: var(--metallic-silver);
-  filter: drop-shadow(0 0 8px var(--metallic-silver-glow));
+  filter: none;
 }
 
 .bronze .rankBadge {
   color: var(--metallic-bronze);
-  filter: drop-shadow(0 0 8px var(--metallic-bronze-glow));
+  filter: none;
 }
 
 .rankBadge span {
@@ -186,22 +150,17 @@
 
 .gold .avatar {
   border: 3px solid var(--metallic-gold);
-  box-shadow: 0 0 0 4px var(--metallic-gold-bg),
-    0 0 30px var(--metallic-gold-glow), inset 0 0 20px var(--gold-overlay-05);
+  box-shadow: 0 0 0 4px var(--metallic-gold-bg);
 }
 
 .silver .avatar {
   border: 3px solid var(--metallic-silver);
-  box-shadow: 0 0 0 4px var(--metallic-silver-bg),
-    0 0 30px var(--metallic-silver-glow),
-    inset 0 0 20px var(--metallic-silver-bg);
+  box-shadow: 0 0 0 4px var(--metallic-silver-bg);
 }
 
 .bronze .avatar {
   border: 3px solid var(--metallic-bronze);
-  box-shadow: 0 0 0 4px var(--metallic-bronze-bg),
-    0 0 30px var(--metallic-bronze-glow),
-    inset 0 0 20px var(--metallic-bronze-bg);
+  box-shadow: 0 0 0 4px var(--metallic-bronze-bg);
 }
 
 .card:not(.gold):not(.silver):not(.bronze) .avatar {

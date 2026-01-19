@@ -147,13 +147,13 @@
 }
 
 .unitBadge[data-unit="excel"] {
-  background: rgba(0, 212, 255, 0.2);
-  color: #00d4ff;
+  background: var(--overlay-medium);
+  color: var(--text-secondary);
 }
 
 .unitBadge[data-unit="crew"] {
-  background: rgba(253, 104, 186, 0.2);
-  color: #fd68ba;
+  background: var(--overlay-medium);
+  color: var(--text-secondary);
 }
 
 .videoInfo {
@@ -519,9 +519,9 @@
 }
 
 .memberAvatar[data-unit="excel"] {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(0, 212, 255, 0.15)) !important;
-  border-color: rgba(0, 212, 255, 0.4) !important;
-  color: #00d4ff !important;
+  background: linear-gradient(135deg, rgba(113, 113, 122, 0.3), rgba(113, 113, 122, 0.15)) !important;
+  border-color: rgba(113, 113, 122, 0.4) !important;
+  color: #71717a !important;
 }
 
 .memberAvatar[data-unit="crew"] {
@@ -545,13 +545,13 @@
 }
 
 .memberBadge[data-unit="excel"] {
-  background: rgba(0, 212, 255, 0.2);
-  color: #00d4ff;
+  background: var(--overlay-medium);
+  color: var(--text-secondary);
 }
 
 .memberBadge[data-unit="crew"] {
-  background: rgba(253, 104, 186, 0.2);
-  color: #fd68ba;
+  background: var(--overlay-medium);
+  color: var(--text-secondary);
 }
 
 /* Guestbook Input Enabled State */

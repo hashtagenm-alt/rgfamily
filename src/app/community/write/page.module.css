@@ -77,12 +77,12 @@
 }
 
 .loginBtn {
-  background: var(--color-primary);
-  color: white;
+  background: var(--text-primary);
+  color: var(--background);
 }
 
 .loginBtn:hover {
-  background: var(--color-primary-hover);
+  background: var(--text-secondary);
 }
 
 .signupBtn {

@@ -36,10 +36,10 @@ const EVENT_LABELS = {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-  broadcast: '#4ade80',
-  collab: '#60a5fa',
-  event: '#f472b6',
-  notice: '#fbbf24',
+  broadcast: '#7fb28a',
+  collab: '#7aa2d8',
+  event: '#d1a36c',
+  notice: '#c2a77a',
   '休': '#94a3b8',
 }
 
@@ -65,7 +65,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
       className="bg-[var(--card-bg)] border border-[var(--glass-border)] backdrop-blur-lg"
     >
       <Group justify="space-between" align="center" mb="lg" pb="md" className="border-b border-[var(--glass-border)]">
-        <Text size="lg" fw={700} c="white">
+        <Text size="lg" fw={700} className="text-[var(--text-primary)]">
           {formattedDate}
         </Text>
         <ActionIcon
@@ -73,7 +73,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
           variant="subtle"
           size="lg"
           radius="xl"
-          className="bg-[var(--glass-bg)] text-[var(--text-muted)] hover:bg-[var(--color-pink)] hover:text-white transition-all"
+          className="bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] transition-all"
         >
           <X size={20} />
         </ActionIcon>
@@ -88,7 +88,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
         <Stack gap="md">
           {events.map((event, index) => {
             const Icon = EVENT_ICONS[event.eventType]
-            const color = event.color || EVENT_COLORS[event.eventType] || '#fd68ba'
+            const color = event.color || EVENT_COLORS[event.eventType] || '#94a3b8'
 
             return (
               <motion.div

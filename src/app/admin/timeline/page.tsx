@@ -31,10 +31,10 @@ const categoryLabels: Record<TimelineCategory, string> = {
 }
 
 const categoryColors: Record<TimelineCategory, string> = {
-  founding: '#4ade80',
-  milestone: '#f472b6',
-  event: '#60a5fa',
-  member: '#fbbf24',
+  founding: '#71717a',
+  milestone: '#6b7280',
+  event: '#52525b',
+  member: '#8b8b8b',
 }
 
 export default function TimelinePage() {
@@ -255,7 +255,7 @@ export default function TimelinePage() {
                       className={styles.input}
                     />
                     {editingEvent.eventDate && isFutureDate(editingEvent.eventDate) && (
-                      <span className={styles.helperText} style={{ color: '#60a5fa' }}>
+                      <span className={styles.helperText} style={{ color: '#71717a' }}>
                         📅 예정된 이벤트로 등록됩니다
                       </span>
                     )}

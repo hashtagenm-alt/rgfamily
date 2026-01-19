@@ -10,13 +10,13 @@ interface CalendarGridProps {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-  broadcast: '#22c55e', // green-500 (방송)
-  collab: '#3b82f6', // blue-500 (콜라보)
-  event: '#f59e0b', // amber-500 (이벤트)
-  notice: '#a855f7', // purple-500 (공지)
-  '休': '#6b7280', // gray-500 (휴방)
-  excel: '#22c55e', // green-500 (Excel Unit)
-  crew: '#3b82f6', // blue-500 (Crew Unit)
+  broadcast: '#7fb28a',
+  collab: '#7aa2d8',
+  event: '#d1a36c',
+  notice: '#c2a77a',
+  '休': '#94a3b8',
+  excel: '#7fb28a',
+  crew: '#7aa2d8',
 }
 
 export default function CalendarGrid({ days, selectedDate, onSelectDate }: CalendarGridProps) {
@@ -34,7 +34,7 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
   }
 
   return (
-    <div className="grid grid-cols-7 gap-[1px] bg-zinc-700/50">
+    <div className="grid grid-cols-7 gap-0.5 bg-[var(--divider)]">
         {days.map((day, index) => {
           const isSelected = isSameDay(day.date, selectedDate)
           const dayOfWeek = day.date.getDay()
@@ -46,23 +46,23 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
               key={index}
               onClick={() => onSelectDate(day.date)}
               className={`
-                min-h-[100px] md:min-h-[80px] sm:min-h-[60px] flex flex-col p-2
+                min-h-[130px] md:min-h-[110px] sm:min-h-[90px] flex flex-col p-3
                 bg-[var(--card-bg)] border-none cursor-pointer relative text-left
                 transition-all duration-200
                 hover:bg-[var(--interactive-hover)]
-                ${!day.isCurrentMonth ? 'opacity-30' : ''}
+                ${!day.isCurrentMonth ? 'opacity-50' : ''}
                 ${day.isToday ? 'bg-[var(--interactive-active)]' : ''}
-                ${isSelected ? 'bg-[var(--interactive-focus)] shadow-[inset_0_0_0_2px_var(--color-primary)]' : ''}
+                ${isSelected ? 'bg-[var(--interactive-focus)] shadow-[inset_0_0_0_2px_var(--color-pink-border)]' : ''}
               `}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
               <span
                 className={`
-                  text-sm font-semibold mb-2 inline-flex items-center justify-center
-                  min-w-[32px] min-h-[32px] rounded-full
-                  ${isSunday ? 'text-red-500' : isSaturday ? 'text-blue-500' : 'text-[var(--text-secondary)]'}
-                  ${day.isToday ? 'bg-[var(--color-primary)] text-white font-bold shadow-md' : ''}
+                  text-base font-bold mb-3 inline-flex items-center justify-center
+                  min-w-[36px] min-h-[36px] rounded-full
+                  ${isSunday ? 'text-red-500' : isSaturday ? 'text-blue-500' : 'text-[var(--text-primary)]'}
+                  ${day.isToday ? 'bg-[var(--text-primary)] !text-[var(--background)] font-bold shadow-md' : ''}
                 `}
               >
                 {day.date.getDate()}
@@ -70,21 +70,22 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
 
               {/* Event Text List (Desktop) */}
               {day.events.length > 0 && (
-                <div className="hidden md:flex flex-col gap-1 flex-1 overflow-hidden">
-                  {day.events.slice(0, 3).map((event, eventIndex) => (
+                <div className="hidden md:flex flex-col gap-1 flex-1 overflow-hidden mt-1">
+                  {day.events.slice(0, 2).map((event, eventIndex) => (
                     <div
                       key={eventIndex}
-                      className="px-2 py-1.5 rounded text-xs font-medium text-white whitespace-nowrap overflow-hidden text-ellipsis transition-all hover:brightness-110 hover:scale-[1.02] shadow-sm"
+                      className="px-2 py-1 rounded text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all"
                       style={{
-                        backgroundColor: getEventColor(event),
+                        backgroundColor: `${getEventColor(event)}25`,
+                        color: getEventColor(event),
                       }}
                     >
                       {event.title}
                     </div>
                   ))}
-                  {day.events.length > 3 && (
-                    <span className="text-xs text-[var(--text-muted)] font-medium mt-0.5">
-                      +{day.events.length - 3}개 더보기
+                  {day.events.length > 2 && (
+                    <span className="text-xs text-[var(--text-muted)] font-medium">
+                      +{day.events.length - 2}개
                     </span>
                   )}
                 </div>
@@ -92,19 +93,19 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
 
               {/* Event Dots (Mobile) */}
               {day.events.length > 0 && (
-                <div className="flex md:hidden gap-1.5 flex-wrap mt-auto">
+                <div className="flex md:hidden gap-2 flex-wrap mt-auto">
                   {day.events.slice(0, 4).map((event, eventIndex) => (
                     <span
                       key={eventIndex}
-                      className="w-2.5 h-2.5 rounded-full"
+                      className="w-3 h-3 rounded-full"
                       style={{
                         backgroundColor: getEventColor(event),
-                        boxShadow: `0 0 4px ${getEventColor(event)}40`,
+                        boxShadow: `0 0 4px ${getEventColor(event)}60`,
                       }}
                     />
                   ))}
                   {day.events.length > 4 && (
-                    <span className="text-[10px] text-[var(--text-muted)] font-medium">
+                    <span className="text-xs text-[var(--text-secondary)] font-semibold">
                       +{day.events.length - 4}
                     </span>
                   )}

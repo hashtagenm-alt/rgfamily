@@ -47,7 +47,7 @@ export default function Calendar() {
             variant="subtle"
             size="xl"
             radius="xl"
-            className="border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] hover:bg-[var(--text-primary)] hover:text-[var(--background)] hover:border-[var(--text-primary)] transition-all"
+            className="border border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] hover:border-[var(--color-pink-border)] transition-all"
           >
             <ChevronLeft size={24} />
           </ActionIcon>
@@ -71,7 +71,7 @@ export default function Calendar() {
             variant="subtle"
             size="xl"
             radius="xl"
-            className="border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-muted)] hover:bg-[var(--text-primary)] hover:text-[var(--background)] hover:border-[var(--text-primary)] transition-all"
+            className="border border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] hover:border-[var(--color-pink-border)] transition-all"
           >
             <ChevronRight size={24} />
           </ActionIcon>
@@ -90,27 +90,23 @@ export default function Calendar() {
             radius="xl"
             size="sm"
             classNames={{
-              root: 'bg-[var(--glass-bg)] border border-[var(--glass-border)]',
-              indicator: unitFilter === 'excel'
-                ? 'bg-[var(--color-pink)]'
-                : unitFilter === 'crew'
-                ? 'bg-[var(--color-cyan)]'
-                : 'bg-[var(--text-primary)]',
-              label: 'text-[var(--text-muted)] data-[active]:text-white font-semibold',
+              root: 'bg-[var(--surface)] border border-[var(--card-border)]',
+              indicator: 'bg-[var(--text-primary)]',
+              label: 'text-[var(--text-muted)] data-[active]:text-[var(--background)] font-semibold',
             }}
           />
         </Group>
       </Stack>
 
       {/* Calendar Container (Weekdays + Grid) */}
-      <div className="rounded-xl overflow-hidden border border-[var(--color-pink)] shadow-[0_0_20px_rgba(253,104,186,0.15)]">
+      <div className="rounded-xl overflow-hidden border border-[var(--card-border)] shadow-sm">
         {/* Weekday Labels */}
-        <div className="grid grid-cols-7 gap-[1px] bg-[var(--color-pink)]">
+        <div className="grid grid-cols-7 gap-0.5 bg-[var(--divider)]">
           {WEEKDAYS.map((day, index) => (
             <div
               key={day}
-              className={`py-4 px-2 text-center text-sm font-bold uppercase tracking-wide bg-[var(--surface)] ${
-                index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-[var(--text-muted)]'
+              className={`py-5 px-3 text-center text-base font-bold uppercase tracking-wider bg-[var(--surface)] ${
+                index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-[var(--text-primary)]'
               }`}
             >
               {day}
@@ -122,7 +118,7 @@ export default function Calendar() {
         {isLoading ? (
           <div className="bg-[var(--card-bg)] p-12">
             <Stack align="center" justify="center" gap="lg">
-              <Loader color="pink" size="lg" />
+              <Loader color="gray" size="lg" />
               <Text c="dimmed">일정을 불러오는 중...</Text>
             </Stack>
           </div>

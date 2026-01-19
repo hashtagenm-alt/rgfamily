@@ -153,9 +153,7 @@ export default function RankingBoard() {
                 )}
                 {item.name}
               </span>
-              <span className={styles.amount}>
-                {item.amount.toLocaleString()} 🪙
-              </span>
+              {/* 하트 개수 숨김 - 게이지바만 표시 */}
             </div>
 
             {item.unit && (

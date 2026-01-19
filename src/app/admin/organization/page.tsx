@@ -213,8 +213,8 @@ export default function OrganizationPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          border: item.isLive ? '2px solid #00d4ff' : '1px solid var(--border)',
-          boxShadow: item.isLive ? '0 0 8px #00d4ff' : 'none',
+          border: item.isLive ? '2px solid var(--live-color)' : '1px solid var(--border)',
+          boxShadow: item.isLive ? '0 0 8px var(--live-glow)' : 'none',
         }}>
           {item.imageUrl ? (
             <Image
@@ -242,8 +242,8 @@ export default function OrganizationPage() {
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              background: '#00d4ff',
-              boxShadow: '0 0 8px #00d4ff',
+              background: 'var(--live-color)',
+              boxShadow: '0 0 8px var(--live-glow)',
               animation: 'pulse 2s infinite',
             }} title="LIVE" />
           )}

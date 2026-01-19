@@ -105,7 +105,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
                   ? '#22c55e'
                   : alert.type === 'warning'
                     ? '#f59e0b'
-                    : '#3b82f6',
+                    : '#71717a',
             color: 'white',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             zIndex: 9999,
@@ -172,7 +172,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
                       ? '#ef4444'
                       : confirmState.options?.variant === 'warning'
                         ? '#f59e0b'
-                        : '#3b82f6',
+                        : '#71717a',
                   color: 'white',
                   cursor: 'pointer',
                   fontSize: 14,

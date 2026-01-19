@@ -18,7 +18,7 @@ export default function AuthLayout({
           width: '40px',
           height: '40px',
           border: '3px solid var(--glass-border)',
-          borderTopColor: 'var(--color-primary)',
+          borderTopColor: 'var(--text-tertiary)',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />

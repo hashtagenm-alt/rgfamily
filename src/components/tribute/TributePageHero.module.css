@@ -3,7 +3,7 @@
   padding: 4rem 1.5rem;
   text-align: center;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(253, 104, 186, 0.1) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
 }
 
 .heroContent {
@@ -16,10 +16,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, rgba(253, 104, 186, 0.2), rgba(253, 104, 186, 0.1));
-  border: 1px solid rgba(253, 104, 186, 0.3);
+  background: var(--overlay-medium);
+  border: 1px solid var(--color-pink-border);
   border-radius: 50px;
-  color: var(--color-primary, #fd68ba);
+  color: var(--text-secondary);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -31,7 +31,7 @@
   font-weight: 700;
   color: #fff;
   margin-bottom: 0.75rem;
-  text-shadow: 0 0 30px rgba(253, 104, 186, 0.3);
+  text-shadow: none;
 }
 
 .heroSubtitle {
@@ -40,7 +40,7 @@
 }
 
 .heroSubtitle strong {
-  color: var(--color-primary-light, #ff8ed4);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -57,7 +57,7 @@
   transform: translate(-50%, -50%);
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(253, 104, 186, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 70%);
   filter: blur(40px);
 }
 
@@ -65,8 +65,8 @@
 .star2,
 .star3 {
   position: absolute;
-  color: rgba(253, 104, 186, 0.3);
-  animation: twinkle 3s ease-in-out infinite;
+  color: rgba(255, 255, 255, 0.2);
+  animation: none;
 }
 
 .star1 {
@@ -186,7 +186,7 @@
 
 /* Light mode support */
 :global([data-theme='light']) .hero {
-  background: linear-gradient(180deg, rgba(253, 104, 186, 0.15) 0%, rgba(253, 104, 186, 0.05) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.02) 100%);
 }
 
 :global([data-theme='light']) .heroTitle {
@@ -199,22 +199,22 @@
 }
 
 :global([data-theme='light']) .heroSubtitle strong {
-  color: var(--primary-deep, #fb37a3);
+  color: var(--text-primary);
 }
 
 :global([data-theme='light']) .vipBadge {
-  background: linear-gradient(135deg, rgba(253, 104, 186, 0.25), rgba(253, 104, 186, 0.15));
-  border-color: rgba(253, 104, 186, 0.4);
+  background: var(--overlay-medium);
+  border-color: var(--color-pink-border);
 }
 
 :global([data-theme='light']) .glow {
-  background: radial-gradient(circle, rgba(253, 104, 186, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.04) 0%, transparent 70%);
 }
 
 :global([data-theme='light']) .star1,
 :global([data-theme='light']) .star2,
 :global([data-theme='light']) .star3 {
-  color: rgba(253, 104, 186, 0.4);
+  color: rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 768px) {

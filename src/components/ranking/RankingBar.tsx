@@ -26,7 +26,7 @@ export default function RankingBar({
       <div className={styles.info}>
         <div className={styles.header}>
           <span className={styles.label}>{label}</span>
-          <span className={styles.value}>{value.toLocaleString()} P</span>
+          {/* 하트 개수 숨김 - 게이지바만 표시 */}
         </div>
         <div className={styles.track}>
           <motion.div

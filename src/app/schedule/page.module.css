@@ -15,8 +15,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 40vh;
-  padding: var(--space-20) var(--space-6) var(--space-12);
+  height: 500px;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-6);
   text-align: center;
   overflow: hidden;
 }
@@ -29,7 +31,7 @@
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 1000px;
+  max-width: 1500px;
   height: 100%;
   background: radial-gradient(
     ellipse 60% 60% at 50% 30%,
@@ -135,8 +137,9 @@
    ======================================= */
 @media (max-width: 768px) {
   .hero {
-    min-height: 35vh;
-    padding: var(--space-16) var(--space-4) var(--space-10);
+    height: 360px;
+    max-width: 100%;
+    padding: var(--space-12) var(--space-4);
   }
 
   .title {

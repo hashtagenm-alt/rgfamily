@@ -28,8 +28,8 @@
 }
 
 .backButton:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--color-pink-border);
+  color: var(--text-primary);
 }
 
 .article {
@@ -155,7 +155,7 @@
 
 .commentInput:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-pink-border);
 }
 
 .submitButton {
@@ -164,10 +164,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: var(--color-primary);
+  background: var(--text-primary);
   border: none;
   border-radius: 8px;
-  color: white;
+  color: var(--background);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -175,7 +175,7 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background: var(--color-primary-light);
+  background: var(--text-secondary);
 }
 
 .submitButton:disabled {

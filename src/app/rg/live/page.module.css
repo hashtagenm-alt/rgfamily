@@ -231,8 +231,8 @@
 }
 
 .unitButton[data-unit="excel"].active {
-  background: var(--color-pink);
-  color: white;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .unitButton[data-unit="crew"].active {
@@ -245,8 +245,8 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: var(--live-overlay-05);
+  border: 1px solid var(--live-overlay-10);
   border-radius: var(--radius-full);
 }
 
@@ -276,8 +276,8 @@
 .liveSection {
   margin-bottom: var(--space-12);
   padding: var(--space-6);
-  background: rgba(239, 68, 68, 0.05);
-  border: 1px solid rgba(239, 68, 68, 0.1);
+  background: var(--live-overlay-05);
+  border: 1px solid var(--live-overlay-10);
   border-radius: var(--radius-2xl);
 }
 
@@ -295,7 +295,7 @@
   gap: var(--space-4);
   padding: var(--space-6);
   background: var(--card-bg);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid var(--live-overlay-10);
   border-radius: var(--radius-2xl);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -316,8 +316,12 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--live-color) 0%, #ff6b6b 50%, var(--live-color) 100%);
-  box-shadow: 0 0 20px var(--live-glow);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 212, 255, 0.15) 0%,
+    rgba(0, 212, 255, 0.6) 100%
+  );
+  box-shadow: 0 0 16px var(--live-glow);
   position: relative;
   padding: 4px;
 }
@@ -341,18 +345,18 @@
 
 .liveBadge {
   position: absolute;
-  bottom: -4px;
+  bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 2px 10px;
-  background: var(--live-color);
+  padding: 2px 7px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), var(--surface));
   border-radius: var(--radius-full);
   font-size: 10px;
   font-weight: var(--font-extrabold);
-  color: white;
+  color: #ef4444;
   letter-spacing: 1px;
-  box-shadow: 0 2px 8px var(--live-glow);
-  border: 2px solid var(--card-bg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(239, 68, 68, 0.45);
   z-index: 2;
 }
 
@@ -392,8 +396,8 @@
 }
 
 .cardAvatar {
-  width: 72px;
-  height: 72px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   border: 2px solid var(--overlay-strong);
   overflow: hidden;
@@ -447,8 +451,8 @@
 }
 
 .unitBadge[data-unit="excel"] {
-  background: rgba(196, 30, 127, 0.15);
-  color: var(--color-pink);
+  background: var(--overlay-medium);
+  color: var(--text-secondary);
 }
 
 .unitBadge[data-unit="crew"] {
@@ -475,8 +479,8 @@
   gap: var(--space-2);
   width: 100%;
   padding: var(--space-3);
-  background: linear-gradient(135deg, var(--live-color), #dc2626);
-  color: white;
+  background: var(--text-primary);
+  color: var(--background);
   font-size: var(--text-sm);
   font-weight: var(--font-bold);
   border: none;
@@ -487,7 +491,7 @@
 
 .watchBtn:hover {
   transform: scale(1.02);
-  box-shadow: 0 4px 20px var(--live-glow);
+  box-shadow: var(--shadow-md);
 }
 
 /* Loading & Empty */
@@ -569,8 +573,8 @@
 }
 
 .modalClose:hover {
-  background: var(--color-pink);
-  color: white;
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 /* Modal Header */
@@ -591,7 +595,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-pink) 0%, var(--color-pink-light) 50%, var(--color-pink) 100%);
+  background: var(--live-color);
   z-index: 0;
 }
 
@@ -600,7 +604,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  box-shadow: 0 0 20px var(--color-pink-glow);
+  box-shadow: 0 0 16px var(--live-glow);
   z-index: 0;
 }
 
@@ -664,8 +668,8 @@
 }
 
 .modalUnit[data-unit="excel"] {
-  background: rgba(196, 30, 127, 0.15);
-  color: var(--color-pink);
+  background: var(--overlay-medium);
+  color: var(--text-secondary);
 }
 
 .modalUnit[data-unit="crew"] {

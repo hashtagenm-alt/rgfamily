@@ -353,7 +353,7 @@ export default function CsvUploader({ onUpload, columns, sampleFile, showDuplica
                       </Badge>
                     )}
                     {(uploadResult.updated ?? 0) > 0 && (
-                      <Badge color="blue" variant="light" size="sm">
+                      <Badge color="gray" variant="light" size="sm">
                         업데이트: {uploadResult.updated}건
                       </Badge>
                     )}
@@ -373,7 +373,7 @@ export default function CsvUploader({ onUpload, columns, sampleFile, showDuplica
                       </Badge>
                     )}
                     {(uploadResult.updated ?? 0) > 0 && (
-                      <Badge color="blue" variant="light" size="sm">
+                      <Badge color="gray" variant="light" size="sm">
                         업데이트: {uploadResult.updated}건
                       </Badge>
                     )}

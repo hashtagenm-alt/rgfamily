@@ -133,8 +133,8 @@ export default function Navbar() {
             <Image
               src="/assets/logo/rg_logo_3d_pink.png"
               alt="RG Logo"
-              width={50}
-              height={50}
+              width={64}
+              height={64}
               priority
               style={{ objectFit: "contain" }}
             />

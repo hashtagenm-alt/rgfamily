@@ -150,7 +150,7 @@
 }
 
 .liveIcon {
-  color: #00d4ff;
+  color: var(--live-color);
 }
 
 .liveBadge {
@@ -214,7 +214,7 @@
 }
 
 .liveStatIcon {
-  color: #00d4ff;
+  color: var(--live-color);
 }
 
 .liveStatInfo {
@@ -251,8 +251,8 @@
 }
 
 .liveCard:hover {
-  border-color: #00d4ff;
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+  border-color: var(--live-color);
+  box-shadow: 0 0 12px var(--live-glow);
 }
 
 .liveCardHeader {

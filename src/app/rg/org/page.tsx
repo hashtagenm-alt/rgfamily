@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, Radio, Calendar, FileText, Zap } from "lucide-react";
+import { ArrowLeft, Users, Radio, Calendar, FileText } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useOrganization } from "@/lib/hooks";
 import {
@@ -44,75 +43,54 @@ export default function OrganizationPage() {
 
   return (
       <div className={`${styles.container} ${activeUnit === 'crew' ? styles.crewTheme : styles.excelTheme}`}>
-        {/* Navigation Bar - Reference Style with Centered Title */}
+        {/* Minimal Navigation */}
         <nav className={styles.pageNav}>
-        <Link href="/" className={styles.backBtn}>
-          <ArrowLeft size={18} />
-          <span>홈</span>
-        </Link>
-        <div className={styles.navTitle}>
-          <Zap size={16} />
-          <span>RG INFO</span>
-        </div>
-        <div className={styles.navTabs}>
-          <Link
-            href="/rg/org"
-            className={`${styles.navTab} ${styles.active}`}
-          >
-            <Users size={16} />
-            <span>조직도</span>
+          <Link href="/" className={styles.backBtn}>
+            <ArrowLeft size={18} />
+            <span>홈</span>
           </Link>
-          <Link href="/rg/live" className={styles.navTab}>
-            <Radio size={16} />
-            <span>LIVE</span>
-          </Link>
-          <Link href="/rg/sig" className={styles.navTab}>
-            <FileText size={16} />
-            <span>시그</span>
-          </Link>
-          <Link href="/rg/history" className={styles.navTab}>
-            <Calendar size={16} />
-            <span>연혁</span>
-          </Link>
-        </div>
-      </nav>
-
-      {/* Logo & Header - Simplified (RG FAMILY 강조) */}
-      <header className={styles.header}>
-        <div className={styles.logoSection}>
-          <div className={styles.logoCircle}>
-            <Image
-              src="/assets/logo/rg_logo_3d_pink.png"
-              alt="RG"
-              width={60}
-              height={60}
-              style={{ objectFit: "contain" }}
-              priority
-            />
+          <div className={styles.navTabs}>
+            <Link
+              href="/rg/org"
+              className={`${styles.navTab} ${styles.active}`}
+            >
+              <Users size={16} />
+              <span>조직도</span>
+            </Link>
+            <Link href="/rg/live" className={styles.navTab}>
+              <Radio size={16} />
+              <span>LIVE</span>
+            </Link>
+            <Link href="/rg/sig" className={styles.navTab}>
+              <FileText size={16} />
+              <span>시그</span>
+            </Link>
+            <Link href="/rg/history" className={styles.navTab}>
+              <Calendar size={16} />
+              <span>연혁</span>
+            </Link>
           </div>
-          <h1 className={styles.logoTitle}>RG FAMILY</h1>
-        </div>
-      </header>
+        </nav>
 
-      {/* Unit Toggle */}
-      <div className={styles.toggleWrapper}>
-        <button
-          className={`${styles.toggleBtn} ${
-            activeUnit === "excel" ? styles.active : ""
-          }`}
-          onClick={() => setActiveUnit("excel")}
-        >
-          EXCEL UNIT
-        </button>
-        <button
-          className={`${styles.toggleBtn} ${
-            activeUnit === "crew" ? styles.active : ""
-          }`}
-          onClick={() => setActiveUnit("crew")}
-        >
-          CREW UNIT
-        </button>
-      </div>
+        {/* Unit Toggle - 프리미엄 탭 스타일 */}
+        <div className={styles.unitHeader}>
+          <div className={styles.unitToggle}>
+            <button
+              className={`${styles.unitTab} ${activeUnit === "excel" ? styles.activeExcel : ""}`}
+              onClick={() => setActiveUnit("excel")}
+            >
+              <span className={styles.unitName}>EXCEL UNIT</span>
+              <span className={styles.unitCount}>{getByUnit("excel").length}명</span>
+            </button>
+            <button
+              className={`${styles.unitTab} ${activeUnit === "crew" ? styles.activeCrew : ""}`}
+              onClick={() => setActiveUnit("crew")}
+            >
+              <span className={styles.unitName}>CREW UNIT</span>
+              <span className={styles.unitCount}>{getByUnit("crew").length}명</span>
+            </button>
+          </div>
+        </div>
 
       {isLoading ? (
         <div className={styles.loading}>

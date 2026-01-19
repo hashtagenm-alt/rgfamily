@@ -9,11 +9,11 @@ export const metadata = {
 };
 
 const EVENT_TYPES = [
-  { label: "방송", color: "#22c55e" }, // Green (방송)
-  { label: "콜라보", color: "#3b82f6" }, // Blue (콜라보)
-  { label: "이벤트", color: "#f59e0b" }, // Amber (이벤트)
-  { label: "공지", color: "#a855f7" }, // Purple (공지)
-  { label: "휴방", color: "#6b7280" }, // Gray (휴방)
+  { label: "방송", color: "#7fb28a" },
+  { label: "콜라보", color: "#7aa2d8" },
+  { label: "이벤트", color: "#d1a36c" },
+  { label: "공지", color: "#c2a77a" },
+  { label: "휴방", color: "#94a3b8" },
 ];
 
 export default function SchedulePage() {
