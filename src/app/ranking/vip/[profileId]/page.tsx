@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use, useCallback } from 'react'
+import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -11,37 +11,16 @@ import {
 } from 'lucide-react'
 import Footer from '@/components/Footer'
 import { BjThankYouSection } from '@/components/vip'
-import { useSupabaseContext, useAuthContext } from '@/lib/context'
-import { useVipStatus } from '@/lib/hooks'
-import { withRetry } from '@/lib/utils/fetch-with-retry'
+import { useAuthContext } from '@/lib/context'
+import { useVipStatus, useVipProfileData } from '@/lib/hooks'
 import styles from './page.module.css'
-
-interface VipRewardData {
-  id: number
-  profileId: string
-  nickname: string
-  rank: number
-  personalMessage: string | null
-  dedicationVideoUrl: string | null
-  seasonName: string
-  totalDonation: number
-  images: {
-    id: number
-    imageUrl: string
-    title: string
-    orderIndex: number
-  }[]
-}
 
 export default function VipProfilePage({ params }: { params: Promise<{ profileId: string }> }) {
   const { profileId } = use(params)
-  const supabase = useSupabaseContext()
   const { user, profile } = useAuthContext()
   const { isVip, isLoading: vipLoading } = useVipStatus()
+  const { data: vipData, isLoading: dataLoading, error } = useVipProfileData(profileId)
 
-  const [vipData, setVipData] = useState<VipRewardData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showGate, setShowGate] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
 
@@ -50,6 +29,8 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   const isOwner = user?.id === profileId
   const hasAccess = isVip || isOwner || isAdmin
 
+  const isLoading = vipLoading || dataLoading
+
   // 2.5초 후 자동으로 게이트 열림
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,89 +38,6 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
     }, 2500)
     return () => clearTimeout(timer)
   }, [])
-
-  const fetchVipData = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // VIP 보상 데이터 조회
-      const { data: reward, error: rewardError } = await withRetry(async () =>
-        await supabase
-          .from('vip_rewards')
-          .select(`
-            id,
-            profile_id,
-            rank,
-            personal_message,
-            dedication_video_url,
-            season_id,
-            profiles:profile_id (nickname, total_donation),
-            seasons:season_id (name)
-          `)
-          .eq('profile_id', profileId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-      )
-
-      if (rewardError) {
-        if (rewardError.code === 'PGRST116') {
-          setError('등록된 VIP 보상 정보가 없습니다.')
-        } else {
-          throw rewardError
-        }
-        setIsLoading(false)
-        return
-      }
-
-      // VIP 이미지 조회
-      const { data: images } = await withRetry(async () =>
-        await supabase
-          .from('vip_images')
-          .select('id, image_url, title, order_index')
-          .eq('reward_id', reward.id)
-          .order('order_index', { ascending: true })
-      )
-
-      // Supabase returns joined data - handle both array and object cases
-      const profileData = reward.profiles
-      const profile = Array.isArray(profileData)
-        ? profileData[0] as { nickname: string; total_donation: number } | undefined
-        : profileData as { nickname: string; total_donation: number } | null
-
-      const seasonData = reward.seasons
-      const season = Array.isArray(seasonData)
-        ? seasonData[0] as { name: string } | undefined
-        : seasonData as { name: string } | null
-
-      setVipData({
-        id: reward.id,
-        profileId: reward.profile_id,
-        nickname: profile?.nickname || '알 수 없음',
-        rank: reward.rank,
-        personalMessage: reward.personal_message,
-        dedicationVideoUrl: reward.dedication_video_url,
-        seasonName: season?.name || '',
-        totalDonation: profile?.total_donation || 0,
-        images: (images || []).map((img) => ({
-          id: img.id,
-          imageUrl: img.image_url,
-          title: img.title || '',
-          orderIndex: img.order_index,
-        })),
-      })
-    } catch (err) {
-      console.error('VIP 데이터 로드 실패:', err)
-      setError('VIP 정보를 불러오는 데 실패했습니다.')
-    }
-
-    setIsLoading(false)
-  }, [supabase, profileId])
-
-  useEffect(() => {
-    fetchVipData()
-  }, [fetchVipData])
 
   // 모달 네비게이션
   const handlePrevImage = (e: React.MouseEvent) => {
@@ -173,7 +71,7 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   }, [selectedImageIndex, vipData])
 
   // 로딩 중
-  if (isLoading || vipLoading) {
+  if (isLoading) {
     return (
       <div className={styles.main}>
         <div className={styles.loading}>
