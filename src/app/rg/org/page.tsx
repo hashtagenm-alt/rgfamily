@@ -41,56 +41,69 @@ export default function OrganizationPage() {
   // 일반 멤버
   const regularMembers = grouped.members;
 
-  return (
-      <div className={`${styles.container} ${activeUnit === 'crew' ? styles.crewTheme : styles.excelTheme}`}>
-        {/* Minimal Navigation */}
-        <nav className={styles.pageNav}>
-          <Link href="/" className={styles.backBtn}>
-            <ArrowLeft size={18} />
-            <span>홈</span>
-          </Link>
-          <div className={styles.navTabs}>
-            <Link
-              href="/rg/org"
-              className={`${styles.navTab} ${styles.active}`}
-            >
-              <Users size={16} />
-              <span>조직도</span>
-            </Link>
-            <Link href="/rg/live" className={styles.navTab}>
-              <Radio size={16} />
-              <span>LIVE</span>
-            </Link>
-            <Link href="/rg/sig" className={styles.navTab}>
-              <FileText size={16} />
-              <span>시그</span>
-            </Link>
-            <Link href="/rg/history" className={styles.navTab}>
-              <Calendar size={16} />
-              <span>연혁</span>
-            </Link>
-          </div>
-        </nav>
+  // 섹션 타이틀
+  const getLeaderTitle = () => {
+    if (grouped.leaders.length > 0) return "대표";
+    if (grouped.directors.length > 0) return "부장";
+    return "팀장";
+  };
 
-        {/* Unit Toggle - 프리미엄 탭 스타일 */}
-        <div className={styles.unitHeader}>
-          <div className={styles.unitToggle}>
-            <button
-              className={`${styles.unitTab} ${activeUnit === "excel" ? styles.activeExcel : ""}`}
-              onClick={() => setActiveUnit("excel")}
-            >
-              <span className={styles.unitName}>EXCEL UNIT</span>
-              <span className={styles.unitCount}>{getByUnit("excel").length}명</span>
-            </button>
-            <button
-              className={`${styles.unitTab} ${activeUnit === "crew" ? styles.activeCrew : ""}`}
-              onClick={() => setActiveUnit("crew")}
-            >
-              <span className={styles.unitName}>CREW UNIT</span>
-              <span className={styles.unitCount}>{getByUnit("crew").length}명</span>
-            </button>
-          </div>
+  return (
+    <div className={styles.container}>
+      {/* Minimal Navigation */}
+      <nav className={styles.pageNav}>
+        <Link href="/" className={styles.backBtn}>
+          <ArrowLeft size={18} />
+          <span>홈</span>
+        </Link>
+        <div className={styles.navTabs}>
+          <Link
+            href="/rg/org"
+            className={`${styles.navTab} ${styles.active}`}
+          >
+            <Users size={16} />
+            <span>조직도</span>
+          </Link>
+          <Link href="/rg/live" className={styles.navTab}>
+            <Radio size={16} />
+            <span>LIVE</span>
+          </Link>
+          <Link href="/rg/sig" className={styles.navTab}>
+            <FileText size={16} />
+            <span>시그</span>
+          </Link>
+          <Link href="/rg/history" className={styles.navTab}>
+            <Calendar size={16} />
+            <span>연혁</span>
+          </Link>
         </div>
+      </nav>
+
+      {/* Page Header */}
+      <header className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>조직도</h1>
+        <p className={styles.pageDesc}>RG Family 구성원을 소개합니다</p>
+      </header>
+
+      {/* Unit Toggle - Clean Tab Style */}
+      <div className={styles.unitHeader}>
+        <div className={styles.unitToggle}>
+          <button
+            className={`${styles.unitTab} ${activeUnit === "excel" ? styles.active : ""}`}
+            onClick={() => setActiveUnit("excel")}
+          >
+            <span className={styles.unitName}>EXCEL UNIT</span>
+            <span className={styles.unitCount}>{getByUnit("excel").length}명</span>
+          </button>
+          <button
+            className={`${styles.unitTab} ${activeUnit === "crew" ? styles.active : ""}`}
+            onClick={() => setActiveUnit("crew")}
+          >
+            <span className={styles.unitName}>CREW UNIT</span>
+            <span className={styles.unitCount}>{getByUnit("crew").length}명</span>
+          </button>
+        </div>
+      </div>
 
       {isLoading ? (
         <div className={styles.loading}>
@@ -101,116 +114,88 @@ export default function OrganizationPage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeUnit}
-            className={styles.orgChart}
-            initial={{ opacity: 0, y: 20 }}
+            className={styles.content}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
           >
-            {/* Level 0: Top Leaders (대표/부장) */}
+            {/* Section: Leaders */}
             {topLeaders.length > 0 && (
-              <>
-                <div className={styles.level} data-level="0">
-                  <div className={styles.levelMembers}>
-                    {topLeaders.map((member) => (
+              <section className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>{getLeaderTitle()}</h2>
+                  <span className={styles.sectionCount}>{topLeaders.length}명</span>
+                </div>
+                <div className={`${styles.grid} ${styles.gridLeaders}`}>
+                  {topLeaders.map((member, index) => (
+                    <motion.div
+                      key={member.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
                       <MemberCard
-                        key={member.id}
                         member={member}
                         size="large"
                         onClick={() => setSelectedMember(member)}
                       />
-                    ))}
-                  </div>
+                    </motion.div>
+                  ))}
                 </div>
-
-                {/* Connector to Level 1 */}
-                {(middleManagers.length > 0 || regularMembers.length > 0) && (
-                  <div className={styles.connector}>
-                    <div className={styles.verticalLine} />
-                    {middleManagers.length > 1 && (
-                      <>
-                        <div className={styles.horizontalLine} />
-                        <div className={styles.branchLines}>
-                          {middleManagers.map((_, i) => (
-                            <div key={i} className={styles.branchLine} />
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </>
+              </section>
             )}
 
-            {/* Level 1: Middle Managers (팀장) */}
+            {/* Section: Managers */}
             {middleManagers.length > 0 && (
-              <>
-                <div className={styles.level} data-level="1">
-                  <div className={styles.levelMembers}>
-                    {middleManagers.map((member) => (
+              <section className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>팀장</h2>
+                  <span className={styles.sectionCount}>{middleManagers.length}명</span>
+                </div>
+                <div className={`${styles.grid} ${styles.gridManagers}`}>
+                  {middleManagers.map((member, index) => (
+                    <motion.div
+                      key={member.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                    >
                       <MemberCard
-                        key={member.id}
                         member={member}
                         size="medium"
                         onClick={() => setSelectedMember(member)}
                       />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Connector to Level 2 (Members) */}
-                {regularMembers.length > 0 && (
-                  <div className={styles.connector}>
-                    <div className={styles.verticalLine} />
-                    {/* Only show branching if there are multiple members to justify spread */}
-                    {regularMembers.length > 1 && (
-                      <>
-                        <div
-                          className={styles.horizontalLine}
-                          style={{
-                            width: `${Math.min(
-                              Math.max(regularMembers.length * 80, 200),
-                              600
-                            )}px`,
-                          }}
-                        />
-                        <div
-                          className={styles.branchLines}
-                          style={{
-                            width: `${Math.min(
-                              Math.max(regularMembers.length * 80, 200),
-                              600
-                            )}px`,
-                          }}
-                        >
-                          {/* Aesthetic optimization: Limit number of branch lines to avoid clutter */}
-                          {Array.from({
-                            length: Math.min(regularMembers.length, 8),
-                          }).map((_, i) => (
-                            <div key={i} className={styles.branchLine} />
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Level 2: Regular Members (멤버/크루) */}
-            {regularMembers.length > 0 && (
-              <div className={styles.level} data-level="2">
-                <div className={styles.levelMembers}>
-                  {regularMembers.map((member) => (
-                    <MemberCard
-                      key={member.id}
-                      member={member}
-                      size="small"
-                      onClick={() => setSelectedMember(member)}
-                    />
+                    </motion.div>
                   ))}
                 </div>
-              </div>
+              </section>
+            )}
+
+            {/* Section: Members */}
+            {regularMembers.length > 0 && (
+              <section className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>멤버</h2>
+                  <span className={styles.sectionCount}>{regularMembers.length}명</span>
+                </div>
+                <div className={`${styles.grid} ${styles.gridMembers}`}>
+                  {regularMembers.map((member, index) => (
+                    <motion.div
+                      key={member.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                    >
+                      <MemberCard
+                        member={member}
+                        size="small"
+                        onClick={() => setSelectedMember(member)}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
             )}
 
             {/* Empty State */}
@@ -218,6 +203,7 @@ export default function OrganizationPage() {
               middleManagers.length === 0 &&
               regularMembers.length === 0 && (
                 <div className={styles.emptyState}>
+                  <Users size={48} />
                   <p>해당 유닛에 멤버가 없습니다.</p>
                 </div>
               )}
@@ -225,16 +211,16 @@ export default function OrganizationPage() {
         </AnimatePresence>
       )}
 
-        {/* Member Detail Modal */}
-        <AnimatePresence>
-          {selectedMember && (
-            <MemberDetailModal
-              member={selectedMember}
-              onClose={() => setSelectedMember(null)}
-            />
-          )}
-        </AnimatePresence>
-        <Footer />
-      </div>
+      {/* Member Detail Modal */}
+      <AnimatePresence>
+        {selectedMember && (
+          <MemberDetailModal
+            member={selectedMember}
+            onClose={() => setSelectedMember(null)}
+          />
+        )}
+      </AnimatePresence>
+      <Footer />
+    </div>
   );
 }
