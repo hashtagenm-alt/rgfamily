@@ -36,11 +36,11 @@ const EVENT_LABELS = {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-  broadcast: '#7fb28a',
-  collab: '#7aa2d8',
-  event: '#d1a36c',
-  notice: '#c2a77a',
-  '休': '#94a3b8',
+  broadcast: '#7f9b88',
+  collab: '#8a94a6',
+  event: '#c89b6b',
+  notice: '#b8a07a',
+  '休': '#8b94a5',
 }
 
 export default function EventList({ date, events, onClose }: EventListProps) {
@@ -96,7 +96,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex gap-4 p-5 bg-[var(--card-bg)] border border-[var(--glass-border)] rounded-xl transition-all hover:bg-[var(--surface)] hover:translate-x-1"
+                className="flex gap-4 p-5 bg-[var(--card-bg)] border border-[var(--glass-border)] rounded-xl shadow-sm transition-all hover:bg-[var(--surface)] hover:translate-x-0.5 hover:shadow-md"
                 style={{ borderLeft: `4px solid ${color}` }}
               >
                 <ThemeIcon
@@ -127,7 +127,7 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                         variant="light"
                         className={
                           event.unit === 'crew'
-                            ? 'bg-[var(--color-cyan-bg)] text-[var(--color-cyan)]'
+                            ? 'bg-[var(--overlay-medium)] text-[var(--text-secondary)]'
                             : 'bg-[var(--overlay-medium)] text-[var(--text-secondary)]'
                         }
                       >

@@ -10,13 +10,13 @@ interface CalendarGridProps {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-  broadcast: '#7fb28a',
-  collab: '#7aa2d8',
-  event: '#d1a36c',
-  notice: '#c2a77a',
-  '休': '#94a3b8',
-  excel: '#7fb28a',
-  crew: '#7aa2d8',
+  broadcast: '#7f9b88',
+  collab: '#8a94a6',
+  event: '#c89b6b',
+  notice: '#b8a07a',
+  '休': '#8b94a5',
+  excel: '#7f9b88',
+  crew: '#8a94a6',
 }
 
 export default function CalendarGrid({ days, selectedDate, onSelectDate }: CalendarGridProps) {

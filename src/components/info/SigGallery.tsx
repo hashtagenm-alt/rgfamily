@@ -39,11 +39,12 @@ const signatureCategories = [
 
 // 번호 범위 필터
 const signatureRanges = [
-  { id: 'all', label: '전체', min: 0, max: 9999 },
-  { id: '1-50', label: '1-50', min: 1, max: 50 },
-  { id: '51-100', label: '51-100', min: 51, max: 100 },
-  { id: '101-150', label: '101-150', min: 101, max: 150 },
-  { id: '151-200', label: '151-200', min: 151, max: 200 },
+  { id: 'all', label: '전체', min: 0, max: Infinity },
+  { id: '1000-1999', label: '1000~', min: 1, max: 1999 },
+  { id: '2000-4999', label: '2000~', min: 2000, max: 4999 },
+  { id: '5000-9999', label: '5000~', min: 5000, max: 9999 },
+  { id: '10000-29999', label: '1만~', min: 10000, max: 29999 },
+  { id: '30000+', label: '3만~', min: 30000, max: Infinity },
 ] as const
 
 type CategoryFilter = typeof signatureCategories[number]['id']
