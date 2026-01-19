@@ -155,9 +155,68 @@
 .optionRow {
   display: flex;
   align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
   padding: 0.75rem 1rem;
   background: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid var(--border);
+}
+
+.optionLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.visibilityOptions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.radioLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.radioLabel input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radioCustom {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  position: relative;
+  transition: all 0.15s;
+}
+
+.radioLabel input:checked + .radioCustom {
+  border-color: var(--color-primary);
+}
+
+.radioLabel input:checked + .radioCustom::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.radioText {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
 .checkboxLabel {
@@ -413,6 +472,16 @@
 
   .contentTextarea {
     min-height: 280px;
+  }
+
+  .optionRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .visibilityOptions {
+    flex-wrap: wrap;
   }
 
   .formActions {

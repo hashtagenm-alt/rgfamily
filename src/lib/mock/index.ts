@@ -91,6 +91,28 @@ export {
   type TributeSignature,
 } from './hall-of-fame'
 
+// BJ Profiles (BJ 멤버 계정)
+export {
+  BJ_MEMBERS,
+  mockBjProfiles,
+  organizationProfileMapping,
+  generateBjProfileId,
+  getOrgIdByProfileId,
+  getProfileIdByOrgId,
+  getBjProfileByEmail,
+  isBjMemberByProfileId,
+  getBjMemberInfo,
+} from './bj-profiles'
+
+// BJ Thank You Messages (BJ 감사 메시지)
+export {
+  mockBjThankYouMessages,
+  getBjMessagesByVipId,
+  getBjMessagesByBjId,
+  getBjMessageCountByVipId,
+  hasReceivedBjMessages,
+} from './bj-messages'
+
 // ============================================
 // Utility Exports
 // ============================================

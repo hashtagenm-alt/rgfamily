@@ -66,6 +66,11 @@
   gap: 0.5rem;
 }
 
+.adminRealName {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
 .authorAvatar {
   position: relative;
   width: 32px;

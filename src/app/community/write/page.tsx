@@ -195,15 +195,31 @@ function WritePostContent() {
 
             {/* 옵션 영역 */}
             <div className={styles.optionRow}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={formData.is_anonymous}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_anonymous: e.target.checked }))}
-                />
-                <span className={styles.checkboxCustom} />
-                <span className={styles.checkboxText}>익명으로 작성</span>
-              </label>
+              <span className={styles.optionLabel}>작성자 표시</span>
+              <div className={styles.visibilityOptions}>
+                <label className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="author-visibility"
+                    value="nickname"
+                    checked={!formData.is_anonymous}
+                    onChange={() => setFormData(prev => ({ ...prev, is_anonymous: false }))}
+                  />
+                  <span className={styles.radioCustom} />
+                  <span className={styles.radioText}>닉네임 공개</span>
+                </label>
+                <label className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="author-visibility"
+                    value="anonymous"
+                    checked={formData.is_anonymous}
+                    onChange={() => setFormData(prev => ({ ...prev, is_anonymous: true }))}
+                  />
+                  <span className={styles.radioCustom} />
+                  <span className={styles.radioText}>익명</span>
+                </label>
+              </div>
             </div>
 
             {/* 에러 메시지 */}

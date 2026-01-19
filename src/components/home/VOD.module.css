@@ -231,6 +231,35 @@
   text-align: center;
 }
 
+/* Placeholder */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  background: var(--surface);
+  border: 1px dashed var(--glass-border);
+  border-radius: 16px;
+  color: var(--text-muted);
+}
+
+.placeholder svg {
+  opacity: 0.5;
+}
+
+.placeholderTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.placeholderDesc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
 .thumbnailPlaceholder {
   width: 100%;
   height: 100%;

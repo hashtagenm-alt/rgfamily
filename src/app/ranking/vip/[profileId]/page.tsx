@@ -10,6 +10,7 @@ import {
   ChevronLeft, ChevronRight, X
 } from 'lucide-react'
 import Footer from '@/components/Footer'
+import { BjThankYouSection } from '@/components/vip'
 import { useSupabaseContext, useAuthContext } from '@/lib/context'
 import { useVipStatus } from '@/lib/hooks'
 import { withRetry } from '@/lib/utils/fetch-with-retry'
@@ -353,6 +354,12 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
             </div>
           </motion.section>
         )}
+
+        {/* BJ 감사 메시지 섹션 */}
+        <BjThankYouSection
+          vipProfileId={profileId}
+          vipNickname={vipData.nickname}
+        />
 
         {/* Empty State */}
         {!vipData.personalMessage && !vipData.dedicationVideoUrl && vipData.images.length === 0 && (

@@ -52,6 +52,7 @@ export const mockVipRewards: VipReward[] = rankedProfiles.slice(0, 50).map((prof
     id: rank,
     profile_id: profile.id,
     season_id: 4, // 현재 시즌
+    episode_id: null, // 직급전 회차 ID (목업에서는 null)
     rank,
     personal_message: rank <= 3 ? personalMessages[rank] : null,
     dedication_video_url: rank <= 3 ? dedicationVideos[rank] : null,

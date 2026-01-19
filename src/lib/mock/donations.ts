@@ -83,6 +83,7 @@ function generateSeasonDonations(
         donor_name: donorName,
         amount: donationAmount,
         season_id: seasonId,
+        episode_id: null,
         unit: unit as 'excel' | 'crew',
         message,
         created_at: donationDate.toISOString()

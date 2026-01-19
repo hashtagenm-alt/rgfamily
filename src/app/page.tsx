@@ -13,31 +13,39 @@ export default function Home() {
         <Navbar />
         <Hero />
         <div className={styles.content}>
-          {/* Live & Notice Section */}
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <div className={styles.sectionBadge}>LIVE NOW</div>
-              <h2 className={styles.sectionTitle}>실시간 멤버</h2>
-            </div>
-            <div className={styles.liveNoticeGrid}>
-              <LiveMembers />
-              <BroadcastNotice />
-            </div>
-          </section>
+          {/* 3-Column Layout: Left Sidebar - Main Content - Right Sidebar */}
+          <div className={styles.threeColumnLayout}>
+            {/* Left Sidebar - Live Members */}
+            <aside className={styles.leftSidebar}>
+              <div className={styles.stickyWrapper}>
+                <LiveMembers />
+              </div>
+            </aside>
 
-          {/* Shorts Section */}
-          <section className={styles.section}>
-            <Suspense fallback={<SectionSkeleton type="shorts" />}>
-              <Shorts />
-            </Suspense>
-          </section>
+            {/* Main Content - Shorts & VOD */}
+            <main className={styles.mainContent}>
+              {/* Shorts Section */}
+              <section className={styles.section}>
+                <Suspense fallback={<SectionSkeleton type="shorts" />}>
+                  <Shorts />
+                </Suspense>
+              </section>
 
-          {/* VOD Section */}
-          <section className={styles.section}>
-            <Suspense fallback={<SectionSkeleton type="vod" />}>
-              <VOD />
-            </Suspense>
-          </section>
+              {/* VOD Section */}
+              <section className={styles.section}>
+                <Suspense fallback={<SectionSkeleton type="vod" />}>
+                  <VOD />
+                </Suspense>
+              </section>
+            </main>
+
+            {/* Right Sidebar - Broadcast Notice */}
+            <aside className={styles.rightSidebar}>
+              <div className={styles.stickyWrapper}>
+                <BroadcastNotice />
+              </div>
+            </aside>
+          </div>
         </div>
 
         <Footer />

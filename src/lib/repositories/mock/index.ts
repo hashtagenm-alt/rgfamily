@@ -812,6 +812,7 @@ class MockVipRewardRepository implements IVipRewardRepository {
       id: generateMockId(),
       profile_id: data.profile_id,
       season_id: data.season_id,
+      episode_id: data.episode_id || null,
       rank: data.rank,
       personal_message: data.personal_message || null,
       dedication_video_url: data.dedication_video_url || null,

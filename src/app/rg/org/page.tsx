@@ -105,10 +105,10 @@ export default function OrganizationPage() {
 
       {/* Main Layout - 3 Column: Left Sidebar + Content + Right Sidebar */}
       <div className={`${styles.mainLayout} ${selectedMember ? styles.sidebarsOpen : ''}`}>
-        {/* Left Sidebar - Pledge */}
+        {/* Left Sidebar - Profile/Social */}
         <div className={styles.leftSidebar}>
           <AnimatePresence mode="wait">
-            <PledgeSidebar member={selectedMember} onClose={() => setSelectedMember(null)} />
+            <ProfileSidebar member={selectedMember} onClose={() => setSelectedMember(null)} />
           </AnimatePresence>
         </div>
 
@@ -225,10 +225,10 @@ export default function OrganizationPage() {
           <Footer />
         </div>
 
-        {/* Right Sidebar - Profile/Social */}
+        {/* Right Sidebar - Pledge */}
         <div className={styles.rightSidebar}>
           <AnimatePresence mode="wait">
-            <ProfileSidebar member={selectedMember} onClose={() => setSelectedMember(null)} />
+            <PledgeSidebar member={selectedMember} onClose={() => setSelectedMember(null)} />
           </AnimatePresence>
         </div>
       </div>

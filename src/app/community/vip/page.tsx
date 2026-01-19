@@ -186,7 +186,7 @@ export default function VipBoardPage() {
               <button className={`${styles.pageBtn} ${styles.active}`}>1</button>
               <button className={styles.pageBtn}>»</button>
             </div>
-            <Link href="/community/vip/write" className={`${styles.writeBtn} ${styles.vipWriteBtn}`}>
+            <Link href="/community/write?board=vip" className={`${styles.writeBtn} ${styles.vipWriteBtn}`}>
               <Crown size={14} />
               글쓰기
             </Link>
