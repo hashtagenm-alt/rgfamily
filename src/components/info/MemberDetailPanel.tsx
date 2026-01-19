@@ -151,10 +151,59 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
         </div>
       )}
 
-      {/* 2컬럼 콘텐츠: 프로필/소셜 | 공약표 */}
+      {/* 2컬럼 콘텐츠: 공약표 | 프로필/소셜 */}
       <div className={styles.mainContent}>
-        {/* 왼쪽: 프로필 + 소셜 */}
+        {/* 왼쪽: 공약표 */}
         <div className={styles.leftColumn}>
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>
+              <Target size={14} />
+              공약표
+            </h3>
+            {hasPledge ? (
+              (() => {
+                const pledgeRows = parsePledge(member.profile_info!.position_pledge!)
+                if (pledgeRows.length > 0) {
+                  return (
+                    <div className={styles.pledgeTable}>
+                      <div className={styles.pledgeTableHeader}>
+                        <span className={styles.pledgeColRank}>등수</span>
+                        <span className={styles.pledgeColTitle}>항목</span>
+                        <span className={styles.pledgeColContent}>내용</span>
+                      </div>
+                      <div className={styles.pledgeTableBody}>
+                        {pledgeRows.map((row, idx) => (
+                          <div
+                            key={idx}
+                            className={styles.pledgeRow}
+                            data-rank={row.rank}
+                          >
+                            <span className={styles.pledgeRankCell}>{getRankIcon(row.rank)}</span>
+                            <span className={styles.pledgeTitleCell}>{row.title}</span>
+                            <span className={styles.pledgeContentCell}>{row.content}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }
+                return (
+                  <div className={styles.pledgeText}>
+                    {member.profile_info!.position_pledge}
+                  </div>
+                )
+              })()
+            ) : (
+              <div className={styles.emptyState}>
+                <Target size={24} />
+                <p>등록된 공약이 없습니다</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 오른쪽: 프로필 + 소셜 */}
+        <div className={styles.rightColumn}>
           {/* 프로필 섹션 */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>
@@ -280,55 +329,6 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
               </div>
             </div>
           )}
-        </div>
-
-        {/* 오른쪽: 공약표 */}
-        <div className={styles.rightColumn}>
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>
-              <Target size={14} />
-              공약표
-            </h3>
-            {hasPledge ? (
-              (() => {
-                const pledgeRows = parsePledge(member.profile_info!.position_pledge!)
-                if (pledgeRows.length > 0) {
-                  return (
-                    <div className={styles.pledgeTable}>
-                      <div className={styles.pledgeTableHeader}>
-                        <span className={styles.pledgeColRank}>등수</span>
-                        <span className={styles.pledgeColTitle}>항목</span>
-                        <span className={styles.pledgeColContent}>내용</span>
-                      </div>
-                      <div className={styles.pledgeTableBody}>
-                        {pledgeRows.map((row, idx) => (
-                          <div
-                            key={idx}
-                            className={styles.pledgeRow}
-                            data-rank={row.rank}
-                          >
-                            <span className={styles.pledgeRankCell}>{getRankIcon(row.rank)}</span>
-                            <span className={styles.pledgeTitleCell}>{row.title}</span>
-                            <span className={styles.pledgeContentCell}>{row.content}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                }
-                return (
-                  <div className={styles.pledgeText}>
-                    {member.profile_info!.position_pledge}
-                  </div>
-                )
-              })()
-            ) : (
-              <div className={styles.emptyState}>
-                <Target size={24} />
-                <p>등록된 공약이 없습니다</p>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
