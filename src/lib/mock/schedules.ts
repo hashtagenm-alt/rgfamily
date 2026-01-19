@@ -97,8 +97,8 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 6,
-    title: '[RG FAMILY] 시즌1 / 11화 - 용병 데이',
-    description: `용병 데이
+    title: '[RG FAMILY] 시즌1 / 11화 - 용병 데이 2',
+    description: `용병 데이 2
 • 자신의 친구 비제이가 받은 하트점수의 50%를 기여도로 획득
 • 1등팀: 상금 2,000,000원
 • 2등팀: 상금 1,000,000원

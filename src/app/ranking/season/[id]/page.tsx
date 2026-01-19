@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useRanking } from '@/lib/hooks/useRanking'
 import { RankingPodium, RankingFullList } from '@/components/ranking'
-import { Calendar, ArrowLeft, Trophy, Users, Heart, TrendingUp, ChevronRight } from 'lucide-react'
+import { Calendar, ArrowLeft, Trophy, Users, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import styles from './page.module.css'
 
@@ -149,21 +149,9 @@ export default function SeasonRankingPage() {
         {seasonStats && (
           <div className={styles.statsBar}>
             <div className={styles.statItem}>
-              <Heart size={14} />
-              <span className={styles.statValue}>{formatAmountShort(seasonStats.totalAmount)}</span>
-              <span className={styles.statLabel}>총 후원</span>
-            </div>
-            <div className={styles.divider} />
-            <div className={styles.statItem}>
               <Users size={14} />
               <span className={styles.statValue}>{seasonStats.participantCount}</span>
               <span className={styles.statLabel}>참여자</span>
-            </div>
-            <div className={styles.divider} />
-            <div className={styles.statItem}>
-              <TrendingUp size={14} />
-              <span className={styles.statValue}>{formatAmountShort(seasonStats.avgAmount)}</span>
-              <span className={styles.statLabel}>평균</span>
             </div>
           </div>
         )}

@@ -66,9 +66,9 @@ export const mockTimelineEvents: TimelineEvent[] = [
   {
     id: 6,
     event_date: '2026-02-12',
-    title: '[시즌1] 11화 - 용병 데이',
+    title: '[시즌1] 11화 - 용병 데이 2',
     description: '친구 비제이와 협력! 친구가 받은 하트점수의 50%를 기여도로 획득. 1등팀 상금 200만원!',
-    image_url: getTimelinePlaceholder('EP11 용병데이', '2196F3'),
+    image_url: getTimelinePlaceholder('EP11 용병데이2', '2196F3'),
     category: 'event',
     season_id: 1,
     order_index: 6,
