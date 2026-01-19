@@ -69,57 +69,129 @@ export default function LivePage() {
         <p className={styles.pageDesc}>RG Family 멤버들의 실시간 방송 현황</p>
       </header>
 
-      <div className={styles.container}>
-        {/* Filter Bar */}
-        <div className={styles.filterBar}>
-          <div className={styles.unitFilter}>
-            {(['all', 'excel', 'crew'] as const).map((unit) => (
-              <button
-                key={unit}
-                onClick={() => setUnitFilter(unit)}
-                className={`${styles.unitButton} ${unitFilter === unit ? styles.active : ''}`}
-                data-unit={unit}
-              >
-                {unit === 'all' ? '전체' : unit === 'excel' ? '엑셀부' : '크루부'}
-              </button>
-            ))}
-          </div>
-          <div className={styles.statsBar}>
-            <div className={styles.liveIndicator}>
-              <span className={styles.liveDot} />
-              <span className={styles.liveCount}>LIVE {liveCount}</span>
+      {/* Main Layout - Content + Side Panel */}
+      <div className={`${styles.mainLayout} ${selectedMember ? styles.panelOpen : ''}`}>
+        {/* Content Area */}
+        <div className={styles.contentArea}>
+          <div className={styles.container}>
+            {/* Filter Bar */}
+            <div className={styles.filterBar}>
+              <div className={styles.unitFilter}>
+                {(['all', 'excel', 'crew'] as const).map((unit) => (
+                  <button
+                    key={unit}
+                    onClick={() => setUnitFilter(unit)}
+                    className={`${styles.unitButton} ${unitFilter === unit ? styles.active : ''}`}
+                    data-unit={unit}
+                  >
+                    {unit === 'all' ? '전체' : unit === 'excel' ? '엑셀부' : '크루부'}
+                  </button>
+                ))}
+              </div>
+              <div className={styles.statsBar}>
+                <div className={styles.liveIndicator}>
+                  <span className={styles.liveDot} />
+                  <span className={styles.liveCount}>LIVE {liveCount}</span>
+                </div>
+                <span className={styles.totalCount}>전체 {totalCount}명</span>
+              </div>
             </div>
-            <span className={styles.totalCount}>전체 {totalCount}명</span>
-          </div>
-        </div>
 
-        {/* Content */}
-        {isLoading ? (
-          <div className={styles.loading}>
-            <div className={styles.spinner} />
-            <span>멤버 목록을 불러오는 중...</span>
-          </div>
-        ) : (
-          <>
-            {/* Live Members Section */}
-            {liveMembers.length > 0 && (
-              <section className={styles.liveSection}>
-                <h2 className={styles.sectionTitle}>
-                  현재 방송 중
-                </h2>
-                <div className={styles.liveGrid}>
-                  {liveMembers.map((member, index) => (
-                    <motion.div
-                      key={member.id}
-                      className={styles.liveCard}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => setSelectedMember(member)}
-                    >
-                      <div className={styles.liveCardAvatar}>
-                        <div className={styles.avatarRing}>
-                          <div className={styles.avatarInner}>
+            {/* Content */}
+            {isLoading ? (
+              <div className={styles.loading}>
+                <div className={styles.spinner} />
+                <span>멤버 목록을 불러오는 중...</span>
+              </div>
+            ) : (
+              <>
+                {/* Live Members Section */}
+                {liveMembers.length > 0 && (
+                  <section className={styles.liveSection}>
+                    <h2 className={styles.sectionTitle}>
+                      현재 방송 중
+                    </h2>
+                    <div className={styles.liveGrid}>
+                      {liveMembers.map((member, index) => (
+                        <motion.div
+                          key={member.id}
+                          className={`${styles.liveCard} ${selectedMember?.id === member.id ? styles.selected : ''}`}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                        >
+                          <div className={styles.liveCardAvatar}>
+                            <div className={styles.avatarRing}>
+                              <div className={styles.avatarInner}>
+                                {member.image_url ? (
+                                  <Image
+                                    src={member.image_url}
+                                    alt={member.name}
+                                    fill
+                                    className={styles.avatarImage}
+                                    unoptimized
+                                  />
+                                ) : (
+                                  <div className={styles.avatarPlaceholder}>
+                                    {member.name.charAt(0)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <span className={styles.liveBadge}>LIVE</span>
+                          </div>
+                          <div className={styles.liveCardInfo}>
+                            <div className={styles.liveCardMeta}>
+                              <span className={styles.unitBadge} data-unit={member.unit}>
+                                {member.unit === 'excel' ? '엑셀부' : '크루부'}
+                              </span>
+                              <span className={styles.liveStatusText}>방송중</span>
+                            </div>
+                            <span className={styles.cardName}>{member.name}</span>
+                            <span className={styles.cardRole}>{member.role}</span>
+                          </div>
+                          {member.social_links?.pandatv && (
+                            <a
+                              href={getPandaTvUrl(member.social_links.pandatv)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.watchBtn}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Radio size={14} />
+                              시청하기
+                            </a>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Offline Members Section */}
+                <section className={styles.offlineSection}>
+                  <h2 className={styles.sectionTitle}>
+                    <Users size={18} />
+                    오프라인 멤버
+                  </h2>
+                  {offlineMembers.length === 0 && liveMembers.length === 0 ? (
+                    <div className={styles.empty}>
+                      <Radio size={48} className={styles.emptyIcon} />
+                      <p>등록된 멤버가 없습니다</p>
+                    </div>
+                  ) : (
+                    <div className={styles.grid}>
+                      {offlineMembers.map((member, index) => (
+                        <motion.div
+                          key={member.id}
+                          className={`${styles.card} ${selectedMember?.id === member.id ? styles.selected : ''}`}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                        >
+                          <div className={styles.cardAvatar}>
                             {member.image_url ? (
                               <Image
                                 src={member.image_url}
@@ -134,99 +206,35 @@ export default function LivePage() {
                               </div>
                             )}
                           </div>
-                        </div>
-                        <span className={styles.liveBadge}>LIVE</span>
-                      </div>
-                      <div className={styles.liveCardInfo}>
-                        <div className={styles.liveCardMeta}>
-                          <span className={styles.unitBadge} data-unit={member.unit}>
-                            {member.unit === 'excel' ? '엑셀부' : '크루부'}
-                          </span>
-                          <span className={styles.liveStatusText}>방송중</span>
-                        </div>
-                        <span className={styles.cardName}>{member.name}</span>
-                        <span className={styles.cardRole}>{member.role}</span>
-                      </div>
-                      {member.social_links?.pandatv && (
-                        <a
-                          href={getPandaTvUrl(member.social_links.pandatv)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.watchBtn}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Radio size={14} />
-                          시청하기
-                        </a>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Offline Members Section */}
-            <section className={styles.offlineSection}>
-              <h2 className={styles.sectionTitle}>
-                <Users size={18} />
-                오프라인 멤버
-              </h2>
-              {offlineMembers.length === 0 && liveMembers.length === 0 ? (
-                <div className={styles.empty}>
-                  <Radio size={48} className={styles.emptyIcon} />
-                  <p>등록된 멤버가 없습니다</p>
-                </div>
-              ) : (
-                <div className={styles.grid}>
-                  {offlineMembers.map((member, index) => (
-                    <motion.div
-                      key={member.id}
-                      className={styles.card}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      onClick={() => setSelectedMember(member)}
-                    >
-                      <div className={styles.cardAvatar}>
-                        {member.image_url ? (
-                          <Image
-                            src={member.image_url}
-                            alt={member.name}
-                            fill
-                            className={styles.avatarImage}
-                            unoptimized
-                          />
-                        ) : (
-                          <div className={styles.avatarPlaceholder}>
-                            {member.name.charAt(0)}
+                          <div className={styles.cardInfo}>
+                            <span className={styles.unitBadge} data-unit={member.unit}>
+                              {member.unit.toUpperCase()}
+                            </span>
+                            <span className={styles.cardName}>{member.name}</span>
+                            <span className={styles.cardRole}>{member.role}</span>
                           </div>
-                        )}
-                      </div>
-                      <div className={styles.cardInfo}>
-                        <span className={styles.unitBadge} data-unit={member.unit}>
-                          {member.unit.toUpperCase()}
-                        </span>
-                        <span className={styles.cardName}>{member.name}</span>
-                        <span className={styles.cardRole}>{member.role}</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
-      </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+          </div>
+        </div>
 
-      {/* Member Detail Modal */}
-      <AnimatePresence>
-        {selectedMember && (
-          <MemberDetailModal
-            member={selectedMember}
-            onClose={() => setSelectedMember(null)}
-          />
-        )}
-      </AnimatePresence>
+        {/* Side Panel */}
+        <div className={styles.sidePanel}>
+          <AnimatePresence>
+            {selectedMember && (
+              <MemberDetailPanel
+                member={selectedMember}
+                onClose={() => setSelectedMember(null)}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }
