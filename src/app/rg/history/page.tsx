@@ -5,7 +5,7 @@ import styles from './page.module.css'
 
 export const metadata = {
   title: '타임라인 | RG FAMILY',
-  description: 'RG FAMILY 연혁 및 히스토리',
+  description: 'RG FAMILY 시즌별 콘텐츠 일정',
 }
 
 export default function TimelinePage() {
@@ -14,8 +14,7 @@ export default function TimelinePage() {
       <Navbar />
       <div className={styles.hero}>
         <span className={styles.heroBadge}>CHRONICLES</span>
-        <h1 className={styles.title}>RG HISTORY</h1>
-        <p className={styles.subtitle}>RG FAMILY가 걸어온 길</p>
+        <h1 className={styles.title}>타임라인</h1>
       </div>
       <Timeline />
       <Footer />
