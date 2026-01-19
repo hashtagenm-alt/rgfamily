@@ -180,6 +180,7 @@ export type Database = {
           donor_name: string
           amount: number
           season_id: number
+          episode_id: number | null
           unit: 'excel' | 'crew' | null
           message: string | null
           created_at: string
@@ -190,6 +191,7 @@ export type Database = {
           donor_name: string
           amount: number
           season_id: number
+          episode_id?: number | null
           unit?: 'excel' | 'crew' | null
           message?: string | null
           created_at?: string
@@ -200,6 +202,7 @@ export type Database = {
           donor_name?: string
           amount?: number
           season_id?: number
+          episode_id?: number | null
           unit?: 'excel' | 'crew' | null
           message?: string | null
           created_at?: string
@@ -215,6 +218,12 @@ export type Database = {
             foreignKeyName: 'donations_season_id_fkey'
             columns: ['season_id']
             referencedRelation: 'seasons'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'donations_episode_id_fkey'
+            columns: ['episode_id']
+            referencedRelation: 'episodes'
             referencedColumns: ['id']
           }
         ]
@@ -299,47 +308,72 @@ export type Database = {
       signatures: {
         Row: {
           id: number
+          sig_number: number
           title: string
           description: string | null
-          unit: 'excel' | 'crew'
-          member_name: string
-          media_type: 'video' | 'image' | 'gif'
-          media_url: string
           thumbnail_url: string | null
-          tags: string[] | null
-          view_count: number
-          is_featured: boolean
+          unit: 'excel' | 'crew'
+          is_group: boolean
           created_at: string
         }
         Insert: {
           id?: number
+          sig_number: number
           title: string
           description?: string | null
-          unit: 'excel' | 'crew'
-          member_name: string
-          media_type: 'video' | 'image' | 'gif'
-          media_url: string
           thumbnail_url?: string | null
-          tags?: string[] | null
-          view_count?: number
-          is_featured?: boolean
+          unit: 'excel' | 'crew'
+          is_group?: boolean
           created_at?: string
         }
         Update: {
           id?: number
+          sig_number?: number
           title?: string
           description?: string | null
-          unit?: 'excel' | 'crew'
-          member_name?: string
-          media_type?: 'video' | 'image' | 'gif'
-          media_url?: string
           thumbnail_url?: string | null
-          tags?: string[] | null
-          view_count?: number
-          is_featured?: boolean
+          unit?: 'excel' | 'crew'
+          is_group?: boolean
           created_at?: string
         }
         Relationships: []
+      }
+      signature_videos: {
+        Row: {
+          id: number
+          signature_id: number
+          member_id: number
+          video_url: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          signature_id: number
+          member_id: number
+          video_url: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          signature_id?: number
+          member_id?: number
+          video_url?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'signature_videos_signature_id_fkey'
+            columns: ['signature_id']
+            referencedRelation: 'signatures'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'signature_videos_member_id_fkey'
+            columns: ['member_id']
+            referencedRelation: 'organization'
+            referencedColumns: ['id']
+          }
+        ]
       }
       schedules: {
         Row: {
@@ -762,6 +796,14 @@ export type Database = {
         Args: { p_donor_id: string; p_amount: number }
         Returns: void
       }
+      increment_comment_count: {
+        Args: { p_post_id: number }
+        Returns: void
+      }
+      decrement_comment_count: {
+        Args: { p_post_id: number }
+        Returns: void
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -785,6 +827,18 @@ export type Database = {
       get_user_rank_active_season: {
         Args: { p_user_id: string }
         Returns: { rank: number; total_amount: number; season_id: number }[]
+      }
+      get_episode_rankings: {
+        Args: { p_episode_id: number; p_limit?: number }
+        Returns: { rank: number; donor_id: string | null; donor_name: string; total_amount: number }[]
+      }
+      is_vip_for_episode: {
+        Args: { p_user_id: string; p_episode_id: number }
+        Returns: boolean
+      }
+      is_vip_for_rank_battles: {
+        Args: { p_user_id: string; p_season_id?: number | null }
+        Returns: boolean
       }
     }
     Enums: {
@@ -810,6 +864,7 @@ export type Donation = Tables<'donations'>
 export type VipReward = Tables<'vip_rewards'>
 export type VipImage = Tables<'vip_images'>
 export type Signature = Tables<'signatures'>
+export type SignatureVideo = Tables<'signature_videos'>
 export type Schedule = Tables<'schedules'>
 export type TimelineEvent = Tables<'timeline_events'>
 export type Notice = Tables<'notices'>
