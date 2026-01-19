@@ -1,7 +1,8 @@
-/* PageLayout - Full Width Layout */
+/* PageLayout - Side Banner Layout */
 
 .wrapper {
-  display: block;
+  display: grid;
+  grid-template-columns: 180px 1fr 180px;
   min-height: 100vh;
   background: var(--background);
 }
@@ -11,7 +12,96 @@
 }
 
 /* Main Content Area */
+.main {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .mainFull {
   width: 100%;
   max-width: 100%;
+}
+
+/* Sidebar Banner Areas */
+.sidebarLeft,
+.sidebarRight {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-deepest);
+  border-color: var(--card-border);
+  overflow-y: auto;
+}
+
+.sidebarLeft {
+  border-right: 1px solid var(--card-border);
+}
+
+.sidebarRight {
+  border-left: 1px solid var(--card-border);
+}
+
+/* Scrollbar for sidebars */
+.sidebarLeft::-webkit-scrollbar,
+.sidebarRight::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebarLeft::-webkit-scrollbar-thumb,
+.sidebarRight::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 2px;
+}
+
+/* =======================================
+   Responsive
+   ======================================= */
+
+/* Large Desktop */
+@media (min-width: 1440px) {
+  .wrapper {
+    grid-template-columns: 200px 1fr 200px;
+  }
+}
+
+/* Desktop */
+@media (max-width: 1280px) {
+  .wrapper {
+    grid-template-columns: 160px 1fr 160px;
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .wrapper {
+    grid-template-columns: 140px 1fr 140px;
+  }
+}
+
+/* Small Tablet - Hide banners */
+@media (max-width: 900px) {
+  .wrapper {
+    display: block;
+  }
+
+  .sidebarLeft,
+  .sidebarRight {
+    display: none;
+  }
+
+  .main {
+    width: 100%;
+  }
+}
+
+/* =======================================
+   Light Mode
+   ======================================= */
+:global([data-theme="light"]) .sidebarLeft,
+:global([data-theme="light"]) .sidebarRight {
+  background: #fafafa;
+  border-color: rgba(0, 0, 0, 0.06);
 }

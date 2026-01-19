@@ -1,0 +1,154 @@
+/* SideBanner - Quick Links & Branding */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  height: 100%;
+}
+
+/* Brand Section */
+.brandSection {
+  text-align: center;
+  padding: 1.25rem 0.75rem;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+}
+
+.brandLogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.brandRG {
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-family: var(--font-display);
+  background: linear-gradient(135deg, #fd68ba 0%, #ff8ccf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.brandFamily {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.15em;
+}
+
+.brandTagline {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Quick Links */
+.quickLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.linksLabel {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+  padding-left: 0.25rem;
+}
+
+.link {
+  text-decoration: none;
+}
+
+.linkItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.linkItem:hover {
+  background: var(--surface);
+  border-color: var(--card-border-hover);
+  color: var(--text-primary);
+}
+
+.linkItem.highlight {
+  background: linear-gradient(135deg, rgba(253, 104, 186, 0.1) 0%, rgba(255, 140, 207, 0.05) 100%);
+  border-color: rgba(253, 104, 186, 0.2);
+  color: var(--text-primary);
+}
+
+.linkItem.highlight:hover {
+  border-color: rgba(253, 104, 186, 0.4);
+  background: linear-gradient(135deg, rgba(253, 104, 186, 0.15) 0%, rgba(255, 140, 207, 0.08) 100%);
+}
+
+.externalIcon {
+  margin-left: auto;
+  opacity: 0.5;
+}
+
+/* Season Badge */
+.seasonBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  margin-top: auto;
+}
+
+.seasonLabel {
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.seasonNumber {
+  font-size: 2rem;
+  font-weight: 900;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* Light Mode */
+:global([data-theme="light"]) .brandSection {
+  background: #ffffff;
+}
+
+:global([data-theme="light"]) .linkItem {
+  background: #ffffff;
+}
+
+:global([data-theme="light"]) .linkItem:hover {
+  background: #f5f5f5;
+}
+
+:global([data-theme="light"]) .seasonBadge {
+  background: #ffffff;
+}
