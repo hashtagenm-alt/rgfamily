@@ -22,9 +22,24 @@ export const mockAdminProfile: Profile = {
   updated_at: '2024-12-30T00:00:00Z',
 }
 
+// 실제 후원 랭킹 Top 10 (2026년 1월 기준)
+const realTopDonors = [
+  { name: '미키™', unit: 'excel', role: 'vip', donation: 5200000 },
+  { name: '미드굿♣️가애', unit: 'excel', role: 'vip', donation: 4850000 },
+  { name: '농심육개장라면', unit: 'excel', role: 'vip', donation: 4320000 },
+  { name: '[RG]✨린아의발굴™', unit: 'excel', role: 'vip', donation: 3980000 },
+  { name: '❥CaNnOt', unit: 'crew', role: 'vip', donation: 3650000 },
+  { name: '태린공주❤️줄여보자', unit: 'excel', role: 'vip', donation: 3420000 },
+  { name: '⭐건빵이미래쥐', unit: 'crew', role: 'vip', donation: 3180000 },
+  { name: '[RG]린아✨여행™', unit: 'excel', role: 'vip', donation: 2950000 },
+  { name: '가윤이꼬❤️털이', unit: 'excel', role: 'vip', donation: 2780000 },
+  { name: '언제나♬', unit: 'crew', role: 'vip', donation: 2580000 },
+]
+
 // 후원자 데이터 생성기
 function generateProfiles(): Profile[] {
   const donorData = [
+    ...realTopDonors,
     { name: 'gul***', unit: 'excel', role: 'vip', donation: 450000 },
     { name: '핑크하트', unit: 'excel', role: 'vip', donation: 420000 },
     { name: '별빛수호자', unit: 'crew', role: 'vip', donation: 380000 },
