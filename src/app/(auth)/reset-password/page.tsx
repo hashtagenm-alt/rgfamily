@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSupabaseContext } from "@/lib/context";
 import { useForm } from "@mantine/form";
@@ -21,6 +21,7 @@ import { IconLock, IconAlertCircle, IconCheck } from "@tabler/icons-react";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useSupabaseContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -47,14 +48,52 @@ export default function ResetPasswordPage() {
     },
   });
 
-  // 세션 유효성 확인 (리다이렉트로 접근했는지)
+  // URL에서 에러 확인 및 세션 유효성 검사
   useEffect(() => {
     const checkSession = async () => {
+      // URL query params에서 에러 확인
+      const errorParam = searchParams.get("error");
+      const errorDescription = searchParams.get("error_description");
+
+      if (errorParam) {
+        setError(errorDescription || "링크가 만료되었거나 유효하지 않습니다.");
+        setIsValidSession(false);
+        return;
+      }
+
+      // URL hash fragment에서 토큰 추출 (클라이언트 사이드)
+      if (typeof window !== "undefined") {
+        const hash = window.location.hash;
+        if (hash) {
+          const params = new URLSearchParams(hash.substring(1));
+          const accessToken = params.get("access_token");
+          const refreshToken = params.get("refresh_token");
+          const type = params.get("type");
+
+          if (accessToken && type === "recovery") {
+            // 토큰으로 세션 설정
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || "",
+            });
+
+            if (!sessionError) {
+              // URL에서 hash 제거
+              window.history.replaceState(null, "", window.location.pathname);
+              setIsValidSession(true);
+              return;
+            }
+          }
+        }
+      }
+
+      // 기존 세션 확인
       const { data: { session } } = await supabase.auth.getSession();
       setIsValidSession(!!session);
     };
+
     checkSession();
-  }, [supabase]);
+  }, [supabase, searchParams]);
 
   const handleSubmit = async (values: typeof form.values) => {
     setIsLoading(true);

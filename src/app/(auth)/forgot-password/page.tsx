@@ -42,6 +42,8 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     try {
+      // Supabase는 Site URL로 리다이렉트 후 hash fragment에 토큰을 포함
+      // reset-password 페이지에서 hash fragment를 처리하도록 설정
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         values.email,
         {
