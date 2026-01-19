@@ -17,7 +17,7 @@ const badgeVariants = cva(
         // RG Family custom variants
         excel: "border-transparent bg-zinc-700 text-zinc-100",
         crew: "border-transparent bg-zinc-600 text-zinc-200",
-        live: "border-transparent bg-[#00d4ff] text-black animate-pulse",
+        live: "border-transparent bg-[#ef4444] text-white animate-pulse",
         vip: "border-transparent bg-gradient-to-r from-[#ffd700] to-[#fdb931] text-black",
         gold: "border-[#ffd700] bg-[#ffd700]/10 text-[#ffd700]",
         silver: "border-[#c0c0c0] bg-[#c0c0c0]/10 text-[#c0c0c0]",

@@ -22,7 +22,7 @@ const buttonVariants = cva(
         pink:
           "bg-[var(--color-pink)] text-white shadow hover:bg-[var(--color-pink-light)]",
         gold: "bg-gradient-to-r from-[#ffd700] to-[#fdb931] text-black shadow hover:opacity-90",
-        live: "bg-[#00d4ff] text-black shadow hover:bg-[#00b8e6]",
+        live: "bg-[#ef4444] text-white shadow hover:bg-[#dc2626]",
       },
       size: {
         default: "h-9 px-4 py-2",
