@@ -14,8 +14,9 @@ function createMockServerProxy(): SupabaseClient<Database> {
 
   const queryBuilder = {
     select: () => queryBuilder,
-    insert: () => Promise.resolve(emptyResponse),
+    insert: () => queryBuilder,
     update: () => queryBuilder,
+    upsert: () => queryBuilder,
     delete: () => queryBuilder,
     eq: () => queryBuilder,
     neq: () => queryBuilder,

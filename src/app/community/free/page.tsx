@@ -208,7 +208,7 @@ export default function FreeBoardPage() {
             </div>
             <div className={styles.boardFooter}>
               <div />
-              <Link href="/community/free/write" className={styles.writeBtn}>
+              <Link href="/community/write?board=free" className={styles.writeBtn}>
                 <PenLine size={16} />
                 글쓰기
               </Link>
@@ -349,7 +349,7 @@ export default function FreeBoardPage() {
                 <button className={styles.pageBtn}>›</button>
                 <button className={styles.pageBtn}>»</button>
               </div>
-              <Link href="/community/free/write" className={styles.writeBtn}>
+              <Link href="/community/write?board=free" className={styles.writeBtn}>
                 <PenLine size={16} />
                 글쓰기
               </Link>
