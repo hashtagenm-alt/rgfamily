@@ -1,35 +1,38 @@
-/* Signature Card - Premium Design */
+/* Signature Card - Clean Style */
 
 .card {
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: var(--radius-xl);
+  transition: all 0.2s ease;
+  border-radius: var(--radius-lg);
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   overflow: hidden;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  border-color: var(--card-border-hover, rgba(255, 255, 255, 0.12));
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Thumbnail - Square */
+/* Thumbnail - 4:3 aspect ratio to avoid cropping */
 .thumbnail {
   position: relative;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   background: var(--surface);
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .image {
-  object-fit: cover;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  object-fit: contain;
+  background: var(--surface);
+  transition: transform 0.3s ease;
 }
 
 .card:hover .image {
-  transform: scale(1.08);
+  transform: scale(1.03);
 }
 
 /* Facade Placeholder - 초기 로딩 상태 */
@@ -39,15 +42,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--surface-elevated) 0%, var(--surface) 100%);
+  background: var(--surface);
   z-index: 1;
 }
 
 .facadeNumber {
-  font-size: 2rem;
-  font-weight: 900;
-  color: var(--text-secondary);
-  opacity: 0.5;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.4;
   font-family: var(--font-display);
 }
 
@@ -59,7 +62,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.03) 50%,
     transparent 100%
   );
   animation: shimmer 1.5s infinite;
@@ -81,7 +84,7 @@
 
 .imageLoaded {
   opacity: 1;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s ease;
 }
 
 /* Error placeholder */
@@ -91,17 +94,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--surface-elevated) 0%, var(--surface) 100%);
+  background: var(--surface);
 }
 
 .placeholderNumber {
-  font-size: 2rem;
-  font-weight: 900;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
-/* Number Badge - cnine style overlay */
+/* Number Badge */
 .numberBadge {
   position: absolute;
   bottom: 8px;
@@ -110,17 +113,16 @@
 }
 
 .number {
-  font-size: 1.5rem;
-  font-weight: 900;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: white;
   text-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(0, 0, 0, 0.3);
+    0 1px 3px rgba(0, 0, 0, 0.6),
+    0 0 10px rgba(0, 0, 0, 0.3);
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
 }
 
-/* Group Badge - 단체 시그 표시 */
+/* Group Badge */
 .groupBadge {
   position: absolute;
   top: 8px;
@@ -129,16 +131,16 @@
   align-items: center;
   gap: 3px;
   padding: 3px 8px;
-  background: var(--color-pink-bg);
-  border: 1px solid var(--color-pink-border);
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
   border-radius: var(--radius-full);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  color: var(--color-pink);
+  color: var(--color-primary);
   z-index: 5;
 }
 
-/* Play Button - cnine style (red circle, bottom right) */
+/* Play Button */
 .playButton {
   position: absolute;
   bottom: 8px;
@@ -146,29 +148,28 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--text-primary);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--background);
+  color: white;
   z-index: 10;
-  box-shadow: var(--shadow-md);
 }
 
 /* Hover Overlay */
 .overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.15);
   pointer-events: none;
 }
 
-/* Info Section - Minimal */
+/* Info Section */
 .info {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 0.25rem;
+  padding: 0.75rem;
 }
 
 .sigNumber {
@@ -190,7 +191,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .number {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 
   .playButton {
@@ -199,7 +200,7 @@
   }
 
   .info {
-    padding: 0.5rem 0.25rem;
+    padding: 0.5rem;
   }
 
   .sigNumber,
@@ -210,26 +211,51 @@
 
 @media (max-width: 480px) {
   .number {
-    font-size: 1rem;
+    font-size: 0.875rem;
   }
 
   .playButton {
     width: 20px;
     height: 20px;
   }
+
+  .info {
+    padding: 0.375rem;
+  }
+
+  .sigNumber,
+  .title {
+    font-size: 0.6875rem;
+  }
 }
 
 /* =======================================
-   Light Mode Overrides
+   Light Mode
    ======================================= */
 :global([data-theme="light"]) .card {
   background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.08);
+  border-color: #e5e5e5;
 }
 
 :global([data-theme="light"]) .card:hover {
-  border-color: rgba(0, 0, 0, 0.15);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme="light"]) .thumbnail {
+  background: #f5f5f5;
+}
+
+:global([data-theme="light"]) .image {
+  background: #f5f5f5;
+}
+
+:global([data-theme="light"]) .facadePlaceholder {
+  background: #f5f5f5;
+}
+
+:global([data-theme="light"]) .placeholder {
+  background: #f5f5f5;
 }
 
 :global([data-theme="light"]) .title {
@@ -237,22 +263,5 @@
 }
 
 :global([data-theme="light"]) .sigNumber {
-  color: #8b6914;
-}
-
-:global([data-theme="light"]) .facadePlaceholder {
-  background: linear-gradient(135deg, #f8f8f8 0%, #efefef 100%);
-}
-
-:global([data-theme="light"]) .facadePlaceholder::after {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.03) 50%,
-    transparent 100%
-  );
-}
-
-:global([data-theme="light"]) .facadeNumber {
-  color: #999;
+  color: #666;
 }

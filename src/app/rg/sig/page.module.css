@@ -1,4 +1,4 @@
-/* Signature Page - Premium Design */
+/* Signature Page - Clean Korean Style */
 
 .main {
   min-height: 100vh;
@@ -6,139 +6,135 @@
 }
 
 /* =======================================
-   Premium Hero Section
+   Navigation Bar
    ======================================= */
-.hero {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 40vh;
-  padding: var(--space-20) var(--space-6) var(--space-12);
-  text-align: center;
-  overflow: hidden;
-}
-
-/* Premium Gradient Background */
-.hero::before {
-  content: '';
-  position: absolute;
+.pageNav {
+  position: fixed;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 1000px;
-  height: 100%;
-  background: radial-gradient(
-    ellipse 60% 60% at 50% 30%,
-    rgba(212, 175, 55, 0.08) 0%,
-    transparent 60%
-  );
-  pointer-events: none;
-}
-
-.hero::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
   left: 0;
   right: 0;
-  height: 100px;
-  background: linear-gradient(to top, var(--background), transparent);
-  pointer-events: none;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-6);
+  background: var(--surface);
+  border-bottom: 1px solid var(--card-border);
 }
 
-.heroBadge {
-  display: inline-flex;
+.backBtn {
+  display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--metallic-gold-bg);
-  border: 1px solid var(--metallic-gold-border);
-  border-radius: var(--radius-full);
-  color: var(--metallic-gold);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  margin-bottom: var(--space-4);
-  position: relative;
-  z-index: 1;
-}
-
-.title {
-  position: relative;
-  z-index: 1;
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 10vw, 5rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 0.9;
-  background: linear-gradient(
-    180deg,
-    var(--text-primary) 0%,
-    var(--text-tertiary) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: var(--space-4);
-}
-
-.subtitle {
-  position: relative;
-  z-index: 1;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
-  font-weight: 400;
-  letter-spacing: 2px;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.navTabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.navTab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.navTab:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.navTab.active {
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+/* =======================================
+   Page Header
+   ======================================= */
+.pageHeader {
+  padding: calc(60px + var(--space-10)) var(--space-6) var(--space-6);
+  text-align: center;
+  border-bottom: 1px solid var(--card-border);
+  background: var(--surface);
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2);
+}
+
+.pageDesc {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0;
 }
 
 /* =======================================
    Responsive
    ======================================= */
 @media (max-width: 768px) {
-  .hero {
-    min-height: 35vh;
-    padding: var(--space-16) var(--space-4) var(--space-10);
+  .pageNav {
+    padding: var(--space-2) var(--space-4);
   }
 
-  .title {
-    font-size: clamp(2rem, 12vw, 3rem);
+  .backBtn span {
+    display: none;
   }
 
-  .subtitle {
-    font-size: var(--text-xs);
+  .navTab span {
+    display: none;
+  }
+
+  .navTab {
+    padding: var(--space-2);
+  }
+
+  .pageHeader {
+    padding: calc(56px + var(--space-8)) var(--space-4) var(--space-4);
+  }
+
+  .pageTitle {
+    font-size: var(--text-2xl);
+  }
+
+  .pageDesc {
+    font-size: var(--text-sm);
   }
 }
 
 /* =======================================
-   Light Mode Overrides
+   Light Mode
    ======================================= */
-:global([data-theme="light"]) .hero::before {
-  background: radial-gradient(
-    ellipse 60% 60% at 50% 30%,
-    rgba(184, 134, 11, 0.1) 0%,
-    transparent 60%
-  );
+:global([data-theme="light"]) .pageNav {
+  background: #ffffff;
+  border-color: #e5e5e5;
 }
 
-:global([data-theme="light"]) .heroBadge {
-  background: linear-gradient(135deg, rgba(184, 134, 11, 0.1), rgba(150, 110, 20, 0.15));
-  border-color: rgba(184, 134, 11, 0.3);
-  color: #8b6914;
-}
-
-:global([data-theme="light"]) .title {
-  background: linear-gradient(
-    180deg,
-    #1a1a1a 0%,
-    #4a4a4a 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
-:global([data-theme="light"]) .subtitle {
-  color: #666666;
+:global([data-theme="light"]) .pageHeader {
+  background: #ffffff;
+  border-color: #e5e5e5;
 }
