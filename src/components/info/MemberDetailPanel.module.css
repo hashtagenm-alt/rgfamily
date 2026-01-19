@@ -532,27 +532,216 @@
 }
 
 /* ==================== 반응형 ==================== */
+@media (max-width: 768px) {
+  .panel {
+    border-left: none;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .closeBtn {
+    width: 40px;
+    height: 40px;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .coverGradient {
+    height: 80px;
+  }
+
+  .avatarSection {
+    margin-top: 30px;
+  }
+
+  .headerInfo {
+    padding: 0 1rem;
+  }
+}
+
 @media (max-width: 480px) {
+  .header {
+    padding-bottom: 1rem;
+  }
+
+  .avatarSection {
+    margin-top: 25px;
+  }
+
   .avatar {
     width: 70px;
     height: 70px;
+    border-width: 3px;
+  }
+
+  .avatarPlaceholder {
+    font-size: 1.5rem;
+  }
+
+  .liveBadge {
+    padding: 3px 8px;
+    font-size: 0.6rem;
   }
 
   .name {
     font-size: 1.15rem;
   }
 
+  .unitBadge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .role {
+    font-size: 0.8rem;
+  }
+
   .quickProfile {
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
   }
 
-  .profileGrid {
-    grid-template-columns: 1fr;
+  .quickItem {
+    font-size: 0.65rem;
+  }
+
+  .statusBadge {
+    margin-top: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  .tabNav {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .tabBtn {
+    padding: 0.4rem;
+    font-size: 0.75rem;
+    gap: 0.25rem;
+  }
+
+  .tabBtn svg {
+    width: 14px;
+    height: 14px;
   }
 
   .tabContent {
     padding: 0.75rem;
+  }
+
+  .profileGrid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .profileCard {
+    padding: 0.6rem;
+  }
+
+  .profileIcon {
+    font-size: 1rem;
+  }
+
+  .profileLabel {
+    font-size: 0.6rem;
+  }
+
+  .profileValue {
+    font-size: 0.8rem;
+  }
+
+  .pledgeTimeline::before {
+    left: 15px;
+  }
+
+  .pledgeRank {
+    width: 30px;
+    height: 30px;
+  }
+
+  .rankIcon {
+    font-size: 0.85rem;
+  }
+
+  .pledgeContent {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .pledgeTitle {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+  }
+
+  .pledgeDesc {
+    font-size: 0.8rem;
+  }
+
+  .pledgeText {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .socialCard {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .socialName {
+    font-size: 0.85rem;
+  }
+
+  .footer {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .watchBtn {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .emptyState {
+    padding: 1.5rem;
+  }
+
+  .emptyState svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .emptyState p {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .closeBtn {
+    width: 36px;
+    height: 36px;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .name {
+    font-size: 1.05rem;
+  }
+
+  .tabBtn {
+    font-size: 0.7rem;
+  }
+
+  .tabContent {
+    padding: 0.5rem;
+  }
+
+  .profileCard {
+    padding: 0.5rem;
+    gap: 0.5rem;
   }
 }

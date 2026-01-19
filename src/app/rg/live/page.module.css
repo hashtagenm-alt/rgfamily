@@ -858,7 +858,77 @@
 }
 
 @media (max-width: 480px) {
+  .pageHeader {
+    padding: calc(52px + var(--space-6)) var(--space-3) var(--space-3);
+  }
+
+  .pageTitle {
+    font-size: var(--text-xl);
+  }
+
+  .pageDesc {
+    font-size: var(--text-xs);
+  }
+
+  .container {
+    padding: var(--space-3);
+  }
+
   .unitButton {
+    padding: var(--space-1) var(--space-2);
+    font-size: 11px;
+  }
+
+  .statsBar {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .liveIndicator {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .liveCount {
+    font-size: var(--text-xs);
+  }
+
+  .totalCount {
+    font-size: var(--text-xs);
+  }
+
+  .sectionTitle {
+    font-size: var(--text-base);
+  }
+
+  .liveSection,
+  .offlineSection {
+    padding: var(--space-3);
+  }
+
+  .liveCard {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .avatarRing {
+    width: 60px;
+    height: 60px;
+  }
+
+  .liveBadge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .cardName {
+    font-size: var(--text-xs);
+  }
+
+  .cardRole {
+    font-size: 10px;
+  }
+
+  .watchBtn {
     padding: var(--space-2) var(--space-3);
     font-size: var(--text-xs);
   }
@@ -869,17 +939,57 @@
   }
 
   .card {
-    padding: var(--space-3);
+    padding: var(--space-2);
+    gap: var(--space-2);
   }
 
   .cardAvatar {
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .unitBadge {
+    font-size: 9px;
+    padding: 1px 6px;
+  }
+}
+
+/* Extra small screens (320px) */
+@media (max-width: 360px) {
+  .pageNav {
+    padding: var(--space-2) var(--space-2);
+  }
+
+  .navTab {
+    padding: 6px;
+  }
+
+  .unitFilter {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .unitButton {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .grid {
+    gap: 6px;
+  }
+
+  .card {
+    padding: 8px;
+  }
+
+  .cardAvatar {
+    width: 44px;
+    height: 44px;
   }
 
   .avatarRing {
-    width: 64px;
-    height: 64px;
+    width: 52px;
+    height: 52px;
   }
 }
 

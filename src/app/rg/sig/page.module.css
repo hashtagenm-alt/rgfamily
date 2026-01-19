@@ -126,6 +126,30 @@
   }
 }
 
+@media (max-width: 480px) {
+  .pageHeader {
+    padding: calc(52px + var(--space-6)) var(--space-3) var(--space-3);
+  }
+
+  .pageTitle {
+    font-size: var(--text-xl);
+  }
+
+  .pageDesc {
+    font-size: var(--text-xs);
+  }
+}
+
+@media (max-width: 360px) {
+  .pageNav {
+    padding: var(--space-2) var(--space-2);
+  }
+
+  .navTab {
+    padding: 6px;
+  }
+}
+
 /* =======================================
    Light Mode
    ======================================= */
