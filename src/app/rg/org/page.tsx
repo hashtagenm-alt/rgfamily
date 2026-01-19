@@ -6,11 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Users, Radio, Calendar, FileText } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useOrganization } from "@/lib/hooks";
-import {
-  MemberCard,
-  MemberDetailPanel,
-  type OrgMember,
-} from "@/components/info";
+import { MemberCard, type OrgMember } from "@/components/info";
+import { PledgeSidebar } from "@/components/info/PledgeSidebar";
+import { ProfileSidebar } from "@/components/info/ProfileSidebar";
 import styles from "./page.module.css";
 
 type UnitType = "excel" | "crew";
@@ -105,8 +103,15 @@ export default function OrganizationPage() {
         </div>
       </div>
 
-      {/* Main Layout - Content + Side Panel */}
-      <div className={`${styles.mainLayout} ${selectedMember ? styles.panelOpen : ''}`}>
+      {/* Main Layout - 3 Column: Left Sidebar + Content + Right Sidebar */}
+      <div className={`${styles.mainLayout} ${selectedMember ? styles.sidebarsOpen : ''}`}>
+        {/* Left Sidebar - Pledge */}
+        <div className={styles.leftSidebar}>
+          <AnimatePresence mode="wait">
+            <PledgeSidebar member={selectedMember} />
+          </AnimatePresence>
+        </div>
+
         {/* Content Area */}
         <div className={styles.contentArea}>
           {isLoading ? (
@@ -220,15 +225,10 @@ export default function OrganizationPage() {
           <Footer />
         </div>
 
-        {/* Side Panel */}
-        <div className={styles.sidePanel}>
-          <AnimatePresence>
-            {selectedMember && (
-              <MemberDetailPanel
-                member={selectedMember}
-                onClose={() => setSelectedMember(null)}
-              />
-            )}
+        {/* Right Sidebar - Profile/Social */}
+        <div className={styles.rightSidebar}>
+          <AnimatePresence mode="wait">
+            <ProfileSidebar member={selectedMember} />
           </AnimatePresence>
         </div>
       </div>
