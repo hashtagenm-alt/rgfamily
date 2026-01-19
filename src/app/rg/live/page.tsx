@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useLiveRoster } from "@/lib/hooks";
-import { MemberDetailPanel } from "@/components/info/MemberDetailPanel";
+import { PledgeSidebar } from "@/components/info/PledgeSidebar";
+import { ProfileSidebar } from "@/components/info/ProfileSidebar";
 import type { OrgMember, UnitFilter } from "@/types/organization";
 import { ArrowLeft, Radio, Users, FileText, Calendar } from "lucide-react";
 import styles from "./page.module.css";
@@ -69,8 +70,15 @@ export default function LivePage() {
         <p className={styles.pageDesc}>RG Family 멤버들의 실시간 방송 현황</p>
       </header>
 
-      {/* Main Layout - Content + Side Panel */}
-      <div className={`${styles.mainLayout} ${selectedMember ? styles.panelOpen : ''}`}>
+      {/* Main Layout - 3 Column: Left Sidebar + Content + Right Sidebar */}
+      <div className={`${styles.mainLayout} ${selectedMember ? styles.sidebarsOpen : ''}`}>
+        {/* Left Sidebar - Pledge */}
+        <div className={styles.leftSidebar}>
+          <AnimatePresence mode="wait">
+            <PledgeSidebar member={selectedMember} />
+          </AnimatePresence>
+        </div>
+
         {/* Content Area */}
         <div className={styles.contentArea}>
           <div className={styles.container}>
@@ -223,15 +231,10 @@ export default function LivePage() {
           </div>
         </div>
 
-        {/* Side Panel */}
-        <div className={styles.sidePanel}>
-          <AnimatePresence>
-            {selectedMember && (
-              <MemberDetailPanel
-                member={selectedMember}
-                onClose={() => setSelectedMember(null)}
-              />
-            )}
+        {/* Right Sidebar - Profile/Social */}
+        <div className={styles.rightSidebar}>
+          <AnimatePresence mode="wait">
+            <ProfileSidebar member={selectedMember} />
           </AnimatePresence>
         </div>
       </div>

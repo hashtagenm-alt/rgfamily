@@ -94,7 +94,7 @@
 }
 
 /* =======================================
-   Main Layout - Content + Side Panel
+   Main Layout - 3 Column: Left + Content + Right
    ======================================= */
 .mainLayout {
   display: flex;
@@ -102,23 +102,37 @@
   transition: all 0.3s ease;
 }
 
+/* Left Sidebar - Pledge */
+.leftSidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--card-bg);
+  border-right: 1px solid var(--card-border);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Content Area */
 .contentArea {
   flex: 1;
   min-width: 0;
   transition: all 0.3s ease;
 }
 
-.sidePanel {
-  width: 0;
-  overflow: hidden;
+/* Right Sidebar - Profile/Social */
+.rightSidebar {
+  width: 300px;
+  flex-shrink: 0;
   background: var(--card-bg);
   border-left: 1px solid var(--card-border);
-  transition: width 0.3s ease;
-  flex-shrink: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.mainLayout.panelOpen .sidePanel {
-  width: 520px;
+/* Sidebars highlight when member selected */
+.mainLayout.sidebarsOpen .leftSidebar,
+.mainLayout.sidebarsOpen .rightSidebar {
+  box-shadow: 0 0 20px rgba(253, 104, 186, 0.1);
 }
 
 /* =======================================
@@ -754,13 +768,45 @@
 /* =======================================
    Responsive
    ======================================= */
-@media (max-width: 1024px) {
-  .mainLayout.panelOpen .sidePanel {
-    width: 420px;
+@media (max-width: 1400px) {
+  .leftSidebar {
+    width: 260px;
+  }
+
+  .rightSidebar {
+    width: 280px;
   }
 
   .grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .leftSidebar {
+    width: 240px;
+  }
+
+  .rightSidebar {
+    width: 260px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .leftSidebar {
+    width: 220px;
+  }
+
+  .rightSidebar {
+    width: 240px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -769,20 +815,9 @@
     flex-direction: column;
   }
 
-  .sidePanel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 0;
-    z-index: 200;
-    border-left: none;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
-  }
-
-  .mainLayout.panelOpen .sidePanel {
-    width: 100%;
-    max-width: 380px;
+  .leftSidebar,
+  .rightSidebar {
+    display: none;
   }
 }
 
