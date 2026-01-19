@@ -1,65 +1,40 @@
 /**
- * Mock Organization Data
- * 조직도 멤버 정보 (실제 프로덕션 데이터 기준)
+ * 조직도 프로필 업데이트 스크립트
+ * BJ 프로필 정보 및 직급 공약 업데이트
  *
- * RG Family 구조:
- * - Excel Unit: 린아(대표), 가애(대표) + 12명의 멤버
- * - Crew Unit: 현재 멤버 없음
+ * 실행: npx tsx scripts/update-org-profiles.ts
  */
 
-import type { Organization } from '@/types/database'
-import { getMemberAvatar } from './utils'
+import { config } from 'dotenv'
+import { createClient } from '@supabase/supabase-js'
 
-export const mockOrganization: Organization[] = [
-  // ========== Excel Unit 대표 ==========
+config({ path: '.env.local' })
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+)
+
+// 엑셀 데이터 기반 프로필 정보
+// 린아, 가애는 공약이 없음 (대표이므로)
+const profileUpdates = [
   {
-    id: 1,
-    unit: 'excel',
-    profile_id: null,
     name: '가애',
-    role: '대표',
-    position_order: 1,
-    parent_id: null,
-    image_url: getMemberAvatar('gaea'),
-    social_links: { pandatv: 'gaea' },
-    profile_info: null,
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
+    profile_info: null, // 공약 없음
   },
   {
-    id: 2,
-    unit: 'excel',
-    profile_id: null,
     name: '린아',
-    role: '대표',
-    position_order: 2,
-    parent_id: null,
-    image_url: getMemberAvatar('rina'),
-    social_links: { pandatv: 'rina' },
     profile_info: {
       mbti: 'ESTP',
       blood_type: 'O형',
       height: '166cm',
       weight: '51kg',
       birthday: '2002.01.25',
+      // position_pledge 없음 - 대표는 공약이 없음
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
-
-  // ========== Excel Unit 멤버 ==========
   {
-    id: 3,
-    unit: 'excel',
-    profile_id: null,
     name: '월아',
-    role: '멤버',
-    position_order: 3,
-    parent_id: 1,
-    image_url: getMemberAvatar('wola'),
-    social_links: { pandatv: 'wola' },
     profile_info: {
       mbti: 'ESTP',
       blood_type: 'O형',
@@ -76,20 +51,9 @@ export const mockOrganization: Organization[] = [
 [7,8,9등] 하녀1,2,3 ▶ 지압판 108배하며 정신차리기, 그 아래-반성하며 청소 열심히하기
 [10,11,12등] 노예장,노예,쌉노예 ▶ 작성X`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 4,
-    unit: 'excel',
-    profile_id: null,
     name: '채은',
-    role: '멤버',
-    position_order: 4,
-    parent_id: 1,
-    image_url: getMemberAvatar('chaeeun'),
-    social_links: { pandatv: 'chaeeun' },
     profile_info: {
       mbti: 'ENFP',
       blood_type: 'O형',
@@ -110,20 +74,9 @@ export const mockOrganization: Organization[] = [
 [11등] 노예 ▶ 죽을
 [12등] 쌉노예 ▶ 게요`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 5,
-    unit: 'excel',
-    profile_id: null,
     name: '가윤',
-    role: '멤버',
-    position_order: 5,
-    parent_id: 1,
-    image_url: getMemberAvatar('gayun'),
-    social_links: { pandatv: 'gayun' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'O형',
@@ -140,20 +93,9 @@ export const mockOrganization: Organization[] = [
 [10,11] 노예장 & 노예 ▶ 애완돌이랑 커플 메이드복 입고 스튜디오 청소 방송하기
 [12] 쌉노예 ▶ 돌가애 수장님한테 애완돌 선물해주기`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 6,
-    unit: 'excel',
-    profile_id: null,
     name: '설윤',
-    role: '멤버',
-    position_order: 6,
-    parent_id: 1,
-    image_url: getMemberAvatar('seolyun'),
-    social_links: { pandatv: 'seolyun' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'A형',
@@ -170,20 +112,9 @@ export const mockOrganization: Organization[] = [
 [10,11] 노예장 & 노예 ▶ 신세한탄하면서 살풀이 받으러가기..
 [12] 쌉노예 ▶ 죄송한 마음을 담아 수장님께 절 2번하기`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 7,
-    unit: 'excel',
-    profile_id: null,
     name: '한세아',
-    role: '멤버',
-    position_order: 7,
-    parent_id: 1,
-    image_url: getMemberAvatar('hansea'),
-    social_links: { pandatv: 'hansea' },
     profile_info: {
       mbti: 'INTJ',
       blood_type: 'AB형',
@@ -200,20 +131,9 @@ export const mockOrganization: Organization[] = [
 [10] 노예장 ▶ 밑직급들 데리고 소 똥 치우고 오기
 [11,12] 노예, 쌉노예 ▶ 노장투혼으로 청소나 열심히 하기`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 8,
-    unit: 'excel',
-    profile_id: null,
     name: '청아',
-    role: '멤버',
-    position_order: 8,
-    parent_id: 1,
-    image_url: getMemberAvatar('cheonga'),
-    social_links: { pandatv: 'cheonga' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'O형',
@@ -233,20 +153,9 @@ export const mockOrganization: Organization[] = [
 [11등] 노예 ▶청소 열심히 하기
 [12등] 쌉노예 ▶청소 열심히 하기`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 9,
-    unit: 'excel',
-    profile_id: null,
     name: '손밍',
-    role: '멤버',
-    position_order: 9,
-    parent_id: 1,
-    image_url: getMemberAvatar('sonming'),
-    social_links: { pandatv: 'sonming' },
     profile_info: {
       mbti: 'INTP',
       blood_type: 'O형',
@@ -264,20 +173,9 @@ export const mockOrganization: Organization[] = [
 [9등] 하녀3 ▶ 반려견과 5KM 산책야방
 [10,11,12등] 노예장,노예,쌉노예 ▶ 12시간 노방종`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 10,
-    unit: 'excel',
-    profile_id: null,
     name: '해린',
-    role: '멤버',
-    position_order: 10,
-    parent_id: 1,
-    image_url: getMemberAvatar('haerin'),
-    social_links: { pandatv: 'haerin' },
     profile_info: {
       mbti: 'ESFP',
       blood_type: 'B형',
@@ -297,20 +195,9 @@ export const mockOrganization: Organization[] = [
 [11등] 노예 ▶ 24시간 노방종 플단모으기
 [12등] 쌉노예 ▶ 오이도 바닷가 입수(일상복)`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 11,
-    unit: 'excel',
-    profile_id: null,
     name: '키키',
-    role: '멤버',
-    position_order: 11,
-    parent_id: 1,
-    image_url: getMemberAvatar('kiki'),
-    social_links: { pandatv: 'kiki' },
     profile_info: {
       mbti: 'ESTP',
       blood_type: 'AB형',
@@ -328,20 +215,9 @@ export const mockOrganization: Organization[] = [
 [9등] 하녀3 ▶ MVP 식데
 [10,11,12등] 노예장,노예,쌉노예 ▶ MVP 커데`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 12,
-    unit: 'excel',
-    profile_id: null,
     name: '한백설',
-    role: '멤버',
-    position_order: 12,
-    parent_id: 1,
-    image_url: getMemberAvatar('hanbaekseol'),
-    social_links: { pandatv: 'hanbaekseol' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'O형',
@@ -361,20 +237,9 @@ export const mockOrganization: Organization[] = [
 11등 노예 ㅡ 쌉노예 데리고 청소하기
 12등 쌉노예 ㅡ 구석가서 즙이나 쳐 짜기`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 13,
-    unit: 'excel',
-    profile_id: null,
     name: '홍서하',
-    role: '멤버',
-    position_order: 13,
-    parent_id: 1,
-    image_url: getMemberAvatar('hongseoha'),
-    social_links: { pandatv: 'hongseoha' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'B형',
@@ -391,20 +256,9 @@ export const mockOrganization: Organization[] = [
 [7,8,9등] 하녀1,2,3 ▶ 녀짓하기 온갖 심부름은 나의 몫 ,,
 [10,11,12등] 노예장, 그 밑... ▶ 최저시급이라도 벌게해주세요.`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 14,
-    unit: 'excel',
-    profile_id: null,
     name: '퀸로니',
-    role: '멤버',
-    position_order: 14,
-    parent_id: 1,
-    image_url: getMemberAvatar('queenroni'),
-    social_links: { pandatv: 'queenroni' },
     profile_info: {
       mbti: 'ENFP',
       blood_type: 'B형',
@@ -424,8 +278,57 @@ export const mockOrganization: Organization[] = [
 [11등] 노예 ▶ 여왕님 공주님 방송 중 노예역할
 [12등] 쌉노예 ▶ 귀족까지 노예역할`,
     },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
   },
 ]
+
+async function updateProfiles() {
+  console.log('🔄 조직도 프로필 업데이트 시작...')
+
+  for (const update of profileUpdates) {
+    const { data, error } = await supabase
+      .from('organization')
+      .update({ profile_info: update.profile_info })
+      .eq('name', update.name)
+      .select('name')
+
+    if (error) {
+      console.error(`❌ ${update.name} 업데이트 실패:`, error.message)
+    } else if (data && data.length > 0) {
+      console.log(`✅ ${update.name} 업데이트 완료`)
+    } else {
+      console.log(`⚠️ ${update.name} 찾을 수 없음`)
+    }
+  }
+
+  // 손밍 추가 (없는 경우)
+  const { data: sonming } = await supabase
+    .from('organization')
+    .select('id')
+    .eq('name', '손밍')
+    .single()
+
+  if (!sonming) {
+    console.log('➕ 손밍 추가 중...')
+    const { error } = await supabase.from('organization').insert({
+      unit: 'excel',
+      name: '손밍',
+      role: '멤버',
+      position_order: 9,
+      parent_id: 1,
+      social_links: { pandatv: 'sonming' },
+      profile_info: profileUpdates.find((p) => p.name === '손밍')?.profile_info,
+      is_live: false,
+      is_active: true,
+    })
+
+    if (error) {
+      console.error('❌ 손밍 추가 실패:', error.message)
+    } else {
+      console.log('✅ 손밍 추가 완료')
+    }
+  }
+
+  console.log('🎉 업데이트 완료!')
+}
+
+updateProfiles()

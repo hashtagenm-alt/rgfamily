@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Image from 'next/image'
 import {
   Radio, Youtube, Instagram, ExternalLink, X,
-  User, Target, Share2, Heart, Cake, Ruler, Droplet
+  User, Target, Heart, Cake, Ruler, Droplet
 } from 'lucide-react'
 import type { OrgMember } from './MemberCard'
 import styles from './MemberDetailPanel.module.css'
@@ -16,8 +15,6 @@ interface MemberDetailPanelProps {
   member: OrgMember | null
   onClose: () => void
 }
-
-type TabType = 'profile' | 'pledge' | 'social'
 
 const hasProfileInfo = (member: OrgMember) => {
   const info = member.profile_info
@@ -66,23 +63,11 @@ const getRankIcon = (rank: string) => {
 }
 
 export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('profile')
-
   if (!member) return null
 
   const hasPledge = !!member.profile_info?.position_pledge
   const hasSocial = member.social_links && Object.keys(member.social_links).length > 0
   const hasProfile = hasProfileInfo(member)
-
-  const availableTabs: TabType[] = ['profile']
-  if (hasPledge) availableTabs.push('pledge')
-  if (hasSocial) availableTabs.push('social')
-
-  const tabLabels: Record<TabType, { icon: React.ReactNode; label: string }> = {
-    profile: { icon: <User size={16} />, label: '프로필' },
-    pledge: { icon: <Target size={16} />, label: '공약' },
-    social: { icon: <Share2 size={16} />, label: '소셜' }
-  }
 
   return (
     <motion.div
@@ -97,11 +82,11 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
         <X size={20} />
       </button>
 
-      {/* 헤더 */}
+      {/* 컴팩트 헤더 */}
       <div className={styles.header}>
         <div className={styles.coverGradient} data-unit={member.unit} />
 
-        <div className={styles.avatarSection}>
+        <div className={styles.headerContent}>
           <div className={`${styles.avatarWrapper} ${member.is_live ? styles.isLive : ''}`}>
             {member.is_live && <span className={styles.liveBadge}>LIVE</span>}
             <div className={styles.avatar}>
@@ -112,184 +97,118 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
               )}
             </div>
           </div>
-        </div>
 
-        <div className={styles.headerInfo}>
-          <div className={styles.nameRow}>
-            <h2 className={styles.name}>{member.name}</h2>
-            <span className={styles.unitBadge} data-unit={member.unit}>
-              {member.unit === 'excel' ? 'EXCEL' : 'CREW'}
-            </span>
-          </div>
-          <span className={styles.role}>{member.role}</span>
-
-          {hasProfile && (
-            <div className={styles.quickProfile}>
-              {member.profile_info?.birthday && (
-                <span className={styles.quickItem}>
-                  <Cake size={12} />
-                  {member.profile_info.birthday}
-                </span>
-              )}
-              {member.profile_info?.height && (
-                <span className={styles.quickItem}>
-                  <Ruler size={12} />
-                  {member.profile_info.height}
-                </span>
-              )}
-              {member.profile_info?.blood_type && (
-                <span className={styles.quickItem}>
-                  <Droplet size={12} />
-                  {member.profile_info.blood_type}
-                </span>
-              )}
+          <div className={styles.headerInfo}>
+            <div className={styles.nameRow}>
+              <h2 className={styles.name}>{member.name}</h2>
+              <span className={styles.unitBadge} data-unit={member.unit}>
+                {member.unit === 'excel' ? 'EXCEL' : 'CREW'}
+              </span>
+              <span className={`${styles.statusBadge} ${member.is_live ? styles.live : ''}`}>
+                {member.is_live ? '🔴 방송 중' : '⚫ 오프라인'}
+              </span>
             </div>
-          )}
-        </div>
+            <span className={styles.role}>{member.role}</span>
 
-        <div className={`${styles.statusBadge} ${member.is_live ? styles.live : ''}`}>
-          {member.is_live ? '🔴 방송 중' : '⚫ 오프라인'}
+            {hasProfile && (
+              <div className={styles.quickProfile}>
+                {member.profile_info?.birthday && (
+                  <span className={styles.quickItem}>
+                    <Cake size={12} />
+                    {member.profile_info.birthday}
+                  </span>
+                )}
+                {member.profile_info?.height && (
+                  <span className={styles.quickItem}>
+                    <Ruler size={12} />
+                    {member.profile_info.height}
+                  </span>
+                )}
+                {member.profile_info?.blood_type && (
+                  <span className={styles.quickItem}>
+                    <Droplet size={12} />
+                    {member.profile_info.blood_type}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* 탭 네비게이션 */}
-      {availableTabs.length > 1 && (
-        <div className={styles.tabNav}>
-          {availableTabs.map((tab) => (
-            <button
-              key={tab}
-              className={`${styles.tabBtn} ${activeTab === tab ? styles.active : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tabLabels[tab].icon}
-              <span>{tabLabels[tab].label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* 탭 컨텐츠 */}
-      <div className={styles.tabContent}>
-        <AnimatePresence mode="wait">
-          {/* 프로필 탭 */}
-          {activeTab === 'profile' && (
-            <motion.div
-              key="profile"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className={styles.profileTab}
-            >
-              {hasProfile ? (
-                <div className={styles.profileGrid}>
-                  {member.profile_info?.mbti && (
-                    <div className={styles.profileCard}>
-                      <span className={styles.profileIcon}>🧠</span>
-                      <div className={styles.profileCardContent}>
-                        <span className={styles.profileLabel}>MBTI</span>
-                        <span className={styles.profileValue}>{member.profile_info.mbti}</span>
-                      </div>
+      {/* 2컬럼 콘텐츠: 프로필/소셜 | 공약표 */}
+      <div className={styles.mainContent}>
+        {/* 왼쪽: 프로필 + 소셜 */}
+        <div className={styles.leftColumn}>
+          {/* 프로필 섹션 */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>
+              <User size={14} />
+              프로필
+            </h3>
+            {hasProfile ? (
+              <div className={styles.profileGrid}>
+                {member.profile_info?.mbti && (
+                  <div className={styles.profileCard}>
+                    <span className={styles.profileIcon}>🧠</span>
+                    <div className={styles.profileCardContent}>
+                      <span className={styles.profileLabel}>MBTI</span>
+                      <span className={styles.profileValue}>{member.profile_info.mbti}</span>
                     </div>
-                  )}
-                  {member.profile_info?.blood_type && (
-                    <div className={styles.profileCard}>
-                      <span className={styles.profileIcon}>🩸</span>
-                      <div className={styles.profileCardContent}>
-                        <span className={styles.profileLabel}>혈액형</span>
-                        <span className={styles.profileValue}>{member.profile_info.blood_type}</span>
-                      </div>
-                    </div>
-                  )}
-                  {member.profile_info?.height && (
-                    <div className={styles.profileCard}>
-                      <span className={styles.profileIcon}>📏</span>
-                      <div className={styles.profileCardContent}>
-                        <span className={styles.profileLabel}>키</span>
-                        <span className={styles.profileValue}>{member.profile_info.height}</span>
-                      </div>
-                    </div>
-                  )}
-                  {member.profile_info?.weight && (
-                    <div className={styles.profileCard}>
-                      <span className={styles.profileIcon}>⚖️</span>
-                      <div className={styles.profileCardContent}>
-                        <span className={styles.profileLabel}>몸무게</span>
-                        <span className={styles.profileValue}>{member.profile_info.weight}</span>
-                      </div>
-                    </div>
-                  )}
-                  {member.profile_info?.birthday && (
-                    <div className={styles.profileCard}>
-                      <span className={styles.profileIcon}>🎂</span>
-                      <div className={styles.profileCardContent}>
-                        <span className={styles.profileLabel}>생일</span>
-                        <span className={styles.profileValue}>{member.profile_info.birthday}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className={styles.emptyState}>
-                  <User size={32} />
-                  <p>등록된 프로필 정보가 없습니다</p>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* 공약 탭 */}
-          {activeTab === 'pledge' && hasPledge && (
-            <motion.div
-              key="pledge"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className={styles.pledgeTab}
-            >
-              {(() => {
-                const pledgeRows = parsePledge(member.profile_info!.position_pledge!)
-                if (pledgeRows.length > 0) {
-                  return (
-                    <div className={styles.pledgeTimeline}>
-                      {pledgeRows.map((row, idx) => (
-                        <div
-                          key={idx}
-                          className={styles.pledgeItem}
-                          data-rank={row.rank}
-                        >
-                          <div className={styles.pledgeRank}>
-                            <span className={styles.rankIcon}>{getRankIcon(row.rank)}</span>
-                          </div>
-                          <div className={styles.pledgeContent}>
-                            <span className={styles.pledgeTitle}>{row.title}</span>
-                            <p className={styles.pledgeDesc}>{row.content}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                }
-                return (
-                  <div className={styles.pledgeText}>
-                    {member.profile_info!.position_pledge}
                   </div>
-                )
-              })()}
-            </motion.div>
-          )}
+                )}
+                {member.profile_info?.blood_type && (
+                  <div className={styles.profileCard}>
+                    <span className={styles.profileIcon}>🩸</span>
+                    <div className={styles.profileCardContent}>
+                      <span className={styles.profileLabel}>혈액형</span>
+                      <span className={styles.profileValue}>{member.profile_info.blood_type}</span>
+                    </div>
+                  </div>
+                )}
+                {member.profile_info?.height && (
+                  <div className={styles.profileCard}>
+                    <span className={styles.profileIcon}>📏</span>
+                    <div className={styles.profileCardContent}>
+                      <span className={styles.profileLabel}>키</span>
+                      <span className={styles.profileValue}>{member.profile_info.height}</span>
+                    </div>
+                  </div>
+                )}
+                {member.profile_info?.weight && (
+                  <div className={styles.profileCard}>
+                    <span className={styles.profileIcon}>⚖️</span>
+                    <div className={styles.profileCardContent}>
+                      <span className={styles.profileLabel}>몸무게</span>
+                      <span className={styles.profileValue}>{member.profile_info.weight}</span>
+                    </div>
+                  </div>
+                )}
+                {member.profile_info?.birthday && (
+                  <div className={styles.profileCard}>
+                    <span className={styles.profileIcon}>🎂</span>
+                    <div className={styles.profileCardContent}>
+                      <span className={styles.profileLabel}>생일</span>
+                      <span className={styles.profileValue}>{member.profile_info.birthday}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={styles.emptyState}>
+                <User size={24} />
+                <p>등록된 프로필 정보가 없습니다</p>
+              </div>
+            )}
+          </div>
 
-          {/* 소셜 탭 */}
-          {activeTab === 'social' && hasSocial && (
-            <motion.div
-              key="social"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className={styles.socialTab}
-            >
+          {/* 소셜 섹션 */}
+          {hasSocial && (
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>
+                <Radio size={14} />
+                소셜
+              </h3>
               <div className={styles.socialGrid}>
                 {member.social_links?.pandatv && (
                   <a
@@ -299,9 +218,9 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
                     className={styles.socialCard}
                     data-platform="pandatv"
                   >
-                    <Radio size={24} />
+                    <Radio size={18} />
                     <span className={styles.socialName}>팬더티비</span>
-                    <ExternalLink size={14} className={styles.socialArrow} />
+                    <ExternalLink size={12} className={styles.socialArrow} />
                   </a>
                 )}
                 {member.social_links?.chzzk && (
@@ -312,9 +231,9 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
                     className={styles.socialCard}
                     data-platform="chzzk"
                   >
-                    <Heart size={24} />
+                    <Heart size={18} />
                     <span className={styles.socialName}>치지직</span>
-                    <ExternalLink size={14} className={styles.socialArrow} />
+                    <ExternalLink size={12} className={styles.socialArrow} />
                   </a>
                 )}
                 {member.social_links?.youtube && (
@@ -325,9 +244,9 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
                     className={styles.socialCard}
                     data-platform="youtube"
                   >
-                    <Youtube size={24} />
+                    <Youtube size={18} />
                     <span className={styles.socialName}>유튜브</span>
-                    <ExternalLink size={14} className={styles.socialArrow} />
+                    <ExternalLink size={12} className={styles.socialArrow} />
                   </a>
                 )}
                 {member.social_links?.instagram && (
@@ -338,15 +257,64 @@ export function MemberDetailPanel({ member, onClose }: MemberDetailPanelProps) {
                     className={styles.socialCard}
                     data-platform="instagram"
                   >
-                    <Instagram size={24} />
+                    <Instagram size={18} />
                     <span className={styles.socialName}>인스타그램</span>
-                    <ExternalLink size={14} className={styles.socialArrow} />
+                    <ExternalLink size={12} className={styles.socialArrow} />
                   </a>
                 )}
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
+
+        {/* 오른쪽: 공약표 */}
+        <div className={styles.rightColumn}>
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>
+              <Target size={14} />
+              공약표
+            </h3>
+            {hasPledge ? (
+              (() => {
+                const pledgeRows = parsePledge(member.profile_info!.position_pledge!)
+                if (pledgeRows.length > 0) {
+                  return (
+                    <div className={styles.pledgeTable}>
+                      <div className={styles.pledgeTableHeader}>
+                        <span className={styles.pledgeColRank}>등수</span>
+                        <span className={styles.pledgeColTitle}>항목</span>
+                        <span className={styles.pledgeColContent}>내용</span>
+                      </div>
+                      <div className={styles.pledgeTableBody}>
+                        {pledgeRows.map((row, idx) => (
+                          <div
+                            key={idx}
+                            className={styles.pledgeRow}
+                            data-rank={row.rank}
+                          >
+                            <span className={styles.pledgeRankCell}>{getRankIcon(row.rank)}</span>
+                            <span className={styles.pledgeTitleCell}>{row.title}</span>
+                            <span className={styles.pledgeContentCell}>{row.content}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }
+                return (
+                  <div className={styles.pledgeText}>
+                    {member.profile_info!.position_pledge}
+                  </div>
+                )
+              })()
+            ) : (
+              <div className={styles.emptyState}>
+                <Target size={24} />
+                <p>등록된 공약이 없습니다</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* 하단 CTA */}

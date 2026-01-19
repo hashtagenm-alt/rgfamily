@@ -73,7 +73,7 @@
    Page Header
    ======================================= */
 .pageHeader {
-  padding: calc(60px + var(--space-10)) var(--space-6) var(--space-6);
+  padding: calc(56px + var(--space-4)) var(--space-6) var(--space-4);
   text-align: center;
   border-bottom: 1px solid var(--card-border);
   background: var(--surface);
@@ -118,7 +118,7 @@
 }
 
 .mainLayout.panelOpen .sidePanel {
-  width: 380px;
+  width: 520px;
 }
 
 /* =======================================
@@ -127,7 +127,7 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-6);
+  padding: var(--space-4);
 }
 
 /* =======================================
