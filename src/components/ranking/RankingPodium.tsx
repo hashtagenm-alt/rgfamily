@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Crown, Medal, Award } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,7 +10,6 @@ import styles from "./RankingPodium.module.css";
 interface RankingPodiumProps {
   items: RankingItem[];
 }
-
 
 export default function RankingPodium({ items }: RankingPodiumProps) {
   // Ensure we have 3 slots even if empty (for layout stability)
@@ -37,6 +35,13 @@ export default function RankingPodium({ items }: RankingPodiumProps) {
     return null;
   };
 
+  // Get animation delay class based on position
+  const getDelayClass = (index: number) => {
+    if (index === 0) return styles.delay1;
+    if (index === 1) return styles.delay2;
+    return styles.delay3;
+  };
+
   return (
     <div className={styles.container}>
       {/* Stage Platform Line */}
@@ -52,65 +57,59 @@ export default function RankingPodium({ items }: RankingPodiumProps) {
           return (
             <div
               key={`empty-${rank}`}
-              className={`${styles.podiumWrapper} ${getRankClass(rank)}`}
+              className={`${styles.podiumWrapper} ${getRankClass(rank)} ${styles.empty}`}
             >
-              <div className={styles.cube}>
-                <div className={styles.top} />
-                <div className={styles.face} />
+              <div className={styles.avatar} />
+              <div className={styles.rankBadge}>
+                {getRankIcon(rank)}
+                <span className={styles.rankNumber}>{rank}</span>
+              </div>
+              <div className={styles.nameCard}>
+                <p className={styles.name}>-</p>
               </div>
             </div>
           );
         }
 
         const Content = (
-          <motion.div
-            className={`${styles.podiumWrapper} ${getRankClass(rank)}`}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: i * 0.1 }}
+          <div
+            className={`${styles.podiumWrapper} ${getRankClass(rank)} ${styles.animate} ${getDelayClass(i)}`}
           >
-            {/* Avatar Section */}
-            <div className={styles.avatarSection}>
-              <div className={styles.avatar}>
-                {item.avatarUrl ? (
-                  <Image
-                    src={item.avatarUrl}
-                    alt={item.donorName}
-                    fill
-                    className={styles.avatarImage}
-                    unoptimized
-                  />
-                ) : (
-                  <div className={styles.initialsWrapper}>
-                    <span className={styles.initials}>
-                      {getInitials(item.donorName)}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className={styles.rankBadge}>
-                {getRankIcon(rank)}
-                <span className={styles.rankNumber}>{rank}</span>
-              </div>
+            {/* Avatar */}
+            <div className={styles.avatar}>
+              {item.avatarUrl ? (
+                <Image
+                  src={item.avatarUrl}
+                  alt={item.donorName}
+                  fill
+                  className={styles.avatarImage}
+                  unoptimized
+                />
+              ) : (
+                <div className={styles.initialsWrapper}>
+                  <span className={styles.initials}>
+                    {getInitials(item.donorName)}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* 3D Glass Cube */}
-            <div className={styles.cube}>
-              <div className={styles.top}>
-                <div className={styles.shine} />
-              </div>
-              <div className={`${styles.face} ${styles.front}`}>
-                <div className={styles.info}>
-                  <p className={styles.name} title={item.donorName}>
-                    {item.donorName}
-                  </p>
-                </div>
-              </div>
+            {/* Rank Badge - 아바타 아래 분리 */}
+            <div className={styles.rankBadge}>
+              {getRankIcon(rank)}
+              <span className={styles.rankNumber}>{rank}</span>
             </div>
-          </motion.div>
+
+            {/* Name Card */}
+            <div className={styles.nameCard}>
+              <p className={styles.name} title={item.donorName}>
+                {item.donorName}
+              </p>
+            </div>
+          </div>
         );
 
-        // Top 3만 개인 페이지 링크 (해시 URL 사용)
+        // Top 3 클릭 시 개인 tribute 페이지로 이동
         if (item.donorId) {
           return (
             <Link

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useRanking } from '@/lib/hooks/useRanking'
 import { RankingPodium, RankingFullList } from '@/components/ranking'
-import { Calendar, ArrowLeft, Trophy, Users, ChevronRight } from 'lucide-react'
+import { Calendar, ArrowLeft, Trophy, Users, ChevronRight, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import styles from './page.module.css'
 
@@ -156,21 +156,38 @@ export default function SeasonRankingPage() {
           </div>
         )}
 
-        {/* Filters */}
+        {/* Filters - Unified Style */}
         <div className={styles.filters}>
-          <div className={styles.seasonTabs}>
-            {seasons.map((season) => (
-              <button
-                key={season.id}
-                onClick={() => router.push(`/ranking/season/${season.id}`)}
-                className={`${styles.seasonTab} ${season.id === seasonId ? styles.active : ''}`}
+          <div className={styles.filterRow}>
+            {/* All-Time / Season Toggle */}
+            <div className={styles.filterGroup}>
+              <Link href="/ranking" className={styles.typeTab}>
+                All-Time
+              </Link>
+              <span className={`${styles.typeTab} ${styles.active}`}>
+                <Calendar size={12} />
+                Season
+              </span>
+            </div>
+
+            {/* Season Dropdown */}
+            <div className={styles.seasonDropdown}>
+              <select
+                value={seasonId || ''}
+                onChange={(e) => router.push(`/ranking/season/${e.target.value}`)}
+                className={styles.seasonSelect}
               >
-                {season.name}
-                {season.is_active && <span className={styles.activeDot} />}
-              </button>
-            ))}
+                {seasons.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    {season.name} {season.is_active ? '●' : ''}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className={styles.selectIcon} />
+            </div>
           </div>
 
+          {/* Unit Filter */}
           <div className={styles.unitFilter}>
             {(['all', 'excel', 'crew'] as const).map((unit) => (
               <button

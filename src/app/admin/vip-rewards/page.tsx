@@ -1,13 +1,22 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Crown, Plus, X, Save } from 'lucide-react'
+import { Crown, Plus, X, Save, Upload, Trash2, GripVertical, Image as ImageIcon } from 'lucide-react'
+import Image from 'next/image'
 import { DataTable, Column } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
 import type { JoinedProfile, JoinedSeason } from '@/types/common'
 import styles from '../shared.module.css'
+
+interface VipImage {
+  id: number
+  rewardId: number
+  imageUrl: string
+  title: string
+  orderIndex: number
+}
 
 interface VipReward {
   id: number
@@ -19,6 +28,7 @@ interface VipReward {
   personalMessage: string
   dedicationVideoUrl: string
   createdAt: string
+  images?: VipImage[]
 }
 
 interface Season {
@@ -36,6 +46,9 @@ export default function VipRewardsPage() {
   const alertHandler = useAlert()
   const [seasons, setSeasons] = useState<Season[]>([])
   const [profiles, setProfiles] = useState<Profile[]>([])
+  const [galleryImages, setGalleryImages] = useState<VipImage[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch related data
   const fetchRelatedData = useCallback(async () => {
@@ -50,6 +63,81 @@ export default function VipRewardsPage() {
   useEffect(() => {
     fetchRelatedData()
   }, [fetchRelatedData])
+
+  // Fetch gallery images for a reward
+  const fetchGalleryImages = useCallback(async (rewardId: number) => {
+    const { data } = await supabase
+      .from('vip_images')
+      .select('id, reward_id, image_url, title, order_index')
+      .eq('reward_id', rewardId)
+      .order('order_index', { ascending: true })
+
+    setGalleryImages(
+      (data || []).map((img) => ({
+        id: img.id,
+        rewardId: img.reward_id,
+        imageUrl: img.image_url,
+        title: img.title || '',
+        orderIndex: img.order_index,
+      }))
+    )
+  }, [supabase])
+
+  // Upload image
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, rewardId: number) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'vip-gallery')
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || '업로드 실패')
+      }
+
+      const { url } = await res.json()
+
+      // Save to database
+      const { error } = await supabase.from('vip_images').insert({
+        reward_id: rewardId,
+        image_url: url,
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        order_index: galleryImages.length,
+      })
+
+      if (error) throw error
+
+      alertHandler.showSuccess('이미지가 업로드되었습니다')
+      fetchGalleryImages(rewardId)
+    } catch (err) {
+      alertHandler.showError(err instanceof Error ? err.message : '업로드 실패')
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  // Delete image
+  const handleImageDelete = async (imageId: number, rewardId: number) => {
+    if (!confirm('이미지를 삭제하시겠습니까?')) return
+
+    const { error } = await supabase.from('vip_images').delete().eq('id', imageId)
+    if (error) {
+      alertHandler.showError('삭제 실패')
+      return
+    }
+    alertHandler.showSuccess('이미지가 삭제되었습니다')
+    fetchGalleryImages(rewardId)
+  }
 
   const {
     items: rewards,
@@ -104,7 +192,14 @@ export default function VipRewardsPage() {
 
   const openAddModal = () => {
     baseOpenAddModal()
+    setGalleryImages([])
     setEditingReward((prev) => prev ? { ...prev, seasonId: seasons[0]?.id || 0 } : null)
+  }
+
+  // Override openEditModal to fetch images
+  const handleOpenEditModal = (reward: VipReward) => {
+    openEditModal(reward)
+    fetchGalleryImages(reward.id)
   }
 
   const handleView = (reward: VipReward) => {
@@ -184,7 +279,7 @@ export default function VipRewardsPage() {
         data={rewards}
         columns={columns}
         onView={handleView}
-        onEdit={openEditModal}
+        onEdit={handleOpenEditModal}
         onDelete={handleDelete}
         searchPlaceholder="VIP 이름으로 검색..."
         isLoading={isLoading}
@@ -296,6 +391,57 @@ export default function VipRewardsPage() {
                     rows={5}
                   />
                 </div>
+
+                {/* Gallery Images Section */}
+                {!isNew && editingReward.id != null && (
+                  <div className={styles.formGroup}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ImageIcon size={16} />
+                      갤러리 이미지
+                    </label>
+                    <div className={styles.galleryGrid}>
+                      {galleryImages.map((img) => (
+                        <div key={img.id} className={styles.galleryItem}>
+                          <Image
+                            src={img.imageUrl}
+                            alt={img.title}
+                            width={120}
+                            height={120}
+                            className={styles.galleryImage}
+                            unoptimized
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleImageDelete(img.id, editingReward.id as number)}
+                            className={styles.galleryDeleteBtn}
+                            title="삭제"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <label className={styles.galleryUploadBtn}>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, editingReward.id as number)}
+                          style={{ display: 'none' }}
+                          disabled={isUploading}
+                        />
+                        {isUploading ? (
+                          <div className={styles.spinner} style={{ width: 24, height: 24 }} />
+                        ) : (
+                          <>
+                            <Upload size={24} />
+                            <span>이미지 추가</span>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                    <p className={styles.hint}>최대 10MB, JPG/PNG/GIF 지원</p>
+                  </div>
+                )}
               </div>
 
               <div className={styles.modalFooter}>

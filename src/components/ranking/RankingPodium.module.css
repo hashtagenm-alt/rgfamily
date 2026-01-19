@@ -42,6 +42,35 @@
   z-index: 1;
 }
 
+/* CSS Animation (replaces framer-motion) */
+.podiumWrapper.animate {
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.podiumWrapper.delay1 {
+  animation-delay: 0s;
+}
+
+.podiumWrapper.delay2 {
+  animation-delay: 0.1s;
+}
+
+.podiumWrapper.delay3 {
+  animation-delay: 0.2s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .podiumWrapper:hover {
   transform: translateY(-8px);
   z-index: 10;
@@ -68,7 +97,7 @@
    ======================================= */
 .avatarSection {
   position: relative;
-  margin-bottom: -24px;
+  margin-bottom: var(--space-3);
   z-index: 20;
 }
 
@@ -187,10 +216,6 @@
    Rank Badge - 순위 표시
    ======================================= */
 .rankBadge {
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -200,7 +225,7 @@
   background: var(--surface);
   border: 1px solid var(--card-border);
   box-shadow: var(--shadow-sm);
-  z-index: 2;
+  margin-top: var(--space-2);
 }
 
 .rankBadge svg {
@@ -246,108 +271,62 @@
 }
 
 /* =======================================
-   Card Style - Clean & Minimal
+   Name Card - Simple & Clean
    ======================================= */
-.cube {
-  position: relative;
-  width: 150px;
-  border-radius: var(--radius-lg);
-  overflow: visible;
-}
-
-.rank1 .cube {
-  width: 180px;
-}
-
-.rank2 .cube,
-.rank3 .cube {
-  width: 160px;
-}
-
-/* Top Edge - Accent Bar */
-.top {
-  position: relative;
-  height: 3px;
+.nameCard {
   width: 100%;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  background: var(--card-border);
-}
-
-/* 1위 - Gold Bar */
-.rank1 .top {
-  height: 4px;
-  background: var(--metallic-gold);
-}
-
-/* 2위 - Silver Bar */
-.rank2 .top {
-  background: var(--metallic-silver);
-}
-
-/* 3위 - Bronze Bar */
-.rank3 .top {
-  background: var(--metallic-bronze);
-}
-
-/* Front Face - Clean Card */
-.face {
+  max-width: 160px;
+  padding: var(--space-3) var(--space-4);
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-top: none;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  transition: all 0.2s ease;
 }
 
-.front {
-  min-height: 80px;
-  padding: 1.5rem 1rem 1.25rem;
-}
-
-/* 1위 - Gold Accent */
-.rank1 .front {
-  min-height: 100px;
-  padding: 1.75rem 1.25rem 1.5rem;
+.rank1 .nameCard {
+  max-width: 180px;
   border-color: var(--metallic-gold-border);
+  border-top: 3px solid var(--metallic-gold);
 }
 
-.rank1:hover .front {
+.rank2 .nameCard {
+  border-color: var(--metallic-silver-border);
+  border-top: 2px solid var(--metallic-silver);
+}
+
+.rank3 .nameCard {
+  border-color: var(--metallic-bronze-border);
+  border-top: 2px solid var(--metallic-bronze);
+}
+
+.podiumWrapper:hover .nameCard {
+  background: var(--surface-hover);
+}
+
+.rank1:hover .nameCard {
   border-color: var(--metallic-gold);
 }
 
-/* 2위 - Silver Accent */
-.rank2 .front {
-  min-height: 90px;
-  border-color: var(--metallic-silver-border);
-}
-
-.rank2:hover .front {
+.rank2:hover .nameCard {
   border-color: var(--metallic-silver);
 }
 
-/* 3위 - Bronze Accent */
-.rank3 .front {
-  min-height: 90px;
-  border-color: var(--metallic-bronze-border);
-}
-
-.rank3:hover .front {
+.rank3:hover .nameCard {
   border-color: var(--metallic-bronze);
 }
 
-/* User Info */
-.info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  width: 100%;
-  text-align: center;
+/* Empty State */
+.empty .avatar {
+  opacity: 0.3;
+}
+
+.empty .rankBadge {
+  opacity: 0.5;
+}
+
+.empty .nameCard {
+  opacity: 0.5;
 }
 
 .name {
@@ -355,11 +334,10 @@
   font-weight: 600;
   font-size: var(--text-sm);
   color: var(--text-primary);
-  width: 100%;
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  letter-spacing: var(--tracking-tight);
 }
 
 /* 1위 이름 - Gold */
@@ -371,41 +349,12 @@
 
 /* 2위 이름 - Silver */
 .rank2 .name {
-  font-size: var(--text-sm);
   color: var(--metallic-silver);
 }
 
 /* 3위 이름 - Bronze */
 .rank3 .name {
-  font-size: var(--text-sm);
   color: var(--metallic-bronze);
-}
-
-.amount {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.rank1 .amount {
-  color: var(--metallic-gold);
-  opacity: 0.8;
-}
-
-.rank2 .amount {
-  color: var(--metallic-silver);
-  opacity: 0.8;
-}
-
-.rank3 .amount {
-  color: var(--metallic-bronze);
-  opacity: 0.8;
-}
-
-/* Subtle Shine on Top Bar */
-.shine {
-  display: none;
 }
 
 /* Responsive */
@@ -436,8 +385,8 @@
     order: unset !important;
   }
 
-  .cube {
-    width: 100% !important;
+  .nameCard {
+    max-width: 100% !important;
   }
 
   .rank1 .avatar {
@@ -460,17 +409,8 @@
     font-size: 1.5rem;
   }
 
-  .avatarSection {
-    margin-bottom: -20px;
-  }
-
-  .front {
-    min-height: auto !important;
-    padding: 1.5rem 1rem 1rem !important;
-  }
-
   .name {
-    font-size: var(--text-xs) !important;
+    font-size: var(--text-sm) !important;
   }
 }
 

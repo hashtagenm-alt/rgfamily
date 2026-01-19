@@ -174,69 +174,93 @@
 }
 
 /* =======================================
-   Filters - Clean Tabs
+   Filters - Clean Tabs (Unified Style)
    ======================================= */
 .filters {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--space-3);
   margin-bottom: var(--space-5);
 }
 
-.seasonTabs {
+.filterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.filterGroup {
   display: flex;
   gap: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  padding: 2px;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
 }
 
-.seasonTabs::-webkit-scrollbar {
-  display: none;
-}
-
-.seasonTab {
-  position: relative;
+.typeTab {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-2) var(--space-4);
   background: transparent;
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
+  border: none;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 12px;
   font-weight: 500;
+  text-decoration: none;
   cursor: pointer;
-  white-space: nowrap;
   transition: all 0.2s;
 }
 
-.seasonTab:hover {
+.typeTab:hover {
   color: var(--text-secondary);
-  border-color: var(--item-border-hover);
-  background: var(--surface);
 }
 
-.seasonTab.active {
+.typeTab.active {
   background: var(--text-primary);
-  border-color: var(--text-primary);
   color: var(--background);
 }
 
-.activeDot {
-  width: 5px;
-  height: 5px;
-  background: currentColor;
-  border-radius: 50%;
-  opacity: 0.7;
+/* Season Dropdown */
+.seasonDropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.seasonTab.active .activeDot {
-  background: var(--color-success);
-  opacity: 1;
+.seasonSelect {
+  appearance: none;
+  padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 140px;
+}
+
+.seasonSelect:hover {
+  border-color: var(--item-border-hover);
+  background: var(--surface-hover);
+}
+
+.seasonSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.selectIcon {
+  position: absolute;
+  right: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
 .unitFilter {
@@ -428,12 +452,22 @@
     min-width: 80px;
   }
 
-  .filters {
+  .filterRow {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-2);
   }
 
-  .seasonTabs {
+  .filterGroup {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .seasonDropdown {
+    width: 100%;
+  }
+
+  .seasonSelect {
     width: 100%;
   }
 
@@ -479,13 +513,66 @@
     font-size: 10px;
   }
 
-  .seasonTab {
+  .typeTab {
     padding: var(--space-2) var(--space-3);
     font-size: 11px;
+  }
+
+  .seasonSelect {
+    font-size: 11px;
+    padding: var(--space-2) var(--space-6) var(--space-2) var(--space-3);
   }
 
   .unitBtn {
     padding: var(--space-2) var(--space-3);
     font-size: 10px;
+  }
+}
+
+/* 360px 소형 기기 */
+@media (max-width: 360px) {
+  .pageTitle {
+    font-size: 13px;
+  }
+
+  .backBtn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .dateRange {
+    font-size: 9px;
+  }
+
+  .daysLeft {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+
+  .typeTab {
+    padding: var(--space-1-5) var(--space-2);
+    font-size: 10px;
+  }
+
+  .seasonSelect {
+    font-size: 10px;
+    min-width: 100px;
+  }
+
+  .unitBtn {
+    padding: var(--space-1-5) var(--space-2);
+    font-size: 10px;
+  }
+
+  .statValue {
+    font-size: 13px;
+  }
+
+  .listTitle {
+    font-size: 12px;
+  }
+
+  .listCount {
+    font-size: 9px;
   }
 }

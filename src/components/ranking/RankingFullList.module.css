@@ -179,11 +179,12 @@
   background: var(--surface);
   border: 2px solid var(--card-border);
   flex-shrink: 0;
+  z-index: 1;
 }
 
 .gold .avatar {
   border-color: var(--metallic-gold);
-  box-shadow: 0 0 15px var(--metallic-gold-glow);
+  box-shadow: 0 0 8px var(--metallic-gold-glow);
   background: var(--surface);
 }
 
@@ -232,12 +233,16 @@
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
 }
 
 .nameRow {
   display: flex;
   align-items: center;
   min-width: 0;
+  overflow: hidden;
 }
 
 .name {
@@ -248,7 +253,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  display: block;
+  width: 100%;
 }
 
 .gold .name {
@@ -412,5 +418,46 @@
 
   .hoverArrow {
     display: none;
+  }
+}
+
+/* 360px 소형 기기 */
+@media (max-width: 360px) {
+  .item {
+    grid-template-columns: 28px 24px 1fr;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .rank {
+    font-size: 11px;
+    width: 22px;
+  }
+
+  .gold .rank,
+  .elite .rank {
+    font-size: 12px;
+  }
+
+  .avatar {
+    width: 24px;
+    height: 24px;
+    border-width: 1px;
+  }
+
+  .gold .avatar {
+    box-shadow: 0 0 4px var(--metallic-gold-glow);
+  }
+
+  .initials {
+    font-size: 9px;
+  }
+
+  .name {
+    font-size: 12px;
+  }
+
+  .gaugeContainer {
+    height: 2px;
   }
 }
