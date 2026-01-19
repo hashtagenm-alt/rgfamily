@@ -47,7 +47,7 @@ export default function Calendar() {
             variant="subtle"
             size="xl"
             radius="xl"
-            className="border border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] hover:border-[var(--color-pink-border)] transition-all"
+            className="border border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] hover:border-[var(--card-border-hover)] transition-all"
           >
             <ChevronLeft size={24} />
           </ActionIcon>
@@ -71,7 +71,7 @@ export default function Calendar() {
             variant="subtle"
             size="xl"
             radius="xl"
-            className="border border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] hover:border-[var(--color-pink-border)] transition-all"
+            className="border border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] hover:border-[var(--card-border-hover)] transition-all"
           >
             <ChevronRight size={24} />
           </ActionIcon>
@@ -99,13 +99,13 @@ export default function Calendar() {
       </Stack>
 
       {/* Calendar Container (Weekdays + Grid) */}
-      <div className="rounded-xl overflow-hidden border border-[var(--card-border)] shadow-sm">
+      <div className="rounded-2xl overflow-hidden border border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
         {/* Weekday Labels */}
         <div className="grid grid-cols-7 gap-0.5 bg-[var(--divider)]">
           {WEEKDAYS.map((day, index) => (
             <div
               key={day}
-              className={`py-5 px-3 text-center text-base font-bold uppercase tracking-wider bg-[var(--surface)] ${
+              className={`py-4 px-3 text-center text-sm font-semibold uppercase tracking-wider bg-[var(--surface)] ${
                 index === 0 ? 'text-[#ef4444]' : index === 6 ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'
               }`}
             >

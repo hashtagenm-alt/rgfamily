@@ -37,7 +37,7 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
   const getCellBackground = (day: CalendarDay) => {
     if (day.events.length > 0) {
       const primaryColor = getEventColor(day.events[0])
-      return `linear-gradient(135deg, ${primaryColor}08 0%, ${primaryColor}15 100%)`
+      return `linear-gradient(135deg, ${primaryColor}08 0%, ${primaryColor}12 100%)`
     }
     return undefined
   }
@@ -57,14 +57,14 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
                 min-h-[140px] md:min-h-[130px] sm:min-h-[100px] flex flex-col p-3
                 bg-[var(--card-bg)] border-none cursor-pointer relative text-left
                 transition-all duration-200
-                hover:bg-[var(--interactive-hover)]
+                hover:bg-[var(--surface)]
                 ${!day.isCurrentMonth ? 'opacity-40' : ''}
-                ${day.isToday ? 'bg-[var(--interactive-active)]' : ''}
-                ${isSelected ? 'bg-[var(--interactive-focus)] shadow-[inset_0_0_0_2px_var(--color-pink-border)]' : ''}
+                ${day.isToday ? 'bg-[var(--overlay-medium)]' : ''}
+                ${isSelected ? 'bg-[var(--surface)] shadow-[inset_0_0_0_2px_var(--text-primary)]' : ''}
               `}
               style={hasEvents && !isSelected && !day.isToday ? { background: cellBackground } : undefined}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: 1.005 }}
+              whileTap={{ scale: 0.995 }}
             >
               <span
                 className={`
@@ -82,11 +82,11 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
                   {day.events.slice(0, 3).map((event, eventIndex) => (
                     <div
                       key={eventIndex}
-                      className="px-2.5 py-1.5 rounded-md text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-all"
+                      className="px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-all"
                       style={{
-                        backgroundColor: `${getEventColor(event)}30`,
+                        backgroundColor: `${getEventColor(event)}18`,
+                        border: `1px solid ${getEventColor(event)}30`,
                         color: getEventColor(event),
-                        textShadow: '0 0 1px rgba(0,0,0,0.1)',
                       }}
                     >
                       {event.title}
@@ -106,10 +106,9 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
                   {day.events.slice(0, 4).map((event, eventIndex) => (
                     <span
                       key={eventIndex}
-                      className="w-4 h-4 rounded-full"
+                      className="w-3 h-3 rounded-full"
                       style={{
                         backgroundColor: getEventColor(event),
-                        boxShadow: `0 0 6px ${getEventColor(event)}60`,
                       }}
                     />
                   ))}

@@ -62,9 +62,9 @@ export default function EventList({ date, events, onClose }: EventListProps) {
     <Paper
       p="lg"
       radius="lg"
-      className="bg-[var(--card-bg)] border border-[var(--glass-border)] backdrop-blur-lg"
+      className="bg-[var(--card-bg)] border border-[var(--card-border)]"
     >
-      <Group justify="space-between" align="center" mb="lg" pb="md" className="border-b border-[var(--glass-border)]">
+      <Group justify="space-between" align="center" mb="lg" pb="md" className="border-b border-[var(--card-border)]">
         <Text size="lg" fw={700} className="text-[var(--text-primary)]">
           {formattedDate}
         </Text>
@@ -96,8 +96,8 @@ export default function EventList({ date, events, onClose }: EventListProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex gap-4 p-5 bg-[var(--card-bg)] border border-[var(--glass-border)] rounded-xl shadow-sm transition-all hover:bg-[var(--surface)] hover:translate-x-0.5 hover:shadow-md"
-                style={{ borderLeft: `4px solid ${color}` }}
+                className="flex gap-4 p-5 bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-sm transition-all hover:bg-[var(--surface-hover)] hover:shadow-md"
+                style={{ borderLeft: `3px solid ${color}` }}
               >
                 <ThemeIcon
                   size={48}

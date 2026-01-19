@@ -1,27 +1,27 @@
-/* cnine.kr style Modal */
+/* Signature Detail Modal - Clean Design */
 .overlay {
   position: fixed;
   inset: 0;
-  background: var(--modal-overlay-dark);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .modal {
   width: 100%;
-  max-width: 900px;
+  max-width: 800px;
   max-height: 90vh;
   background: var(--surface-elevated);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
 }
 
 /* Header */
@@ -29,24 +29,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.titleSection {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.playIcon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--card-border);
 }
 
 .title {
@@ -54,6 +38,7 @@
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  font-family: var(--font-display);
 }
 
 .closeBtn {
@@ -61,7 +46,7 @@
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: var(--glass-bg);
+  background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
@@ -75,24 +60,79 @@
   color: var(--text-primary);
 }
 
-/* Empty State */
-.emptyState {
+/* Main Content - Two Column Layout */
+.content {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Signature Image Section */
+.imageSection {
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
-  color: var(--text-muted);
-  font-size: 0.875rem;
+  padding: 1.5rem;
+  border-right: 1px solid var(--card-border);
 }
 
-/* Member Tabs - cnine style with avatar */
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--background);
+}
+
+.signatureImage {
+  object-fit: contain;
+}
+
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--surface-elevated) 0%, var(--surface) 100%);
+}
+
+.imagePlaceholder span {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--text-secondary);
+  opacity: 0.3;
+  font-family: var(--font-display);
+}
+
+/* Video Section */
+.videoSection {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Tabs Container */
 .tabsContainer {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--card-border);
   background: var(--card-bg);
+}
+
+.tabsLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .tabsArrow {
@@ -100,7 +140,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--card-border);
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
@@ -111,8 +151,8 @@
 }
 
 .tabsArrow:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
 }
 
 .tabs {
@@ -133,30 +173,29 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-full);
   background: var(--surface);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .tab:hover {
-  border-color: var(--color-primary);
+  border-color: var(--text-secondary);
 }
 
 .tab.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
-/* Tab Avatar */
 .tabAvatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   overflow: hidden;
-  background: var(--glass-bg);
+  background: var(--card-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -170,12 +209,6 @@
   object-fit: cover;
 }
 
-.tabInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
 .tabName {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -184,248 +217,110 @@
 }
 
 .tab.active .tabName {
-  color: white;
+  color: var(--background);
 }
 
 .tab.active .tabAvatar {
-  border: 2px solid white;
+  border: 2px solid var(--background);
 }
 
-.tabDate {
+/* Video Player */
+.playerWrapper {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-}
-
-.tab.active .tabDate {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* Video Section */
-.videoSection {
+  justify-content: center;
   padding: 1rem;
-  flex: 1;
-  overflow: auto;
-}
-
-.videoWrapper {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
   background: #000;
-  border-radius: 8px;
-  overflow: hidden;
+  min-height: 300px;
 }
 
 .video {
   width: 100%;
   height: 100%;
+  min-height: 280px;
   border: none;
+  border-radius: var(--radius-md);
 }
 
 .videoThumbnail {
-  position: relative;
   width: 100%;
   height: 100%;
-  cursor: pointer;
-}
-
-.thumbnailImage {
-  object-fit: cover;
-}
-
-.thumbnailPlaceholder {
-  width: 100%;
-  height: 100%;
+  min-height: 280px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--surface-elevated) 0%, var(--surface) 100%);
+  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  gap: 1rem;
 }
 
-.thumbnailPlaceholder span {
-  font-size: 3rem;
-  font-weight: 900;
+.videoInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
-  opacity: 0.5;
+}
+
+.videoDate {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--card-border);
 }
 
 .playOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease;
+  gap: 0.75rem;
 }
 
-.videoThumbnail:hover .playOverlay {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.bigPlayButton {
-  width: 80px;
-  height: 80px;
+.playButton {
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: var(--color-primary);
+  background: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 32px var(--color-pink-glow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
 }
 
-.videoThumbnail:hover .bigPlayButton {
+.videoThumbnail:hover .playButton {
   transform: scale(1.1);
 }
 
-/* Related Videos Section - Member List Style */
-.relatedSection {
-  padding: 1rem;
-  border-top: 1px solid var(--glass-border);
-  background: var(--card-bg);
-}
-
-.relatedHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.relatedTitle {
+.playText {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
-.relatedCount {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.relatedVideos {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.relatedArrow {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--glass-border);
-  background: var(--surface);
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.relatedArrow:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.relatedList {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
+/* Empty State */
+.emptyState {
   flex: 1;
-  padding: 0.25rem 0;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.relatedList::-webkit-scrollbar {
-  display: none;
-}
-
-.relatedItem {
-  flex-shrink: 0;
-  cursor: pointer;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 2px solid transparent;
-  transition: all 0.2s ease;
-  background: var(--surface);
-}
-
-.relatedItem:hover {
-  border-color: var(--color-primary);
-}
-
-.relatedItem.activeRelated {
-  border-color: var(--color-primary);
-  background: var(--color-pink-bg);
-}
-
-.relatedMember {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-}
-
-.relatedAvatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: var(--glass-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.relatedAvatarImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.relatedInfo {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
-  min-width: 0;
-}
-
-.relatedName {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.relatedDate {
-  font-size: 0.6875rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
   color: var(--text-muted);
 }
 
-.relatedPlayIcon {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  flex-shrink: 0;
+.emptyState p {
+  margin: 0;
+  font-size: 0.875rem;
 }
 
-/* Responsive */
+/* Responsive - Mobile */
 @media (max-width: 768px) {
   .overlay {
     padding: 0;
@@ -434,11 +329,27 @@
 
   .modal {
     max-height: 95vh;
-    border-radius: 16px 16px 0 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+
+  .content {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .imageSection {
+    border-right: none;
+    border-bottom: 1px solid var(--card-border);
+    padding: 1rem;
+  }
+
+  .imageWrapper {
+    max-width: 200px;
+    margin: 0 auto;
   }
 
   .header {
-    padding: 1rem;
+    padding: 0.875rem 1rem;
   }
 
   .title {
@@ -446,37 +357,66 @@
   }
 
   .tabsContainer {
-    padding: 0.5rem;
+    padding: 0.625rem 0.75rem;
   }
 
   .tab {
-    padding: 0.375rem 0.5rem;
+    padding: 0.25rem 0.5rem;
   }
 
   .tabAvatar {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
   }
 
   .tabName {
     font-size: 0.75rem;
   }
 
-  .bigPlayButton {
-    width: 60px;
-    height: 60px;
+  .playerWrapper {
+    min-height: 200px;
+    padding: 0.75rem;
   }
 
-  .relatedMember {
-    padding: 0.375rem 0.5rem;
+  .video {
+    min-height: 180px;
   }
 
-  .relatedAvatar {
-    width: 32px;
-    height: 32px;
+  .videoThumbnail {
+    min-height: 180px;
   }
 
-  .relatedName {
-    font-size: 0.75rem;
+  .playButton {
+    width: 56px;
+    height: 56px;
   }
+
+  .emptyState {
+    padding: 2rem;
+  }
+}
+
+/* Light Mode */
+:global([data-theme="light"]) .modal {
+  background: #ffffff;
+}
+
+:global([data-theme="light"]) .imageSection {
+  background: #f9f9f9;
+}
+
+:global([data-theme="light"]) .tabsContainer {
+  background: #f5f5f5;
+}
+
+:global([data-theme="light"]) .tab.active {
+  background: #1a1a1a;
+}
+
+:global([data-theme="light"]) .tab.active .tabName {
+  color: #ffffff;
+}
+
+:global([data-theme="light"]) .playButton {
+  background: #1a1a1a;
 }

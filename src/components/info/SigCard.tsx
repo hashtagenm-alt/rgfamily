@@ -66,11 +66,6 @@ export default function SigCard({ signature, onClick }: SigCardProps) {
           </div>
         )}
 
-        {/* Number Badge - cnine style */}
-        <div className={styles.numberBadge}>
-          <span className={styles.number}>{signature.sigNumber}</span>
-        </div>
-
         {/* Play Button - always visible, positioned bottom-right */}
         <motion.div
           className={styles.playButton}
@@ -90,7 +85,6 @@ export default function SigCard({ signature, onClick }: SigCardProps) {
 
       {/* Info - Minimal */}
       <div className={styles.info}>
-        <span className={styles.sigNumber}>{signature.sigNumber}</span>
         <span className={styles.title}>{signature.title}</span>
       </div>
     </motion.div>
