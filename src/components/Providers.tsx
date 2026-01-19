@@ -17,21 +17,21 @@ import {
   useTheme,
 } from "@/lib/context";
 
-// RG Family Mantine Theme
+// RG Family Mantine Theme - Sophisticated Monochrome
 const mantineTheme = createTheme({
-  primaryColor: "pink",
+  primaryColor: "gray",
   colors: {
-    pink: [
-      "#fff0f6",
-      "#ffdeeb",
-      "#fcc2d7",
-      "#faa2c1",
-      "#fd68ba", // primary
-      "#fb37a3", // deep
-      "#e64980",
-      "#d6336c",
-      "#c2255c",
-      "#a61e4d",
+    gray: [
+      "#fafafa", // [0] - lightest
+      "#f4f4f5",
+      "#e4e4e7",
+      "#d4d4d8",
+      "#a1a1aa",
+      "#71717a",
+      "#52525b", // [6] - primary
+      "#3f3f46",
+      "#27272a",
+      "#18181b", // [9] - darkest
     ],
     dark: [
       "#e0e0e0", // [0] - 더 밝은 텍스트 (라벨용)

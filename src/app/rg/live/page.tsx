@@ -56,16 +56,6 @@ export default function LivePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className={styles.hero}>
-        <div className={styles.heroBadge}>
-          <span className={styles.liveDot} />
-          <span>NOW STREAMING</span>
-        </div>
-        <h1 className={styles.title}>현재 방송중</h1>
-        <p className={styles.subtitle}>RG FAMILY 멤버 실시간 방송 현황</p>
-      </section>
-
       <div className={styles.container}>
         {/* Unit Filter */}
         <div className={styles.filters}>
@@ -281,12 +271,6 @@ function MemberDetailModal({ member, onClose }: { member: LiveMember; onClose: (
             <span className={styles.statusLabel}>상태</span>
             <span className={`${styles.statusValue} ${member.is_live ? styles.statusLive : ''}`}>
               {member.is_live ? "LIVE" : "오프라인"}
-            </span>
-          </div>
-          <div className={styles.statusItem}>
-            <span className={styles.statusLabel}>소속</span>
-            <span className={styles.statusValue}>
-              {member.unit === 'excel' ? '한국 엑셀방송' : '중국 단보방송'}
             </span>
           </div>
         </div>

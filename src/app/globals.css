@@ -10,7 +10,7 @@
   --color-primary-deep: #3f3f46;
 
   /* Live Status */
-  --color-live: #00d4ff;
+  --color-live: #ef4444;
 
   /* Ranking Colors */
   --color-gold: #ffd700;
@@ -168,7 +168,7 @@
   --color-info-bg: rgba(113, 113, 122, 0.15);
 
   --color-cyan: #00f0ff;
-  --color-cyan-bg: rgba(0, 240, 255, 0.15);
+  --color-cyan-bg: rgba(239, 68, 68, 0.15);
 
   --color-collab: #71717a;
   --color-collab-bg: rgba(113, 113, 122, 0.15);
@@ -183,14 +183,14 @@
   --modal-overlay-strong: rgba(0, 0, 0, 0.8);
   --modal-overlay-dark: rgba(0, 0, 0, 0.85);
 
-  /* LIVE Status - Cyan */
-  --live-color: #00d4ff;
-  --live-glow: rgba(0, 212, 255, 0.35);
+  /* LIVE Status - Red */
+  --live-color: #ef4444;
+  --live-glow: rgba(239, 68, 68, 0.35);
 
   /* Star/Particle Effects - Theme Aware */
   --star-bright: rgba(255, 255, 255, 0.35);
   --star-dim: rgba(255, 255, 255, 0.2);
-  --star-accent: rgba(0, 240, 255, 0.3);
+  --star-accent: rgba(253, 104, 186, 0.3);
 
   /* Unit Identity Colors */
   --unit-excel: #e4e4e7; /* Clean White/Silver */
@@ -472,11 +472,11 @@
   --color-pink-overlay-10: rgba(82, 82, 91, 0.1);
 
   /* Live/Error Color Utility */
-  --live-overlay-02: rgba(0, 212, 255, 0.02);
-  --live-overlay-03: rgba(0, 212, 255, 0.03);
-  --live-overlay-05: rgba(0, 212, 255, 0.05);
-  --live-overlay-10: rgba(0, 212, 255, 0.1);
-  --live-overlay-20: rgba(0, 212, 255, 0.2);
+  --live-overlay-02: rgba(239, 68, 68, 0.02);
+  --live-overlay-03: rgba(239, 68, 68, 0.03);
+  --live-overlay-05: rgba(239, 68, 68, 0.05);
+  --live-overlay-10: rgba(239, 68, 68, 0.1);
+  --live-overlay-20: rgba(239, 68, 68, 0.2);
 
   /* Gold Utility - Various Opacities */
   --gold-overlay-02: rgba(212, 175, 55, 0.02);
@@ -716,11 +716,11 @@
   --color-pink-overlay-10: rgba(82, 82, 91, 0.12);
 
   /* Live/Error Color Utility - Light */
-  --live-overlay-02: rgba(0, 212, 255, 0.03);
-  --live-overlay-03: rgba(0, 212, 255, 0.04);
-  --live-overlay-05: rgba(0, 212, 255, 0.06);
-  --live-overlay-10: rgba(0, 212, 255, 0.12);
-  --live-overlay-20: rgba(0, 212, 255, 0.2);
+  --live-overlay-02: rgba(239, 68, 68, 0.03);
+  --live-overlay-03: rgba(239, 68, 68, 0.04);
+  --live-overlay-05: rgba(239, 68, 68, 0.06);
+  --live-overlay-10: rgba(239, 68, 68, 0.12);
+  --live-overlay-20: rgba(239, 68, 68, 0.2);
 
   /* Gold Utility - Light Mode */
   --gold-overlay-02: rgba(184, 134, 11, 0.03);

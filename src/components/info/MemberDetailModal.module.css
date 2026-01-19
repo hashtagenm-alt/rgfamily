@@ -500,7 +500,7 @@
   color: var(--color-primary);
 }
 
-/* Watch Button - 핑크 브랜드 컬러 (직접 색상 값 사용) */
+/* Watch Button - Sophisticated Monochrome */
 .watchButton {
   display: flex;
   align-items: center;
@@ -509,21 +509,21 @@
   width: calc(100% - 3rem);
   margin: 1.5rem;
   padding: 1rem;
-  background: #fd68ba;
-  color: white;
+  background: var(--text-primary);
+  color: var(--background);
   font-size: var(--text-base);
   font-weight: 700;
   text-decoration: none;
   border-radius: var(--radius-md);
   border: none;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(253, 104, 186, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .watchButton:hover {
-  background: #fb37a3;
+  background: var(--text-secondary);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(253, 104, 186, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* Responsive */

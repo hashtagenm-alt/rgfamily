@@ -11,10 +11,8 @@
 
 .card:hover {
   transform: translateY(-4px);
-  border-color: var(--color-pink);
-  box-shadow:
-    0 15px 30px rgba(0, 0, 0, 0.15),
-    0 0 20px rgba(253, 104, 186, 0.3);
+  border-color: var(--card-border-hover, rgba(255, 255, 255, 0.12));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* Thumbnail - Square */
@@ -230,10 +228,8 @@
 }
 
 :global([data-theme="light"]) .card:hover {
-  border-color: var(--color-pink);
-  box-shadow:
-    0 15px 30px rgba(0, 0, 0, 0.08),
-    0 0 20px rgba(253, 104, 186, 0.25);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 :global([data-theme="light"]) .title {
