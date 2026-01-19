@@ -244,37 +244,6 @@ export const mockOrganization: Organization[] = [
     created_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: 9,
-    unit: 'excel',
-    profile_id: null,
-    name: '손밍',
-    role: '멤버',
-    position_order: 9,
-    parent_id: 1,
-    image_url: getMemberAvatar('sonming'),
-    social_links: { pandatv: 'sonming' },
-    profile_info: {
-      mbti: 'INTP',
-      blood_type: 'O형',
-      height: '161cm',
-      weight: '45kg',
-      birthday: '1996.07.25',
-      position_pledge: `[1등] 여왕 ▶ MVP 돌아온 손밍코스
-[2등] 공주 ▶ MVP 식데
-[3등] 황족 ▶ MVP 커데
-[4등] 귀족 ▶ MVP 5명 단체식사
-[5등] 시녀장 ▶ MVP 개인연락처
-[6등] 시녀 ▶ MVP 갠방소원권 (협의)
-[7등] 하녀1 ▶ 갠방 비키니방송
-[8등] 하녀2 ▶ 하루 코스프레 입고 출근
-[9등] 하녀3 ▶ 반려견과 5KM 산책야방
-[10,11,12등] 노예장,노예,쌉노예 ▶ 12시간 노방종`,
-    },
-    is_live: false,
-    is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
-  },
-  {
     id: 10,
     unit: 'excel',
     profile_id: null,

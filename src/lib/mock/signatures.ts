@@ -114,9 +114,7 @@ export const mockSignatureData: SignatureData[] = [
     thumbnailUrl: getPicsumThumbnail(1005, 400, 400),
     unit: 'excel',
     isGroup: false,
-    videos: [
-      { id: 9, memberId: 9, memberName: '손밍', memberImage: getPicsumThumbnail(109, 100, 100), videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', createdAt: '2025-12-01T10:00:00Z' },
-    ],
+    videos: [],
     createdAt: '2024-11-10T14:00:00Z',
   },
   {
@@ -181,7 +179,6 @@ export const mockSignatureData: SignatureData[] = [
     isGroup: false,
     videos: [
       { id: 14, memberId: 6, memberName: '설윤', memberImage: getPicsumThumbnail(106, 100, 100), videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', createdAt: '2025-10-15T10:00:00Z' },
-      { id: 15, memberId: 9, memberName: '손밍', memberImage: getPicsumThumbnail(109, 100, 100), videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', createdAt: '2025-10-12T10:00:00Z' },
     ],
     createdAt: '2024-09-15T11:00:00Z',
   },
