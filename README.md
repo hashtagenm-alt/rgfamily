@@ -183,4 +183,4 @@ This project is private and proprietary.
 
 ---
 
-Built with Next.js and Supabase
+Built with Next.js and Supabase 1
