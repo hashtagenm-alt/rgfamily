@@ -139,7 +139,7 @@ export default function BroadcastNotice() {
                 alt="방송 공지 이미지"
                 fill
                 sizes="(max-width: 768px) 100vw, 35vw"
-                style={{ objectFit: 'contain', objectPosition: 'center' }}
+                style={{ objectFit: 'cover', objectPosition: 'center' }}
                 unoptimized
               />
             </div>

@@ -99,10 +99,11 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Thumbnail - Banner Style (Left 35-40%) */
+/* Thumbnail - 16:9 Aspect Ratio */
 .itemThumbnail {
   flex-shrink: 0;
   width: 35%;
+  aspect-ratio: 16 / 9;
   position: relative;
   background: var(--surface-secondary);
   border-left: 1px solid var(--card-border);
