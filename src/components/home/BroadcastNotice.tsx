@@ -40,7 +40,7 @@ export default function BroadcastNotice() {
 
   const parseContent = (content: string) => {
     // HTML 태그를 줄바꿈으로 변환 (br, p, div 등)
-    let text = content
+    const text = content
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<\/p>/gi, '\n')
       .replace(/<\/div>/gi, '\n')

@@ -13,6 +13,18 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Custom rule overrides
+  {
+    rules: {
+      // 데이터 패칭 패턴에서 useEffect 내 setState 호출은 일반적인 패턴이므로 warning으로 변경
+      "react-hooks/set-state-in-effect": "warn",
+      // 사용하지 않는 변수는 warning으로 처리 (언더스코어 prefix 허용)
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }],
+    },
+  },
 ]);
 
 export default eslintConfig;

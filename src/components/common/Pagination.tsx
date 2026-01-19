@@ -22,7 +22,7 @@ export function Pagination({
   // 표시할 페이지 범위 계산
   const halfRange = Math.floor(pageRange / 2)
   let startPage = Math.max(1, currentPage - halfRange)
-  let endPage = Math.min(totalPages, startPage + pageRange - 1)
+  const endPage = Math.min(totalPages, startPage + pageRange - 1)
 
   // 끝 페이지가 범위보다 작으면 시작 페이지 조정
   if (endPage - startPage + 1 < pageRange) {

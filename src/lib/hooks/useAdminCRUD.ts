@@ -196,8 +196,12 @@ export function useAdminCRUD<T extends { id?: number | string }>(
   // Store config refs to avoid infinite loop
   const fromDbFormatRef = React.useRef(fromDbFormat)
   const orderByRef = React.useRef(orderBy)
-  fromDbFormatRef.current = fromDbFormat
-  orderByRef.current = orderBy
+
+  // Update refs in effect to avoid "Cannot access refs during render" error
+  React.useEffect(() => {
+    fromDbFormatRef.current = fromDbFormat
+    orderByRef.current = orderBy
+  }, [fromDbFormat, orderBy])
 
   // Fetch items
   const refetch = useCallback(async () => {

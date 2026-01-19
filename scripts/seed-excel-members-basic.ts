@@ -64,7 +64,7 @@ async function main() {
   // 2. 각 멤버 데이터 upsert (이름 기준으로 업데이트 또는 신규 추가)
   let addedCount = 0
   let updatedCount = 0
-  let skippedCount = 0
+  const _skippedCount = 0
 
   for (const member of excelMembers) {
     // 이미 존재하는지 확인

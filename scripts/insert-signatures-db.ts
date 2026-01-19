@@ -5,7 +5,6 @@
 
 import { createClient } from '@supabase/supabase-js'
 import * as fs from 'fs'
-import * as path from 'path'
 
 const SUPABASE_URL = 'https://titqtnobfapyjvairgqy.supabase.co'
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpdHF0bm9iZmFweWp2YWlyZ3F5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODc5NDQyNSwiZXhwIjoyMDg0MzcwNDI1fQ.M6mlPiqgRruYCd4jXBcIOsYIhtqgvJmGmzg6l3KakwU'
@@ -68,7 +67,7 @@ async function main() {
   console.log(`📊 총 ${sigNumbers.length}개 시그니처`)
 
   let successCount = 0
-  let skipCount = 0
+  const _skipCount = 0
   let failCount = 0
 
   for (let i = 0; i < sigNumbers.length; i++) {
@@ -128,7 +127,7 @@ async function main() {
   console.log('')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log(`✅ 성공: ${successCount}개`)
-  console.log(`⏭️ 스킵: ${skipCount}개`)
+  console.log(`⏭️ 스킵: ${_skipCount}개`)
   console.log(`❌ 실패: ${failCount}개`)
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 }

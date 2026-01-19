@@ -56,7 +56,7 @@ function compressGif(inputPath: string, sigNumber: number): string | null {
     console.log(`  압축됨: ${compressedSize.toFixed(1)}MB`)
 
     return outputPath
-  } catch (err) {
+  } catch {
     console.error(`  ❌ 압축 실패`)
     return null
   }
@@ -97,8 +97,9 @@ async function uploadCompressedGif(sigNumber: number): Promise<string | null> {
     fs.unlinkSync(compressedPath)
 
     return result.secure_url
-  } catch (err: any) {
-    console.error(`  ❌ Cloudinary 업로드 실패:`, err.message || err)
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err)
+    console.error(`  ❌ Cloudinary 업로드 실패:`, errorMessage)
     return null
   }
 }
