@@ -66,15 +66,23 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
               whileHover={{ scale: 1.005 }}
               whileTap={{ scale: 0.995 }}
             >
-              <span
-                className={`
-                  text-lg font-bold mb-2 inline-flex items-center justify-center
-                  min-w-[38px] min-h-[38px] rounded-full text-(--text-primary)
-                  ${day.isToday ? 'bg-(--text-primary) text-(--background)! font-bold shadow-md' : ''}
-                `}
-              >
-                {day.date.getDate()}
-              </span>
+              <div className="flex flex-col items-start gap-0.5 mb-2">
+                <span
+                  className={`
+                    text-lg font-bold inline-flex items-center justify-center
+                    min-w-[38px] min-h-[38px] rounded-full
+                    ${day.isToday ? 'bg-(--text-primary) text-(--background)! font-bold shadow-md' : ''}
+                    ${!day.isToday && day.isHoliday ? 'text-[#ef4444]' : 'text-(--text-primary)'}
+                  `}
+                >
+                  {day.date.getDate()}
+                </span>
+                {day.holidayName && (
+                  <span className="text-[10px] font-semibold text-[#ef4444] whitespace-nowrap overflow-hidden text-ellipsis max-w-full px-1">
+                    {day.holidayName}
+                  </span>
+                )}
+              </div>
 
               {/* Event Text List (Desktop) - 크기 및 시인성 개선 */}
               {day.events.length > 0 && (

@@ -183,8 +183,9 @@
   min-width: 0;
   color: var(--text-secondary);
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.6;
   overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 .pledgeText {

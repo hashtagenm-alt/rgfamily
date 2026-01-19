@@ -173,8 +173,13 @@
   flex-shrink: 0;
   background: var(--card-bg);
   border-right: 1px solid var(--card-border);
-  overflow: hidden;
+  overflow-y: auto;
   transition: all 0.3s ease;
+  /* Sticky positioning */
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  align-self: flex-start;
 }
 
 /* Content Area */
@@ -190,8 +195,13 @@
   flex-shrink: 0;
   background: var(--card-bg);
   border-left: 1px solid var(--card-border);
-  overflow: hidden;
+  overflow-y: auto;
   transition: all 0.3s ease;
+  /* Sticky positioning */
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  align-self: flex-start;
 }
 
 /* Sidebars highlight when member selected */
