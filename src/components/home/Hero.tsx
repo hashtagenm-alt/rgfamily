@@ -33,7 +33,7 @@ const banners: Banner[] = [
     id: "banner-text-1",
     type: "text",
     title: "RG FAMILY",
-    subtitle: "OFFICIAL FAN COMMUNITY",
+    subtitle: "OFFICIAL SITE",
   },
   // 새 배너 추가 예시:
   // {

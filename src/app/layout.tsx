@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "RG Family",
-  description: "RG Family Fan Community",
+  description: "RG FAMILY 공식 사이트",
 };
 
 export default function RootLayout({

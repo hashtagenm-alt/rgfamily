@@ -34,7 +34,7 @@ export const hasValidSupabaseCredentials = !!(
 // 앱 설정
 export const APP_CONFIG = {
   name: 'RG Family',
-  description: '팬더티비 스트리머 팬 커뮤니티',
+  description: 'RG FAMILY 공식 사이트',
   platform: 'pandatv',
   units: {
     excel: { name: '엑셀부', label: 'EXCEL UNIT', country: '한국' },

@@ -22,7 +22,6 @@ export default function Footer() {
             <span className={styles.logo}>RG FAMILY</span>
           </div>
           <p className={styles.description}>
-            PandaTV 공식 팬 커뮤니티<br />
             함께하는 즐거움, RG와 함께
           </p>
           <Link href="/ranking/vip" className={styles.vipLink}>
