@@ -23,6 +23,8 @@ const eslintConfig = defineConfig([
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_"
       }],
+      // React 컴파일러 최적화 관련 - 수동 메모이제이션 보존 실패는 warning으로 처리
+      "react-hooks/preserve-manual-memoization": "warn",
     },
   },
 ]);
