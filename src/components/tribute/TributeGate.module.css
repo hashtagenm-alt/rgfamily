@@ -48,41 +48,41 @@
 
 .gold .gateIcon {
   color: #ffd700;
-  filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6));
+  filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
 }
 
 .gold .gateText {
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
 }
 
 /* Silver Theme (Rank 2) */
 .silver {
-  background: radial-gradient(circle at center, rgba(192, 192, 192, 0.2), transparent 50%),
+  background: radial-gradient(circle at center, rgba(192, 192, 192, 0.15), transparent 50%),
               linear-gradient(180deg, #080808 0%, #121212 100%);
 }
 
 .silver .gateIcon {
   color: #c0c0c0;
-  filter: drop-shadow(0 0 30px rgba(192, 192, 192, 0.6));
+  filter: drop-shadow(0 0 15px rgba(192, 192, 192, 0.4));
 }
 
 .silver .gateText {
-  text-shadow: 0 0 20px rgba(192, 192, 192, 0.6);
+  text-shadow: 0 0 12px rgba(192, 192, 192, 0.4);
 }
 
 /* Bronze Theme (Rank 3) */
 .bronze {
-  background: radial-gradient(circle at center, rgba(205, 127, 50, 0.2), transparent 50%),
+  background: radial-gradient(circle at center, rgba(205, 127, 50, 0.15), transparent 50%),
               linear-gradient(180deg, #0a0600 0%, #150e05 100%);
 }
 
 .bronze .gateIcon {
   color: #cd7f32;
-  filter: drop-shadow(0 0 30px rgba(205, 127, 50, 0.6));
+  filter: drop-shadow(0 0 15px rgba(205, 127, 50, 0.4));
 }
 
 .bronze .gateText {
-  text-shadow: 0 0 20px rgba(205, 127, 50, 0.6);
+  text-shadow: 0 0 12px rgba(205, 127, 50, 0.4);
 }
 
 /* Default Theme */

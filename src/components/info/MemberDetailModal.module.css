@@ -531,19 +531,20 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.9rem;
-  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-  color: white;
+  background: var(--text-primary);
+  color: var(--background);
   font-size: 0.95rem;
   font-weight: 700;
   text-decoration: none;
   border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .watchBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  opacity: 0.9;
 }
 
 /* ==================== 반응형 ==================== */
