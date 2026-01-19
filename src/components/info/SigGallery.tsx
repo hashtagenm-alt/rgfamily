@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { Search, X } from 'lucide-react'
 import { useSupabaseContext } from '@/lib/context'
 import { withRetry } from '@/lib/utils/fetch-with-retry'
@@ -262,17 +262,15 @@ export default function SigGallery() {
           <p>등록된 시그니처가 없습니다</p>
         </div>
       ) : (
-        <motion.div className={styles.grid} layout>
-          <AnimatePresence>
-            {signatures.map((sig) => (
-              <SigCard
-                key={sig.id}
-                signature={sig}
-                onClick={() => setSelectedSig(sig)}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        <div className={styles.grid}>
+          {signatures.map((sig) => (
+            <SigCard
+              key={sig.id}
+              signature={sig}
+              onClick={() => setSelectedSig(sig)}
+            />
+          ))}
+        </div>
       )}
 
       {/* Detail Modal */}

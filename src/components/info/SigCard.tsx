@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Play } from 'lucide-react'
 import Image from 'next/image'
 import { useLazyLoad } from '@/lib/hooks'
@@ -14,7 +13,6 @@ interface SigCardProps {
 }
 
 export default function SigCard({ signature, onClick }: SigCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
 
@@ -25,16 +23,10 @@ export default function SigCard({ signature, onClick }: SigCardProps) {
   })
 
   return (
-    <motion.div
+    <div
       ref={ref}
       className={styles.card}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
-      whileHover={{ scale: 1.02 }}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
     >
       {/* Thumbnail - Square aspect ratio with Lazy Loading */}
       <div className={styles.thumbnail}>
@@ -66,27 +58,19 @@ export default function SigCard({ signature, onClick }: SigCardProps) {
           </div>
         )}
 
-        {/* Play Button - always visible, positioned bottom-right */}
-        <motion.div
-          className={styles.playButton}
-          animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
-        >
+        {/* Play Button */}
+        <div className={styles.playButton}>
           <Play size={14} fill="white" />
-        </motion.div>
+        </div>
 
         {/* Hover Overlay */}
-        <motion.div
-          className={styles.overlay}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.2 }}
-        />
+        <div className={styles.overlay} />
       </div>
 
       {/* Info - Minimal */}
       <div className={styles.info}>
         <span className={styles.title}>{signature.title}</span>
       </div>
-    </motion.div>
+    </div>
   )
 }
