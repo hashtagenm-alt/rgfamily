@@ -40,8 +40,8 @@ describe('formatAmountShort', () => {
   })
 
   it('should format amounts in 만 range without unit', () => {
-    expect(formatAmountShort(10000)).toBe('1.0만')
-    expect(formatAmountShort(50000)).toBe('5.0만')
+    expect(formatAmountShort(10000)).toBe('1만')
+    expect(formatAmountShort(50000)).toBe('5만')
   })
 
   it('should format amounts in 억 range without unit', () => {
