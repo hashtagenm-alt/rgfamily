@@ -1,4 +1,4 @@
-/* RankingPodium.module.css - Premium Design (1위 특별, 2&3위 동일 엘리트) */
+/* RankingPodium.module.css - Refined Design (Game Ranking Style) */
 
 /* Container Setup */
 .container {
@@ -6,12 +6,29 @@
   justify-content: center;
   align-items: flex-end;
   gap: var(--space-6);
-  padding: 3rem 2rem 4rem;
+  padding: 2.5rem 1.5rem 3rem;
   max-width: 900px;
   margin: 0 auto;
   position: relative;
   z-index: 10;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Stage Platform Line - Subtle */
+.stageLine {
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border-overlay-15) 30%,
+    var(--border-overlay-25) 50%,
+    var(--border-overlay-15) 70%,
+    transparent 100%
+  );
 }
 
 /* Individual Podium Card Wrapper */
@@ -20,13 +37,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: transform 0.4s var(--ease-spring);
+  transition: transform 0.3s ease;
   cursor: pointer;
   z-index: 1;
 }
 
 .podiumWrapper:hover {
-  transform: translateY(-12px) scale(1.03);
+  transform: translateY(-8px);
   z-index: 10;
 }
 
@@ -47,62 +64,80 @@
 }
 
 /* =======================================
-   Avatar Section - 화려한 이니셜/프로필 표시
+   Avatar Section - Clean Design
    ======================================= */
 .avatarSection {
   position: relative;
-  margin-bottom: -30px;
+  margin-bottom: -24px;
   z-index: 20;
 }
 
 .avatar {
-  width: 90px;
-  height: 90px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  border: 4px solid var(--card-border);
+  border: 3px solid var(--card-border);
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   background: var(--surface);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
 }
 
 /* 1위 Champion Avatar */
 .rank1 .avatar {
-  width: 130px;
-  height: 130px;
-  border: 5px solid var(--metallic-gold);
+  width: 110px;
+  height: 110px;
+  border: 3px solid var(--metallic-gold);
   box-shadow:
-    0 0 0 3px rgba(255, 215, 0, 0.15),
-    0 0 25px rgba(255, 215, 0, 0.25),
+    0 0 0 2px rgba(255, 215, 0, 0.15),
+    0 0 20px rgba(255, 215, 0, 0.2),
+    0 6px 20px rgba(0, 0, 0, 0.25);
+  background: var(--surface);
+}
+
+.rank1:hover .avatar {
+  box-shadow:
+    0 0 0 3px rgba(255, 215, 0, 0.2),
+    0 0 30px rgba(255, 215, 0, 0.25),
     0 8px 24px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(135deg, #1a1510 0%, #2d2418 50%, #1a1510 100%);
 }
 
 /* 2위 Silver Avatar */
 .rank2 .avatar {
-  width: 105px;
-  height: 105px;
-  border: 4px solid var(--metallic-silver);
+  width: 95px;
+  height: 95px;
+  border: 3px solid var(--metallic-silver);
   box-shadow:
-    0 0 0 2px var(--metallic-silver-bg),
+    0 0 15px var(--metallic-silver-glow),
+    0 4px 16px rgba(0, 0, 0, 0.2);
+  background: var(--surface);
+}
+
+.rank2:hover .avatar {
+  box-shadow:
     0 0 20px var(--metallic-silver-glow),
     0 6px 20px rgba(0, 0, 0, 0.25);
-  background: linear-gradient(135deg, #1a1a1a 0%, #252525 50%, #1a1a1a 100%);
 }
 
 /* 3위 Bronze Avatar */
 .rank3 .avatar {
-  width: 105px;
-  height: 105px;
-  border: 4px solid var(--metallic-bronze);
+  width: 95px;
+  height: 95px;
+  border: 3px solid var(--metallic-bronze);
   box-shadow:
-    0 0 0 2px var(--metallic-bronze-bg),
+    0 0 15px var(--metallic-bronze-glow),
+    0 4px 16px rgba(0, 0, 0, 0.2);
+  background: var(--surface);
+}
+
+.rank3:hover .avatar {
+  box-shadow:
     0 0 20px var(--metallic-bronze-glow),
     0 6px 20px rgba(0, 0, 0, 0.25);
-  background: linear-gradient(135deg, #1a1510 0%, #251f18 50%, #1a1510 100%);
 }
 
 .avatarImage {
@@ -110,7 +145,7 @@
 }
 
 /* =======================================
-   닉네임 이니셜 - Ultra Premium Design
+   닉네임 이니셜 - Clean Design
    ======================================= */
 .initialsWrapper {
   width: 100%;
@@ -121,152 +156,31 @@
   position: relative;
 }
 
-/* 이니셜 배경 효과 (파티클 링) */
-.initialsWrapper::before {
-  content: '';
-  position: absolute;
-  width: 85%;
-  height: 85%;
-  border-radius: 50%;
-  background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.03) 100%);
-  animation: initialsRingPulse 4s ease-in-out infinite;
-}
-
-@keyframes initialsRingPulse {
-  0%, 100% { transform: scale(0.9); opacity: 0.3; }
-  50% { transform: scale(1.1); opacity: 0.6; }
-}
-
 .initials {
   font-family: var(--font-display);
-  font-weight: 900;
-  letter-spacing: 3px;
+  font-weight: 700;
+  letter-spacing: 1px;
   position: relative;
   z-index: 1;
   text-transform: uppercase;
 }
 
-/* 1위 이니셜 - Luxurious Gold with Sparkle */
+/* 1위 이니셜 - Gold */
 .rank1 .initials {
-  font-size: 2.8rem;
-  background: linear-gradient(
-    135deg,
-    #b8860b 0%,
-    #ffd700 15%,
-    #fff8dc 30%,
-    #ffd700 50%,
-    #fff8dc 70%,
-    #ffd700 85%,
-    #b8860b 100%
-  );
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5))
-          drop-shadow(0 0 25px rgba(255, 215, 0, 0.25));
-  animation: goldLuxuryShimmer 4s ease-in-out infinite;
+  font-size: 2.2rem;
+  color: var(--metallic-gold);
 }
 
-.rank1 .initialsWrapper::before {
-  background: radial-gradient(circle, transparent 30%, rgba(255, 215, 0, 0.1) 100%);
-  animation: goldRingPulse 3s ease-in-out infinite;
-}
-
-@keyframes goldLuxuryShimmer {
-  0%, 100% {
-    background-position: 0% 50%;
-    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5))
-            drop-shadow(0 0 25px rgba(255, 215, 0, 0.25));
-  }
-  50% {
-    background-position: 100% 50%;
-    filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.6))
-            drop-shadow(0 0 30px rgba(255, 215, 0, 0.3));
-  }
-}
-
-@keyframes goldRingPulse {
-  0%, 100% { transform: scale(0.85); opacity: 0.4; }
-  50% { transform: scale(1.15); opacity: 0.8; }
-}
-
-/* 2위 이니셜 - Silver Shimmer */
+/* 2위 이니셜 - Silver */
 .rank2 .initials {
-  font-size: 2.2rem;
-  background: linear-gradient(
-    135deg,
-    #606060 0%,
-    #a0a0a0 15%,
-    #e8e8e8 30%,
-    #c0c0c0 50%,
-    #e8e8e8 70%,
-    #a0a0a0 85%,
-    #606060 100%
-  );
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 8px rgba(192, 192, 192, 0.4))
-          drop-shadow(0 0 16px rgba(192, 192, 192, 0.2));
-  animation: silverShimmer 5s ease-in-out infinite;
+  font-size: 1.8rem;
+  color: var(--metallic-silver);
 }
 
-.rank2 .initialsWrapper::before {
-  background: radial-gradient(circle, transparent 30%, rgba(192, 192, 192, 0.1) 100%);
-}
-
-@keyframes silverShimmer {
-  0%, 100% {
-    background-position: 0% 50%;
-    filter: drop-shadow(0 0 8px rgba(192, 192, 192, 0.4))
-            drop-shadow(0 0 16px rgba(192, 192, 192, 0.2));
-  }
-  50% {
-    background-position: 100% 50%;
-    filter: drop-shadow(0 0 10px rgba(192, 192, 192, 0.5))
-            drop-shadow(0 0 20px rgba(192, 192, 192, 0.3));
-  }
-}
-
-/* 3위 이니셜 - Bronze Shimmer */
+/* 3위 이니셜 - Bronze */
 .rank3 .initials {
-  font-size: 2.2rem;
-  background: linear-gradient(
-    135deg,
-    #804020 0%,
-    #cd7f32 15%,
-    #e09050 30%,
-    #cd7f32 50%,
-    #e09050 70%,
-    #cd7f32 85%,
-    #804020 100%
-  );
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 8px rgba(205, 127, 50, 0.4))
-          drop-shadow(0 0 16px rgba(205, 127, 50, 0.2));
-  animation: bronzeShimmer 5s ease-in-out infinite;
-}
-
-.rank3 .initialsWrapper::before {
-  background: radial-gradient(circle, transparent 30%, rgba(205, 127, 50, 0.1) 100%);
-}
-
-@keyframes bronzeShimmer {
-  0%, 100% {
-    background-position: 0% 50%;
-    filter: drop-shadow(0 0 8px rgba(205, 127, 50, 0.4))
-            drop-shadow(0 0 16px rgba(205, 127, 50, 0.2));
-  }
-  50% {
-    background-position: 100% 50%;
-    filter: drop-shadow(0 0 10px rgba(205, 127, 50, 0.5))
-            drop-shadow(0 0 20px rgba(205, 127, 50, 0.3));
-  }
+  font-size: 1.8rem;
+  color: var(--metallic-bronze);
 }
 
 /* =======================================
@@ -274,148 +188,156 @@
    ======================================= */
 .rankBadge {
   position: absolute;
-  bottom: -12px;
+  bottom: -10px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 6px 12px;
+  gap: 3px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
   background: var(--surface);
-  border: 2px solid var(--card-border);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-sm);
   z-index: 2;
+}
+
+.rankBadge svg {
+  width: 14px;
+  height: 14px;
 }
 
 .rankNumber {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--text-sm);
+  font-weight: 600;
+  font-size: var(--text-xs);
 }
 
-/* 1위 Badge - Gold Champion */
+/* 1위 Badge - Gold */
 .rank1 .rankBadge {
-  padding: 8px 16px;
+  padding: 5px 12px;
   background: var(--metallic-gold-bg);
-  border: 1px solid var(--metallic-gold-border);
-  color: #1a1a1a;
-  box-shadow: none;
+  border-color: var(--metallic-gold-border);
+  color: var(--metallic-gold);
+}
+
+.rank1 .rankBadge svg {
+  width: 16px;
+  height: 16px;
 }
 
 .rank1 .rankNumber {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
 }
 
 /* 2위 Badge - Silver */
 .rank2 .rankBadge {
-  padding: 6px 14px;
   background: var(--metallic-silver-bg);
-  border: 1px solid var(--metallic-silver-border);
-  color: #1a1a1a;
-  backdrop-filter: blur(6px);
-  box-shadow: none;
+  border-color: var(--metallic-silver-border);
+  color: var(--metallic-silver);
 }
 
 /* 3위 Badge - Bronze */
 .rank3 .rankBadge {
-  padding: 6px 14px;
   background: var(--metallic-bronze-bg);
-  border: 1px solid var(--metallic-bronze-border);
-  color: #1a1a1a;
-  backdrop-filter: blur(6px);
-  box-shadow: none;
+  border-color: var(--metallic-bronze-border);
+  color: var(--metallic-bronze);
 }
 
 /* =======================================
-   3D-Style Card (Pseudo-3D with gradients)
+   Card Style - Clean & Minimal
    ======================================= */
 .cube {
   position: relative;
-  width: 160px;
-  border-radius: var(--radius-xl);
+  width: 150px;
+  border-radius: var(--radius-lg);
   overflow: visible;
 }
 
 .rank1 .cube {
-  width: 210px;
+  width: 180px;
 }
 
 .rank2 .cube,
 .rank3 .cube {
-  width: 175px;
+  width: 160px;
 }
 
-/* Top Edge - Metallic Highlight Bar */
+/* Top Edge - Accent Bar */
 .top {
   position: relative;
-  height: 6px;
+  height: 3px;
   width: 100%;
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  background: var(--glass-border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--card-border);
 }
 
 /* 1위 - Gold Bar */
 .rank1 .top {
-  height: 8px;
-  background: var(--metallic-gold-border);
-  box-shadow: none;
+  height: 4px;
+  background: var(--metallic-gold);
 }
 
 /* 2위 - Silver Bar */
 .rank2 .top {
-  background: var(--metallic-silver-border);
-  box-shadow: none;
+  background: var(--metallic-silver);
 }
 
 /* 3위 - Bronze Bar */
 .rank3 .top {
-  background: var(--metallic-bronze-border);
-  box-shadow: none;
+  background: var(--metallic-bronze);
 }
 
-/* Front Face - Glass Card */
+/* Front Face - Clean Card */
 .face {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-top: none;
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .front {
-  min-height: 100px;
-  padding: 2rem 1rem 1.5rem;
+  min-height: 80px;
+  padding: 1.5rem 1rem 1.25rem;
 }
 
-/* 1위 - Gold Tinted Glass */
+/* 1위 - Gold Accent */
 .rank1 .front {
-  min-height: 140px;
-  padding: 2.5rem 1.5rem 2rem;
-  background: var(--glass-bg);
+  min-height: 100px;
+  padding: 1.75rem 1.25rem 1.5rem;
   border-color: var(--metallic-gold-border);
 }
 
-/* 2위 - Silver Glass */
+.rank1:hover .front {
+  border-color: var(--metallic-gold);
+}
+
+/* 2위 - Silver Accent */
 .rank2 .front {
-  min-height: 115px;
-  background: var(--glass-bg);
+  min-height: 90px;
   border-color: var(--metallic-silver-border);
 }
 
-/* 3위 - Bronze Glass */
+.rank2:hover .front {
+  border-color: var(--metallic-silver);
+}
+
+/* 3위 - Bronze Accent */
 .rank3 .front {
-  min-height: 115px;
-  background: var(--glass-bg);
+  min-height: 90px;
   border-color: var(--metallic-bronze-border);
+}
+
+.rank3:hover .front {
+  border-color: var(--metallic-bronze);
 }
 
 /* User Info */
@@ -423,15 +345,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   width: 100%;
   text-align: center;
 }
 
 .name {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--text-base);
+  font-weight: 600;
+  font-size: var(--text-sm);
   color: var(--text-primary);
   width: 100%;
   overflow: hidden;
@@ -440,98 +362,50 @@
   letter-spacing: var(--tracking-tight);
 }
 
-/* 1위 이름 - Gold Gradient */
+/* 1위 이름 - Gold */
 .rank1 .name {
-  font-size: var(--text-xl);
-  background: linear-gradient(135deg, #ffd700 0%, #ffec8b 50%, #ffd700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--metallic-gold);
 }
 
-/* 2위 이름 - Silver Gradient */
+/* 2위 이름 - Silver */
 .rank2 .name {
-  font-size: var(--text-lg);
-  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 50%, #c0c0c0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 10px rgba(192, 192, 192, 0.4));
+  font-size: var(--text-sm);
+  color: var(--metallic-silver);
 }
 
-/* 3위 이름 - Bronze Gradient */
+/* 3위 이름 - Bronze */
 .rank3 .name {
-  font-size: var(--text-lg);
-  background: linear-gradient(135deg, #cd7f32 0%, #e09050 50%, #cd7f32 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 10px rgba(205, 127, 50, 0.4));
+  font-size: var(--text-sm);
+  color: var(--metallic-bronze);
 }
 
 .amount {
   font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
+  font-weight: 500;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 
 .rank1 .amount {
-  font-size: var(--text-base);
-  color: rgba(255, 215, 0, 0.9);
+  color: var(--metallic-gold);
+  opacity: 0.8;
 }
 
 .rank2 .amount {
-  color: rgba(192, 192, 192, 0.85);
+  color: var(--metallic-silver);
+  opacity: 0.8;
 }
 
 .rank3 .amount {
-  color: rgba(205, 127, 50, 0.85);
+  color: var(--metallic-bronze);
+  opacity: 0.8;
 }
 
-/* Shimmer Animation */
+/* Subtle Shine on Top Bar */
 .shine {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.15),
-    transparent
-  );
-  animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-/* Hover Glow Effects - Subtle */
-.rank1:hover .front {
-  box-shadow:
-    0 0 20px rgba(255, 215, 0, 0.2),
-    inset 0 0 20px rgba(255, 215, 0, 0.04);
-}
-
-.rank2:hover .front {
-  box-shadow:
-    0 0 16px rgba(192, 192, 192, 0.2),
-    inset 0 0 16px rgba(192, 192, 192, 0.03);
-}
-
-.rank3:hover .front {
-  box-shadow:
-    0 0 16px rgba(205, 127, 50, 0.2),
-    inset 0 0 16px rgba(205, 127, 50, 0.03);
+  display: none;
 }
 
 /* Responsive */
@@ -539,13 +413,17 @@
   .container {
     flex-direction: column;
     align-items: center;
-    gap: 2rem;
-    padding: 2rem 1rem;
+    gap: 1.5rem;
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .stageLine {
+    display: none;
   }
 
   .podiumWrapper {
     width: 100%;
-    max-width: 280px;
+    max-width: 260px;
   }
 
   .podiumWrapper:hover {
@@ -563,31 +441,42 @@
   }
 
   .rank1 .avatar {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
   }
 
   .rank2 .avatar,
   .rank3 .avatar {
-    width: 85px;
-    height: 85px;
+    width: 80px;
+    height: 80px;
   }
 
   .rank1 .initials {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .rank2 .initials,
   .rank3 .initials {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .avatarSection {
-    margin-bottom: -25px;
+    margin-bottom: -20px;
   }
 
   .front {
     min-height: auto !important;
-    padding: 2rem 1rem 1rem !important;
+    padding: 1.5rem 1rem 1rem !important;
+  }
+
+  .name {
+    font-size: var(--text-xs) !important;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .podiumWrapper {
+    transition: none;
   }
 }

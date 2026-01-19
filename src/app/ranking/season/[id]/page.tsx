@@ -142,18 +142,66 @@ export default function SeasonRankingPage() {
         </Link>
       </nav>
 
-      {/* Premium Hero Section */}
+      {/* Premium Hero Section - Green Theme (Season) */}
       <div className={styles.hero}>
+        {/* Ambient Orbs */}
+        <div className={styles.ambientOrbs}>
+          <motion.div
+            className={`${styles.orb} ${styles.orbPrimary}`}
+            animate={{
+              x: [0, 25, 0],
+              y: [0, -15, 0],
+            }}
+            transition={{
+              duration: 18,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div
+            className={`${styles.orb} ${styles.orbSecondary}`}
+            animate={{
+              x: [0, -15, 0],
+              y: [0, 20, 0],
+            }}
+            transition={{
+              duration: 22,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
+
         <motion.div
           className={styles.heroContent}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <span className={styles.heroBadge}>{selectedSeason?.name || 'SEASON'}</span>
-          <h1 className={styles.title}>RANKINGS</h1>
+          <motion.span
+            className={`${styles.heroBadge} ${selectedSeason?.is_active ? styles.activeBadge : styles.archiveBadgeHero}`}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
+            {selectedSeason?.is_active && <span className={styles.liveDot} />}
+            <span>{selectedSeason?.name || 'SEASON'}</span>
+          </motion.span>
+          <motion.h1
+            className={styles.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            RANKINGS
+          </motion.h1>
           {selectedSeason && (
-            <div className={styles.seasonMeta}>
+            <motion.div
+              className={styles.seasonMeta}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.4 }}
+            >
               <span className={styles.dateRange}>
                 <Calendar size={14} />
                 {formatSeasonDate(selectedSeason.start_date)} ~ {selectedSeason.end_date ? formatSeasonDate(selectedSeason.end_date) : '진행 중'}
@@ -161,7 +209,7 @@ export default function SeasonRankingPage() {
               {selectedSeason.is_active && daysRemaining !== null && daysRemaining > 0 && (
                 <span className={styles.daysLeft}>D-{daysRemaining}</span>
               )}
-            </div>
+            </motion.div>
           )}
         </motion.div>
 

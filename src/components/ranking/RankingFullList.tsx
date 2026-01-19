@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { RankingItem } from "@/types/common";
@@ -25,9 +25,18 @@ export default function RankingFullList({
     return maxAmount > 0 ? (amount / maxAmount) * 100 : 0;
   };
 
+  // 티어별 스타일 분류
+  const getTierStyle = (rank: number) => {
+    if (rank === 1) return styles.champion;
+    if (rank === 2 || rank === 3) return styles.elite;
+    if (rank <= 10) return styles.top10;
+    if (rank <= 20) return styles.rising;
+    return styles.standard;
+  };
+
+  // 레거시 함수 유지
   const getRankStyle = (rank: number) => {
     if (rank === 1) return styles.gold;
-    // 2,3위는 동일한 elite 스타일
     if (rank === 2 || rank === 3) return styles.elite;
     if (rank <= 10) return styles.top10;
     return "";
@@ -40,11 +49,14 @@ export default function RankingFullList({
 
         const Content = (
           <motion.div
-            className={`${styles.item} ${getRankStyle(item.rank)}`}
+            className={`${styles.item} ${getRankStyle(item.rank)} ${getTierStyle(item.rank)}`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: index * 0.02 }}
           >
+            {/* Left Border Accent */}
+            <div className={styles.borderAccent} />
+
             {/* Rank Number */}
             <div className={styles.rankSection}>
               <span className={styles.rank}>{item.rank}</span>
@@ -87,14 +99,16 @@ export default function RankingFullList({
                 </div>
               </div>
 
-              {/* Gauge Bar */}
+              {/* Gauge Bar with Glow Dot */}
               <div className={styles.gaugeContainer}>
                 <motion.div
                   className={styles.gaugeFill}
                   initial={{ width: 0 }}
                   animate={{ width: `${percentage}%` }}
                   transition={{ duration: 0.8, delay: index * 0.02 + 0.2 }}
-                />
+                >
+                  {item.rank === 1 && <span className={styles.gaugeGlowDot} />}
+                </motion.div>
                 {item.rank <= 3 && (
                   <motion.div
                     className={styles.gaugeGlow}
@@ -106,7 +120,10 @@ export default function RankingFullList({
               </div>
             </div>
 
-            {/* 하트 개수 숨김 - 게이지바만 표시 */}
+            {/* Hover Arrow */}
+            <div className={styles.hoverArrow}>
+              <ChevronRight size={18} />
+            </div>
           </motion.div>
         );
 

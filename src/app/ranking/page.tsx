@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Crown, Sparkles, ChevronDown, Calendar } from "lucide-react";
+import { ArrowLeft, Crown, Sparkles, ChevronDown, Calendar, Trophy } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useSupabaseContext } from "@/lib/context";
 import type { RankingItem, UnitFilter } from "@/types/common";
@@ -101,17 +101,67 @@ export default function TotalRankingPage() {
         </Link>
       </nav>
 
-      {/* Premium Hero Section */}
+      {/* Premium Hero Section - Gold Theme (All-Time) */}
       <div className={styles.hero}>
+        {/* Ambient Orbs */}
+        <div className={styles.ambientOrbs}>
+          <motion.div
+            className={`${styles.orb} ${styles.orbGold}`}
+            animate={{
+              x: [0, 30, 0],
+              y: [0, -20, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div
+            className={`${styles.orb} ${styles.orbSecondary}`}
+            animate={{
+              x: [0, -20, 0],
+              y: [0, 30, 0],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
+
         <motion.div
           className={styles.heroContent}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <span className={styles.heroBadge}>ELITE</span>
-          <h1 className={styles.title}>RANKINGS</h1>
-          <p className={styles.subtitle}>Top Supporters of RG Family</p>
+          <motion.span
+            className={styles.heroBadge}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
+            <Trophy size={12} />
+            <span>HALL OF FAME</span>
+          </motion.span>
+          <motion.h1
+            className={styles.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            RANKINGS
+          </motion.h1>
+          <motion.p
+            className={styles.subtitle}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+          >
+            All-Time Top Supporters
+          </motion.p>
         </motion.div>
 
         {/* Scroll Indicator */}

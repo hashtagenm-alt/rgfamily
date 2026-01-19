@@ -101,7 +101,7 @@
 }
 
 /* =======================================
-   Hero Section - Dramatic & Minimal
+   Hero Section - Refined Gold Theme (All-Time)
    ======================================= */
 .hero {
   position: relative;
@@ -109,11 +109,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 70vh;
-  padding: var(--space-20) var(--space-6);
+  min-height: 65vh;
+  padding: var(--space-16) var(--space-6);
   overflow: hidden;
 }
 
+/* Subtle Gold Accent */
 .hero::before {
   content: '';
   position: absolute;
@@ -124,11 +125,12 @@
   max-width: 1000px;
   height: 100%;
   background: radial-gradient(
-    ellipse 60% 40% at 50% 0%,
-    rgba(255, 255, 255, 0.04) 0%,
+    ellipse 50% 35% at 50% 30%,
+    var(--metallic-gold-bg) 0%,
     transparent 60%
   );
   pointer-events: none;
+  opacity: 0.5;
 }
 
 .hero::after {
@@ -142,6 +144,37 @@
   pointer-events: none;
 }
 
+/* Ambient Orbs - More Subtle */
+.ambientOrbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.06;
+}
+
+.orbGold {
+  top: 10%;
+  right: 15%;
+  width: 300px;
+  height: 300px;
+  background: var(--metallic-gold);
+}
+
+.orbSecondary {
+  bottom: 25%;
+  left: 10%;
+  width: 250px;
+  height: 250px;
+  background: var(--metallic-gold-light);
+}
+
 .heroContent {
   position: relative;
   z-index: 1;
@@ -152,34 +185,47 @@
 }
 
 .heroBadge {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 6px;
-  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--metallic-gold);
   margin-bottom: var(--space-4);
+  padding: var(--space-1-5) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--metallic-gold-border);
+  border-radius: var(--radius-full);
   opacity: 0.9;
+}
+
+.heroBadge svg {
+  opacity: 0.8;
+  width: 10px;
+  height: 10px;
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 12vw, 7rem);
+  font-size: clamp(3.5rem, 12vw, 7rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 0.9;
   background: linear-gradient(
     180deg,
-    var(--text-primary) 0%,
+    var(--text-primary) 20%,
     var(--text-tertiary) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .subtitle {
-  font-size: var(--text-sm);
-  font-weight: 400;
+  font-size: var(--text-xs);
+  font-weight: 500;
   letter-spacing: 2px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -441,12 +487,16 @@
   }
 
   .hero {
-    min-height: 60vh;
-    padding: var(--space-16) var(--space-4);
+    min-height: 50vh;
+    padding: var(--space-12) var(--space-4);
+  }
+
+  .ambientOrbs {
+    display: none;
   }
 
   .title {
-    font-size: clamp(2.5rem, 15vw, 4rem);
+    font-size: clamp(2.5rem, 12vw, 4rem);
   }
 
   .container {
@@ -469,16 +519,16 @@
   }
 
   .fullListSection {
-    padding: var(--space-5);
-    border-radius: var(--radius-xl);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
   }
 
   .sectionHeader {
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .sectionTitle {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
   }
 }
 
@@ -489,21 +539,26 @@
   }
 
   .hero {
-    min-height: 55vh;
+    min-height: 45vh;
   }
 
   .heroBadge {
-    font-size: 10px;
-    letter-spacing: 4px;
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+
+  .title {
+    font-size: clamp(2rem, 10vw, 3rem);
   }
 
   .subtitle {
-    font-size: var(--text-xs);
+    font-size: 10px;
+    letter-spacing: 1px;
   }
 
   .scrollIndicator {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 
   .unitButton {

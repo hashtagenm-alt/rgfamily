@@ -96,7 +96,7 @@
 }
 
 /* =======================================
-   Hero Section - Dramatic & Minimal
+   Hero Section - Refined Green Theme (Season)
    ======================================= */
 .hero {
   position: relative;
@@ -104,11 +104,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 70vh;
-  padding: var(--space-20) var(--space-6);
+  min-height: 65vh;
+  padding: var(--space-16) var(--space-6);
   overflow: hidden;
 }
 
+/* Subtle Green Accent */
 .hero::before {
   content: '';
   position: absolute;
@@ -119,11 +120,12 @@
   max-width: 1000px;
   height: 100%;
   background: radial-gradient(
-    ellipse 60% 50% at 50% 30%,
+    ellipse 50% 35% at 50% 30%,
     var(--color-success-bg) 0%,
     transparent 60%
   );
   pointer-events: none;
+  opacity: 0.5;
 }
 
 .hero::after {
@@ -137,6 +139,37 @@
   pointer-events: none;
 }
 
+/* Ambient Orbs - More Subtle */
+.ambientOrbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.06;
+}
+
+.orbPrimary {
+  top: 10%;
+  right: 15%;
+  width: 300px;
+  height: 300px;
+  background: var(--color-success);
+}
+
+.orbSecondary {
+  bottom: 25%;
+  left: 10%;
+  width: 250px;
+  height: 250px;
+  background: #4ade80;
+}
+
 .heroContent {
   position: relative;
   z-index: 1;
@@ -147,29 +180,57 @@
 }
 
 .heroBadge {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 6px;
-  color: var(--color-success);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
   margin-bottom: var(--space-4);
-  opacity: 0.8;
+  padding: var(--space-1-5) var(--space-3);
+  border-radius: var(--radius-full);
+}
+
+.activeBadge {
+  color: var(--color-success);
+  background: transparent;
+  border: 1px solid var(--color-success-border);
+}
+
+.archiveBadgeHero {
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-overlay-15);
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-success);
+  border-radius: 50%;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 12vw, 7rem);
+  font-size: clamp(3.5rem, 12vw, 7rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 0.9;
   background: linear-gradient(
     180deg,
-    var(--text-primary) 0%,
+    var(--text-primary) 20%,
     var(--text-tertiary) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .seasonMeta {

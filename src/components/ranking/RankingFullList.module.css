@@ -20,55 +20,120 @@
 /* Individual Ranking Item */
 .item {
   display: grid;
-  grid-template-columns: 60px 48px 1fr 100px;
+  grid-template-columns: 50px 44px 1fr;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--radius-lg);
-  transition: var(--transition-base);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
+/* Left Border Accent */
+.borderAccent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: transparent;
+}
+
+/* Hover Arrow */
+.hoverArrow {
+  position: absolute;
+  right: var(--space-3);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: var(--text-muted);
+}
+
 .link .item:hover {
   border-color: var(--item-border-hover);
-  transform: translateX(4px);
-  box-shadow: var(--shadow-md);
+  background: var(--overlay-subtle);
   cursor: pointer;
 }
 
+.link .item:hover .hoverArrow {
+  opacity: 0.5;
+}
+
 .noLink .item:hover {
-  border-color: var(--card-border);
-  transform: none;
   cursor: default;
 }
 
-/* Rank Styles - Gold (1위) */
+/* =======================================
+   Tier Styles - Champion (1위)
+   ======================================= */
+.item.champion {
+  background: linear-gradient(90deg, var(--metallic-gold-bg) 0%, var(--card-bg) 50%);
+  border-color: var(--metallic-gold-border);
+}
+
+.item.champion .borderAccent {
+  background: var(--metallic-gold);
+  width: 3px;
+}
+
+.link .item.champion:hover {
+  border-color: var(--metallic-gold);
+}
+
+/* Rank Styles - Gold (Legacy - 1위) */
 .item.gold {
-  background: linear-gradient(90deg, var(--metallic-gold-bg) 0%, var(--card-bg) 30%);
+  background: linear-gradient(90deg, var(--metallic-gold-bg) 0%, var(--card-bg) 50%);
   border-color: var(--metallic-gold-border);
 }
 
 .link .item.gold:hover {
   border-color: var(--metallic-gold);
-  box-shadow: var(--gold-shadow-05);
 }
 
-/* 2,3위 Elite 스타일 (동일) */
+/* =======================================
+   Tier Styles - Elite (2-3위)
+   ======================================= */
 .item.elite {
-  background: linear-gradient(90deg, var(--overlay-subtle) 0%, var(--card-bg) 30%);
+  background: var(--card-bg);
   border-color: var(--border-overlay-15);
 }
 
-.link .item.elite:hover {
-  border-color: var(--border-overlay-25);
-  box-shadow: var(--shadow-md);
+.item.elite .borderAccent {
+  background: var(--metallic-silver);
+  width: 2px;
 }
 
+.link .item.elite:hover {
+  border-color: var(--metallic-silver-border);
+}
+
+/* =======================================
+   Tier Styles - Top 10 (4-10위)
+   ======================================= */
 .item.top10 {
-  background: linear-gradient(90deg, var(--overlay-subtle) 0%, var(--card-bg) 20%);
+  background: var(--card-bg);
+}
+
+.item.top10 .borderAccent {
+  background: var(--text-muted);
+  opacity: 0.2;
+}
+
+/* =======================================
+   Tier Styles - Rising (11-20위)
+   ======================================= */
+.item.rising {
+  background: var(--card-bg);
+}
+
+/* =======================================
+   Tier Styles - Standard (21위+)
+   ======================================= */
+.item.standard {
+  background: var(--card-bg);
+  border-color: var(--card-border);
 }
 
 /* Rank Number Section */
@@ -133,73 +198,32 @@
   object-fit: cover;
 }
 
-/* 닉네임 이니셜 스타일 - Premium Design */
+/* 닉네임 이니셜 스타일 - Clean Design */
 .initials {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--text-base);
+  font-weight: 600;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
-/* 1위 - Luxurious Gold Initials */
-.gold .initials {
-  background: linear-gradient(
-    135deg,
-    #b8860b 0%,
-    #ffd700 20%,
-    #fff8dc 40%,
-    #ffd700 60%,
-    #b8860b 100%
-  );
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: var(--text-xl);
-  font-weight: 900;
-  filter: drop-shadow(0 0 10px var(--metallic-gold-glow));
-  animation: listGoldShimmer 3s ease-in-out infinite;
-}
-
-@keyframes listGoldShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* 2,3위 - Elegant Platinum Initials (Theme Compatible) */
-.elite .initials {
-  background: linear-gradient(
-    135deg,
-    var(--elite-gradient-from) 0%,
-    var(--elite-gradient-mid) 30%,
-    var(--elite-gradient-to) 50%,
-    var(--elite-gradient-mid) 70%,
-    var(--elite-gradient-from) 100%
-  );
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: var(--text-lg);
-  font-weight: 900;
-  filter: drop-shadow(0 0 6px var(--elite-glow));
-  animation: listPlatinumShimmer 4s ease-in-out infinite;
-}
-
-@keyframes listPlatinumShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* Top 10 이니셜 - Subtle Premium */
-.top10 .initials {
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* 1위 - Gold Initials */
+.gold .initials,
+.champion .initials {
+  color: var(--metallic-gold);
   font-weight: 700;
+}
+
+/* 2,3위 - Silver Initials */
+.elite .initials {
+  color: var(--metallic-silver);
+  font-weight: 600;
+}
+
+/* Top 10 이니셜 */
+.top10 .initials {
+  color: var(--text-secondary);
 }
 
 /* Info Section */
@@ -259,7 +283,7 @@
 /* Gauge Bar */
 .gaugeContainer {
   position: relative;
-  height: 6px;
+  height: 4px;
   background: var(--surface-hover);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -270,36 +294,36 @@
   top: 0;
   left: 0;
   height: 100%;
-  background: var(--primary);
+  background: var(--text-tertiary);
   border-radius: var(--radius-full);
-  min-width: 4px;
+  min-width: 2px;
 }
 
-.gold .gaugeFill {
-  background: var(--metallic-gold-gradient);
-}
-
-/* 2,3위 Elite 게이지 (동일) */
-.elite .gaugeFill {
-  background: linear-gradient(90deg, var(--text-tertiary), var(--text-secondary), var(--text-tertiary));
-}
-
-.gaugeGlow {
-  position: absolute;
-  top: -2px;
-  left: 0;
-  height: 10px;
-  border-radius: var(--radius-full);
-  filter: blur(4px);
-  opacity: 0.5;
-}
-
-.gold .gaugeGlow {
+.gold .gaugeFill,
+.champion .gaugeFill {
   background: var(--metallic-gold);
 }
 
-.elite .gaugeGlow {
-  background: var(--text-secondary);
+/* 2,3위 Elite 게이지 */
+.elite .gaugeFill {
+  background: var(--metallic-silver);
+}
+
+/* Glow Dot at end of gauge */
+.gaugeGlowDot {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: var(--metallic-gold);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--metallic-gold-glow);
+}
+
+.gaugeGlow {
+  display: none;
 }
 
 /* Amount Section */

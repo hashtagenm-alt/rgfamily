@@ -12,6 +12,7 @@ interface RankingPodiumProps {
   items: RankingItem[];
 }
 
+
 export default function RankingPodium({ items }: RankingPodiumProps) {
   // Ensure we have 3 slots even if empty (for layout stability)
   const top3 = [
@@ -38,6 +39,9 @@ export default function RankingPodium({ items }: RankingPodiumProps) {
 
   return (
     <div className={styles.container}>
+      {/* Stage Platform Line */}
+      <div className={styles.stageLine} />
+
       {podiumOrder.map((item, i) => {
         // Correct rank based on position in array
         // i=0 -> Rank 2, i=1 -> Rank 1, i=2 -> Rank 3
@@ -61,11 +65,11 @@ export default function RankingPodium({ items }: RankingPodiumProps) {
         const Content = (
           <motion.div
             className={`${styles.podiumWrapper} ${getRankClass(rank)}`}
-            initial={{ opacity: 0, scale: 0.9, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: i * 0.15 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: i * 0.1 }}
           >
-            {/* Avatar Section (Floating) - 화려한 닉네임 이니셜 표시 */}
+            {/* Avatar Section */}
             <div className={styles.avatarSection}>
               <div className={styles.avatar}>
                 {item.avatarUrl ? (
