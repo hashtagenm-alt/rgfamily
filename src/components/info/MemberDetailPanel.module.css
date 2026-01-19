@@ -474,14 +474,7 @@
   font-size: 0.7rem;
 }
 
-/* ==================== 하단 CTA ==================== */
-.footer {
-  padding: 0.5rem;
-  background: var(--surface);
-  border-top: 1px solid var(--card-border);
-  flex-shrink: 0;
-}
-
+/* ==================== 방송 보러가기 버튼 ==================== */
 .watchBtn {
   display: flex;
   align-items: center;
@@ -620,7 +613,7 @@
     font-size: 0.7rem;
   }
 
-  .footer {
+  .liveCtaTop {
     padding: 0.4rem;
   }
 
