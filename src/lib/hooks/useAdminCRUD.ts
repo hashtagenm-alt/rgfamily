@@ -103,6 +103,9 @@ export interface AdminCRUDConfig<T extends { id?: number | string }> {
     ascending?: boolean
   }
 
+  /** 커스텀 select 쿼리 (선택, 기본값: '*') - 조인이 필요한 경우 사용 */
+  selectQuery?: string
+
   /** DB 행 → 프론트엔드 객체 변환 */
   fromDbFormat: (row: Record<string, unknown>) => T
 
@@ -170,6 +173,7 @@ export function useAdminCRUD<T extends { id?: number | string }>(
     tableName,
     defaultItem,
     orderBy,
+    selectQuery = '*',
     fromDbFormat,
     toDbFormat,
     validate,
@@ -196,18 +200,20 @@ export function useAdminCRUD<T extends { id?: number | string }>(
   // Store config refs to avoid infinite loop
   const fromDbFormatRef = React.useRef(fromDbFormat)
   const orderByRef = React.useRef(orderBy)
+  const selectQueryRef = React.useRef(selectQuery)
 
   // Update refs in effect to avoid "Cannot access refs during render" error
   React.useEffect(() => {
     fromDbFormatRef.current = fromDbFormat
     orderByRef.current = orderBy
-  }, [fromDbFormat, orderBy])
+    selectQueryRef.current = selectQuery
+  }, [fromDbFormat, orderBy, selectQuery])
 
   // Fetch items
   const refetch = useCallback(async () => {
     setIsLoading(true)
 
-    let query = supabase.from(tableName).select('*')
+    let query = supabase.from(tableName).select(selectQueryRef.current)
 
     if (orderByRef.current) {
       query = query.order(orderByRef.current.column, { ascending: orderByRef.current.ascending ?? true })
@@ -217,8 +223,10 @@ export function useAdminCRUD<T extends { id?: number | string }>(
 
     if (error) {
       console.error(`${tableName} 데이터 로드 실패:`, error)
-    } else {
-      setItems((data || []).map(fromDbFormatRef.current))
+    } else if (data) {
+      // Type assertion for custom select queries
+      const rows = data as unknown as Record<string, unknown>[]
+      setItems(rows.map(fromDbFormatRef.current))
     }
 
     setIsLoading(false)
@@ -275,8 +283,15 @@ export function useAdminCRUD<T extends { id?: number | string }>(
     if (isNew) {
       const { error } = await supabase.from(tableName).insert(dbData)
       if (error) {
-        console.error(`${tableName} 등록 실패:`, error)
-        showError('등록에 실패했습니다.', '오류')
+        console.error(`${tableName} 등록 실패:`, error, 'code:', error.code, 'details:', error.details, 'hint:', error.hint)
+        // FK 오류인 경우 친절한 메시지
+        if (error.code === '23503') {
+          showError('선택한 항목이 존재하지 않습니다.\n데이터를 다시 확인해주세요.', '등록 실패')
+        } else if (error.code === '23505') {
+          showError('이미 동일한 데이터가 존재합니다.', '중복 오류')
+        } else {
+          showError(`등록에 실패했습니다: ${error.message || error.code}`, '오류')
+        }
         return false
       }
     } else {

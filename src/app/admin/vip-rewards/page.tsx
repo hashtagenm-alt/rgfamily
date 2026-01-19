@@ -161,15 +161,29 @@ export default function VipRewardsPage() {
       dedicationVideoUrl: '',
     },
     orderBy: { column: 'created_at', ascending: false },
+    selectQuery: `
+      id,
+      profile_id,
+      season_id,
+      rank,
+      personal_message,
+      dedication_video_url,
+      created_at,
+      profiles:profile_id (nickname),
+      seasons:season_id (name)
+    `,
     fromDbFormat: (row) => {
-      const profile = row.profiles as JoinedProfile | null
-      const season = row.seasons as JoinedSeason | null
+      const profile = row.profiles as JoinedProfile | JoinedProfile[] | null
+      const season = row.seasons as JoinedSeason | JoinedSeason[] | null
+      // Supabase는 배열 또는 객체로 반환할 수 있음
+      const profileData = Array.isArray(profile) ? profile[0] : profile
+      const seasonData = Array.isArray(season) ? season[0] : season
       return {
         id: row.id as number,
         profileId: row.profile_id as string,
-        nickname: profile?.nickname || '',
+        nickname: profileData?.nickname || '',
         seasonId: row.season_id as number,
-        seasonName: season?.name || '',
+        seasonName: seasonData?.name || '',
         rank: row.rank as number,
         personalMessage: (row.personal_message as string) || '',
         dedicationVideoUrl: (row.dedication_video_url as string) || '',
@@ -185,6 +199,8 @@ export default function VipRewardsPage() {
     }),
     validate: (item) => {
       if (!item.profileId) return 'VIP 회원을 선택해주세요.'
+      if (!item.seasonId || item.seasonId <= 0) return '시즌을 선택해주세요.'
+      if (!item.rank || item.rank < 1) return '순위를 입력해주세요.'
       return null
     },
     alertHandler,

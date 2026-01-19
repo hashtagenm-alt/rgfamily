@@ -1,0 +1,678 @@
+/* VIP Signature Gallery - High-End Luxury Design */
+
+/* ============================================
+   Gallery Section
+   ============================================ */
+.gallerySection {
+  margin: 3rem 0;
+  padding: 0;
+}
+
+/* ============================================
+   Luxury Header
+   ============================================ */
+.galleryHeader {
+  position: relative;
+  text-align: center;
+  padding: 2.5rem 2rem;
+  margin-bottom: 2rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 215, 0, 0.03) 0%,
+    transparent 100%
+  );
+  border-top: 1px solid rgba(255, 215, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+  overflow: hidden;
+}
+
+.headerAccent {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #ffd700 50%,
+    transparent 100%
+  );
+}
+
+.headerContent {
+  position: relative;
+  z-index: 1;
+}
+
+.headerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 50px;
+  color: #ffd700;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.headerTitle {
+  font-family: var(--font-display, 'Inter', sans-serif);
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  color: var(--text-primary, #fff);
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.headerSubtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+.headerDecor {
+  position: absolute;
+  top: 50%;
+  right: 2rem;
+  transform: translateY(-50%);
+}
+
+.decorStar1,
+.decorStar2,
+.decorStar3 {
+  position: absolute;
+  color: rgba(255, 215, 0, 0.3);
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.decorStar1 {
+  top: -10px;
+  right: 0;
+  animation-delay: 0s;
+}
+
+.decorStar2 {
+  top: 5px;
+  right: -15px;
+  animation-delay: 1s;
+}
+
+.decorStar3 {
+  top: -5px;
+  right: -30px;
+  animation-delay: 2s;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+/* ============================================
+   Gallery Grid - Masonry Style
+   ============================================ */
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+  padding: 0 1rem;
+}
+
+/* Large screen: 4 columns */
+@media (min-width: 900px) {
+  .galleryGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Medium screen: 3 columns */
+@media (max-width: 899px) and (min-width: 640px) {
+  .galleryGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Small screen: 2 columns */
+@media (max-width: 639px) {
+  .galleryGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding: 0 0.5rem;
+  }
+}
+
+/* ============================================
+   Gallery Item
+   ============================================ */
+.galleryItem {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.galleryItem:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 215, 0, 0.3);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 215, 0, 0.1);
+}
+
+.galleryItem.locked {
+  cursor: not-allowed;
+}
+
+.galleryItem.locked:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+/* Corner Accent */
+.cornerAccent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 215, 0, 0.15) 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.galleryItem:hover .cornerAccent {
+  opacity: 1;
+}
+
+/* ============================================
+   Thumbnail
+   ============================================ */
+.itemThumbnail {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+.thumbnailImage {
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.galleryItem:hover .thumbnailImage {
+  transform: scale(1.05);
+}
+
+.thumbnailPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.02));
+  color: rgba(255, 215, 0, 0.4);
+}
+
+/* Overlay */
+.itemOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.galleryItem:hover .itemOverlay {
+  opacity: 1;
+}
+
+.playButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #ffd700, #ffb800);
+  border-radius: 50%;
+  color: #000;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.galleryItem:hover .playButton {
+  transform: scale(1);
+}
+
+/* Lock Overlay for non-VIP */
+.lockOverlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.lockOverlay span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Blur for non-owners */
+.blurOverlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.galleryItem.locked .itemOverlay {
+  opacity: 1;
+  z-index: 2;
+  background: transparent;
+}
+
+/* Gradient */
+.itemGradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* ============================================
+   Item Info
+   ============================================ */
+.itemInfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  z-index: 3;
+}
+
+.memberName {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+.sigLabel {
+  font-size: 0.7rem;
+  color: rgba(255, 215, 0, 0.8);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   Locked Notice
+   ============================================ */
+.lockedNotice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   Empty Gallery
+   ============================================ */
+.emptyGallery {
+  margin: 3rem 0;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.emptyContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), transparent);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 50%;
+  color: rgba(255, 215, 0, 0.5);
+  margin-bottom: 0.5rem;
+}
+
+.emptyContent h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.emptyContent p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.adminHint {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 0.5rem;
+}
+
+/* ============================================
+   Lightbox Modal
+   ============================================ */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.lightboxContent {
+  position: relative;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.lightboxClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lightboxClose:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.lightboxHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.08), transparent);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+  color: #ffd700;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.lightboxMedia {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.lightboxVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.lightboxImage {
+  object-fit: contain;
+}
+
+.lightboxPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.lightboxPlaceholder p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ============================================
+   Light Mode
+   ============================================ */
+:global([data-theme='light']) .galleryHeader {
+  background: linear-gradient(
+    180deg,
+    rgba(184, 134, 11, 0.05) 0%,
+    transparent 100%
+  );
+  border-top-color: rgba(184, 134, 11, 0.15);
+  border-bottom-color: rgba(184, 134, 11, 0.15);
+}
+
+:global([data-theme='light']) .headerAccent {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #b8860b 50%,
+    transparent 100%
+  );
+}
+
+:global([data-theme='light']) .headerBadge {
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.12), rgba(184, 134, 11, 0.04));
+  border-color: rgba(184, 134, 11, 0.25);
+  color: #8b6914;
+}
+
+:global([data-theme='light']) .headerTitle {
+  color: var(--text-primary, #1a1a1a);
+}
+
+:global([data-theme='light']) .headerSubtitle {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+:global([data-theme='light']) .decorStar1,
+:global([data-theme='light']) .decorStar2,
+:global([data-theme='light']) .decorStar3 {
+  color: rgba(184, 134, 11, 0.35);
+}
+
+:global([data-theme='light']) .galleryItem {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .galleryItem:hover {
+  border-color: rgba(184, 134, 11, 0.35);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(184, 134, 11, 0.15);
+}
+
+:global([data-theme='light']) .cornerAccent {
+  background: linear-gradient(135deg, transparent 50%, rgba(184, 134, 11, 0.12) 50%);
+}
+
+:global([data-theme='light']) .thumbnailPlaceholder {
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.08), rgba(184, 134, 11, 0.02));
+  color: rgba(184, 134, 11, 0.4);
+}
+
+:global([data-theme='light']) .playButton {
+  background: linear-gradient(135deg, #b8860b, #daa520);
+  box-shadow: 0 4px 20px rgba(184, 134, 11, 0.3);
+}
+
+:global([data-theme='light']) .sigLabel {
+  color: rgba(184, 134, 11, 0.85);
+}
+
+:global([data-theme='light']) .lockedNotice {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme='light']) .emptyGallery {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global([data-theme='light']) .emptyIcon {
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.1), transparent);
+  border-color: rgba(184, 134, 11, 0.15);
+  color: rgba(184, 134, 11, 0.5);
+}
+
+:global([data-theme='light']) .emptyContent h3 {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+:global([data-theme='light']) .emptyContent p {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme='light']) .adminHint {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme='light']) .lightbox {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+:global([data-theme='light']) .lightboxContent {
+  background: #fff;
+  border-color: rgba(184, 134, 11, 0.2);
+}
+
+:global([data-theme='light']) .lightboxClose {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+:global([data-theme='light']) .lightboxClose:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+:global([data-theme='light']) .lightboxHeader {
+  background: linear-gradient(180deg, rgba(184, 134, 11, 0.08), transparent);
+  border-color: rgba(184, 134, 11, 0.15);
+  color: #8b6914;
+}
+
+:global([data-theme='light']) .lightboxPlaceholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 640px) {
+  .galleryHeader {
+    padding: 1.5rem 1rem;
+  }
+
+  .headerTitle {
+    font-size: 1.25rem;
+    letter-spacing: 0.1em;
+  }
+
+  .headerSubtitle {
+    font-size: 0.8rem;
+  }
+
+  .headerDecor {
+    display: none;
+  }
+
+  .itemInfo {
+    padding: 0.75rem;
+  }
+
+  .memberName {
+    font-size: 0.85rem;
+  }
+
+  .sigLabel {
+    font-size: 0.6rem;
+  }
+
+  .playButton {
+    width: 44px;
+    height: 44px;
+  }
+
+  .playButton svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .lightbox {
+    padding: 1rem;
+  }
+
+  .lightboxContent {
+    border-radius: 12px;
+  }
+}
