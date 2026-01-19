@@ -56,16 +56,6 @@ export default function LivePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className={styles.hero}>
-        <div className={styles.heroBadge}>
-          <span className={styles.liveDot} />
-          <span>NOW STREAMING</span>
-        </div>
-        <h1 className={styles.title}>현재 방송중</h1>
-        <p className={styles.subtitle}>RG FAMILY 멤버 실시간 방송 현황</p>
-      </section>
-
       <div className={styles.container}>
         {/* Unit Filter */}
         <div className={styles.filters}>
