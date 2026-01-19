@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLiveRoster } from "@/lib/hooks";
 import type { LiveMember, UnitFilter } from "@/types/organization";
-import { Radio, Youtube, Instagram, ExternalLink, X, ArrowLeft, Users, Filter } from "lucide-react";
+import { ArrowLeft, Radio, Youtube, Instagram, ExternalLink, X, Users, FileText, Calendar } from "lucide-react";
 import styles from "./page.module.css";
 
 // PandaTV ID로 URL 생성
@@ -33,32 +33,45 @@ export default function LivePage() {
   const totalCount = unitFilteredMembers.length;
 
   return (
-    <main className={styles.main}>
-      {/* Navigation Bar - Reference Style */}
+    <div className={styles.main}>
+      {/* Navigation */}
       <nav className={styles.pageNav}>
         <Link href="/" className={styles.backBtn}>
           <ArrowLeft size={18} />
           <span>홈</span>
         </Link>
-        <div className={styles.navTitle}>
-          <Radio size={16} />
-          <span>LIVE STATUS</span>
-        </div>
-        <div className={styles.navActions}>
-          <button className={styles.navBtn}>
-            <Filter size={16} />
-            <span>필터</span>
-          </button>
-          <button className={styles.navBtn}>
+        <div className={styles.navTabs}>
+          <Link href="/rg/org" className={styles.navTab}>
             <Users size={16} />
-            <span>{totalCount}명</span>
-          </button>
+            <span>조직도</span>
+          </Link>
+          <Link
+            href="/rg/live"
+            className={`${styles.navTab} ${styles.active}`}
+          >
+            <Radio size={16} />
+            <span>LIVE</span>
+          </Link>
+          <Link href="/rg/sig" className={styles.navTab}>
+            <FileText size={16} />
+            <span>시그</span>
+          </Link>
+          <Link href="/rg/history" className={styles.navTab}>
+            <Calendar size={16} />
+            <span>연혁</span>
+          </Link>
         </div>
       </nav>
 
+      {/* Page Header */}
+      <header className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>라이브 방송</h1>
+        <p className={styles.pageDesc}>RG Family 멤버들의 실시간 방송 현황</p>
+      </header>
+
       <div className={styles.container}>
-        {/* Unit Filter */}
-        <div className={styles.filters}>
+        {/* Filter Bar */}
+        <div className={styles.filterBar}>
           <div className={styles.unitFilter}>
             {(['all', 'excel', 'crew'] as const).map((unit) => (
               <button
@@ -67,13 +80,16 @@ export default function LivePage() {
                 className={`${styles.unitButton} ${unitFilter === unit ? styles.active : ''}`}
                 data-unit={unit}
               >
-                {unit === 'all' ? 'ALL' : unit.toUpperCase()}
+                {unit === 'all' ? '전체' : unit === 'excel' ? '엑셀부' : '크루부'}
               </button>
             ))}
           </div>
-          <div className={styles.liveIndicator}>
-            <span className={styles.liveDotSmall} />
-            <span className={styles.liveCount}>{liveCount} LIVE</span>
+          <div className={styles.statsBar}>
+            <div className={styles.liveIndicator}>
+              <span className={styles.liveDot} />
+              <span className={styles.liveCount}>LIVE {liveCount}</span>
+            </div>
+            <span className={styles.totalCount}>전체 {totalCount}명</span>
           </div>
         </div>
 
@@ -89,8 +105,7 @@ export default function LivePage() {
             {liveMembers.length > 0 && (
               <section className={styles.liveSection}>
                 <h2 className={styles.sectionTitle}>
-                  <span className={styles.liveDotSmall} />
-                  NOW STREAMING
+                  현재 방송 중
                 </h2>
                 <div className={styles.liveGrid}>
                   {liveMembers.map((member, index) => (
@@ -123,9 +138,12 @@ export default function LivePage() {
                         <span className={styles.liveBadge}>LIVE</span>
                       </div>
                       <div className={styles.liveCardInfo}>
-                        <span className={styles.unitBadge} data-unit={member.unit}>
-                          {member.unit.toUpperCase()}
-                        </span>
+                        <div className={styles.liveCardMeta}>
+                          <span className={styles.unitBadge} data-unit={member.unit}>
+                            {member.unit === 'excel' ? '엑셀부' : '크루부'}
+                          </span>
+                          <span className={styles.liveStatusText}>방송중</span>
+                        </div>
                         <span className={styles.cardName}>{member.name}</span>
                         <span className={styles.cardRole}>{member.role}</span>
                       </div>
@@ -151,7 +169,7 @@ export default function LivePage() {
             <section className={styles.offlineSection}>
               <h2 className={styles.sectionTitle}>
                 <Users size={18} />
-                전체 멤버
+                오프라인 멤버
               </h2>
               {offlineMembers.length === 0 && liveMembers.length === 0 ? (
                 <div className={styles.empty}>
@@ -209,7 +227,7 @@ export default function LivePage() {
           />
         )}
       </AnimatePresence>
-    </main>
+    </div>
   );
 }
 
