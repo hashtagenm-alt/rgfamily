@@ -134,8 +134,11 @@ export async function getBjMessagesByVipId(
       const canViewContent = msg.is_public || canViewPrivateContent
 
       // 비공개 + 권한 없음인 경우 콘텐츠는 제거 (방어적 처리)
+      // 단, 영상의 경우 썸네일 표시를 위해 URL은 유지 (재생만 차단)
       const safeContentText = canViewContent ? msg.content_text : null
-      const safeContentUrl = canViewContent ? msg.content_url : null
+      const safeContentUrl = canViewContent
+        ? msg.content_url
+        : (msg.message_type === 'video' ? msg.content_url : null)
 
       messages.push({
         id: msg.id,
