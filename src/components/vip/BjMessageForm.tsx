@@ -262,13 +262,13 @@ export default function BjMessageForm({
                     <input
                       type="url"
                       className={styles.input}
-                      placeholder="https://youtube.com/watch?v=... 또는 Google Drive 링크"
+                      placeholder="https://youtube.com/watch?v=... 또는 https://youtu.be/..."
                       value={contentUrl}
                       onChange={(e) => setContentUrl(e.target.value)}
                       disabled={isSubmitting}
                     />
                     <span className={styles.hint}>
-                      YouTube, Google Drive 등 영상 링크를 입력해주세요
+                      YouTube 영상 링크만 지원합니다
                     </span>
                   </div>
                   <div className={styles.inputGroup}>
