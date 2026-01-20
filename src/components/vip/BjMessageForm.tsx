@@ -70,9 +70,35 @@ export default function BjMessageForm({
         setError(messageType === 'image' ? '이미지 URL을 입력해주세요.' : '영상 URL을 입력해주세요.')
         return false
       }
-      // URL 형식 간단 검증
+
+      // URL 형식 및 타입별 검증
       try {
-        new URL(contentUrl)
+        const parsedUrl = new URL(contentUrl)
+
+        if (messageType === 'image') {
+          // 이미지 URL 검증: 이미지 확장자 또는 이미지 호스팅 서비스
+          const validImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+          const path = parsedUrl.pathname.toLowerCase()
+          const isImageHost = ['imgur.com', 'i.imgur.com', 'drive.google.com', 'postimg.cc'].some(
+            host => parsedUrl.hostname.includes(host)
+          )
+          const hasImageExtension = validImageExtensions.some(ext => path.endsWith(ext))
+
+          if (!hasImageExtension && !isImageHost) {
+            setError('지원하는 이미지 형식: jpg, png, gif, webp 또는 Imgur/Google Drive 링크')
+            return false
+          }
+        }
+
+        if (messageType === 'video') {
+          // 영상 URL 검증: YouTube만 허용
+          const isYouTube = parsedUrl.hostname.includes('youtube.com') || parsedUrl.hostname.includes('youtu.be')
+
+          if (!isYouTube) {
+            setError('영상은 YouTube 링크만 지원합니다.')
+            return false
+          }
+        }
       } catch {
         setError('올바른 URL 형식이 아닙니다.')
         return false

@@ -40,7 +40,7 @@ export default function EpisodesPage() {
     const fetchSeasons = async () => {
       const { data } = await supabase
         .from('seasons')
-        .select('id, name')
+        .select('id, name, is_active')
         .order('start_date', { ascending: false })
 
       if (data && data.length > 0) {

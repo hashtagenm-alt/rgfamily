@@ -46,6 +46,7 @@ function getFriendlyErrorMessage(error: { message?: string; code?: string }, tab
     const fkMessages: Record<string, Record<string, string>> = {
       seasons: {
         donations_season_id_fkey: '이 시즌에 후원 기록이 있어\n삭제할 수 없습니다.\n\n먼저 후원 기록을 삭제하거나\n다른 시즌으로 이동해주세요.',
+        episodes_season_id_fkey: '이 시즌에 에피소드(직급전)가 있어\n삭제할 수 없습니다.\n\n먼저 에피소드를 삭제해주세요.',
       },
       organization: {
         donations_donor_id_fkey: '이 멤버에게 연결된 후원 기록이 있어\n삭제할 수 없습니다.',
@@ -53,6 +54,10 @@ function getFriendlyErrorMessage(error: { message?: string; code?: string }, tab
       },
       signatures: {
         signature_videos_signature_id_fkey: '이 시그니처에 등록된 영상이 있어\n삭제할 수 없습니다.',
+      },
+      episodes: {
+        donations_episode_id_fkey: '이 에피소드에 후원 기록이 있어\n삭제할 수 없습니다.\n\n먼저 후원 기록에서 에피소드 연결을 해제하거나\n삭제해주세요.',
+        vip_rewards_episode_id_fkey: '이 에피소드에 VIP 보상 기록이 있어\n삭제할 수 없습니다.\n\n먼저 VIP 보상 데이터를 삭제해주세요.',
       },
     }
 

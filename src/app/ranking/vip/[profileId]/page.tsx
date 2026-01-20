@@ -88,6 +88,25 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
     )
   }
 
+  // 비로그인 상태
+  if (!user) {
+    return (
+      <div className={styles.main}>
+        <div className={styles.restrictedOverlay}>
+          <div className={styles.restrictedBadge}>
+            <Lock size={48} className={styles.restrictedIcon} />
+            <span className={styles.restrictedText}>로그인 필요</span>
+            <span className={styles.restrictedSubtext}>VIP 페이지는 로그인 후 이용 가능합니다</span>
+            <Link href="/login" className={styles.restrictedButton}>
+              로그인
+            </Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
   // 에러
   if (error || !vipData) {
     return (

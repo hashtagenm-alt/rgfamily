@@ -27,6 +27,14 @@ INSERT INTO schedules (title, description, event_type, start_datetime, is_all_da
 ('[RG FAMILY] 시즌1 / 09화!', '주차방지데이', 'broadcast', '2026-02-07 14:00:00+09', false, '#fd68ba'),
 -- 10화: 2026-02-10 (화)
 ('[RG FAMILY] 시즌1 / 10화!', '용병 데이_1', 'broadcast', '2026-02-10 14:00:00+09', false, '#fd68ba'),
+-- 11화: 2026-02-12 (목)
+('[RG FAMILY] 시즌1 / 11화!', NULL, 'broadcast', '2026-02-12 14:00:00+09', false, '#fd68ba'),
+-- 12화: 2026-02-14 (토)
+('[RG FAMILY] 시즌1 / 12화!', NULL, 'broadcast', '2026-02-14 14:00:00+09', false, '#fd68ba'),
+-- 13화: 2026-02-17 (화)
+('[RG FAMILY] 시즌1 / 13화!', NULL, 'broadcast', '2026-02-17 14:00:00+09', false, '#fd68ba'),
+-- 14화: 2026-02-19 (목)
+('[RG FAMILY] 시즌1 / 14화!', NULL, 'broadcast', '2026-02-19 14:00:00+09', false, '#fd68ba'),
 -- 15화 (최종): 2026-02-24 (화)
 ('[RG FAMILY] 시즌1 / 15화!', '최종 직급전', 'broadcast', '2026-02-24 14:00:00+09', false, '#ffd700');
 
@@ -42,6 +50,10 @@ INSERT INTO timeline_events (event_date, title, description, category, season_id
 ('2026-02-05', '[RG FAMILY] 시즌1 / 08화!', '대표를 이겨라', 'broadcast', 10, 8),
 ('2026-02-07', '[RG FAMILY] 시즌1 / 09화!', '주차방지데이', 'broadcast', 10, 9),
 ('2026-02-10', '[RG FAMILY] 시즌1 / 10화!', '용병 데이_1', 'broadcast', 10, 10),
+('2026-02-12', '[RG FAMILY] 시즌1 / 11화!', NULL, 'broadcast', 10, 11),
+('2026-02-14', '[RG FAMILY] 시즌1 / 12화!', NULL, 'broadcast', 10, 12),
+('2026-02-17', '[RG FAMILY] 시즌1 / 13화!', NULL, 'broadcast', 10, 13),
+('2026-02-19', '[RG FAMILY] 시즌1 / 14화!', NULL, 'broadcast', 10, 14),
 ('2026-02-24', '[RG FAMILY] 시즌1 / 15화!', '최종 직급전', 'broadcast', 10, 15);
 
 -- 4. episodes 테이블에도 추가 (에피소드 관리용)
@@ -59,4 +71,8 @@ INSERT INTO episodes (season_id, episode_number, title, description, broadcast_d
 (10, 8, '대표를 이겨라', 'RG Family 시즌1 여덟 번째 에피소드', '2026-02-05 14:00:00+09', false),
 (10, 9, '주차방지데이', 'RG Family 시즌1 아홉 번째 에피소드', '2026-02-07 14:00:00+09', false),
 (10, 10, '용병 데이_1', 'RG Family 시즌1 열 번째 에피소드', '2026-02-10 14:00:00+09', false),
+(10, 11, '시즌1 11화', NULL, '2026-02-12 14:00:00+09', false),
+(10, 12, '시즌1 12화', NULL, '2026-02-14 14:00:00+09', false),
+(10, 13, '시즌1 13화', NULL, '2026-02-17 14:00:00+09', false),
+(10, 14, '시즌1 14화', NULL, '2026-02-19 14:00:00+09', false),
 (10, 15, '최종 직급전', 'RG Family 시즌1 최종 에피소드 - 최종 직급전', '2026-02-24 14:00:00+09', true);

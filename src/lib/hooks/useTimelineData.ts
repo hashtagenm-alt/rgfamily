@@ -121,12 +121,18 @@ export function useTimelineData(options?: UseTimelineDataOptions): UseTimelineDa
       seasonMap.get(seasonId)!.push(event)
     })
 
-    // 시즌 ID 내림차순으로 정렬 (최신 시즌 먼저)
-    const sortedSeasonIds = Array.from(seasonMap.keys()).sort((a, b) => b - a)
+    // 시즌 ID 오름차순으로 정렬 (오래된 시즌 먼저, 최신 시즌이 스크롤 아래로)
+    const sortedSeasonIds = Array.from(seasonMap.keys()).sort((a, b) => a - b)
 
     sortedSeasonIds.forEach((seasonId) => {
       const season = seasons.find((s) => s.id === seasonId) || null
       const seasonEvents = seasonMap.get(seasonId) || []
+
+      // 각 시즌 내 이벤트도 날짜 오름차순 정렬 (오래된 이벤트 먼저)
+      seasonEvents.sort((a, b) =>
+        new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+      )
+
       groups.push({ season, events: seasonEvents })
     })
 

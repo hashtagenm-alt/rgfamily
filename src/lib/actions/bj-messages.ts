@@ -133,13 +133,17 @@ export async function getBjMessagesByVipId(
       // 비공개 메시지는 canViewPrivateContent가 true인 경우만 열람 가능
       const canViewContent = msg.is_public || canViewPrivateContent
 
+      // 비공개 + 권한 없음인 경우 콘텐츠는 제거 (방어적 처리)
+      const safeContentText = canViewContent ? msg.content_text : null
+      const safeContentUrl = canViewContent ? msg.content_url : null
+
       messages.push({
         id: msg.id,
         vip_profile_id: msg.vip_profile_id,
         bj_member_id: msg.bj_member_id,
         message_type: msg.message_type as 'text' | 'image' | 'video',
-        content_text: msg.content_text,
-        content_url: msg.content_url,
+        content_text: safeContentText,
+        content_url: safeContentUrl,
         is_public: msg.is_public,
         is_deleted: msg.is_deleted,
         created_at: msg.created_at,
@@ -302,7 +306,9 @@ export async function updateBjMessage(
     }
 
     // 수정 데이터 구성
-    const updateData: Record<string, unknown> = {}
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    }
     if (data.contentText !== undefined) updateData.content_text = data.contentText
     if (data.contentUrl !== undefined) updateData.content_url = data.contentUrl
     if (data.isPublic !== undefined) updateData.is_public = data.isPublic

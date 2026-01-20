@@ -170,10 +170,6 @@ export default function LoginPage() {
             </Button>
 
             <Text ta="center" size="xs" c="dimmed">
-              <Anchor component={Link} href="/find-email" c="dimmed" size="xs">
-                아이디 찾기
-              </Anchor>
-              {" | "}
               <Anchor component={Link} href="/forgot-password" c="dimmed" size="xs">
                 비밀번호 찾기
               </Anchor>

@@ -11,6 +11,7 @@ CREATE TABLE public.bj_thank_you_messages (
   message_type text NOT NULL CHECK (message_type IN ('text', 'image', 'video')),
   content_text text CHECK (char_length(content_text) <= 1000),
   content_url text,  -- 이미지 URL 또는 영상 외부 링크 (YouTube, Google Drive 등)
+  is_public boolean DEFAULT true,
   is_deleted boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
@@ -28,6 +29,7 @@ COMMENT ON COLUMN public.bj_thank_you_messages.bj_member_id IS '메시지를 작
 COMMENT ON COLUMN public.bj_thank_you_messages.message_type IS '메시지 타입: text, image, video';
 COMMENT ON COLUMN public.bj_thank_you_messages.content_text IS '텍스트 메시지 (최대 1000자)';
 COMMENT ON COLUMN public.bj_thank_you_messages.content_url IS '이미지 URL 또는 영상 외부 링크';
+COMMENT ON COLUMN public.bj_thank_you_messages.is_public IS '공개 여부: true=전체 공개, false=VIP/작성자/관리자 전용';
 
 -- ============================================
 -- 헬퍼 함수
@@ -88,13 +90,24 @@ CREATE TRIGGER bj_message_updated_at
 -- RLS 활성화
 ALTER TABLE public.bj_thank_you_messages ENABLE ROW LEVEL SECURITY;
 
--- SELECT: VIP 본인 또는 관리자만 조회 가능
+-- SELECT: 로그인 사용자 중 공개 메시지는 모두 조회 가능, 비공개는 VIP/작성자/관리자만
 CREATE POLICY "VIP 본인 또는 관리자만 조회 가능"
   ON public.bj_thank_you_messages
   FOR SELECT
   USING (
-    auth.uid() = vip_profile_id
-    OR is_admin(auth.uid())
+    is_deleted = false
+    AND auth.uid() IS NOT NULL
+    AND (
+      is_public
+      OR auth.uid() = vip_profile_id
+      OR is_admin(auth.uid())
+      OR EXISTS (
+        SELECT 1 FROM public.organization
+        WHERE id = bj_member_id
+          AND profile_id = auth.uid()
+          AND is_active = true
+      )
+    )
   );
 
 -- INSERT: organization.profile_id가 일치하는 BJ만 작성 가능

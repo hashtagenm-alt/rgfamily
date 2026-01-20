@@ -157,6 +157,32 @@ interface FinalizeResult {
 }
 
 /**
+ * RPC 결과 런타임 타입 검증
+ * - 위험한 타입 단언 대신 실제 데이터 검증
+ */
+function validateEpisodeRankings(data: unknown): EpisodeRanking[] {
+  if (!Array.isArray(data)) {
+    console.warn('RPC 결과가 배열이 아닙니다:', data)
+    return []
+  }
+
+  return data
+    .filter((item): item is Record<string, unknown> => {
+      if (typeof item !== 'object' || item === null) {
+        console.warn('잘못된 랭킹 항목:', item)
+        return false
+      }
+      return true
+    })
+    .map((item, index) => ({
+      rank: typeof item.rank === 'number' ? item.rank : index + 1,
+      donor_id: typeof item.donor_id === 'string' ? item.donor_id : null,
+      donor_name: typeof item.donor_name === 'string' ? item.donor_name : '알 수 없음',
+      total_amount: typeof item.total_amount === 'number' ? item.total_amount : 0,
+    }))
+}
+
+/**
  * 직급전 확정 + Top 3 VIP 자동 생성
  *
  * 핵심 로직:
@@ -192,15 +218,19 @@ export async function finalizeRankBattle(
     }
 
     // 2. Top 3 랭킹 조회 (RPC 함수 사용)
-    const { data: rankings, error: rankingError } = await supabase
+    const { data: rawRankings, error: rankingError } = await supabase
       .rpc('get_episode_rankings', {
         p_episode_id: episodeId,
         p_limit: 3
-      }) as { data: EpisodeRanking[] | null; error: unknown }
+      })
 
     if (rankingError) {
+      console.error('RPC 오류:', rankingError)
       throw new Error('랭킹 조회 중 오류가 발생했습니다.')
     }
+
+    // 런타임 타입 검증
+    const rankings = validateEpisodeRankings(rawRankings)
 
     if (!rankings || rankings.length === 0) {
       throw new Error('후원 데이터가 없어 확정할 수 없습니다.')
@@ -289,6 +319,6 @@ export async function getEpisodeRankings(
       })
 
     if (error) throw new Error(error.message)
-    return data || []
+    return validateEpisodeRankings(data)
   })
 }
