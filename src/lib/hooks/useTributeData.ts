@@ -143,46 +143,25 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
         .order('created_at', { ascending: false })
 
       if (rewardsError) {
-        // 테이블이 없거나 권한 문제 시 mock 데이터로 fallback
-        console.warn('VIP 보상 테이블 조회 실패, mock 데이터로 대체:', rewardsError.message || rewardsError)
-
-        // Mock 데이터로 fallback
-        const mockProfile = mockProfiles.find(p => p.id === userId) || mockProfiles[0]
-        const mockReward = getVipRewardByProfileId(userId) || mockVipRewards[0]
-
-        if (mockProfile && mockReward) {
-          const fallbackHofData: HallOfFameHonor[] = [{
-            id: `fallback-${mockProfile.id}`,
-            donorId: mockProfile.id,
-            donorName: mockProfile.nickname,
-            donorAvatar: mockProfile.avatar_url || '',
-            honorType: 'season_top3',
-            rank: mockReward?.rank || 1,
-            seasonId: 4,
-            seasonName: '시즌 4',
-            amount: mockProfile.total_donation,
-            unit: mockProfile.unit as 'excel' | 'crew' | null,
-            tributeMessage: mockReward?.personalMessage ?? undefined,
-            tributeVideoUrl: mockReward?.dedicationVideoUrl ?? undefined,
-            tributeImageUrl: mockReward?.giftImages?.[0]?.url,
-            createdAt: new Date().toISOString(),
-          }]
-          setHallOfFameData(fallbackHofData)
-        }
-        setIsLoading(false)
-        return
+        // 테이블이 없거나 권한 문제 시 Supabase profiles에서 직접 조회
+        console.warn('VIP 보상 테이블 조회 실패, profiles에서 직접 조회:', rewardsError.message || rewardsError)
       }
 
       // vip_rewards에 데이터가 없으면 donations/profiles에서 직접 조회 (Fallback)
       if (!rewardsData || rewardsData.length === 0) {
+        console.log('[Tribute] vip_rewards 비어있음, profiles에서 조회 시도. userId:', userId)
+
         // 프로필 조회
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, nickname, avatar_url, total_donation, unit')
           .eq('id', userId)
           .single()
 
+        console.log('[Tribute] profiles 조회 결과:', { profileData, profileError })
+
         if (!profileData) {
+          console.warn('[Tribute] 프로필 없음 - accessDenied 설정')
           setAccessDenied(isAdmin ? 'page_not_found' : 'not_qualified')
           setIsLoading(false)
           return
@@ -195,32 +174,24 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
           .eq('is_active', true)
           .single()
 
-        // 후원 랭킹에서 순위 계산
-        const { data: rankingData } = await supabase
-          .from('donations')
-          .select('donor_id, amount')
+        // profiles.total_donation 기반으로 랭킹 계산 (더 정확함)
+        const { data: allProfiles } = await supabase
+          .from('profiles')
+          .select('id, total_donation')
+          .gt('total_donation', 0)
+          .order('total_donation', { ascending: false })
 
         let rank = 0
-        if (rankingData) {
-          // 후원자별 총액 집계
-          const totals = rankingData.reduce((acc, d) => {
-            if (d.donor_id) {
-              acc[d.donor_id] = (acc[d.donor_id] || 0) + d.amount
-            }
-            return acc
-          }, {} as Record<string, number>)
-
-          // 순위 계산
-          const sortedDonors = Object.entries(totals)
-            .sort(([, a], [, b]) => b - a)
-            .map(([id], idx) => ({ id, rank: idx + 1 }))
-
-          const found = sortedDonors.find(d => d.id === userId)
-          rank = found?.rank || 0
+        if (allProfiles) {
+          const foundIndex = allProfiles.findIndex(p => p.id === userId)
+          rank = foundIndex >= 0 ? foundIndex + 1 : 0
         }
+
+        console.log('[Tribute] 계산된 랭킹 (profiles 기반):', rank, '/ total_donation:', profileData.total_donation)
 
         // Top 50 이내가 아니면 접근 거부
         if (rank === 0 || rank > 50) {
+          console.warn('[Tribute] Top 50 이내가 아님 - accessDenied 설정. rank:', rank)
           setAccessDenied(isAdmin ? 'page_not_found' : 'not_qualified')
           setIsLoading(false)
           return

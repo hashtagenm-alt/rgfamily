@@ -7,6 +7,8 @@ import { PageLayout } from "@/components/layout";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSupabaseContext } from "@/lib/context";
+import { USE_MOCK_DATA } from "@/lib/config";
+import { rankedProfiles } from "@/lib/mock";
 import type { RankingItem, UnitFilter } from "@/types/common";
 import {
   RankingPodium,
@@ -30,6 +32,30 @@ export default function TotalRankingPage() {
 
   const fetchRankings = useCallback(async () => {
     setIsLoading(true);
+
+    // Mock 데이터 모드
+    if (USE_MOCK_DATA) {
+      // Mock 시즌 데이터
+      setCurrentSeason({ id: 4, name: '시즌 4', is_active: true });
+
+      // Mock 랭킹 데이터 (unit 필터 적용)
+      let filteredProfiles = rankedProfiles;
+      if (unitFilter !== 'all' && unitFilter !== 'vip') {
+        filteredProfiles = rankedProfiles.filter(p => p.unit === unitFilter);
+      }
+
+      setRankings(
+        filteredProfiles.slice(0, 50).map((p, idx) => ({
+          donorId: p.id,
+          donorName: p.nickname || "익명",
+          avatarUrl: p.avatar_url,
+          totalAmount: p.total_donation || 0,
+          rank: idx + 1,
+        }))
+      );
+      setIsLoading(false);
+      return;
+    }
 
     // 현재 활성 시즌 조회
     const { data: seasonData } = await supabase

@@ -8,7 +8,7 @@
 // ============================================
 // Domain Data Exports
 // ============================================
-export { mockProfiles, mockAdminProfile } from './profiles'
+export { mockProfiles, mockAdminProfile, rankedProfiles } from './profiles'
 export { mockSeasons } from './seasons'
 export { mockOrganization } from './organization'
 export { mockDonations } from './donations'

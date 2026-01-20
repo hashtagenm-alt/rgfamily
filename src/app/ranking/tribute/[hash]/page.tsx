@@ -85,13 +85,14 @@ export default function TributeHashPage({ params }: { params: Promise<{ hash: st
   })
 
   // 2.5초 후 자동으로 게이트 열림
+  // hashError와 page_not_found만 별도 화면 표시, 나머지는 게이트 타이머 필요
   useEffect(() => {
-    if (accessDenied || hashError) return
+    if (hashError || accessDenied === 'page_not_found') return
     const timer = setTimeout(() => {
       setShowGate(false)
     }, 2500)
     return () => clearTimeout(timer)
-  }, [accessDenied, hashError])
+  }, [hashError, accessDenied])
 
   // 해시 에러
   if (hashError) {
