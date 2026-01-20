@@ -24,6 +24,8 @@ export interface BjMessageWithMember extends BjThankYouMessage {
   }
   // 비공개 메시지 여부 (UI에서 잠금 아이콘 표시용)
   is_private_for_viewer?: boolean
+  // 비공개 콘텐츠 열람 가능 여부
+  canViewContent: boolean
 }
 
 // ==================== BJ 멤버 확인 ====================
@@ -66,9 +68,11 @@ export async function checkBjMemberStatus(): Promise<
 
 /**
  * 특정 VIP의 BJ 감사 메시지 조회
- * - VIP 본인, BJ 멤버, 관리자만 조회 가능
- * - 공개 메시지: 모든 권한자에게 표시
- * - 비공개 메시지: VIP 본인과 작성자 BJ만 열람 가능
+ * - 로그인한 모든 사용자 조회 가능
+ * - 공개 메시지: 모든 로그인 사용자에게 전체 내용 표시
+ * - 비공개 메시지: 모든 사용자에게 반환되지만, canViewContent 플래그로 열람 권한 구분
+ *   - canViewContent=true: VIP 본인, 작성자 BJ, 관리자
+ *   - canViewContent=false: 일반 사용자 (제목/썸네일만 표시, 블러 처리)
  */
 export async function getBjMessagesByVipId(
   vipProfileId: string
@@ -92,12 +96,8 @@ export async function getBjMessagesByVipId(
     const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
     const isOwner = userId === vipProfileId
     const userBjMemberId = orgData?.id || null
-    const isBjMember = userBjMemberId !== null
 
-    // VIP 본인, BJ 멤버, 관리자만 접근 가능
-    if (!isOwner && !isAdmin && !isBjMember) {
-      throw new Error('열람 권한이 없습니다.')
-    }
+    // 모든 로그인 사용자가 조회 가능 (권한 체크 제거)
 
     const { data, error } = await supabase
       .from('bj_thank_you_messages')
@@ -115,24 +115,23 @@ export async function getBjMessagesByVipId(
 
     if (error) throw new Error(error.message)
 
-    // 데이터 변환 및 비공개 메시지 필터링
+    // 데이터 변환 (비공개 메시지도 반환, canViewContent 플래그로 권한 구분)
     const messages: BjMessageWithMember[] = []
 
     for (const msg of data || []) {
       const orgInfo = msg.organization
       const org = Array.isArray(orgInfo) ? orgInfo[0] : orgInfo
 
-      // 비공개 메시지 접근 권한 체크
+      // 비공개 메시지 열람 권한 체크
       // - 관리자: 모든 메시지 열람 가능
       // - VIP 본인: 모든 메시지 열람 가능
       // - BJ 멤버: 본인이 작성한 메시지만 열람 가능 (비공개인 경우)
       const isAuthor = userBjMemberId === msg.bj_member_id
-      const canViewPrivate = isAdmin || isOwner || isAuthor
+      const canViewPrivateContent = isAdmin || isOwner || isAuthor
 
-      // 비공개 메시지인데 권한이 없으면 제외
-      if (!msg.is_public && !canViewPrivate) {
-        continue
-      }
+      // 공개 메시지는 모든 사용자가 열람 가능
+      // 비공개 메시지는 canViewPrivateContent가 true인 경우만 열람 가능
+      const canViewContent = msg.is_public || canViewPrivateContent
 
       messages.push({
         id: msg.id,
@@ -153,6 +152,8 @@ export async function getBjMessagesByVipId(
           : undefined,
         // 비공개 메시지임을 UI에서 표시하기 위한 플래그
         is_private_for_viewer: !msg.is_public,
+        // 비공개 콘텐츠 열람 가능 여부
+        canViewContent,
       })
     }
 
@@ -162,6 +163,7 @@ export async function getBjMessagesByVipId(
 
 /**
  * 특정 BJ가 작성한 메시지 조회 (본인 작성글)
+ * - BJ 본인이 작성한 메시지는 항상 열람 가능
  */
 export async function getBjMessagesByBjMember(): Promise<ActionResult<BjMessageWithMember[]>> {
   return authAction(async (supabase, userId) => {
@@ -189,7 +191,12 @@ export async function getBjMessagesByBjMember(): Promise<ActionResult<BjMessageW
 
     if (error) throw new Error(error.message)
 
-    return (data || []) as BjMessageWithMember[]
+    // BJ 본인이 작성한 메시지는 항상 열람 가능
+    return (data || []).map((msg) => ({
+      ...msg,
+      message_type: msg.message_type as 'text' | 'image' | 'video',
+      canViewContent: true,
+    })) as BjMessageWithMember[]
   })
 }
 
@@ -364,6 +371,7 @@ export async function deleteBjMessage(messageId: number): Promise<ActionResult<n
 
 /**
  * 모든 BJ 메시지 조회 (Admin)
+ * - Admin은 모든 메시지 열람 가능
  */
 export async function getAllBjMessages(options?: {
   vipProfileId?: string
@@ -390,7 +398,13 @@ export async function getAllBjMessages(options?: {
     const { data, error } = await query
 
     if (error) throw new Error(error.message)
-    return (data || []) as BjMessageWithMember[]
+
+    // Admin은 모든 메시지 열람 가능
+    return (data || []).map((msg) => ({
+      ...msg,
+      message_type: msg.message_type as 'text' | 'image' | 'video',
+      canViewContent: true,
+    })) as BjMessageWithMember[]
   })
 }
 

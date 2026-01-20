@@ -13,6 +13,7 @@ import styles from './BjThankYouSection.module.css'
 interface BjThankYouSectionProps {
   vipProfileId: string
   vipNickname: string
+  hasFullAccess?: boolean  // 비공개 콘텐츠 전체 접근 권한
 }
 
 const INITIAL_DISPLAY_COUNT = 6
@@ -20,6 +21,7 @@ const INITIAL_DISPLAY_COUNT = 6
 export default function BjThankYouSection({
   vipProfileId,
   vipNickname,
+  hasFullAccess = false,
 }: BjThankYouSectionProps) {
   const { messages, isLoading, submitMessage } = useBjMessages(vipProfileId)
   const { isBjMember, bjMemberId, bjMemberInfo, isLoading: bjLoading } = useBjMemberStatus()
@@ -32,6 +34,8 @@ export default function BjThankYouSection({
   const hasMore = messages.length > INITIAL_DISPLAY_COUNT
 
   const handleCardClick = (message: BjMessageWithMember) => {
+    // 잠금된 메시지(canViewContent가 false)는 모달을 열지 않음
+    if (!message.canViewContent) return
     setSelectedMessage(message)
   }
 

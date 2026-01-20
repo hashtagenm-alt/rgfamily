@@ -105,14 +105,75 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
           .single()
       )
 
-      if (rewardError) {
-        if (rewardError.code === 'PGRST116') {
-          setError('등록된 VIP 보상 정보가 없습니다.')
-        } else {
-          throw rewardError
+      // vip_rewards에 데이터가 없으면 프로필/후원 데이터에서 직접 조회 (Fallback)
+      if (rewardError && rewardError.code === 'PGRST116') {
+        // 프로필 조회
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id, nickname, avatar_url, total_donation, unit')
+          .eq('id', profileId)
+          .single()
+
+        if (!profileData) {
+          setError('프로필 정보를 찾을 수 없습니다.')
+          setIsLoading(false)
+          return
         }
+
+        // 현재 시즌 조회
+        const { data: currentSeason } = await supabase
+          .from('seasons')
+          .select('id, name')
+          .eq('is_active', true)
+          .single()
+
+        // 후원 랭킹에서 순위 계산
+        const { data: rankingData } = await supabase
+          .from('donations')
+          .select('donor_id, amount')
+
+        let rank = 0
+        if (rankingData) {
+          const totals = rankingData.reduce((acc, d) => {
+            if (d.donor_id) {
+              acc[d.donor_id] = (acc[d.donor_id] || 0) + d.amount
+            }
+            return acc
+          }, {} as Record<string, number>)
+
+          const sortedDonors = Object.entries(totals)
+            .sort(([, a], [, b]) => b - a)
+            .map(([id], idx) => ({ id, rank: idx + 1 }))
+
+          const found = sortedDonors.find(d => d.id === profileId)
+          rank = found?.rank || 0
+        }
+
+        // Top 50 이내가 아니면 에러
+        if (rank === 0 || rank > 50) {
+          setError('VIP 자격이 없습니다. (Top 50 이내만 조회 가능)')
+          setIsLoading(false)
+          return
+        }
+
+        // Fallback 데이터 설정
+        setData({
+          id: 0,
+          profileId: profileData.id,
+          nickname: profileData.nickname || '알 수 없음',
+          rank: rank,
+          personalMessage: null,
+          dedicationVideoUrl: null,
+          seasonName: currentSeason?.name || '',
+          totalDonation: profileData.total_donation || 0,
+          images: [],
+        })
         setIsLoading(false)
         return
+      }
+
+      if (rewardError) {
+        throw rewardError
       }
 
       // VIP 이미지 조회

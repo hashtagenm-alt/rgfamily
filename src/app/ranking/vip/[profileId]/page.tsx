@@ -24,10 +24,15 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   const [showGate, setShowGate] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
 
-  // 접근 권한 체크: VIP이거나 본인 페이지이거나 관리자
+  // 접근 권한 체크
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
   const isOwner = user?.id === profileId
-  const hasAccess = isVip || isOwner || isAdmin
+
+  // VIP 페이지 자체는 로그인 회원 모두 열람 가능
+  const isLoggedIn = !!user
+
+  // 비공개 콘텐츠 전체 접근 권한 (VIP/본인/관리자)
+  const hasFullAccess = isVip || isOwner || isAdmin
 
   const isLoading = vipLoading || dataLoading
 
@@ -118,49 +123,71 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
 
   // 컨텐츠 렌더링 (접근 권한에 따라 다름)
   const renderContent = () => {
-    // 접근 권한이 없으면 블러 처리
-    if (!hasAccess) {
+    // 비로그인 사용자에게만 로그인 유도
+    if (!isLoggedIn) {
       return (
         <div className={styles.restrictedOverlay}>
-          {/* 블러된 미리보기 콘텐츠 */}
-          <div className={styles.restrictedContent}>
-            {/* 메시지 섹션 미리보기 */}
-            <section className={styles.messageSection}>
-              <div className={styles.sectionHeader}>
-                <MessageSquare size={20} />
-                <h2>감사 메시지</h2>
-                <div className={styles.sectionDivider} />
-              </div>
-              <div className={styles.messageCard}>
-                <p>이 콘텐츠는 VIP 회원만 볼 수 있습니다. VIP 회원이 되시면 특별한 감사 메시지와 전용 시그니처를 확인하실 수 있습니다.</p>
-              </div>
-            </section>
-
-            {/* 갤러리 섹션 미리보기 */}
-            <section className={styles.gallerySection}>
-              <div className={styles.sectionHeader}>
-                <ImageIcon size={20} />
-                <h2>VIP 전용 시그니처</h2>
-                <div className={styles.sectionDivider} />
-              </div>
-              <div className={styles.galleryGrid}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className={styles.galleryItem} style={{ background: '#1a1a1a' }} />
-                ))}
-              </div>
-            </section>
-          </div>
-
-          {/* 잠금 오버레이 */}
           <div className={styles.restrictedBadge}>
             <Lock size={48} className={styles.restrictedIcon} />
-            <span className={styles.restrictedText}>VIP Exclusive</span>
-            <span className={styles.restrictedSubtext}>VIP 회원만 열람할 수 있습니다</span>
-            <Link href="/ranking" className={styles.restrictedButton}>
-              VIP 되기
+            <span className={styles.restrictedText}>로그인 필요</span>
+            <span className={styles.restrictedSubtext}>VIP 페이지는 로그인 후 이용 가능합니다</span>
+            <Link href="/login" className={styles.restrictedButton}>
+              로그인
             </Link>
           </div>
         </div>
+      )
+    }
+
+    // VIP 전용 콘텐츠(personalMessage, images)는 hasFullAccess 필요
+    if (!hasFullAccess) {
+      return (
+        <>
+          {/* VIP 전용 콘텐츠: 블러 처리 */}
+          <div className={styles.restrictedOverlay}>
+            <div className={styles.restrictedContent}>
+              <section className={styles.messageSection}>
+                <div className={styles.sectionHeader}>
+                  <MessageSquare size={20} />
+                  <h2>감사 메시지</h2>
+                  <div className={styles.sectionDivider} />
+                </div>
+                <div className={styles.messageCard}>
+                  <p>이 콘텐츠는 VIP 회원만 볼 수 있습니다. VIP 회원이 되시면 특별한 감사 메시지와 전용 시그니처를 확인하실 수 있습니다.</p>
+                </div>
+              </section>
+
+              <section className={styles.gallerySection}>
+                <div className={styles.sectionHeader}>
+                  <ImageIcon size={20} />
+                  <h2>VIP 전용 시그니처</h2>
+                  <div className={styles.sectionDivider} />
+                </div>
+                <div className={styles.galleryGrid}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className={styles.galleryItem} style={{ background: '#1a1a1a' }} />
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            <div className={styles.restrictedBadge}>
+              <Lock size={48} className={styles.restrictedIcon} />
+              <span className={styles.restrictedText}>VIP Exclusive</span>
+              <span className={styles.restrictedSubtext}>VIP 회원만 열람할 수 있습니다</span>
+              <Link href="/ranking" className={styles.restrictedButton}>
+                VIP 되기
+              </Link>
+            </div>
+          </div>
+
+          {/* BJ 감사 메시지 섹션: 로그인 사용자에게 공개 (공개/비공개 분리 적용) */}
+          <BjThankYouSection
+            vipProfileId={profileId}
+            vipNickname={vipData.nickname}
+            hasFullAccess={false}
+          />
+        </>
       )
     }
 
@@ -257,6 +284,7 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
         <BjThankYouSection
           vipProfileId={profileId}
           vipNickname={vipData.nickname}
+          hasFullAccess={true}
         />
 
         {/* Empty State */}
