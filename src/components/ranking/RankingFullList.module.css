@@ -19,10 +19,10 @@
 /* Individual Ranking Item */
 .item {
   display: grid;
-  grid-template-columns: 56px 48px 1fr;
+  grid-template-columns: 64px 56px 1fr;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
   background: var(--card-bg);
   border-bottom: 1px solid var(--card-border);
   transition: all 0.2s ease;
