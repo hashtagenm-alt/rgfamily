@@ -85,7 +85,7 @@ VALUES (
   'donor-005-cannot',
   '❥CaNnOt',
   'vip',
-  'crew',
+  'excel',
   8000000,
   NOW(),
   NOW()
@@ -119,7 +119,7 @@ VALUES (
   'donor-007-gunbbang',
   '⭐건빵이미래쥐',
   'vip',
-  'crew',
+  'excel',
   7000000,
   NOW(),
   NOW()
@@ -170,7 +170,7 @@ VALUES (
   'donor-010-always',
   '언제나♬',
   'vip',
-  'crew',
+  'excel',
   5500000,
   NOW(),
   NOW()
