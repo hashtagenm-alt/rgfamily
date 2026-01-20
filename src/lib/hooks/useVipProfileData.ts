@@ -18,6 +18,7 @@ export interface VipRewardData {
   id: number
   profileId: string
   nickname: string
+  avatarUrl: string | null
   rank: number
   personalMessage: string | null
   dedicationVideoUrl: string | null
@@ -81,6 +82,7 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
           id: reward.id,
           profileId: reward.profile_id,
           nickname: profile?.nickname || '알 수 없음',
+          avatarUrl: profile?.avatar_url || null,
           rank: reward.rank,
           personalMessage: reward.personal_message,
           dedicationVideoUrl: reward.dedication_video_url,
@@ -108,7 +110,7 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
             personal_message,
             dedication_video_url,
             season_id,
-            profiles:profile_id (nickname, total_donation),
+            profiles:profile_id (nickname, avatar_url, total_donation),
             seasons:season_id (name)
           `)
           .eq('profile_id', profileId)
@@ -173,6 +175,7 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
           id: 0,
           profileId: profileData.id,
           nickname: profileData.nickname || '알 수 없음',
+          avatarUrl: profileData.avatar_url || null,
           rank: rank,
           personalMessage: null,
           dedicationVideoUrl: null,
@@ -200,8 +203,8 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
       // Supabase returns joined data - handle both array and object cases
       const profileData = reward.profiles
       const profile = Array.isArray(profileData)
-        ? profileData[0] as { nickname: string; total_donation: number } | undefined
-        : profileData as { nickname: string; total_donation: number } | null
+        ? profileData[0] as { nickname: string; avatar_url: string | null; total_donation: number } | undefined
+        : profileData as { nickname: string; avatar_url: string | null; total_donation: number } | null
 
       const seasonData = reward.seasons
       const season = Array.isArray(seasonData)
@@ -212,6 +215,7 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
         id: reward.id,
         profileId: reward.profile_id,
         nickname: profile?.nickname || '알 수 없음',
+        avatarUrl: profile?.avatar_url || null,
         rank: reward.rank,
         personalMessage: reward.personal_message,
         dedicationVideoUrl: reward.dedication_video_url,

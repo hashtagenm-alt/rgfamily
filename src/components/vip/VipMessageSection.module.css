@@ -1,0 +1,230 @@
+.section {
+  margin-top: 32px;
+}
+
+/* 섹션 헤더 */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.headerIcon {
+  color: #d4af37;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.messageCount {
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sectionDivider {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(212, 175, 55, 0.3),
+    transparent
+  );
+}
+
+/* 작성 버튼 */
+.writeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 10px;
+  color: #d4af37;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.writeBtn:hover {
+  background: rgba(212, 175, 55, 0.25);
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+/* 메시지 그리드 */
+.messagesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .messagesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .messagesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 로딩 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: #d4af37;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 빈 상태 */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+}
+
+.emptyIcon {
+  color: rgba(212, 175, 55, 0.4);
+}
+
+.emptyText {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.writeFirstBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+  border: none;
+  border-radius: 12px;
+  color: #1a1a1a;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.writeFirstBtn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* 더 보기 / 접기 버튼 */
+.showMoreBtn,
+.showLessBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 14px;
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.showMoreBtn:hover,
+.showLessBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.rotated {
+  transform: rotate(180deg);
+}
+
+/* 라이트 테마 */
+:global(.light) .sectionTitle {
+  color: #1a1a1a;
+}
+
+:global(.light) .loading {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global(.light) .emptyState {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+:global(.light) .emptyText {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global(.light) .showMoreBtn,
+:global(.light) .showLessBtn {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+:global(.light) .showMoreBtn:hover,
+:global(.light) .showLessBtn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1a1a1a;
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .sectionHeader {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .sectionDivider {
+    display: none;
+  }
+
+  .writeBtn {
+    width: 100%;
+    justify-content: center;
+    order: 10;
+    margin-top: 4px;
+  }
+}

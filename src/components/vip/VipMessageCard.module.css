@@ -1,0 +1,380 @@
+.card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.card:hover {
+  border-color: rgba(253, 104, 186, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* 헤더 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(212, 175, 55, 0.4);
+}
+
+.avatarPlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.date {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 배지 컨테이너 */
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 비공개 배지 */
+.privateBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+/* 타입 배지 */
+.typeBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 메뉴 */
+.menuContainer {
+  position: relative;
+}
+
+.menuBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s;
+}
+
+.menuBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  min-width: 140px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.menu button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+}
+
+/* 미디어 컨테이너 */
+.mediaContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  margin-bottom: 12px;
+}
+
+.mediaImage {
+  object-fit: cover;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  transition: background 0.2s;
+}
+
+.card:hover .videoOverlay {
+  background: rgba(212, 175, 55, 0.3);
+}
+
+.videoPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+/* 텍스트 메시지 */
+.messageText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* 라이트 테마 */
+:global(.light) .card {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:global(.light) .name {
+  color: #1a1a1a;
+}
+
+:global(.light) .date {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global(.light) .messageText {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+:global(.light) .videoPlaceholder {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+:global(.light) .menuBtn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global(.light) .menuBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1a1a;
+}
+
+:global(.light) .menu {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+:global(.light) .menu button {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+:global(.light) .menu button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ==================== 잠금 콘텐츠 스타일 ==================== */
+
+.lockedCard {
+  cursor: default;
+  position: relative;
+}
+
+.lockedCard:hover {
+  transform: none;
+}
+
+.lockedBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.lockedContent {
+  position: relative;
+  min-height: 100px;
+}
+
+.lockedMediaContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.lockedMediaBlur {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.08) 0%,
+    rgba(253, 104, 186, 0.08) 50%,
+    rgba(212, 175, 55, 0.08) 100%
+  );
+  backdrop-filter: blur(8px);
+}
+
+.lockedMediaImage {
+  object-fit: cover;
+  filter: brightness(0.6);
+}
+
+.lockedText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  font-style: italic;
+}
+
+.lockOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+  z-index: 1;
+}
+
+.lockIcon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.lockText {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+/* 라이트 테마 - 잠금 콘텐츠 */
+:global(.light) .lockedBadge {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+:global(.light) .lockedMediaBlur {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.1) 0%,
+    rgba(253, 104, 186, 0.1) 50%,
+    rgba(212, 175, 55, 0.1) 100%
+  );
+}
+
+:global(.light) .lockedText {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+:global(.light) .lockOverlay {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+:global(.light) .lockIcon {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global(.light) .lockText {
+  color: rgba(0, 0, 0, 0.6);
+}

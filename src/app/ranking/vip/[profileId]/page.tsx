@@ -10,7 +10,7 @@ import {
   ChevronLeft, ChevronRight, X
 } from 'lucide-react'
 import Footer from '@/components/Footer'
-import { BjThankYouSection } from '@/components/vip'
+import { BjThankYouSection, VipMessageSection } from '@/components/vip'
 import { useAuthContext } from '@/lib/context'
 import { useVipStatus, useVipProfileData } from '@/lib/hooks'
 import styles from './page.module.css'
@@ -200,6 +200,13 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
             </div>
           </div>
 
+          {/* VIP 메시지 보드: 로그인 사용자에게 공개 */}
+          <VipMessageSection
+            vipProfileId={profileId}
+            vipNickname={vipData.nickname}
+            vipAvatarUrl={vipData.avatarUrl}
+          />
+
           {/* BJ 감사 메시지 섹션: 로그인 사용자에게 공개 (공개/비공개 분리 적용) */}
           <BjThankYouSection
             vipProfileId={profileId}
@@ -213,6 +220,13 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
     // 접근 권한이 있으면 실제 콘텐츠 표시
     return (
       <>
+        {/* VIP 메시지 보드 */}
+        <VipMessageSection
+          vipProfileId={profileId}
+          vipNickname={vipData.nickname}
+          vipAvatarUrl={vipData.avatarUrl}
+        />
+
         {/* Personal Message */}
         {vipData.personalMessage && (
           <motion.section
