@@ -609,7 +609,7 @@ class MockTimelineRepository implements ITimelineRepository {
   async findAll(): Promise<TimelineItem[]> {
     return store.timelineEvents
       .map(e => this.formatEvent(e))
-      .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
+      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
   }
 
   async findByFilter(options: {
@@ -629,7 +629,7 @@ class MockTimelineRepository implements ITimelineRepository {
 
     return events
       .map(e => this.formatEvent(e))
-      .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
+      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
   }
 
   async getCategories(): Promise<string[]> {
