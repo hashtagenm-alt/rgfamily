@@ -101,10 +101,20 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
             </div>
           )}
 
-          {/* 영상: 썸네일 + 잠금 오버레이 */}
-          {message.message_type === 'video' && (
+          {/* 영상: 썸네일 표시 (재생 불가) */}
+          {message.message_type === 'video' && message.content_url && (
             <div className={styles.lockedMediaContainer}>
-              <div className={styles.lockedMediaBlur} />
+              {getYouTubeThumbnail(message.content_url) ? (
+                <Image
+                  src={getYouTubeThumbnail(message.content_url)!}
+                  alt="영상 썸네일"
+                  fill
+                  className={styles.lockedMediaImage}
+                  unoptimized
+                />
+              ) : (
+                <div className={styles.lockedMediaBlur} />
+              )}
             </div>
           )}
 
