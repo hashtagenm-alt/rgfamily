@@ -70,18 +70,32 @@ export function useVipMessages(vipProfileId: string): UseVipMessagesResult {
       return
     }
 
-    // Server Action 호출
-    const result = await getVipMessagesByVipId(vipProfileId)
+    try {
+      // Server Action 호출
+      const result = await getVipMessagesByVipId(vipProfileId)
 
-    if (result.error) {
-      setError(result.error)
+      if (result.error) {
+        // 테이블이 없는 경우 빈 배열로 처리 (에러 숨김)
+        if (result.error.includes('does not exist') || result.error.includes('42P01')) {
+          setMessages([])
+          setError(null)
+        } else {
+          setError(result.error)
+          setMessages([])
+        }
+        setIsLoading(false)
+        return
+      }
+
+      setMessages(result.data || [])
+    } catch (err) {
+      console.error('VIP 메시지 조회 실패:', err)
+      // 테이블이 없어도 에러를 표시하지 않고 빈 상태로 처리
       setMessages([])
+      setError(null)
+    } finally {
       setIsLoading(false)
-      return
     }
-
-    setMessages(result.data || [])
-    setIsLoading(false)
   }, [vipProfileId, user])
 
   // 메시지 작성

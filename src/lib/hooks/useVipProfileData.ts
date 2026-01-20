@@ -47,14 +47,15 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
   const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
+    // 인증 로딩 중이면 대기 (아직 로딩 상태 변경하지 않음)
+    if (authLoading) {
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
     try {
-      if (authLoading) {
-        return
-      }
-
       if (!user) {
         setData(null)
         setError('로그인이 필요합니다.')
