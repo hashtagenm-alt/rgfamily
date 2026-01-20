@@ -17,7 +17,7 @@ import styles from './page.module.css'
 
 export default function VipProfilePage({ params }: { params: Promise<{ profileId: string }> }) {
   const { profileId } = use(params)
-  const { user, profile } = useAuthContext()
+  const { user, profile, isLoading: authLoading } = useAuthContext()
   const { isVip, isLoading: vipLoading } = useVipStatus()
   const { data: vipData, isLoading: dataLoading, error } = useVipProfileData(profileId)
 
@@ -34,7 +34,8 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   // 비공개 콘텐츠 전체 접근 권한 (VIP/본인/관리자)
   const hasFullAccess = isVip || isOwner || isAdmin
 
-  const isLoading = vipLoading || dataLoading
+  // 인증 로딩도 전체 로딩에 포함하여 플리커링 방지
+  const isLoading = authLoading || vipLoading || dataLoading
 
   // 2.5초 후 자동으로 게이트 열림
   useEffect(() => {
