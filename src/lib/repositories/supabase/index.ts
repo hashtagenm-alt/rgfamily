@@ -558,7 +558,7 @@ class SupabaseTimelineRepository implements ITimelineRepository {
 
   async findAll(): Promise<TimelineItem[]> {
     const { data, error } = await withRetry(async () =>
-      await this.supabase.from('timeline_events').select('*, seasons(name)').order('event_date', { ascending: false })
+      await this.supabase.from('timeline_events').select('*, seasons(name)').order('event_date', { ascending: true })
     )
     if (error) throw error
     return (data || []).map(e => this.formatEvent(e))
@@ -574,7 +574,7 @@ class SupabaseTimelineRepository implements ITimelineRepository {
       let query = this.supabase
         .from('timeline_events')
         .select('*, seasons(name)')
-        .order('event_date', { ascending: false })
+        .order('event_date', { ascending: true })
 
       if (seasonId) {
         query = query.eq('season_id', seasonId)
