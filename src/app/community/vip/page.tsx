@@ -9,6 +9,7 @@ import Footer from '@/components/Footer'
 import { useSupabaseContext, useAuthContext } from '@/lib/context'
 import { useVipStatus } from '@/lib/hooks'
 import { withRetry } from '@/lib/utils/fetch-with-retry'
+import { logger } from '@/lib/utils/logger'
 import { formatShortDate } from '@/lib/utils/format'
 import TabFilter from '@/components/community/TabFilter'
 import type { JoinedProfile } from '@/types/common'
@@ -60,7 +61,7 @@ export default function VipBoardPage() {
     )
 
     if (error) {
-      console.error('게시글 로드 실패:', error)
+      logger.dbError('select', 'posts', error)
     } else {
       setPosts(
         (data || []).map((p) => {
