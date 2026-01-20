@@ -21,7 +21,6 @@ import Footer from "@/components/Footer";
 import { useAuthContext, useSupabaseContext } from "@/lib/context";
 import { useVipStatus, useRanking, useContentProtection } from "@/lib/hooks";
 import { withRetry } from "@/lib/utils/fetch-with-retry";
-import { getTributePageUrl } from "@/lib/utils";
 import styles from "./page.module.css";
 
 // VIP 콘텐츠 타입 정의
@@ -451,7 +450,7 @@ export default function VipLoungePage() {
               </div>
               {user?.id && (
                 <Link
-                  href={getTributePageUrl(user.id)}
+                  href={`/ranking/vip/${user.id}`}
                   className={styles.secretLink}
                 >
                   입장하기
