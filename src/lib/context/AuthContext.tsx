@@ -29,6 +29,9 @@ const MOCK_ADMIN_CREDENTIALS = {
   password: 'admin',
 }
 
+// Mock 세션 저장 키
+const MOCK_SESSION_KEY = 'mock_admin_session'
+
 interface AuthState {
   user: User | null
   profile: Profile | null
@@ -75,6 +78,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
+      // Mock 모드에서 저장된 세션 복원
+      if (USE_MOCK_DATA) {
+        try {
+          const savedSession = localStorage.getItem(MOCK_SESSION_KEY)
+          if (savedSession) {
+            const { user, session } = JSON.parse(savedSession)
+            setState({
+              user,
+              profile: mockAdminProfile,
+              session,
+              isLoading: false,
+              isAuthenticated: true,
+            })
+            return
+          }
+        } catch (e) {
+          console.error('Mock 세션 복원 실패:', e)
+          localStorage.removeItem(MOCK_SESSION_KEY)
+        }
+      }
+
       const { data: { session } } = await supabase.auth.getSession()
 
       if (session?.user) {
@@ -163,6 +187,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user: mockUser,
         } as Session
 
+        // Mock 세션을 localStorage에 저장
+        localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify({
+          user: mockUser,
+          session: mockSession,
+        }))
+
         setState({
           user: mockUser,
           profile: mockAdminProfile,
@@ -206,6 +236,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     // Mock 모드에서 로그아웃 처리
     if (USE_MOCK_DATA) {
+      // Mock 세션 삭제
+      localStorage.removeItem(MOCK_SESSION_KEY)
       setState({
         user: null,
         profile: null,

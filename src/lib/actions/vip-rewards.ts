@@ -71,6 +71,7 @@ export async function deleteVipReward(
 export async function getVipRewards(options?: {
   seasonId?: number
   profileId?: string
+  episodeId?: number
 }): Promise<ActionResult<VipReward[]>> {
   return adminAction(async (supabase) => {
     let query = supabase
@@ -83,6 +84,9 @@ export async function getVipRewards(options?: {
     }
     if (options?.profileId) {
       query = query.eq('profile_id', options.profileId)
+    }
+    if (options?.episodeId) {
+      query = query.eq('episode_id', options.episodeId)
     }
 
     const { data, error } = await query

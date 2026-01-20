@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuthContext, useSupabaseContext } from '@/lib/context'
 import { USE_MOCK_DATA } from '@/lib/config'
+import { logger } from '@/lib/utils/logger'
 import type { Role } from '@/types/database'
 
 interface VipStatusResult {
@@ -23,9 +24,14 @@ export function useVipStatus(): VipStatusResult {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // 인증 로딩 중이면 아무것도 하지 않음
+    if (authLoading) {
+      setIsLoading(true)
+      return
+    }
+
     const fetchVipStatus = async () => {
       setIsLoading(true)
-      if (authLoading) return
 
       if (!user) {
         setIsVip(false)
@@ -56,7 +62,7 @@ export function useVipStatus(): VipStatusResult {
       })
 
       if (error) {
-        console.error('VIP 순위 조회 실패:', error)
+        logger.dbError('rpc', 'get_user_rank', error)
         setIsVip(false)
         setRank(null)
         setTotalAmount(null)

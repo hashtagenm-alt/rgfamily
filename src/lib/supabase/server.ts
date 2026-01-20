@@ -10,14 +10,14 @@ import { USE_MOCK_DATA, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/config'
  */
 function createMockServerProxy(): SupabaseClient<Database> {
   const emptyResponse = { data: null, error: null }
-  const emptyArrayResponse = { data: [], error: null }
+  const emptyArrayResponse = { data: [], error: null, count: 0 }
 
   const queryBuilder = {
     select: () => queryBuilder,
     insert: () => queryBuilder,
     update: () => queryBuilder,
-    upsert: () => queryBuilder,
     delete: () => queryBuilder,
+    upsert: () => queryBuilder,
     eq: () => queryBuilder,
     neq: () => queryBuilder,
     gt: () => queryBuilder,
@@ -35,7 +35,7 @@ function createMockServerProxy(): SupabaseClient<Database> {
     range: () => queryBuilder,
     single: () => Promise.resolve(emptyResponse),
     maybeSingle: () => Promise.resolve(emptyResponse),
-    then: (resolve: (value: { data: unknown[]; error: null }) => void) =>
+    then: (resolve: (value: { data: unknown[]; error: null; count: number }) => void) =>
       Promise.resolve(emptyArrayResponse).then(resolve),
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use, useCallback } from 'react'
+import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,44 +10,31 @@ import {
   ChevronLeft, ChevronRight, X
 } from 'lucide-react'
 import Footer from '@/components/Footer'
-import { useSupabaseContext, useAuthContext } from '@/lib/context'
-import { useVipStatus } from '@/lib/hooks'
-import { withRetry } from '@/lib/utils/fetch-with-retry'
+import { BjThankYouSection } from '@/components/vip'
+import { useAuthContext } from '@/lib/context'
+import { useVipStatus, useVipProfileData } from '@/lib/hooks'
 import styles from './page.module.css'
-
-interface VipRewardData {
-  id: number
-  profileId: string
-  nickname: string
-  rank: number
-  personalMessage: string | null
-  dedicationVideoUrl: string | null
-  seasonName: string
-  totalDonation: number
-  images: {
-    id: number
-    imageUrl: string
-    title: string
-    orderIndex: number
-  }[]
-}
 
 export default function VipProfilePage({ params }: { params: Promise<{ profileId: string }> }) {
   const { profileId } = use(params)
-  const supabase = useSupabaseContext()
   const { user, profile } = useAuthContext()
   const { isVip, isLoading: vipLoading } = useVipStatus()
+  const { data: vipData, isLoading: dataLoading, error } = useVipProfileData(profileId)
 
-  const [vipData, setVipData] = useState<VipRewardData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showGate, setShowGate] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
 
-  // 접근 권한 체크: VIP이거나 본인 페이지이거나 관리자
+  // 접근 권한 체크
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
   const isOwner = user?.id === profileId
-  const hasAccess = isVip || isOwner || isAdmin
+
+  // VIP 페이지 자체는 로그인 회원 모두 열람 가능
+  const isLoggedIn = !!user
+
+  // 비공개 콘텐츠 전체 접근 권한 (VIP/본인/관리자)
+  const hasFullAccess = isVip || isOwner || isAdmin
+
+  const isLoading = vipLoading || dataLoading
 
   // 2.5초 후 자동으로 게이트 열림
   useEffect(() => {
@@ -56,89 +43,6 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
     }, 2500)
     return () => clearTimeout(timer)
   }, [])
-
-  const fetchVipData = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // VIP 보상 데이터 조회
-      const { data: reward, error: rewardError } = await withRetry(async () =>
-        await supabase
-          .from('vip_rewards')
-          .select(`
-            id,
-            profile_id,
-            rank,
-            personal_message,
-            dedication_video_url,
-            season_id,
-            profiles:profile_id (nickname, total_donation),
-            seasons:season_id (name)
-          `)
-          .eq('profile_id', profileId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-      )
-
-      if (rewardError) {
-        if (rewardError.code === 'PGRST116') {
-          setError('등록된 VIP 보상 정보가 없습니다.')
-        } else {
-          throw rewardError
-        }
-        setIsLoading(false)
-        return
-      }
-
-      // VIP 이미지 조회
-      const { data: images } = await withRetry(async () =>
-        await supabase
-          .from('vip_images')
-          .select('id, image_url, title, order_index')
-          .eq('reward_id', reward.id)
-          .order('order_index', { ascending: true })
-      )
-
-      // Supabase returns joined data - handle both array and object cases
-      const profileData = reward.profiles
-      const profile = Array.isArray(profileData)
-        ? profileData[0] as { nickname: string; total_donation: number } | undefined
-        : profileData as { nickname: string; total_donation: number } | null
-
-      const seasonData = reward.seasons
-      const season = Array.isArray(seasonData)
-        ? seasonData[0] as { name: string } | undefined
-        : seasonData as { name: string } | null
-
-      setVipData({
-        id: reward.id,
-        profileId: reward.profile_id,
-        nickname: profile?.nickname || '알 수 없음',
-        rank: reward.rank,
-        personalMessage: reward.personal_message,
-        dedicationVideoUrl: reward.dedication_video_url,
-        seasonName: season?.name || '',
-        totalDonation: profile?.total_donation || 0,
-        images: (images || []).map((img) => ({
-          id: img.id,
-          imageUrl: img.image_url,
-          title: img.title || '',
-          orderIndex: img.order_index,
-        })),
-      })
-    } catch (err) {
-      console.error('VIP 데이터 로드 실패:', err)
-      setError('VIP 정보를 불러오는 데 실패했습니다.')
-    }
-
-    setIsLoading(false)
-  }, [supabase, profileId])
-
-  useEffect(() => {
-    fetchVipData()
-  }, [fetchVipData])
 
   // 모달 네비게이션
   const handlePrevImage = (e: React.MouseEvent) => {
@@ -172,12 +76,31 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   }, [selectedImageIndex, vipData])
 
   // 로딩 중
-  if (isLoading || vipLoading) {
+  if (isLoading) {
     return (
       <div className={styles.main}>
         <div className={styles.loading}>
           <div className={styles.spinner} />
           <span>VIP 정보를 불러오는 중...</span>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  // 비로그인 상태
+  if (!user) {
+    return (
+      <div className={styles.main}>
+        <div className={styles.restrictedOverlay}>
+          <div className={styles.restrictedBadge}>
+            <Lock size={48} className={styles.restrictedIcon} />
+            <span className={styles.restrictedText}>로그인 필요</span>
+            <span className={styles.restrictedSubtext}>VIP 페이지는 로그인 후 이용 가능합니다</span>
+            <Link href="/login" className={styles.restrictedButton}>
+              로그인
+            </Link>
+          </div>
         </div>
         <Footer />
       </div>
@@ -219,49 +142,71 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
 
   // 컨텐츠 렌더링 (접근 권한에 따라 다름)
   const renderContent = () => {
-    // 접근 권한이 없으면 블러 처리
-    if (!hasAccess) {
+    // 비로그인 사용자에게만 로그인 유도
+    if (!isLoggedIn) {
       return (
         <div className={styles.restrictedOverlay}>
-          {/* 블러된 미리보기 콘텐츠 */}
-          <div className={styles.restrictedContent}>
-            {/* 메시지 섹션 미리보기 */}
-            <section className={styles.messageSection}>
-              <div className={styles.sectionHeader}>
-                <MessageSquare size={20} />
-                <h2>감사 메시지</h2>
-                <div className={styles.sectionDivider} />
-              </div>
-              <div className={styles.messageCard}>
-                <p>이 콘텐츠는 VIP 회원만 볼 수 있습니다. VIP 회원이 되시면 특별한 감사 메시지와 전용 시그니처를 확인하실 수 있습니다.</p>
-              </div>
-            </section>
-
-            {/* 갤러리 섹션 미리보기 */}
-            <section className={styles.gallerySection}>
-              <div className={styles.sectionHeader}>
-                <ImageIcon size={20} />
-                <h2>VIP 전용 시그니처</h2>
-                <div className={styles.sectionDivider} />
-              </div>
-              <div className={styles.galleryGrid}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className={styles.galleryItem} style={{ background: '#1a1a1a' }} />
-                ))}
-              </div>
-            </section>
-          </div>
-
-          {/* 잠금 오버레이 */}
           <div className={styles.restrictedBadge}>
             <Lock size={48} className={styles.restrictedIcon} />
-            <span className={styles.restrictedText}>VIP Exclusive</span>
-            <span className={styles.restrictedSubtext}>VIP 회원만 열람할 수 있습니다</span>
-            <Link href="/ranking" className={styles.restrictedButton}>
-              VIP 되기
+            <span className={styles.restrictedText}>로그인 필요</span>
+            <span className={styles.restrictedSubtext}>VIP 페이지는 로그인 후 이용 가능합니다</span>
+            <Link href="/login" className={styles.restrictedButton}>
+              로그인
             </Link>
           </div>
         </div>
+      )
+    }
+
+    // VIP 전용 콘텐츠(personalMessage, images)는 hasFullAccess 필요
+    if (!hasFullAccess) {
+      return (
+        <>
+          {/* VIP 전용 콘텐츠: 블러 처리 */}
+          <div className={styles.restrictedOverlay}>
+            <div className={styles.restrictedContent}>
+              <section className={styles.messageSection}>
+                <div className={styles.sectionHeader}>
+                  <MessageSquare size={20} />
+                  <h2>감사 메시지</h2>
+                  <div className={styles.sectionDivider} />
+                </div>
+                <div className={styles.messageCard}>
+                  <p>이 콘텐츠는 VIP 회원만 볼 수 있습니다. VIP 회원이 되시면 특별한 감사 메시지와 전용 시그니처를 확인하실 수 있습니다.</p>
+                </div>
+              </section>
+
+              <section className={styles.gallerySection}>
+                <div className={styles.sectionHeader}>
+                  <ImageIcon size={20} />
+                  <h2>VIP 전용 시그니처</h2>
+                  <div className={styles.sectionDivider} />
+                </div>
+                <div className={styles.galleryGrid}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className={styles.galleryItem} style={{ background: '#1a1a1a' }} />
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            <div className={styles.restrictedBadge}>
+              <Lock size={48} className={styles.restrictedIcon} />
+              <span className={styles.restrictedText}>VIP Exclusive</span>
+              <span className={styles.restrictedSubtext}>VIP 회원만 열람할 수 있습니다</span>
+              <Link href="/ranking" className={styles.restrictedButton}>
+                VIP 되기
+              </Link>
+            </div>
+          </div>
+
+          {/* BJ 감사 메시지 섹션: 로그인 사용자에게 공개 (공개/비공개 분리 적용) */}
+          <BjThankYouSection
+            vipProfileId={profileId}
+            vipNickname={vipData.nickname}
+            hasFullAccess={false}
+          />
+        </>
       )
     }
 
@@ -353,6 +298,13 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
             </div>
           </motion.section>
         )}
+
+        {/* BJ 감사 메시지 섹션 */}
+        <BjThankYouSection
+          vipProfileId={profileId}
+          vipNickname={vipData.nickname}
+          hasFullAccess={true}
+        />
 
         {/* Empty State */}
         {!vipData.personalMessage && !vipData.dedicationVideoUrl && vipData.images.length === 0 && (

@@ -50,19 +50,8 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
       return
     }
 
-    if (!user) {
-      setAccessDenied('not_authenticated')
-      setIsLoading(false)
-      return
-    }
-
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-    if (!isAdmin && user.id !== userId) {
-      setAccessDenied('not_owner')
-      setIsLoading(false)
-      return
-    }
-
+    // VIP 페이지는 로그인 없이도 볼 수 있도록 허용 (공개 프로필)
+    // 단, 실제 콘텐츠는 VIP 자격이 있어야 함 (fetchTributeData에서 처리)
     setAccessDenied(null)
   }, [userId, user, profile, authLoading])
 
@@ -177,8 +166,75 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
         return
       }
 
+      // vip_rewards에 데이터가 없으면 donations/profiles에서 직접 조회 (Fallback)
       if (!rewardsData || rewardsData.length === 0) {
-        setAccessDenied(isAdmin ? 'page_not_found' : 'not_qualified')
+        // 프로필 조회
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id, nickname, avatar_url, total_donation, unit')
+          .eq('id', userId)
+          .single()
+
+        if (!profileData) {
+          setAccessDenied(isAdmin ? 'page_not_found' : 'not_qualified')
+          setIsLoading(false)
+          return
+        }
+
+        // 현재 시즌 조회
+        const { data: currentSeason } = await supabase
+          .from('seasons')
+          .select('id, name')
+          .eq('is_active', true)
+          .single()
+
+        // 후원 랭킹에서 순위 계산
+        const { data: rankingData } = await supabase
+          .from('donations')
+          .select('donor_id, amount')
+
+        let rank = 0
+        if (rankingData) {
+          // 후원자별 총액 집계
+          const totals = rankingData.reduce((acc, d) => {
+            if (d.donor_id) {
+              acc[d.donor_id] = (acc[d.donor_id] || 0) + d.amount
+            }
+            return acc
+          }, {} as Record<string, number>)
+
+          // 순위 계산
+          const sortedDonors = Object.entries(totals)
+            .sort(([, a], [, b]) => b - a)
+            .map(([id], idx) => ({ id, rank: idx + 1 }))
+
+          const found = sortedDonors.find(d => d.id === userId)
+          rank = found?.rank || 0
+        }
+
+        // Top 50 이내가 아니면 접근 거부
+        if (rank === 0 || rank > 50) {
+          setAccessDenied(isAdmin ? 'page_not_found' : 'not_qualified')
+          setIsLoading(false)
+          return
+        }
+
+        // Fallback 데이터 생성
+        const fallbackHofData: HallOfFameHonor[] = [{
+          id: `fallback-${profileData.id}`,
+          donorId: profileData.id,
+          donorName: profileData.nickname || '알 수 없음',
+          donorAvatar: profileData.avatar_url || '',
+          honorType: 'season_top3',
+          rank: rank,
+          seasonId: currentSeason?.id || 0,
+          seasonName: currentSeason?.name || '',
+          amount: profileData.total_donation || 0,
+          unit: profileData.unit as 'excel' | 'crew' | null,
+          createdAt: new Date().toISOString(),
+        }]
+
+        setHallOfFameData(fallbackHofData)
         setIsLoading(false)
         return
       }

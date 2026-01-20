@@ -10,29 +10,35 @@
 import type { VipReward, VipImage } from '@/types/database'
 import { rankedProfiles } from './profiles'
 
-// Personal Messages for Top 3
+// Personal Messages for Top 3 (실제 후원 랭킹 Top 3)
 const personalMessages: Record<number, string> = {
-  1: `핑크하트님, 항상 최고의 응원을 보내주셔서 진심으로 감사합니다.
+  1: `미키™님, 압도적인 1위로 항상 최고의 응원을 보내주셔서 진심으로 감사합니다! 💖
 
-처음 방송을 시작했을 때부터 지금까지 변함없이 함께해주신 덕분에 매일 방송이 즐겁습니다. 힘들 때마다 핑크하트님의 따뜻한 메시지를 보며 힘을 얻곤 해요.
+처음 방송을 시작했을 때부터 지금까지 변함없이 함께해주신 미키™님 덕분에 매일 방송이 행복합니다. 언제나 든든한 서포터로 함께해주셔서 정말 감사드려요.
 
-앞으로도 함께해주실 거죠? 사랑합니다!
+미키™님과 함께하는 모든 순간이 소중해요. 앞으로도 함께 더 좋은 추억 만들어가요!
 
-- 나노 드림`,
-  2: `gul***님, 변함없는 응원에 진심으로 감사드려요.
+사랑합니다! 💕
 
-항상 채팅에서 응원해주시고, 다른 팬분들도 챙겨주시는 모습이 정말 따뜻해요. gul***님 덕분에 우리 방송 분위기가 항상 좋은 것 같아요.
+- RG Family 일동`,
+  2: `미드굿♣️가애님, 항상 변함없는 응원에 진심으로 감사드려요! 🌟
 
-앞으로도 함께 좋은 추억 많이 만들어요!
+가애님과 함께하는 방송은 언제나 특별해요. 채팅에서 따뜻한 메시지로 분위기를 밝혀주시고, 다른 팬분들도 챙겨주시는 모습이 정말 감동입니다.
 
-- 나노 드림`,
-  3: `별빛수호자님, 따뜻한 응원 항상 감사합니다.
+미드굿♣️가애님 덕분에 우리 방송 분위기가 항상 최고예요! 앞으로도 함께 좋은 추억 많이 만들어요!
 
-닉네임처럼 정말 별빛처럼 빛나는 서포터가 되어주시는 것 같아 감동이에요. 조용히 응원해주시는 모습이 정말 따뜻합니다.
+감사합니다! 💝
 
-앞으로도 좋은 방송으로 보답할게요!
+- RG Family 일동`,
+  3: `농심육개장라면님, 따뜻한 응원 항상 감사합니다! 🍜❤️
 
-- 나노 드림`,
+특별한 닉네임만큼이나 특별한 서포터가 되어주셔서 정말 감동이에요. 조용히 응원해주시다가도 중요한 순간에는 항상 함께해주시는 모습이 정말 따뜻합니다.
+
+농심육개장라면님 덕분에 힘이 나요! 앞으로도 좋은 방송으로 보답할게요!
+
+감사합니다! 💖
+
+- RG Family 일동`,
 }
 
 // Dedication Video URLs for Top 3
@@ -52,6 +58,7 @@ export const mockVipRewards: VipReward[] = rankedProfiles.slice(0, 50).map((prof
     id: rank,
     profile_id: profile.id,
     season_id: 4, // 현재 시즌
+    episode_id: null, // 직급전 회차 ID (목업에서는 null)
     rank,
     personal_message: rank <= 3 ? personalMessages[rank] : null,
     dedication_video_url: rank <= 3 ? dedicationVideos[rank] : null,
@@ -64,12 +71,12 @@ export const mockVipRewards: VipReward[] = rankedProfiles.slice(0, 50).map((prof
  * Top 3 후원자 전용 갤러리 이미지
  */
 export const mockVipImages: VipImage[] = [
-  // Gold (1등) 갤러리 - 4장
+  // 미키™ (1등) 갤러리 - 4장
   {
     id: 1,
     reward_id: 1,
     image_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=800&fit=crop',
-    title: 'Gold Exclusive #1',
+    title: '미키™님 전용 시그니처 #1',
     order_index: 0,
     created_at: new Date(2025, 0, 1).toISOString(),
   },
@@ -77,7 +84,7 @@ export const mockVipImages: VipImage[] = [
     id: 2,
     reward_id: 1,
     image_url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&h=800&fit=crop',
-    title: 'Gold Exclusive #2',
+    title: '미키™님 전용 시그니처 #2',
     order_index: 1,
     created_at: new Date(2025, 0, 1).toISOString(),
   },
@@ -85,7 +92,7 @@ export const mockVipImages: VipImage[] = [
     id: 3,
     reward_id: 1,
     image_url: 'https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=800&h=800&fit=crop',
-    title: 'Gold Exclusive #3',
+    title: '미키™님 전용 시그니처 #3',
     order_index: 2,
     created_at: new Date(2025, 0, 1).toISOString(),
   },
@@ -93,16 +100,16 @@ export const mockVipImages: VipImage[] = [
     id: 4,
     reward_id: 1,
     image_url: 'https://images.unsplash.com/photo-1618172193763-c511deb635ca?w=800&h=800&fit=crop',
-    title: 'Gold Exclusive #4',
+    title: '미키™님 전용 시그니처 #4',
     order_index: 3,
     created_at: new Date(2025, 0, 1).toISOString(),
   },
-  // Silver (2등) 갤러리 - 3장
+  // 미드굿♣️가애 (2등) 갤러리 - 3장
   {
     id: 5,
     reward_id: 2,
     image_url: 'https://images.unsplash.com/photo-1633177317976-3f9bc45e1d1d?w=800&h=800&fit=crop',
-    title: 'Silver Exclusive #1',
+    title: '미드굿♣️가애님 전용 시그니처 #1',
     order_index: 0,
     created_at: new Date(2025, 0, 1).toISOString(),
   },
@@ -110,7 +117,7 @@ export const mockVipImages: VipImage[] = [
     id: 6,
     reward_id: 2,
     image_url: 'https://images.unsplash.com/photo-1614851099511-773084f6911d?w=800&h=800&fit=crop',
-    title: 'Silver Exclusive #2',
+    title: '미드굿♣️가애님 전용 시그니처 #2',
     order_index: 1,
     created_at: new Date(2025, 0, 1).toISOString(),
   },
@@ -118,16 +125,16 @@ export const mockVipImages: VipImage[] = [
     id: 7,
     reward_id: 2,
     image_url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&h=800&fit=crop',
-    title: 'Silver Exclusive #3',
+    title: '미드굿♣️가애님 전용 시그니처 #3',
     order_index: 2,
     created_at: new Date(2025, 0, 1).toISOString(),
   },
-  // Bronze (3등) 갤러리 - 2장
+  // 농심육개장라면 (3등) 갤러리 - 2장
   {
     id: 8,
     reward_id: 3,
     image_url: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800&h=800&fit=crop',
-    title: 'Bronze Exclusive #1',
+    title: '농심육개장라면님 전용 시그니처 #1',
     order_index: 0,
     created_at: new Date(2025, 0, 1).toISOString(),
   },
@@ -135,7 +142,7 @@ export const mockVipImages: VipImage[] = [
     id: 9,
     reward_id: 3,
     image_url: 'https://images.unsplash.com/photo-1604076913837-52ab5629fba9?w=800&h=800&fit=crop',
-    title: 'Bronze Exclusive #2',
+    title: '농심육개장라면님 전용 시그니처 #2',
     order_index: 1,
     created_at: new Date(2025, 0, 1).toISOString(),
   },

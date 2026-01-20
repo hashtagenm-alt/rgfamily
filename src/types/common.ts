@@ -70,6 +70,8 @@ export interface CalendarDay {
   date: Date
   isCurrentMonth: boolean
   isToday: boolean
+  isHoliday: boolean
+  holidayName: string | null
   events: ScheduleEvent[]
 }
 

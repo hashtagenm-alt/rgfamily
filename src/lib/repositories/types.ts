@@ -129,7 +129,6 @@ export interface IScheduleRepository {
 export interface ISignatureRepository {
   findById(id: number): Promise<Signature | null>
   findByUnit(unit: 'excel' | 'crew'): Promise<Signature[]>
-  findFeatured(): Promise<Signature[]>
   findAll(): Promise<Signature[]>
   create(data: InsertTables<'signatures'>): Promise<Signature>
   update(id: number, data: UpdateTables<'signatures'>): Promise<Signature>

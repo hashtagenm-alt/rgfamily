@@ -13,26 +13,26 @@ export default function Home() {
         <Navbar />
         <Hero />
         <div className={styles.content}>
-          {/* Live & Notice Section */}
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <div className={styles.sectionBadge}>LIVE NOW</div>
-              <h2 className={styles.sectionTitle}>실시간 멤버</h2>
-            </div>
-            <div className={styles.liveNoticeGrid}>
-              <LiveMembers />
-              <BroadcastNotice />
-            </div>
-          </section>
+          {/* Section Header */}
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionBadge}>LIVE NOW</span>
+            <h2 className={styles.sectionTitle}>실시간 멤버</h2>
+          </div>
 
-          {/* Shorts Section */}
+          {/* 2-Column Layout: Live Members & Broadcast Notice */}
+          <div className={styles.liveNoticeGrid}>
+            <LiveMembers />
+            <BroadcastNotice />
+          </div>
+
+          {/* Shorts Section - Full Width */}
           <section className={styles.section}>
             <Suspense fallback={<SectionSkeleton type="shorts" />}>
               <Shorts />
             </Suspense>
           </section>
 
-          {/* VOD Section */}
+          {/* VOD Section - Full Width */}
           <section className={styles.section}>
             <Suspense fallback={<SectionSkeleton type="vod" />}>
               <VOD />

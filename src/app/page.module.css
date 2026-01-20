@@ -76,7 +76,43 @@
 }
 
 /* =======================================
-   Live & Notice Grid
+   Three Column Layout
+   ======================================= */
+.threeColumnLayout {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.leftSidebar,
+.rightSidebar {
+  position: relative;
+}
+
+.stickyWrapper {
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.stickyWrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-height: 100vh;
+  min-width: 0; /* Prevent grid blowout from overflow content */
+  overflow: hidden; /* Contain horizontal overflow from Shorts/VOD */
+}
+
+/* =======================================
+   Live & Notice Grid (Legacy - for mobile)
    ======================================= */
 .liveNoticeGrid {
   display: grid;
@@ -88,10 +124,36 @@
 /* =======================================
    Responsive
    ======================================= */
+@media (max-width: 1280px) {
+  .threeColumnLayout {
+    grid-template-columns: 240px 1fr 240px;
+  }
+}
+
 @media (max-width: 1024px) {
   .content {
     padding: var(--space-6) var(--space-4);
     gap: var(--space-10);
+  }
+
+  .threeColumnLayout {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  .leftSidebar,
+  .rightSidebar {
+    order: 0;
+  }
+
+  .mainContent {
+    order: 1;
+  }
+
+  .stickyWrapper {
+    position: relative;
+    top: 0;
+    max-height: none;
   }
 
   .liveNoticeGrid {

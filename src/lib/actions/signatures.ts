@@ -62,56 +62,32 @@ export async function deleteSignature(
 }
 
 /**
- * Featured 토글
- */
-export async function toggleSignatureFeatured(
-  id: number,
-  isFeatured: boolean
-): Promise<ActionResult<Signature>> {
-  return adminAction(async (supabase) => {
-    const { data: signature, error } = await supabase
-      .from('signatures')
-      .update({ is_featured: isFeatured })
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw new Error(error.message)
-    return signature
-  }, ['/admin/signatures', '/signature'])
-}
-
-/**
  * 시그니처 목록 조회 (공개)
  */
 export async function getSignatures(options?: {
   unit?: 'excel' | 'crew'
-  mediaType?: 'video' | 'image' | 'gif'
-  memberName?: string
-  tag?: string
-  featured?: boolean
+  isGroup?: boolean
+  sigNumberMin?: number
+  sigNumberMax?: number
   limit?: number
 }): Promise<ActionResult<Signature[]>> {
   return publicAction(async (supabase) => {
     let query = supabase
       .from('signatures')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('sig_number', { ascending: true })
 
     if (options?.unit) {
       query = query.eq('unit', options.unit)
     }
-    if (options?.mediaType) {
-      query = query.eq('media_type', options.mediaType)
+    if (options?.isGroup !== undefined) {
+      query = query.eq('is_group', options.isGroup)
     }
-    if (options?.memberName) {
-      query = query.eq('member_name', options.memberName)
+    if (options?.sigNumberMin !== undefined) {
+      query = query.gte('sig_number', options.sigNumberMin)
     }
-    if (options?.tag) {
-      query = query.contains('tags', [options.tag])
-    }
-    if (options?.featured) {
-      query = query.eq('is_featured', true)
+    if (options?.sigNumberMax !== undefined) {
+      query = query.lte('sig_number', options.sigNumberMax)
     }
     if (options?.limit) {
       query = query.limit(options.limit)
@@ -121,52 +97,5 @@ export async function getSignatures(options?: {
 
     if (error) throw new Error(error.message)
     return data || []
-  })
-}
-
-/**
- * Featured 시그니처 조회 (공개)
- */
-export async function getFeaturedSignatures(
-  limit: number = 6
-): Promise<ActionResult<Signature[]>> {
-  return getSignatures({ featured: true, limit })
-}
-
-/**
- * 멤버별 시그니처 조회 (공개)
- */
-export async function getSignaturesByMember(
-  memberName: string
-): Promise<ActionResult<Signature[]>> {
-  return getSignatures({ memberName })
-}
-
-/**
- * 시그니처 조회수 증가 (공개)
- */
-export async function incrementSignatureViewCount(
-  id: number
-): Promise<ActionResult<null>> {
-  return publicAction(async (supabase) => {
-    // 현재 조회수 조회 후 증가
-    const { data } = await supabase
-      .from('signatures')
-      .select('view_count')
-      .eq('id', id)
-      .single()
-
-    if (data) {
-      try {
-        await supabase
-          .from('signatures')
-          .update({ view_count: (data.view_count || 0) + 1 })
-          .eq('id', id)
-      } catch {
-        // 조회수 증가 실패해도 무시
-      }
-    }
-
-    return null
   })
 }

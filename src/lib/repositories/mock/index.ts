@@ -322,6 +322,7 @@ class MockDonationRepository implements IDonationRepository {
       donor_name: data.donor_name,
       amount: data.amount,
       season_id: data.season_id,
+      episode_id: data.episode_id ?? null,
       unit: data.unit || null,
       message: data.message || null,
       created_at: getCurrentTimestamp(),
@@ -747,30 +748,24 @@ class MockSignatureRepository implements ISignatureRepository {
   }
 
   async findByUnit(unit: 'excel' | 'crew'): Promise<Signature[]> {
-    return store.signatures.filter(s => s.unit === unit)
-  }
-
-  async findFeatured(): Promise<Signature[]> {
-    return store.signatures.filter(s => s.is_featured)
+    return store.signatures
+      .filter(s => s.unit === unit)
+      .sort((a, b) => a.sig_number - b.sig_number)
   }
 
   async findAll(): Promise<Signature[]> {
-    return store.signatures
+    return [...store.signatures].sort((a, b) => a.sig_number - b.sig_number)
   }
 
   async create(data: InsertTables<'signatures'>): Promise<Signature> {
     const newSignature: Signature = {
       id: generateMockId(),
+      sig_number: data.sig_number,
       title: data.title,
       description: data.description || null,
-      unit: data.unit,
-      member_name: data.member_name,
-      media_type: data.media_type,
-      media_url: data.media_url,
       thumbnail_url: data.thumbnail_url || null,
-      tags: data.tags || null,
-      view_count: data.view_count || 0,
-      is_featured: data.is_featured ?? false,
+      unit: data.unit,
+      is_group: data.is_group ?? false,
       created_at: getCurrentTimestamp(),
     }
     store.signatures.push(newSignature)
@@ -817,6 +812,7 @@ class MockVipRewardRepository implements IVipRewardRepository {
       id: generateMockId(),
       profile_id: data.profile_id,
       season_id: data.season_id,
+      episode_id: data.episode_id || null,
       rank: data.rank,
       personal_message: data.personal_message || null,
       dedication_video_url: data.dedication_video_url || null,

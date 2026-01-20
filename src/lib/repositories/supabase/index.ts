@@ -728,21 +728,14 @@ class SupabaseSignatureRepository implements ISignatureRepository {
 
   async findByUnit(unit: 'excel' | 'crew'): Promise<Signature[]> {
     const { data } = await withRetry(async () =>
-      await this.supabase.from('signatures').select('*').eq('unit', unit).order('created_at', { ascending: false })
-    )
-    return data || []
-  }
-
-  async findFeatured(): Promise<Signature[]> {
-    const { data } = await withRetry(async () =>
-      await this.supabase.from('signatures').select('*').eq('is_featured', true).order('created_at', { ascending: false })
+      await this.supabase.from('signatures').select('*').eq('unit', unit).order('sig_number', { ascending: true })
     )
     return data || []
   }
 
   async findAll(): Promise<Signature[]> {
     const { data } = await withRetry(async () =>
-      await this.supabase.from('signatures').select('*').order('created_at', { ascending: false })
+      await this.supabase.from('signatures').select('*').order('sig_number', { ascending: true })
     )
     return data || []
   }

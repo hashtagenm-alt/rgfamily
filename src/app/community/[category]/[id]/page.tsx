@@ -16,9 +16,11 @@ interface PostDetail {
   content: string
   authorId: string
   authorName: string
+  authorRealName?: string
   authorAvatar: string | null
   viewCount: number
   createdAt: string
+  isAnonymous: boolean
 }
 
 interface Comment {
@@ -50,6 +52,7 @@ export default function PostDetailPage({
   }
   const supabase = useSupabaseContext()
   const { user, profile } = useAuthContext()
+  const isAdmin = ['admin', 'superadmin', 'moderator'].includes(profile?.role ?? '')
   const [post, setPost] = useState<PostDetail | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
@@ -79,15 +82,19 @@ export default function PostDetailPage({
       .eq('id', postId)
 
     const postProfile = postData.profiles as JoinedProfile | null
+    const isAnonymous = Boolean(postData.is_anonymous)
+    const realNickname = postProfile?.nickname || '알 수 없음'
     setPost({
       id: postData.id,
       title: postData.title,
       content: postData.content || '',
       authorId: postData.author_id,
-      authorName: postProfile?.nickname || '익명',
-      authorAvatar: postProfile?.avatar_url || null,
+      authorName: isAnonymous ? '익명' : realNickname,
+      authorRealName: isAnonymous ? realNickname : undefined,
+      authorAvatar: !isAnonymous || isAdmin ? (postProfile?.avatar_url || null) : null,
       viewCount: (postData.view_count || 0) + 1,
       createdAt: postData.created_at,
+      isAnonymous,
     })
 
     // 댓글 조회
@@ -201,6 +208,9 @@ export default function PostDetailPage({
                   )}
                 </div>
                 <span>{post.authorName}</span>
+                {isAdmin && post.isAnonymous && post.authorRealName && (
+                  <span className={styles.adminRealName}>({post.authorRealName})</span>
+                )}
               </div>
               <div className={styles.metaItems}>
                 <span>

@@ -12,7 +12,14 @@ export { mockProfiles, mockAdminProfile } from './profiles'
 export { mockSeasons } from './seasons'
 export { mockOrganization } from './organization'
 export { mockDonations } from './donations'
-export { mockSignatures, mockSignatureData, signatureCategories, type SignatureData, type SignatureVideo, type Signature } from './signatures'
+export {
+  mockEpisodes,
+  getEpisodesBySeason,
+  getRankBattlesBySeason,
+  getEpisodeById,
+  getFinalizedRankBattles,
+} from './episodes'
+export { mockSignatures, mockSignatureData, signatureCategories, type SignatureData, type SignatureVideo } from './signatures'
 export { mockSchedules } from './schedules'
 export { mockTimelineEvents } from './timeline'
 export { mockNotices } from './notices'
@@ -90,6 +97,28 @@ export {
   type TributeMemberVideo,
   type TributeSignature,
 } from './hall-of-fame'
+
+// BJ Profiles (BJ 멤버 계정)
+export {
+  BJ_MEMBERS,
+  mockBjProfiles,
+  organizationProfileMapping,
+  generateBjProfileId,
+  getOrgIdByProfileId,
+  getProfileIdByOrgId,
+  getBjProfileByEmail,
+  isBjMemberByProfileId,
+  getBjMemberInfo,
+} from './bj-profiles'
+
+// BJ Thank You Messages (BJ 감사 메시지)
+export {
+  mockBjThankYouMessages,
+  getBjMessagesByVipId,
+  getBjMessagesByBjId,
+  getBjMessageCountByVipId,
+  hasReceivedBjMessages,
+} from './bj-messages'
 
 // ============================================
 // Utility Exports

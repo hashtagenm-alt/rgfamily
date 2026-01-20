@@ -11,6 +11,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useSchedules } from '@/lib/context'
+import { getMonthHolidays } from '@/lib/utils/holidays'
 import type { Schedule } from '@/types/database'
 import type { CalendarDay, ScheduleEvent, UnitFilter } from '@/types/common'
 
@@ -76,16 +77,31 @@ export function useSchedule(): UseScheduleReturn {
     const firstDay = new Date(year, month, 1)
     const lastDay = new Date(year, month + 1, 0)
 
+    // 공휴일 정보 가져오기
+    const holidays = getMonthHolidays(year, month)
+    const prevMonthHolidays = getMonthHolidays(
+      month === 0 ? year - 1 : year,
+      month === 0 ? 11 : month - 1
+    )
+    const nextMonthHolidays = getMonthHolidays(
+      month === 11 ? year + 1 : year,
+      month === 11 ? 0 : month + 1
+    )
+
     const days: CalendarDay[] = []
 
     // 이전 달의 날짜들
     const startDayOfWeek = firstDay.getDay()
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
       const date = new Date(year, month, -i)
+      const dayNum = date.getDate()
+      const holidayName = prevMonthHolidays.get(dayNum) || null
       days.push({
         date,
         isCurrentMonth: false,
         isToday: false,
+        isHoliday: !!holidayName || date.getDay() === 0,
+        holidayName,
         events: [],
       })
     }
@@ -93,6 +109,7 @@ export function useSchedule(): UseScheduleReturn {
     // 현재 달의 날짜들
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day)
+      const holidayName = holidays.get(day) || null
       const dayEvents = events
         .filter((event) => {
           const eventDate = new Date(event.start_datetime)
@@ -118,6 +135,8 @@ export function useSchedule(): UseScheduleReturn {
         date,
         isCurrentMonth: true,
         isToday: date.getTime() === today.getTime(),
+        isHoliday: !!holidayName || date.getDay() === 0,
+        holidayName,
         events: dayEvents,
       })
     }
@@ -126,10 +145,13 @@ export function useSchedule(): UseScheduleReturn {
     const remainingDays = 42 - days.length
     for (let i = 1; i <= remainingDays; i++) {
       const date = new Date(year, month + 1, i)
+      const holidayName = nextMonthHolidays.get(i) || null
       days.push({
         date,
         isCurrentMonth: false,
         isToday: false,
+        isHoliday: !!holidayName || date.getDay() === 0,
+        holidayName,
         events: [],
       })
     }

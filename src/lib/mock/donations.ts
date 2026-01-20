@@ -4,6 +4,7 @@
  */
 
 import type { Donation } from '@/types/database'
+import { mockEpisodes } from './episodes'
 
 // 후원자 이름 풀 (50명)
 const donorNames = [
@@ -18,6 +19,24 @@ const donorNames = [
   '달나라토끼', '별똥별', '유성우', '은하계', '우주탐험',
   '판타지아', '드림캐처', '럭키스타', '매직걸', '원더풀'
 ]
+
+// 해당 시즌의 에피소드 중 날짜에 맞는 에피소드 찾기
+function findEpisodeForDate(seasonId: number, donationDate: Date): number | null {
+  const seasonEpisodes = mockEpisodes
+    .filter(ep => ep.season_id === seasonId)
+    .sort((a, b) => new Date(a.broadcast_date).getTime() - new Date(b.broadcast_date).getTime())
+
+  // 가장 가까운 이전 에피소드 찾기
+  for (let i = seasonEpisodes.length - 1; i >= 0; i--) {
+    const epDate = new Date(seasonEpisodes[i].broadcast_date)
+    if (epDate <= donationDate) {
+      return seasonEpisodes[i].id
+    }
+  }
+
+  // 첫 에피소드보다 이전이면 첫 에피소드에 배정
+  return seasonEpisodes.length > 0 ? seasonEpisodes[0].id : null
+}
 
 // 시즌별 후원 데이터 생성기
 function generateSeasonDonations(
@@ -70,6 +89,9 @@ function generateSeasonDonations(
       const randomTime = startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())
       const donationDate = new Date(randomTime)
 
+      // 후원 날짜에 맞는 에피소드 찾기
+      const episodeId = findEpisodeForDate(seasonId, donationDate)
+
       // 메시지 (30% 확률로 포함)
       const messages = [
         '응원합니다!', '화이팅!', '최고에요!', '오늘도 수고하셨어요',
@@ -83,6 +105,7 @@ function generateSeasonDonations(
         donor_name: donorName,
         amount: donationAmount,
         season_id: seasonId,
+        episode_id: episodeId,
         unit: unit as 'excel' | 'crew',
         message,
         created_at: donationDate.toISOString()

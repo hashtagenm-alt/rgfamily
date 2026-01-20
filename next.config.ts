@@ -98,6 +98,17 @@ const nextConfig: NextConfig = {
         destination: '/ranking',
         permanent: true,
       },
+      // Community write redirects
+      {
+        source: '/community/free/write',
+        destination: '/community/write?board=free',
+        permanent: false,
+      },
+      {
+        source: '/community/vip/write',
+        destination: '/community/write?board=vip',
+        permanent: false,
+      },
     ]
   },
   images: {

@@ -8,6 +8,7 @@
  */
 
 import { getPicsumThumbnail } from './utils'
+import type { Signature } from '@/types/database'
 
 // 시그니처 멤버별 영상 타입
 export interface SignatureVideo {
@@ -30,22 +31,6 @@ export interface SignatureData {
   isGroup: boolean // 단체 시그 여부
   videos: SignatureVideo[] // 멤버별 영상들
   createdAt: string
-}
-
-// 기존 타입 호환을 위한 export (deprecated)
-export interface Signature {
-  id: number
-  title: string
-  description: string | null
-  unit: 'excel' | 'crew'
-  member_name: string
-  media_type: 'video' | 'gif' | 'image'
-  media_url: string
-  thumbnail_url: string
-  tags: string[]
-  view_count: number
-  is_featured: boolean
-  created_at: string
 }
 
 // cnine 스타일 시그니처 데이터 (새 구조)
@@ -210,23 +195,17 @@ export const mockSignatureData: SignatureData[] = [
   },
 ]
 
-// 기존 형식 호환용 데이터 (deprecated)
-export const mockSignatures: Signature[] = mockSignatureData.flatMap(sig =>
-  sig.videos.map((video, idx) => ({
-    id: video.id,
-    title: `${sig.title} (${sig.sigNumber})`,
-    description: `${video.memberName}의 시그니처 영상`,
-    unit: sig.unit,
-    member_name: video.memberName,
-    media_type: 'video' as const,
-    media_url: video.videoUrl,
-    thumbnail_url: sig.thumbnailUrl,
-    tags: [sig.title, video.memberName, `${sig.sigNumber}`],
-    view_count: 0,
-    is_featured: idx === 0,
-    created_at: sig.createdAt,
-  }))
-)
+// DB 테이블 형태의 시그니처 목록
+export const mockSignatures: Signature[] = mockSignatureData.map((sig) => ({
+  id: sig.id,
+  sig_number: sig.sigNumber,
+  title: sig.title,
+  description: sig.description || null,
+  thumbnail_url: sig.thumbnailUrl || null,
+  unit: sig.unit,
+  is_group: sig.isGroup,
+  created_at: sig.createdAt,
+}))
 
 // 필터 카테고리 목록
 export const signatureCategories = [

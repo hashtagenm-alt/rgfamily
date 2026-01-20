@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
-import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Play, ChevronLeft, ChevronRight, X, Film } from "lucide-react";
 import { useSupabaseContext } from "@/lib/context";
 import { getYouTubeShortsEmbedUrl, getYouTubeThumbnail, extractYouTubeId } from "@/lib/utils/youtube";
 import styles from "./Shorts.module.css";
@@ -84,7 +84,7 @@ export default function Shorts() {
     return (
       <section className={styles.section}>
         <div className={styles.header}>
-          <h3>SHORTS SECTION</h3>
+          <h3>SHORTS</h3>
           <div className={styles.line} />
         </div>
         <div className={styles.loading}>로딩 중...</div>
@@ -92,6 +92,7 @@ export default function Shorts() {
     );
   }
 
+  // 데이터가 없으면 플레이스홀더 표시
   if (shorts.length === 0) {
     return (
       <section className={styles.section}>
@@ -99,7 +100,13 @@ export default function Shorts() {
           <h3>SHORTS</h3>
           <div className={styles.line} />
         </div>
-        <div className={styles.empty}>등록된 숏폼이 없습니다</div>
+        <div className={styles.placeholder}>
+          <Film size={48} strokeWidth={1} />
+          <span className={styles.placeholderTitle}>숏폼 콘텐츠 준비 중</span>
+          <span className={styles.placeholderDesc}>
+            곧 다양한 숏폼 영상으로 찾아뵙겠습니다
+          </span>
+        </div>
       </section>
     );
   }

@@ -12,12 +12,12 @@ const config: Config = {
       colors: {
         // Brand Colors
         primary: {
-          DEFAULT: "#fd68ba",
-          light: "#ff8ed4",
-          deep: "#fb37a3",
+          DEFAULT: "#52525b",
+          light: "#71717a",
+          deep: "#3f3f46",
         },
         // Live Status
-        live: "#00d4ff",
+        live: "#ef4444",
         // Ranking Colors
         gold: "#ffd700",
         silver: "#c0c0c0",
