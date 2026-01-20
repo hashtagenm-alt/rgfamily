@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { MessageSquare, ImageIcon, Video, Play, ExternalLink, Lock } from 'lucide-react'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
+import { getYouTubeThumbnail } from '@/lib/utils/youtube'
 import styles from './BjMessageCard.module.css'
 
 interface BjMessageCardProps {
@@ -47,14 +48,6 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
       default:
         return '메시지'
     }
-  }
-
-  // YouTube 썸네일 추출
-  const getYouTubeThumbnail = (url: string): string | null => {
-    const match = url.match(
-      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-    )
-    return match ? `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg` : null
   }
 
   // 잠금 콘텐츠 렌더링 (비공개 + 권한 없음)

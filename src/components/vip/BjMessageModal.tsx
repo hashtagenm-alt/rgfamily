@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ExternalLink, MessageSquare, ImageIcon, Video, Heart } from 'lucide-react'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
+import { getYouTubeEmbedUrl, isYouTubeUrl } from '@/lib/utils/youtube'
 import styles from './BjMessageModal.module.css'
 
 interface BjMessageModalProps {
@@ -36,18 +37,6 @@ export default function BjMessageModal({ message, isOpen, onClose }: BjMessageMo
       default:
         return <MessageSquare size={16} />
     }
-  }
-
-  // YouTube 임베드 URL 추출
-  const getYouTubeEmbedUrl = (url: string): string | null => {
-    const match = url.match(
-      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-    )
-    return match ? `https://www.youtube.com/embed/${match[1]}` : null
-  }
-
-  const isYouTubeUrl = (url: string): boolean => {
-    return url.includes('youtube.com') || url.includes('youtu.be')
   }
 
   return (
