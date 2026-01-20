@@ -86,17 +86,22 @@ function generateProfiles(): Profile[] {
   // Top 10 실제 후원자 + 나머지 Mock 후원자
   const donorData = [...realTopDonors, ...otherDonors]
 
-  return donorData.map((donor, index) => ({
-    id: `user-${index + 1}`,
-    nickname: donor.name,
-    email: null,
-    avatar_url: null, // 후원자는 프로필 사진 없음 → 이니셜 표시
-    role: donor.role as 'vip' | 'member',
-    unit: donor.unit as 'excel' | 'crew',
-    total_donation: 0, // 하트 개수 미정 (0 = 미표시)
-    created_at: new Date(2024, Math.floor(index / 5), (index % 28) + 1).toISOString(),
-    updated_at: new Date(2025, 0, 1).toISOString(),
-  }))
+  return donorData.map((donor, index) => {
+    // Top 10만 전체 랭킹에 표시 (목업 - 순위만 표시용)
+    const isTop10 = index < 10
+
+    return {
+      id: `user-${index + 1}`,
+      nickname: donor.name,
+      email: null,
+      avatar_url: null, // 후원자는 프로필 사진 없음 → 이니셜 표시
+      role: donor.role as 'vip' | 'member',
+      unit: donor.unit as 'excel' | 'crew',
+      total_donation: isTop10 ? (10 - index) : 0, // 목업: 순위용 (10, 9, 8...)
+      created_at: new Date(2024, Math.floor(index / 5), (index % 28) + 1).toISOString(),
+      updated_at: new Date(2025, 0, 1).toISOString(),
+    }
+  })
 }
 
 export const mockProfiles: Profile[] = [
