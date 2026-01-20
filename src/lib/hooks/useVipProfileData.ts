@@ -152,12 +152,8 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
           rank = found?.rank || 0
         }
 
-        // Top 50 이내가 아니면 에러
-        if (rank === 0 || rank > 50) {
-          setError('VIP 자격이 없습니다. (Top 50 이내만 조회 가능)')
-          setIsLoading(false)
-          return
-        }
+        // 프로필 데이터는 항상 로드 (VIP 여부와 무관하게 페이지 표시)
+        // VIP 전용 콘텐츠 제한은 페이지 컴포넌트에서 처리
 
         // Fallback 데이터 설정
         setData({
