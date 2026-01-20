@@ -124,6 +124,31 @@
   }
 }
 
+/* Loading - 닉네임 표시 */
+.loadingIcon {
+  color: var(--metallic-gold);
+  filter: drop-shadow(0 0 12px var(--metallic-gold-glow));
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+.loadingName {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: 2px;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    var(--metallic-gold-light) 30%,
+    var(--metallic-gold) 60%,
+    #c9a962 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 10px var(--metallic-gold-glow));
+}
+
 /* Empty State */
 .empty {
   display: flex;

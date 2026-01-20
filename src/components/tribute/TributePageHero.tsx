@@ -1,7 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Crown, Star } from 'lucide-react'
+import { Crown, Star, User } from 'lucide-react'
+import Link from 'next/link'
 import type { HallOfFameHonor } from '@/lib/mock'
 import styles from './TributePageHero.module.css'
 
@@ -35,6 +36,12 @@ export default function TributePageHero({ honor }: TributePageHeroProps) {
           <span>{badgeText}</span>
         </div>
         <h1 className={styles.heroTitle}>{honor.donorName}</h1>
+
+        {/* VIP 개인 페이지 링크 */}
+        <Link href={`/ranking/vip/${honor.donorId}`} className={styles.vipPageLink}>
+          <User size={16} />
+          <span>VIP 개인 페이지</span>
+        </Link>
       </motion.div>
 
       <div className={styles.heroDecoration}>

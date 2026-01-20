@@ -13,15 +13,20 @@ import {
   TributeSections,
 } from '@/components/tribute'
 import { useTributeData, useContentProtection } from '@/lib/hooks'
+import { useSupabaseContext } from '@/lib/context'
 import { decodeHashToUserId } from '@/lib/utils/hash'
+import { USE_MOCK_DATA } from '@/lib/config'
+import { mockProfiles } from '@/lib/mock'
 import styles from '../../[userId]/page.module.css'
 
 export default function TributeHashPage({ params }: { params: Promise<{ hash: string }> }) {
   const { hash } = use(params)
   const router = useRouter()
+  const supabase = useSupabaseContext()
   const [showGate, setShowGate] = useState(true)
   const [decodedUserId, setDecodedUserId] = useState<string | null>(null)
   const [hashError, setHashError] = useState(false)
+  const [quickNickname, setQuickNickname] = useState<string | null>(null)
 
   // 해시 디코딩
   useEffect(() => {
@@ -32,6 +37,33 @@ export default function TributeHashPage({ params }: { params: Promise<{ hash: st
       setHashError(true)
     }
   }, [hash])
+
+  // 닉네임 빠른 조회 (로딩 화면에 표시용)
+  useEffect(() => {
+    if (!decodedUserId) return
+
+    const fetchQuickNickname = async () => {
+      if (USE_MOCK_DATA) {
+        const mockProfile = mockProfiles.find(p => p.id === decodedUserId)
+        if (mockProfile) {
+          setQuickNickname(mockProfile.nickname)
+        }
+        return
+      }
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('id', decodedUserId)
+        .single()
+
+      if (data?.nickname) {
+        setQuickNickname(data.nickname)
+      }
+    }
+
+    fetchQuickNickname()
+  }, [decodedUserId, supabase])
 
   const {
     hallOfFameData,
@@ -97,6 +129,7 @@ export default function TributeHashPage({ params }: { params: Promise<{ hash: st
       <div className={styles.main}>
         <div className={styles.loading}>
           <div className={styles.spinner} />
+          {quickNickname && <span className={styles.loadingName}>{quickNickname}</span>}
           <span>인증 확인 중...</span>
         </div>
         <Footer />
@@ -119,8 +152,10 @@ export default function TributeHashPage({ params }: { params: Promise<{ hash: st
     return (
       <div className={styles.main}>
         <div className={styles.loading}>
+          <Crown size={32} className={styles.loadingIcon} />
+          {quickNickname && <span className={styles.loadingName}>{quickNickname}</span>}
           <div className={styles.spinner} />
-          <span>헌정 페이지 확인 중...</span>
+          <span>헌정 페이지 준비 중...</span>
         </div>
         <Footer />
       </div>

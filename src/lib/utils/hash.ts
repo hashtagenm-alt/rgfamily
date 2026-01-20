@@ -62,8 +62,9 @@ export function decodeHashToUserId(hash: string): string | null {
       })
       .join('')
 
-    // UUID 형식 검증 (기본적인 길이 체크)
-    if (userId.length < 32) {
+    // ID 형식 검증 (mock 데이터 user-1 형식도 허용)
+    // UUID: 36자, Mock ID: user-1 ~ user-50 형식 (5~8자)
+    if (userId.length < 5) {
       return null
     }
 
