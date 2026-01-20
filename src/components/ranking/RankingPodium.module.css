@@ -1,34 +1,36 @@
-/* RankingPodium.module.css - Refined Design (Game Ranking Style) */
+/* RankingPodium.module.css - Premium Podium Design */
 
 /* Container Setup */
 .container {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: var(--space-6);
-  padding: 2.5rem 1.5rem 3rem;
+  gap: var(--space-8);
+  padding: 3rem 1.5rem 2rem;
   max-width: 900px;
   margin: 0 auto;
   position: relative;
   z-index: 10;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 }
 
-/* Stage Platform Line - Subtle */
+/* Stage Platform - 3D Podium Base */
 .stageLine {
   position: absolute;
   bottom: 0;
-  left: 15%;
-  right: 15%;
-  height: 1px;
+  left: 10%;
+  right: 10%;
+  height: 4px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--border-overlay-15) 30%,
-    var(--border-overlay-25) 50%,
-    var(--border-overlay-15) 70%,
+    var(--metallic-gold-glow) 30%,
+    var(--metallic-gold) 50%,
+    var(--metallic-gold-glow) 70%,
     transparent 100%
   );
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 20px var(--metallic-gold-glow);
 }
 
 /* Individual Podium Card Wrapper */
@@ -93,7 +95,7 @@
 }
 
 /* =======================================
-   Avatar Section - Clean Design
+   Avatar Section - Premium Glow Design
    ======================================= */
 .avatarSection {
   position: relative;
@@ -116,57 +118,84 @@
   transition: all 0.3s ease;
 }
 
-/* 1위 Champion Avatar */
+/* 1위 Champion Avatar - Premium */
 .rank1 .avatar {
-  width: 110px;
-  height: 110px;
-  border: 3px solid var(--metallic-gold);
+  width: 120px;
+  height: 120px;
+  border: 4px solid var(--metallic-gold);
   box-shadow:
-    0 0 0 2px rgba(255, 215, 0, 0.15),
-    0 0 20px rgba(255, 215, 0, 0.2),
-    0 6px 20px rgba(0, 0, 0, 0.25);
+    0 0 0 4px rgba(255, 215, 0, 0.15),
+    0 0 0 8px rgba(255, 215, 0, 0.08),
+    0 0 40px rgba(255, 215, 0, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.3);
   background: var(--surface);
+  animation: championPulse 3s ease-in-out infinite;
+}
+
+@keyframes championPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 4px rgba(255, 215, 0, 0.15),
+      0 0 0 8px rgba(255, 215, 0, 0.08),
+      0 0 40px rgba(255, 215, 0, 0.3),
+      0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(255, 215, 0, 0.2),
+      0 0 0 12px rgba(255, 215, 0, 0.1),
+      0 0 60px rgba(255, 215, 0, 0.4),
+      0 12px 40px rgba(0, 0, 0, 0.35);
+  }
 }
 
 .rank1:hover .avatar {
+  transform: scale(1.05);
   box-shadow:
-    0 0 0 3px rgba(255, 215, 0, 0.2),
-    0 0 30px rgba(255, 215, 0, 0.25),
-    0 8px 24px rgba(0, 0, 0, 0.3);
+    0 0 0 6px rgba(255, 215, 0, 0.25),
+    0 0 0 12px rgba(255, 215, 0, 0.12),
+    0 0 60px rgba(255, 215, 0, 0.4),
+    0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 /* 2위 Silver Avatar */
 .rank2 .avatar {
-  width: 95px;
-  height: 95px;
+  width: 100px;
+  height: 100px;
   border: 3px solid var(--metallic-silver);
   box-shadow:
-    0 0 15px var(--metallic-silver-glow),
-    0 4px 16px rgba(0, 0, 0, 0.2);
+    0 0 0 3px rgba(192, 192, 192, 0.1),
+    0 0 25px var(--metallic-silver-glow),
+    0 6px 24px rgba(0, 0, 0, 0.25);
   background: var(--surface);
 }
 
 .rank2:hover .avatar {
+  transform: scale(1.03);
   box-shadow:
-    0 0 20px var(--metallic-silver-glow),
-    0 6px 20px rgba(0, 0, 0, 0.25);
+    0 0 0 4px rgba(192, 192, 192, 0.15),
+    0 0 35px var(--metallic-silver-glow),
+    0 8px 28px rgba(0, 0, 0, 0.3);
 }
 
 /* 3위 Bronze Avatar */
 .rank3 .avatar {
-  width: 95px;
-  height: 95px;
+  width: 100px;
+  height: 100px;
   border: 3px solid var(--metallic-bronze);
   box-shadow:
-    0 0 15px var(--metallic-bronze-glow),
-    0 4px 16px rgba(0, 0, 0, 0.2);
+    0 0 0 3px rgba(205, 127, 50, 0.1),
+    0 0 25px var(--metallic-bronze-glow),
+    0 6px 24px rgba(0, 0, 0, 0.25);
   background: var(--surface);
 }
 
 .rank3:hover .avatar {
+  transform: scale(1.03);
   box-shadow:
-    0 0 20px var(--metallic-bronze-glow),
-    0 6px 20px rgba(0, 0, 0, 0.25);
+    0 0 0 4px rgba(205, 127, 50, 0.15),
+    0 0 35px var(--metallic-bronze-glow),
+    0 8px 28px rgba(0, 0, 0, 0.3);
 }
 
 .avatarImage {
@@ -271,7 +300,7 @@
 }
 
 /* =======================================
-   Name Card - Simple & Clean
+   Name Card - Pedestal Style
    ======================================= */
 .nameCard {
   width: 100%;
@@ -282,38 +311,91 @@
   border-radius: var(--radius-lg);
   text-align: center;
   transition: all 0.2s ease;
+  position: relative;
 }
 
+/* 1위 - Gold Pedestal */
 .rank1 .nameCard {
   max-width: 180px;
-  border-color: var(--metallic-gold-border);
-  border-top: 3px solid var(--metallic-gold);
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(180deg, var(--metallic-gold-bg) 0%, var(--card-bg) 100%);
+  border: 2px solid var(--metallic-gold-border);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 4px 20px rgba(255, 215, 0, 0.15),
+    inset 0 1px 0 rgba(255, 215, 0, 0.1);
 }
 
+.rank1 .nameCard::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 4px;
+  background: var(--metallic-gold);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 10px var(--metallic-gold-glow);
+}
+
+/* 2위 - Silver Pedestal */
 .rank2 .nameCard {
-  border-color: var(--metallic-silver-border);
-  border-top: 2px solid var(--metallic-silver);
+  background: linear-gradient(180deg, var(--metallic-silver-bg) 0%, var(--card-bg) 100%);
+  border: 1px solid var(--metallic-silver-border);
+  box-shadow: 0 4px 16px rgba(192, 192, 192, 0.1);
 }
 
+.rank2 .nameCard::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 3px;
+  background: var(--metallic-silver);
+  border-radius: var(--radius-full);
+}
+
+/* 3위 - Bronze Pedestal */
 .rank3 .nameCard {
-  border-color: var(--metallic-bronze-border);
-  border-top: 2px solid var(--metallic-bronze);
+  background: linear-gradient(180deg, var(--metallic-bronze-bg) 0%, var(--card-bg) 100%);
+  border: 1px solid var(--metallic-bronze-border);
+  box-shadow: 0 4px 16px rgba(205, 127, 50, 0.1);
+}
+
+.rank3 .nameCard::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 3px;
+  background: var(--metallic-bronze);
+  border-radius: var(--radius-full);
 }
 
 .podiumWrapper:hover .nameCard {
-  background: var(--surface-hover);
+  transform: translateY(-2px);
 }
 
 .rank1:hover .nameCard {
   border-color: var(--metallic-gold);
+  box-shadow:
+    0 8px 30px rgba(255, 215, 0, 0.2),
+    inset 0 1px 0 rgba(255, 215, 0, 0.15);
 }
 
 .rank2:hover .nameCard {
   border-color: var(--metallic-silver);
+  box-shadow: 0 8px 24px rgba(192, 192, 192, 0.15);
 }
 
 .rank3:hover .nameCard {
   border-color: var(--metallic-bronze);
+  box-shadow: 0 8px 24px rgba(205, 127, 50, 0.15);
 }
 
 /* Empty State */
@@ -360,38 +442,31 @@
 /* Responsive */
 @media (max-width: 768px) {
   .container {
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1.5rem 1rem 2rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: 2rem 1rem;
   }
 
   .stageLine {
-    display: none;
+    left: 5%;
+    right: 5%;
+    height: 2px;
   }
 
   .podiumWrapper {
-    width: 100%;
-    max-width: 260px;
+    flex: 0 0 auto;
   }
 
   .podiumWrapper:hover {
-    transform: none;
-  }
-
-  .rank1,
-  .rank2,
-  .rank3 {
-    order: unset !important;
-  }
-
-  .nameCard {
-    max-width: 100% !important;
+    transform: translateY(-4px);
   }
 
   .rank1 .avatar {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
+    animation: none;
   }
 
   .rank2 .avatar,
@@ -401,7 +476,7 @@
   }
 
   .rank1 .initials {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
 
   .rank2 .initials,
@@ -409,8 +484,75 @@
     font-size: 1.5rem;
   }
 
+  .nameCard {
+    max-width: 140px !important;
+    padding: var(--space-2) var(--space-3) !important;
+  }
+
+  .rank1 .nameCard {
+    max-width: 160px !important;
+    padding: var(--space-3) var(--space-4) !important;
+  }
+
   .name {
     font-size: var(--text-sm) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    gap: var(--space-3);
+    padding: 1.5rem 0.5rem;
+  }
+
+  .stageLine {
+    display: none;
+  }
+
+  .rank1 .avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .rank2 .avatar,
+  .rank3 .avatar {
+    width: 64px;
+    height: 64px;
+  }
+
+  .rank1 .initials {
+    font-size: 1.6rem;
+  }
+
+  .rank2 .initials,
+  .rank3 .initials {
+    font-size: 1.2rem;
+  }
+
+  .nameCard {
+    max-width: 100px !important;
+    padding: var(--space-2) !important;
+  }
+
+  .rank1 .nameCard {
+    max-width: 120px !important;
+  }
+
+  .name {
+    font-size: var(--text-xs) !important;
+  }
+
+  .rankBadge {
+    padding: 2px 6px;
+  }
+
+  .rankBadge svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .rankNumber {
+    font-size: 10px;
   }
 }
 

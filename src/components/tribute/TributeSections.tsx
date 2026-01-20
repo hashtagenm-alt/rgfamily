@@ -28,9 +28,10 @@ import styles from './TributeSections.module.css'
 interface TributeSectionsProps {
   honor: HallOfFameHonor
   allHonors: HallOfFameHonor[]
+  isContentRestricted?: boolean // 콘텐츠 블러 처리 여부
 }
 
-export default function TributeSections({ honor, allHonors }: TributeSectionsProps) {
+export default function TributeSections({ honor, allHonors, isContentRestricted = false }: TributeSectionsProps) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
   const { user, profile } = useAuthContext()
   const router = useRouter()
@@ -63,24 +64,26 @@ export default function TributeSections({ honor, allHonors }: TributeSectionsPro
           donorName={honor.donorName}
           videoUrl={honor.tributeVideoUrl}
           isPlaying={isVideoPlaying}
-          onPlay={() => setIsVideoPlaying(true)}
+          onPlay={() => !isContentRestricted && setIsVideoPlaying(true)}
+          isBlurred={isContentRestricted}
         />
       )}
 
       {/* Member Videos */}
-      <TributeMemberVideosSection memberVideos={honor.memberVideos} />
+      <TributeMemberVideosSection memberVideos={honor.memberVideos} isBlurred={isContentRestricted} />
 
       {/* Photo Gallery */}
       <TributeGallerySection
         images={honor.tributeImages}
         legacyImage={honor.tributeImageUrl}
+        isBlurred={isContentRestricted}
       />
 
       {/* VIP Signatures - Luxury Gallery */}
       <VipSignatureGallery
         donorName={honor.donorName}
         signatures={honor.exclusiveSignatures}
-        isOwner={isOwner}
+        isOwner={isOwner && !isContentRestricted}
         onLockedClick={handleLockedClick}
       />
 
@@ -90,6 +93,15 @@ export default function TributeSections({ honor, allHonors }: TributeSectionsPro
       {/* Hall of Fame History */}
       {allHonors.length > 1 && (
         <TributeHistorySection honors={allHonors} />
+      )}
+
+      {/* Content Restriction Notice */}
+      {isContentRestricted && (
+        <div className={styles.restrictedNotice}>
+          <Crown size={24} />
+          <p>이 페이지의 콘텐츠는 해당 후원자만 열람 가능합니다</p>
+          <span>이미지와 영상이 블러 처리됩니다</span>
+        </div>
       )}
     </div>
   )
@@ -121,11 +133,13 @@ function TributeVideoSection({
   videoUrl,
   isPlaying,
   onPlay,
+  isBlurred = false,
 }: {
   donorName: string
   videoUrl: string
   isPlaying: boolean
   onPlay: () => void
+  isBlurred?: boolean
 }) {
   return (
     <motion.section
@@ -138,10 +152,10 @@ function TributeVideoSection({
         <Film size={20} />
         <h2>EXCLUSIVE VIDEO</h2>
       </div>
-      <div className={styles.videoWrapper}>
+      <div className={`${styles.videoWrapper} ${isBlurred ? styles.blurred : ''}`}>
         <div className={styles.videoInner}>
           <div className={styles.video} onClick={onPlay}>
-            {isPlaying ? (
+            {isPlaying && !isBlurred ? (
               <video
                 src={videoUrl}
                 controls
@@ -162,6 +176,12 @@ function TributeVideoSection({
             )}
           </div>
         </div>
+        {isBlurred && (
+          <div className={styles.blurOverlay}>
+            <Crown size={24} />
+            <span>VIP 전용</span>
+          </div>
+        )}
       </div>
     </motion.section>
   )
@@ -170,8 +190,10 @@ function TributeVideoSection({
 // Member Videos Section
 function TributeMemberVideosSection({
   memberVideos,
+  isBlurred = false,
 }: {
   memberVideos?: HallOfFameHonor['memberVideos']
+  isBlurred?: boolean
 }) {
   if (memberVideos && memberVideos.length > 0) {
     return (
@@ -185,7 +207,7 @@ function TributeMemberVideosSection({
           <Play size={20} />
           <h2>멤버 감사 영상</h2>
         </div>
-        <div className={styles.videosGrid}>
+        <div className={`${styles.videosGrid} ${isBlurred ? styles.blurred : ''}`}>
           {memberVideos.map((video) => (
             <div key={video.id} className={styles.videoCard}>
               <div className={styles.videoThumbnail}>
@@ -202,6 +224,12 @@ function TributeMemberVideosSection({
               </div>
             </div>
           ))}
+          {isBlurred && (
+            <div className={styles.blurOverlay}>
+              <Crown size={24} />
+              <span>VIP 전용</span>
+            </div>
+          )}
         </div>
       </motion.section>
     )
@@ -228,9 +256,11 @@ function TributeMemberVideosSection({
 function TributeGallerySection({
   images,
   legacyImage,
+  isBlurred = false,
 }: {
   images?: string[]
   legacyImage?: string
+  isBlurred?: boolean
 }) {
   const hasImages = images && images.length > 0
   const hasLegacy = legacyImage && !hasImages
@@ -247,9 +277,15 @@ function TributeGallerySection({
           <ImageIcon size={20} />
           <h2>감사 포토</h2>
         </div>
-        <div className={styles.galleryGrid}>
+        <div className={`${styles.galleryGrid} ${isBlurred ? styles.blurred : ''}`}>
           {images.map((imageUrl, index) => (
-            <a key={index} href={imageUrl} download className={styles.galleryCard}>
+            <a
+              key={index}
+              href={isBlurred ? undefined : imageUrl}
+              download={!isBlurred}
+              className={styles.galleryCard}
+              onClick={(e) => isBlurred && e.preventDefault()}
+            >
               <Image
                 src={imageUrl}
                 alt={`Tribute Photo ${index + 1}`}
@@ -257,11 +293,19 @@ function TributeGallerySection({
                 className={styles.galleryImage}
                 unoptimized
               />
-              <div className={styles.galleryOverlay}>
-                <Download size={20} />
-              </div>
+              {!isBlurred && (
+                <div className={styles.galleryOverlay}>
+                  <Download size={20} />
+                </div>
+              )}
             </a>
           ))}
+          {isBlurred && (
+            <div className={styles.blurOverlay}>
+              <Crown size={24} />
+              <span>VIP 전용</span>
+            </div>
+          )}
         </div>
       </motion.section>
     )
@@ -279,8 +323,13 @@ function TributeGallerySection({
           <ImageIcon size={20} />
           <h2>감사 포토</h2>
         </div>
-        <div className={styles.galleryGrid}>
-          <a href={legacyImage} download className={styles.galleryCard}>
+        <div className={`${styles.galleryGrid} ${isBlurred ? styles.blurred : ''}`}>
+          <a
+            href={isBlurred ? undefined : legacyImage}
+            download={!isBlurred}
+            className={styles.galleryCard}
+            onClick={(e) => isBlurred && e.preventDefault()}
+          >
             <Image
               src={legacyImage}
               alt="Exclusive Signature"
@@ -288,10 +337,18 @@ function TributeGallerySection({
               className={styles.galleryImage}
               unoptimized
             />
-            <div className={styles.galleryOverlay}>
-              <Download size={20} />
-            </div>
+            {!isBlurred && (
+              <div className={styles.galleryOverlay}>
+                <Download size={20} />
+              </div>
+            )}
           </a>
+          {isBlurred && (
+            <div className={styles.blurOverlay}>
+              <Crown size={24} />
+              <span>VIP 전용</span>
+            </div>
+          )}
         </div>
       </motion.section>
     )

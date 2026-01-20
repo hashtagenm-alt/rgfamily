@@ -1,94 +1,122 @@
+/* TributeNav - Luxury Brand Aesthetic */
+
 .nav {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 50;
+  left: 0;
+  right: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background: rgba(5, 5, 5, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: var(--space-4) var(--space-8);
+  background: rgba(5, 5, 5, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .backBtn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: rgba(255, 255, 255, 0.7);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   text-decoration: none;
-  font-size: 0.9rem;
-  transition: color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .backBtn:hover {
-  color: #fff;
+  color: #d4af37;
 }
 
 .title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-primary, #fd68ba);
-  letter-spacing: 0.1em;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: #d4af37;
+  letter-spacing: 4px;
+  text-transform: uppercase;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-3);
 }
 
 .navBtn {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
 .navBtn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  color: #d4af37;
 }
 
-/* Light Mode */
+/* ═══════════════════════════════════════════════
+   LIGHT MODE
+   ═══════════════════════════════════════════════ */
 :global([data-theme='light']) .nav {
-  background: rgba(255, 255, 255, 0.9);
-  border-bottom-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom-color: rgba(184, 134, 11, 0.2);
 }
 
 :global([data-theme='light']) .backBtn {
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(0, 0, 0, 0.5);
 }
 
 :global([data-theme='light']) .backBtn:hover {
-  color: #1a1a1a;
+  color: #b8860b;
+}
+
+:global([data-theme='light']) .title {
+  color: #b8860b;
 }
 
 :global([data-theme='light']) .navBtn {
-  color: rgba(0, 0, 0, 0.6);
-  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.4);
 }
 
 :global([data-theme='light']) .navBtn:hover {
-  color: #1a1a1a;
-  background: rgba(0, 0, 0, 0.1);
+  color: #b8860b;
 }
 
-@media (max-width: 640px) {
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .nav {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .backBtn span,
   .navBtn span {
     display: none;
   }
 
+  .title {
+    letter-spacing: 2px;
+  }
+}
+
+@media (max-width: 480px) {
   .title span {
-    font-size: 0.8rem;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
   }
 }

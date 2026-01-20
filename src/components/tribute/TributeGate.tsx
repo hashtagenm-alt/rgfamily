@@ -47,7 +47,7 @@ export default function TributeGate({ isVisible, donorName, rank, onClose }: Tri
             transition={{ delay: 0.2 }}
             className={styles.gateText}
           >
-            TRIBUTE PAGE
+            {donorName}
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
@@ -56,7 +56,7 @@ export default function TributeGate({ isVisible, donorName, rank, onClose }: Tri
             transition={{ delay: 0.4 }}
             className={styles.gateSubtext}
           >
-            {donorName}
+            TRIBUTE PAGE
           </motion.div>
         </motion.div>
       )}

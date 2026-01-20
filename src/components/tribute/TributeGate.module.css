@@ -1,137 +1,145 @@
+/* TributeGate - Luxury Brand Aesthetic */
+
 .gateOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
+  inset: 0;
+  z-index: 1000;
+  background: #050505;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 50%),
-              linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
+  gap: var(--space-6);
   cursor: pointer;
 }
 
+.gateOverlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
+}
+
 .gateIcon {
-  color: var(--text-primary, #e4e4e7);
-  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.15));
-  animation: float 3s ease-in-out infinite;
+  color: #d4af37;
+  filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.3));
 }
 
 .gateText {
-  font-size: 2.5rem;
-  font-weight: 700;
-  letter-spacing: 0.5em;
-  color: #fff;
-  text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 300;
+  color: #d4af37;
+  letter-spacing: 8px;
+  text-transform: uppercase;
 }
 
 .gateSubtext {
-  font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.2em;
+  font-size: var(--text-xs);
+  color: rgba(212, 175, 55, 0.6);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  font-weight: 300;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.gateLine {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+  margin-top: var(--space-4);
 }
+
+/* ═══════════════════════════════════════════════
+   RANK THEMES
+   ═══════════════════════════════════════════════ */
 
 /* Gold Theme (Rank 1) */
-.gold {
-  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.2), transparent 50%),
-              linear-gradient(180deg, #0d0a00 0%, #1a1500 100%);
+.gold::before {
+  background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.12) 0%, transparent 70%);
 }
 
 .gold .gateIcon {
   color: #ffd700;
-  filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+  filter: drop-shadow(0 0 50px rgba(255, 215, 0, 0.4));
 }
 
 .gold .gateText {
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.gold .gateSubtext {
+  color: rgba(255, 215, 0, 0.6);
 }
 
 /* Silver Theme (Rank 2) */
-.silver {
-  background: radial-gradient(circle at center, rgba(192, 192, 192, 0.15), transparent 50%),
-              linear-gradient(180deg, #080808 0%, #121212 100%);
+.silver::before {
+  background: radial-gradient(ellipse at center, rgba(192, 192, 192, 0.1) 0%, transparent 70%);
 }
 
 .silver .gateIcon {
   color: #c0c0c0;
-  filter: drop-shadow(0 0 15px rgba(192, 192, 192, 0.4));
+  filter: drop-shadow(0 0 50px rgba(192, 192, 192, 0.4));
 }
 
 .silver .gateText {
-  text-shadow: 0 0 12px rgba(192, 192, 192, 0.4);
+  color: #c0c0c0;
+  text-shadow: 0 0 30px rgba(192, 192, 192, 0.3);
+}
+
+.silver .gateSubtext {
+  color: rgba(192, 192, 192, 0.6);
 }
 
 /* Bronze Theme (Rank 3) */
-.bronze {
-  background: radial-gradient(circle at center, rgba(205, 127, 50, 0.15), transparent 50%),
-              linear-gradient(180deg, #0a0600 0%, #150e05 100%);
+.bronze::before {
+  background: radial-gradient(ellipse at center, rgba(205, 127, 50, 0.1) 0%, transparent 70%);
 }
 
 .bronze .gateIcon {
   color: #cd7f32;
-  filter: drop-shadow(0 0 15px rgba(205, 127, 50, 0.4));
+  filter: drop-shadow(0 0 50px rgba(205, 127, 50, 0.4));
 }
 
 .bronze .gateText {
-  text-shadow: 0 0 12px rgba(205, 127, 50, 0.4);
+  color: #cd7f32;
+  text-shadow: 0 0 30px rgba(205, 127, 50, 0.3);
 }
 
-/* Default Theme */
-.default {
-  /* Uses original pink theme */
+.bronze .gateSubtext {
+  color: rgba(205, 127, 50, 0.6);
 }
 
-/* Light Mode */
-:global([data-theme='light']) .gateOverlay {
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.03), transparent 50%),
-              linear-gradient(180deg, #f8f8f8 0%, #ffffff 100%);
+/* Default Theme - uses gold */
+.default::before {
+  background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
 }
 
-:global([data-theme='light']) .gateText {
-  color: #1a1a1a;
-  text-shadow: none;
-}
+/* ═══════════════════════════════════════════════
+   LIGHT MODE - 제거됨 (항상 다크모드 유지)
+   TributeGate 애니메이션은 테마와 무관하게 항상 검은 배경
+   ═══════════════════════════════════════════════ */
 
-:global([data-theme='light']) .gateSubtext {
-  color: rgba(0, 0, 0, 0.6);
-}
-
-:global([data-theme='light']) .gold {
-  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.15), transparent 50%),
-              linear-gradient(180deg, #fffef5 0%, #fffff5 100%);
-}
-
-:global([data-theme='light']) .silver {
-  background: radial-gradient(circle at center, rgba(150, 150, 150, 0.15), transparent 50%),
-              linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
-}
-
-:global([data-theme='light']) .bronze {
-  background: radial-gradient(circle at center, rgba(205, 127, 50, 0.15), transparent 50%),
-              linear-gradient(180deg, #fff8f0 0%, #fffcf5 100%);
-}
-
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .gateText {
-    font-size: 1.5rem;
-    letter-spacing: 0.3em;
+    letter-spacing: 4px;
   }
 
   .gateSubtext {
-    font-size: 1rem;
+    letter-spacing: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gateText {
+    letter-spacing: 3px;
   }
 
-  .gateIcon :global(svg) {
-    width: 60px;
-    height: 60px;
+  .gateSubtext {
+    letter-spacing: 2px;
+    font-size: 0.65rem;
   }
 }

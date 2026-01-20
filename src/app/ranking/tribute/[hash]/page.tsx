@@ -39,6 +39,7 @@ export default function TributeHashPage({ params }: { params: Promise<{ hash: st
     isLoading,
     authLoading,
     accessDenied,
+    isContentRestricted,
   } = useTributeData({ userId: decodedUserId || '' })
 
   // VIP 콘텐츠 보호 (접근이 허용된 경우에만)
@@ -103,8 +104,8 @@ export default function TributeHashPage({ params }: { params: Promise<{ hash: st
     )
   }
 
-  // 접근 거부
-  if (accessDenied) {
+  // 접근 거부는 page_not_found 경우에만 표시
+  if (accessDenied === 'page_not_found') {
     return (
       <div className={styles.main}>
         <TributeAccessDenied reason={accessDenied} />
@@ -160,7 +161,11 @@ export default function TributeHashPage({ params }: { params: Promise<{ hash: st
       <TributePageHero honor={primaryHonor} />
 
       {/* Content Sections */}
-      <TributeSections honor={primaryHonor} allHonors={hallOfFameData} />
+      <TributeSections
+        honor={primaryHonor}
+        allHonors={hallOfFameData}
+        isContentRestricted={isContentRestricted}
+      />
 
       <Footer />
     </div>

@@ -1,4 +1,4 @@
-/* Total Ranking Page - Clean Game Stats Style */
+/* Ranking Page - Modern Korean Portal Style */
 
 .main {
   min-height: 100vh;
@@ -6,284 +6,295 @@
 }
 
 /* =======================================
-   Header - Compact & Professional (Sticky)
+   Hero Section - Gradient Background
    ======================================= */
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--card-border);
-  backdrop-filter: blur(12px);
+.hero {
+  position: relative;
+  padding: 120px var(--space-6) 80px;
+  background: linear-gradient(
+    180deg,
+    rgba(253, 104, 186, 0.1) 0%,
+    rgba(253, 104, 186, 0.03) 50%,
+    transparent 100%
+  );
+  text-align: center;
+  overflow: hidden;
 }
 
-.headerInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1100px;
+.heroGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 500px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 215, 0, 0.08) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
   margin: 0 auto;
-  padding: var(--space-3) var(--space-5);
-  gap: var(--space-3);
 }
 
-.headerLeft {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.backBtn {
-  flex-shrink: 0;
+.heroTitleRow {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: var(--surface);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: all 0.2s;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
-.backBtn:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-  border-color: var(--item-border-hover);
-}
-
-.titleArea {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.pageTitle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.goldAccent {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: var(--metallic-gold);
-  border-radius: 50%;
-}
-
-.subtitle {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-.seasonLink {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-
-.seasonLink:hover {
-  background: var(--surface-hover);
-  border-color: var(--item-border-hover);
-}
-
-.liveDot {
-  width: 6px;
-  height: 6px;
-  background: var(--color-success);
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.vipLink {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  background: var(--metallic-gold-bg);
-  border: 1px solid var(--metallic-gold-border);
-  border-radius: var(--radius-md);
+.heroCrown {
   color: var(--metallic-gold);
-  font-size: 11px;
+  filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.heroSubtitle {
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+  margin-bottom: var(--space-6);
+  line-height: 1.6;
+}
+
+.heroLinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.heroLinkSeason,
+.heroLinkVip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  font-size: var(--text-base);
   font-weight: 600;
   text-decoration: none;
   transition: all 0.2s;
 }
 
-.vipLink:hover {
-  background: var(--gold-overlay-08);
-  border-color: var(--metallic-gold);
+.heroLinkSeason {
+  background: rgba(255, 100, 100, 0.1);
+  border: 1px solid rgba(255, 100, 100, 0.2);
+  color: #ff6b6b;
 }
 
-.vipLink svg:last-child {
-  opacity: 0.5;
+.heroLinkSeason:hover {
+  background: rgba(255, 100, 100, 0.15);
+  border-color: rgba(255, 100, 100, 0.3);
+  transform: translateY(-1px);
+}
+
+.heroLinkVip {
+  background: var(--metallic-gold-bg);
+  border: 1px solid var(--metallic-gold-border);
+  color: var(--metallic-gold);
+}
+
+.heroLinkVip:hover {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: var(--metallic-gold);
+  transform: translateY(-1px);
 }
 
 /* =======================================
    Container
    ======================================= */
 .container {
-  max-width: 1100px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: var(--space-5);
+  padding: 0 var(--space-6) var(--space-10);
 }
 
 /* =======================================
-   Stats Bar - Inline Quick Stats
+   Stats Grid - Card Style
    ======================================= */
-.statsBar {
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-5);
+  margin-top: calc(-1 * var(--space-8));
+  margin-bottom: var(--space-8);
+  position: relative;
+  z-index: 2;
+}
+
+.statCard {
   display: flex;
   align-items: center;
   gap: var(--space-5);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-6);
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
+  border-radius: var(--radius-2xl);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
 }
 
-.statItem {
+.statCard:hover {
+  border-color: var(--item-border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.statIcon {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, rgba(253, 104, 186, 0.12), rgba(253, 104, 186, 0.06));
+  border-radius: var(--radius-xl);
+  color: var(--color-primary);
 }
 
-.statItem svg {
-  color: var(--text-muted);
+.statInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .statValue {
-  font-size: var(--text-base);
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-primary);
   font-family: var(--font-display);
 }
 
 .statLabel {
-  font-size: 11px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
 /* =======================================
-   Filters - Clean Tabs
+   Filter Section - Korean Portal Style
    ======================================= */
-.filters {
+.filterSection {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-}
-
-.filterGroup {
-  display: flex;
-  gap: 2px;
-  padding: 2px;
-  background: var(--surface);
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-2xl);
+  margin-bottom: var(--space-8);
 }
 
-.typeTab {
+.filterTabs {
   display: flex;
+  gap: var(--space-3);
+}
+
+.filterTab {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-4);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
   background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
   text-decoration: none;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
-.typeTab:hover {
+.filterTab:hover {
   color: var(--text-secondary);
+  background: var(--surface-hover);
 }
 
-.typeTab.active {
+.filterTab.active {
   background: var(--text-primary);
+  color: var(--background);
+  border-color: var(--text-primary);
+}
+
+.filterTab.active svg {
   color: var(--background);
 }
 
-.unitFilter {
+.unitTabs {
   display: flex;
-  gap: 2px;
-  padding: 2px;
+  gap: 4px;
+  padding: 4px;
   background: var(--surface);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
 }
 
-.unitBtn {
-  padding: var(--space-2) var(--space-4);
+.unitTab {
+  padding: var(--space-2-5) var(--space-5);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--text-base);
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.unitBtn:hover {
+.unitTab:hover {
   color: var(--text-secondary);
 }
 
-.unitBtn.active {
+.unitTab.active {
   background: var(--card-bg);
   color: var(--text-primary);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.unitBtn[data-unit="excel"].active {
-  color: var(--excel-color);
+.unitTab[data-unit="excel"].active {
+  color: var(--excel-color, #4ade80);
 }
 
-.unitBtn[data-unit="crew"].active {
-  color: var(--crew-color);
+.unitTab[data-unit="crew"].active {
+  color: var(--crew-color, #60a5fa);
 }
 
 /* =======================================
    Podium Section
    ======================================= */
 .podiumSection {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-10);
+}
+
+.sectionHeader {
+  margin-bottom: var(--space-5);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sectionTitle svg {
+  color: var(--metallic-gold);
 }
 
 /* =======================================
@@ -292,7 +303,7 @@
 .listSection {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   overflow: hidden;
 }
 
@@ -300,24 +311,34 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  background: var(--surface);
   border-bottom: 1px solid var(--card-border);
 }
 
 .listTitle {
-  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.listCount {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--metallic-gold);
-  padding: 2px 8px;
+.listTitle svg {
+  color: var(--color-primary);
+}
+
+.listBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
   background: var(--metallic-gold-bg);
   border: 1px solid var(--metallic-gold-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
+  color: var(--metallic-gold);
+  font-size: var(--text-sm);
+  font-weight: 700;
 }
 
 /* =======================================
@@ -329,16 +350,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
-  min-height: 300px;
+  gap: var(--space-5);
+  min-height: 400px;
+  padding: var(--space-10);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-2xl);
   color: var(--text-muted);
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--card-border);
-  border-top-color: var(--metallic-gold);
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--card-border);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -348,61 +373,64 @@
 }
 
 .empty svg {
-  opacity: 0.4;
+  opacity: 0.3;
+  color: var(--metallic-gold);
 }
 
 .empty p {
-  font-size: var(--text-sm);
+  font-size: var(--text-lg);
 }
 
 /* =======================================
    Responsive
    ======================================= */
 @media (max-width: 768px) {
-  .headerInner {
-    padding: var(--space-3) var(--space-4);
+  .hero {
+    padding: 80px var(--space-4) 50px;
   }
 
-  .headerRight {
-    gap: var(--space-1);
+  .heroTitle {
+    font-size: 2rem;
   }
 
-  .seasonLink span:not(.liveDot) {
-    display: none;
-  }
-
-  .seasonLink {
-    padding: var(--space-2);
-  }
-
-  .vipLink span {
-    display: none;
-  }
-
-  .vipLink {
-    padding: var(--space-2);
+  .heroSubtitle {
+    font-size: var(--text-sm);
   }
 
   .container {
+    padding: 0 var(--space-4) var(--space-6);
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    margin-top: calc(-1 * var(--space-4));
+  }
+
+  .statCard {
     padding: var(--space-4);
   }
 
-  .statsBar {
+  .statIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .statValue {
+    font-size: 1.25rem;
+  }
+
+  .filterSection {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
   }
 
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filterGroup {
-    width: 100%;
+  .filterTabs {
     justify-content: center;
   }
 
-  .unitFilter {
-    width: 100%;
+  .unitTabs {
     justify-content: center;
   }
 
@@ -412,56 +440,46 @@
 }
 
 @media (max-width: 480px) {
-  .pageTitle {
-    font-size: var(--text-sm);
+  .hero {
+    padding: 70px var(--space-3) 40px;
   }
 
-  .subtitle {
-    font-size: 10px;
+  .heroTitle {
+    font-size: 1.75rem;
   }
 
-  .statsBar {
+  .heroTitleRow {
     gap: var(--space-2);
-    padding: var(--space-3);
   }
 
-  .statValue {
-    font-size: var(--text-sm);
-  }
-
-  .statLabel {
-    font-size: 10px;
-  }
-
-  .typeTab {
-    padding: var(--space-2) var(--space-3);
-    font-size: 11px;
-  }
-
-  .unitBtn {
-    padding: var(--space-2) var(--space-3);
-    font-size: 10px;
-  }
-}
-
-/* 360px 소형 기기 */
-@media (max-width: 360px) {
-  .pageTitle {
-    font-size: 13px;
-  }
-
-  .backBtn {
+  .heroCrown {
     width: 28px;
     height: 28px;
   }
 
-  .typeTab {
-    padding: var(--space-1-5) var(--space-2);
-    font-size: 10px;
+  .heroLinks {
+    flex-direction: column;
+    gap: var(--space-2);
   }
 
-  .unitBtn {
-    padding: var(--space-1-5) var(--space-2);
-    font-size: 10px;
+  .heroLinkSeason,
+  .heroLinkVip {
+    width: 100%;
+    justify-content: center;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .filterTab {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  .unitTab {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  .sectionTitle {
+    font-size: var(--text-base);
   }
 }

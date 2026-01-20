@@ -25,6 +25,7 @@ export interface UseTributeDataReturn {
   isLoading: boolean
   authLoading: boolean
   accessDenied: AccessDeniedReason | null
+  isContentRestricted: boolean // 콘텐츠 블러 처리 필요 여부
   refetch: () => Promise<void>
 }
 
@@ -34,24 +35,30 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
   const [hallOfFameData, setHallOfFameData] = useState<HallOfFameHonor[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [accessDenied, setAccessDenied] = useState<AccessDeniedReason | null>(null)
+  const [isContentRestricted, setIsContentRestricted] = useState(true)
 
-  // 접근 제어 확인
+  // 접근 제어 확인 - 페이지 진입은 항상 허용, 콘텐츠만 제한
   useEffect(() => {
     if (authLoading) return
 
-    if (USE_MOCK_DATA) {
-      const accessResult = checkTributePageAccess(userId, user, profile)
-      if (!accessResult.hasAccess && accessResult.reason) {
-        setAccessDenied(accessResult.reason)
-        setIsLoading(false)
-      } else {
-        setAccessDenied(null)
-      }
+    // Admin은 모든 콘텐츠 접근 가능
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
+    if (isAdmin) {
+      setIsContentRestricted(false)
+      setAccessDenied(null)
       return
     }
 
-    // VIP 페이지는 로그인 없이도 볼 수 있도록 허용 (공개 프로필)
-    // 단, 실제 콘텐츠는 VIP 자격이 있어야 함 (fetchTributeData에서 처리)
+    // 본인 페이지인 경우 콘텐츠 접근 가능
+    const isOwner = user?.id === userId
+    if (isOwner) {
+      setIsContentRestricted(false)
+      setAccessDenied(null)
+      return
+    }
+
+    // 그 외 - 페이지 진입은 허용하되 콘텐츠는 블러 처리
+    setIsContentRestricted(true)
     setAccessDenied(null)
   }, [userId, user, profile, authLoading])
 
@@ -299,6 +306,7 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
     isLoading,
     authLoading,
     accessDenied,
+    isContentRestricted,
     refetch: fetchTributeData,
   }
 }

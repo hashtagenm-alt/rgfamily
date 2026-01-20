@@ -2,7 +2,9 @@
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, Trophy, Users, Calendar, ChevronRight } from "lucide-react";
+import { Trophy, Users, Calendar, Crown, Flame, TrendingUp } from "lucide-react";
+import { PageLayout } from "@/components/layout";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSupabaseContext } from "@/lib/context";
 import type { RankingItem, UnitFilter } from "@/types/common";
@@ -87,111 +89,129 @@ export default function TotalRankingPage() {
   const top3 = rankings.slice(0, 3);
 
   return (
-    <main className={styles.main}>
-      {/* Compact Header - Game Stats Style */}
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.headerLeft}>
-            <Link href="/" className={styles.backBtn}>
-              <ArrowLeft size={16} />
-            </Link>
-            <div className={styles.titleArea}>
-              <h1 className={styles.pageTitle}>
-                All-Time Rankings
-                <span className={styles.goldAccent} />
-              </h1>
-              <span className={styles.subtitle}>전체 기간 누적 랭킹</span>
+    <PageLayout>
+      <main className={styles.main}>
+        <Navbar />
+
+        {/* Hero Section */}
+        <section className={styles.hero}>
+          <div className={styles.heroGlow} />
+          <div className={styles.heroContent}>
+            <div className={styles.heroTitleRow}>
+              <Crown className={styles.heroCrown} size={36} />
+              <h1 className={styles.heroTitle}>후원 랭킹</h1>
             </div>
-          </div>
-          <div className={styles.headerRight}>
-            {currentSeason && (
-              <Link href={`/ranking/season/${currentSeason.id}`} className={styles.seasonLink}>
-                <span className={styles.liveDot} />
-                <span>{currentSeason.name}</span>
-                <ChevronRight size={14} />
+            <p className={styles.heroSubtitle}>RG FAMILY를 빛내주신 후원자님들께 감사드립니다</p>
+
+            {/* Quick Links */}
+            <div className={styles.heroLinks}>
+              {currentSeason && (
+                <Link href={`/ranking/season/${currentSeason.id}`} className={styles.heroLinkSeason}>
+                  <Flame size={16} />
+                  <span>{currentSeason.name} 진행중</span>
+                </Link>
+              )}
+              <Link href="/ranking/vip" className={styles.heroLinkVip}>
+                <Trophy size={16} />
+                <span>VIP 라운지</span>
               </Link>
-            )}
-            <Link href="/ranking/vip" className={styles.vipLink}>
-              <Trophy size={14} />
-              <span>VIP</span>
-              <ChevronRight size={14} />
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <div className={styles.container}>
-        {/* Quick Stats Bar */}
-        {stats && (
-          <div className={styles.statsBar}>
-            <div className={styles.statItem}>
-              <Users size={14} />
-              <span className={styles.statValue}>{stats.participantCount}</span>
-              <span className={styles.statLabel}>참여자</span>
             </div>
           </div>
-        )}
+        </section>
 
-        {/* Filters */}
-        <div className={styles.filters}>
-          <div className={styles.filterGroup}>
-            <Link href="/ranking" className={`${styles.typeTab} ${styles.active}`}>
-              All-Time
-            </Link>
-            <Link href="/ranking/season/current" className={styles.typeTab}>
-              <Calendar size={12} />
-              Season
-            </Link>
-          </div>
-
-          <div className={styles.unitFilter}>
-            {(["all", "excel", "crew"] as const).map((unit) => (
-              <button
-                key={unit}
-                onClick={() => setUnitFilter(unit)}
-                className={`${styles.unitBtn} ${
-                  unitFilter === unit ? styles.active : ""
-                }`}
-                data-unit={unit}
-              >
-                {unit === "all" ? "ALL" : unit.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className={styles.loading}>
-            <div className={styles.spinner} />
-          </div>
-        ) : rankings.length === 0 ? (
-          <div className={styles.empty}>
-            <Trophy size={32} />
-            <p>데이터가 없습니다</p>
-          </div>
-        ) : (
-          <>
-            {/* Top 3 Podium */}
-            <section className={styles.podiumSection}>
-              <RankingPodium items={top3} />
-            </section>
-
-            {/* Full Ranking List */}
-            <section ref={listRef} className={styles.listSection}>
-              <div className={styles.listHeader}>
-                <span className={styles.listTitle}>전체 랭킹</span>
-                <span className={styles.listCount}>TOP {Math.min(50, rankings.length)}</span>
+        <div className={styles.container}>
+          {/* Stats Cards */}
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon}>
+                <Users size={20} />
               </div>
-              <RankingFullList
-                rankings={rankings}
-                maxAmount={maxAmount}
-                limit={50}
-              />
-            </section>
-          </>
-        )}
-      </div>
-      <Footer />
-    </main>
+              <div className={styles.statInfo}>
+                <span className={styles.statValue}>{stats?.participantCount || 0}</span>
+                <span className={styles.statLabel}>총 후원자</span>
+              </div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon}>
+                <TrendingUp size={20} />
+              </div>
+              <div className={styles.statInfo}>
+                <span className={styles.statValue}>TOP 50</span>
+                <span className={styles.statLabel}>명예의 전당</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className={styles.filterSection}>
+            <div className={styles.filterTabs}>
+              <Link href="/ranking" className={`${styles.filterTab} ${styles.active}`}>
+                <Crown size={14} />
+                전체 기간
+              </Link>
+              <Link href="/ranking/season/current" className={styles.filterTab}>
+                <Calendar size={14} />
+                시즌별
+              </Link>
+            </div>
+
+            <div className={styles.unitTabs}>
+              {(["all", "excel", "crew"] as const).map((unit) => (
+                <button
+                  key={unit}
+                  onClick={() => setUnitFilter(unit)}
+                  className={`${styles.unitTab} ${unitFilter === unit ? styles.active : ""}`}
+                  data-unit={unit}
+                >
+                  {unit === "all" ? "전체" : unit === "excel" ? "엑셀부" : "크루부"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className={styles.loading}>
+              <div className={styles.spinner} />
+              <span>랭킹을 불러오는 중...</span>
+            </div>
+          ) : rankings.length === 0 ? (
+            <div className={styles.empty}>
+              <Trophy size={48} />
+              <p>아직 등록된 후원 데이터가 없습니다</p>
+            </div>
+          ) : (
+            <>
+              {/* Top 3 Podium */}
+              <section className={styles.podiumSection}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>
+                    <Crown size={18} />
+                    TOP 3 명예의 전당
+                  </h2>
+                </div>
+                <RankingPodium items={top3} />
+              </section>
+
+              {/* Full Ranking List */}
+              <section ref={listRef} className={styles.listSection}>
+                <div className={styles.listHeader}>
+                  <h2 className={styles.listTitle}>
+                    <TrendingUp size={16} />
+                    전체 랭킹
+                  </h2>
+                  <span className={styles.listBadge}>TOP {Math.min(50, rankings.length)}</span>
+                </div>
+                <RankingFullList
+                  rankings={rankings}
+                  maxAmount={maxAmount}
+                  limit={50}
+                />
+              </section>
+            </>
+          )}
+        </div>
+        <Footer />
+      </main>
+    </PageLayout>
   );
 }

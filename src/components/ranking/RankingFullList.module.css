@@ -1,9 +1,8 @@
-/* RankingFullList.module.css - Premium Gauge List (Theme Compatible) */
+/* RankingFullList.module.css - Premium Korean Portal Style */
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   width: 100%;
 }
 
@@ -20,16 +19,23 @@
 /* Individual Ranking Item */
 .item {
   display: grid;
-  grid-template-columns: 50px 44px 1fr;
+  grid-template-columns: 56px 48px 1fr;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
+  border-bottom: 1px solid var(--card-border);
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+}
+
+.item:first-child {
+  border-radius: 0;
+}
+
+.item:last-child {
+  border-bottom: none;
 }
 
 /* Left Border Accent */
@@ -69,44 +75,44 @@
    Tier Styles - Champion (1위)
    ======================================= */
 .item.champion {
-  background: linear-gradient(90deg, var(--metallic-gold-bg) 0%, var(--card-bg) 50%);
-  border-color: var(--metallic-gold-border);
+  background: linear-gradient(90deg, var(--metallic-gold-bg) 0%, var(--card-bg) 40%);
+  border-bottom: 2px solid var(--metallic-gold-border);
 }
 
 .item.champion .borderAccent {
-  background: var(--metallic-gold);
-  width: 3px;
+  background: linear-gradient(180deg, var(--metallic-gold) 0%, transparent 100%);
+  width: 4px;
 }
 
 .link .item.champion:hover {
-  border-color: var(--metallic-gold);
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.12) 0%, var(--surface-hover) 40%);
 }
 
 /* Rank Styles - Gold (Legacy - 1위) */
 .item.gold {
-  background: linear-gradient(90deg, var(--metallic-gold-bg) 0%, var(--card-bg) 50%);
-  border-color: var(--metallic-gold-border);
+  background: linear-gradient(90deg, var(--metallic-gold-bg) 0%, var(--card-bg) 40%);
+  border-bottom: 2px solid var(--metallic-gold-border);
 }
 
 .link .item.gold:hover {
-  border-color: var(--metallic-gold);
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.12) 0%, var(--surface-hover) 40%);
 }
 
 /* =======================================
    Tier Styles - Elite (2-3위)
    ======================================= */
 .item.elite {
-  background: var(--card-bg);
-  border-color: var(--border-overlay-15);
+  background: linear-gradient(90deg, var(--metallic-silver-bg) 0%, var(--card-bg) 40%);
+  border-bottom: 1px solid var(--metallic-silver-border);
 }
 
 .item.elite .borderAccent {
-  background: var(--metallic-silver);
-  width: 2px;
+  background: linear-gradient(180deg, var(--metallic-silver) 0%, transparent 100%);
+  width: 3px;
 }
 
 .link .item.elite:hover {
-  border-color: var(--metallic-silver-border);
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.08) 0%, var(--surface-hover) 40%);
 }
 
 /* =======================================
@@ -117,8 +123,14 @@
 }
 
 .item.top10 .borderAccent {
-  background: var(--text-muted);
-  opacity: 0.2;
+  background: linear-gradient(180deg, var(--color-primary) 0%, transparent 100%);
+  opacity: 0.3;
+  width: 2px;
+}
+
+.link .item.top10:hover,
+.noLink .item.top10:hover {
+  background: var(--surface-hover);
 }
 
 /* =======================================
@@ -128,12 +140,24 @@
   background: var(--card-bg);
 }
 
+.item.rising .borderAccent {
+  background: linear-gradient(180deg, var(--text-muted) 0%, transparent 100%);
+  opacity: 0.2;
+}
+
+.item.rising:hover {
+  background: var(--surface-hover);
+}
+
 /* =======================================
    Tier Styles - Standard (21위+)
    ======================================= */
 .item.standard {
   background: var(--card-bg);
-  border-color: var(--card-border);
+}
+
+.item.standard:hover {
+  background: var(--surface-hover);
 }
 
 /* Rank Number Section */
@@ -145,25 +169,37 @@
 
 .rank {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--text-secondary);
-  width: 48px;
+  color: var(--text-muted);
+  width: 56px;
   text-align: center;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--surface);
 }
 
-.gold .rank {
-  background: var(--metallic-gold-gradient);
+.gold .rank,
+.champion .rank {
+  background: linear-gradient(135deg, var(--metallic-gold) 0%, #b8860b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-size: var(--text-2xl);
+  font-weight: 800;
 }
 
-/* 2,3위 Elite 순위 (동일) */
+/* 2,3위 Elite 순위 */
 .elite .rank {
-  color: var(--text-primary);
-  font-size: var(--text-2xl);
+  color: var(--metallic-silver);
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+/* Top 10 순위 */
+.top10 .rank {
+  color: var(--text-secondary);
+  font-size: var(--text-lg);
 }
 
 /* Avatar */
@@ -172,27 +208,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   overflow: hidden;
   background: var(--surface);
   border: 2px solid var(--card-border);
   flex-shrink: 0;
   z-index: 1;
+  transition: all 0.2s ease;
 }
 
-.gold .avatar {
-  border-color: var(--metallic-gold);
-  box-shadow: 0 0 8px var(--metallic-gold-glow);
+.gold .avatar,
+.champion .avatar {
+  width: 52px;
+  height: 52px;
+  border: 3px solid var(--metallic-gold);
+  box-shadow:
+    0 0 0 2px rgba(255, 215, 0, 0.1),
+    0 0 12px var(--metallic-gold-glow);
   background: var(--surface);
 }
 
-/* 2,3위 Elite 아바타 (동일) */
+/* 2,3위 Elite 아바타 */
 .elite .avatar {
-  border-color: var(--border-overlay-25);
-  box-shadow: var(--shadow-sm);
+  width: 50px;
+  height: 50px;
+  border: 2px solid var(--metallic-silver);
+  box-shadow: 0 0 8px var(--metallic-silver-glow);
   background: var(--surface);
+}
+
+/* Top 10 아바타 */
+.top10 .avatar {
+  border-color: var(--border-overlay-25);
 }
 
 .avatarImage {
