@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { useAuthContext } from "@/lib/context";
 import { useHonorQualification } from "@/lib/hooks";
-import { getTributePageUrl } from "@/lib/utils";
 import ThemeToggle from "./ui/ThemeToggle";
 import styles from "./Navbar.module.css";
 
@@ -202,7 +201,7 @@ export default function Navbar() {
           )}
           {/* VIP Button - 자격이 있는 사용자에게만 표시 */}
           {isVipQualified && user?.id && (
-            <Link href={getTributePageUrl(user.id)} className={styles.vipBtn}>
+            <Link href={`/ranking/vip/${user.id}`} className={styles.vipBtn}>
               <Crown size={14} />
               <span>VIP</span>
             </Link>
@@ -285,7 +284,7 @@ export default function Navbar() {
             {/* VIP Button - 모바일 */}
             {isVipQualified && user?.id && (
               <Link
-                href={getTributePageUrl(user.id)}
+                href={`/ranking/vip/${user.id}`}
                 className={styles.vipBtn}
                 onClick={() => setIsMobileMenuOpen(false)}
               >

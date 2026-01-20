@@ -4,7 +4,7 @@ import { Crown, Medal, Award } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { RankingItem } from "@/types/common";
-import { getInitials, getTributePageUrl } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import styles from "./RankingPodium.module.css";
 
 interface RankingPodiumProps {
@@ -109,12 +109,12 @@ export default function RankingPodium({ items }: RankingPodiumProps) {
           </div>
         );
 
-        // Top 3 클릭 시 개인 tribute 페이지로 이동
+        // Top 3 클릭 시 VIP 개인 페이지로 이동
         if (item.donorId) {
           return (
             <Link
               key={item.donorId}
-              href={getTributePageUrl(item.donorId)}
+              href={`/ranking/vip/${item.donorId}`}
               style={{ display: "contents" }}
             >
               {Content}

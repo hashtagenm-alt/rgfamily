@@ -5,7 +5,7 @@ import { User, Trophy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { RankingItem } from "@/types/common";
-import { getTributePageUrl } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import styles from "./RankingList.module.css";
 
 interface RankingListProps {
@@ -124,7 +124,7 @@ export default function RankingList({
             return (
               <Link
                 key={item.donorId || index}
-                href={getTributePageUrl(item.donorId)}
+                href={`/ranking/vip/${item.donorId}`}
                 className={styles.link}
               >
                 {ItemContent}
