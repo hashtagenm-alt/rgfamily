@@ -167,19 +167,20 @@
   transition: all 0.3s ease;
 }
 
-/* Left Sidebar - Pledge */
+/* Left Sidebar - Profile/Social */
 .leftSidebar {
   width: 280px;
   flex-shrink: 0;
   background: var(--card-bg);
   border-right: 1px solid var(--card-border);
-  overflow-y: auto;
-  transition: all 0.3s ease;
-  /* Sticky positioning */
+  /* Sticky - 스크롤 따라감 */
   position: sticky;
   top: 56px;
   height: calc(100vh - 56px);
   align-self: flex-start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: all 0.3s ease;
 }
 
 /* Content Area */
@@ -189,19 +190,20 @@
   transition: all 0.3s ease;
 }
 
-/* Right Sidebar - Profile/Social */
+/* Right Sidebar - Pledge */
 .rightSidebar {
   width: 300px;
   flex-shrink: 0;
   background: var(--card-bg);
   border-left: 1px solid var(--card-border);
-  overflow-y: auto;
-  transition: all 0.3s ease;
-  /* Sticky positioning */
+  /* Sticky - 스크롤 따라감 */
   position: sticky;
   top: 56px;
   height: calc(100vh - 56px);
   align-self: flex-start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: all 0.3s ease;
 }
 
 /* Sidebars highlight when member selected */

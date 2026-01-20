@@ -12,10 +12,11 @@ ON CONFLICT (id) DO NOTHING;
 -- donor_id는 NULL (실제 유저 연동 전)
 -- donor_name으로 랭킹 표시
 
+-- 닉네임만 사용 (아이디 제외)
 INSERT INTO public.donations (donor_name, donor_id, amount, season_id, unit, created_at)
 VALUES
-  ('미키™', NULL, 10000000, 4, 'excel', '2026-01-15 12:00:00+09'),
-  ('미드굿♣가애', NULL, 9500000, 4, 'excel', '2026-01-15 11:00:00+09'),
+  ('미키', NULL, 10000000, 4, 'excel', '2026-01-15 12:00:00+09'),
+  ('미드', NULL, 9500000, 4, 'excel', '2026-01-15 11:00:00+09'),
   ('농심육개장라면', NULL, 9000000, 4, 'excel', '2026-01-15 10:00:00+09'),
   ('[RG]✨린아의발굴™', NULL, 8500000, 4, 'excel', '2026-01-14 15:00:00+09'),
   ('❥CaNnOt', NULL, 8000000, 4, 'excel', '2026-01-14 14:00:00+09'),
