@@ -264,10 +264,10 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
   }, [supabase, userId, accessDenied, profile])
 
   useEffect(() => {
-    if (!authLoading && !accessDenied) {
+    if (!accessDenied) {
       fetchTributeData()
     }
-  }, [fetchTributeData, authLoading, accessDenied])
+  }, [fetchTributeData, accessDenied])
 
   const primaryHonor = hallOfFameData?.[0] ?? null
 
