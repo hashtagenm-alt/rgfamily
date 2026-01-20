@@ -28,10 +28,11 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
   const isOwner = user?.id === profileId
 
-  // VIP 페이지 자체는 로그인 회원 모두 열람 가능
+  // 로그인 여부
   const isLoggedIn = !!user
 
-  // 비공개 콘텐츠 전체 접근 권한 (VIP/본인/관리자)
+  // VIP 전용 콘텐츠 접근 권한 (VIP/본인/관리자만)
+  // 페이지 자체는 누구나 볼 수 있음
   const hasFullAccess = isVip || isOwner || isAdmin
 
   // 인증 로딩도 전체 로딩에 포함하여 플리커링 방지
@@ -89,25 +90,6 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
     )
   }
 
-  // 비로그인 상태
-  if (!user) {
-    return (
-      <div className={styles.main}>
-        <div className={styles.restrictedOverlay}>
-          <div className={styles.restrictedBadge}>
-            <Lock size={48} className={styles.restrictedIcon} />
-            <span className={styles.restrictedText}>로그인 필요</span>
-            <span className={styles.restrictedSubtext}>VIP 페이지는 로그인 후 이용 가능합니다</span>
-            <Link href="/login" className={styles.restrictedButton}>
-              로그인
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    )
-  }
-
   // 에러
   if (error || !vipData) {
     return (
@@ -143,23 +125,8 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
 
   // 컨텐츠 렌더링 (접근 권한에 따라 다름)
   const renderContent = () => {
-    // 비로그인 사용자에게만 로그인 유도
-    if (!isLoggedIn) {
-      return (
-        <div className={styles.restrictedOverlay}>
-          <div className={styles.restrictedBadge}>
-            <Lock size={48} className={styles.restrictedIcon} />
-            <span className={styles.restrictedText}>로그인 필요</span>
-            <span className={styles.restrictedSubtext}>VIP 페이지는 로그인 후 이용 가능합니다</span>
-            <Link href="/login" className={styles.restrictedButton}>
-              로그인
-            </Link>
-          </div>
-        </div>
-      )
-    }
-
     // VIP 전용 콘텐츠(personalMessage, images)는 hasFullAccess 필요
+    // 페이지 자체는 누구나 볼 수 있음 (비로그인도 가능)
     if (!hasFullAccess) {
       return (
         <>
@@ -195,25 +162,35 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
               <Lock size={48} className={styles.restrictedIcon} />
               <span className={styles.restrictedText}>VIP Exclusive</span>
               <span className={styles.restrictedSubtext}>VIP 회원만 열람할 수 있습니다</span>
-              <Link href="/ranking" className={styles.restrictedButton}>
-                VIP 되기
-              </Link>
+              {isLoggedIn ? (
+                <Link href="/ranking" className={styles.restrictedButton}>
+                  VIP 되기
+                </Link>
+              ) : (
+                <Link href="/login" className={styles.restrictedButton}>
+                  로그인
+                </Link>
+              )}
             </div>
           </div>
 
-          {/* VIP 메시지 보드: 로그인 사용자에게 공개 */}
-          <VipMessageSection
-            vipProfileId={profileId}
-            vipNickname={vipData.nickname}
-            vipAvatarUrl={vipData.avatarUrl}
-          />
+          {/* VIP 메시지 보드: 로그인 사용자에게만 공개 */}
+          {isLoggedIn && (
+            <VipMessageSection
+              vipProfileId={profileId}
+              vipNickname={vipData.nickname}
+              vipAvatarUrl={vipData.avatarUrl}
+            />
+          )}
 
           {/* BJ 감사 메시지 섹션: 로그인 사용자에게 공개 (공개/비공개 분리 적용) */}
-          <BjThankYouSection
-            vipProfileId={profileId}
-            vipNickname={vipData.nickname}
-            hasFullAccess={false}
-          />
+          {isLoggedIn && (
+            <BjThankYouSection
+              vipProfileId={profileId}
+              vipNickname={vipData.nickname}
+              hasFullAccess={false}
+            />
+          )}
         </>
       )
     }
