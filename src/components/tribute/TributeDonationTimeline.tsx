@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { History, Heart, MessageCircle } from 'lucide-react'
+import { History, MessageCircle } from 'lucide-react'
 import type { TributeDonation, TributeTheme } from '@/types/common'
 import styles from './TributeDonationTimeline.module.css'
 
@@ -61,9 +61,6 @@ export default function TributeDonationTimeline({
             <History size={24} />
           </div>
           <h2 className={styles.title}>Donation History</h2>
-          <p className={styles.subtitle}>
-            Total: <span className={styles.totalAmount}>{formatAmountShort(totalAmount)} 하트</span>
-          </p>
         </motion.div>
 
         {/* Timeline */}
@@ -83,10 +80,6 @@ export default function TributeDonationTimeline({
 
               <div className={styles.timelineContent}>
                 <div className={styles.timelineHeader}>
-                  <div className={styles.amount}>
-                    <Heart size={16} className={styles.heartIcon} />
-                    <span>{formatAmountShort(donation.amount)} 하트</span>
-                  </div>
                   <span className={styles.date}>{formatDonationDate(donation.createdAt)}</span>
                 </div>
 

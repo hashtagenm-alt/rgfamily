@@ -19,7 +19,6 @@ import {
   Loader2,
 } from 'lucide-react'
 import type { HallOfFameHonor } from '@/lib/mock'
-import { formatAmount } from '@/lib/utils/format'
 import { useGuestbook } from '@/lib/hooks'
 import { useAuthContext } from '@/lib/context'
 import VipSignatureGallery from './VipSignatureGallery'
@@ -539,7 +538,6 @@ function TributeHistorySection({ honors }: { honors: HallOfFameHonor[] }) {
                 ? `${honor.seasonName} TOP ${honor.rank}`
                 : honor.episodeName}
             </span>
-            <span className={styles.historyAmount}>{formatAmount(honor.amount)}</span>
           </div>
         ))}
       </div>

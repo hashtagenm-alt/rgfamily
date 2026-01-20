@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Crown, ArrowLeft, Heart, Play, ImageIcon,
+  Crown, ArrowLeft, Play, ImageIcon,
   Trophy, Star, MessageSquare, Video, Lock,
   ChevronLeft, ChevronRight, X
 } from 'lucide-react'
@@ -416,20 +416,16 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
           >
             {vipData.nickname}
           </motion.h1>
-          <motion.div
-            className={styles.heroSubtitle}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            {vipData.seasonName && <span className={styles.seasonTag}>{vipData.seasonName}</span>}
-            {vipData.totalDonation > 0 && (
-              <span className={styles.donationTag}>
-                <Heart size={12} />
-                {vipData.totalDonation.toLocaleString()} 하트
-              </span>
-            )}
-          </motion.div>
+          {vipData.seasonName && (
+            <motion.div
+              className={styles.heroSubtitle}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <span className={styles.seasonTag}>{vipData.seasonName}</span>
+            </motion.div>
+          )}
         </div>
         <div className={styles.heroDecoration}>
           <div className={styles.glow} />

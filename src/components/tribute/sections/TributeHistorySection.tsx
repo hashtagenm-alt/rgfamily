@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion'
 import { Trophy, Star } from 'lucide-react'
 import type { HallOfFameHonor } from '@/lib/mock'
-import { formatAmount } from '@/lib/utils/format'
 import styles from '../TributeSections.module.css'
 
 interface TributeHistorySectionProps {
@@ -39,7 +38,6 @@ export default function TributeHistorySection({ honors }: TributeHistorySectionP
                   ? `${honor.seasonName} TOP ${honor.rank}`
                   : honor.episodeName}
               </span>
-              <span className={styles.historyAmount}>{formatAmount(honor.amount)}</span>
             </div>
           ))}
         </div>

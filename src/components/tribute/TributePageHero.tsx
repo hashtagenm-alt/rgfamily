@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion'
 import { Crown, Star } from 'lucide-react'
 import type { HallOfFameHonor } from '@/lib/mock'
-import { formatAmount } from '@/lib/utils/format'
 import styles from './TributePageHero.module.css'
 
 interface TributePageHeroProps {
@@ -36,9 +35,6 @@ export default function TributePageHero({ honor }: TributePageHeroProps) {
           <span>{badgeText}</span>
         </div>
         <h1 className={styles.heroTitle}>{honor.donorName}</h1>
-        <p className={styles.heroSubtitle}>
-          총 후원: <strong>{formatAmount(honor.amount, '하트')}</strong>
-        </p>
       </motion.div>
 
       <div className={styles.heroDecoration}>

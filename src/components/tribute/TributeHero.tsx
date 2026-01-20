@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Crown, Medal, Award, Calendar, Heart } from 'lucide-react'
+import { Crown, Medal, Award, Calendar } from 'lucide-react'
 import Image from 'next/image'
 import type { TributeProfile, TributeTheme, TributeRank } from '@/types/common'
 import TributeBadge from './TributeBadge'
@@ -126,11 +126,6 @@ export default function TributeHero({ profile, theme, rank, seasonName }: Tribut
           <h1 className={styles.nickname}>{profile.nickname}</h1>
 
           <div className={styles.statsRow}>
-            <div className={styles.stat}>
-              <Heart className={styles.statIcon} size={18} />
-              <span className={styles.statValue}>{formatAmount(profile.totalDonation, '하트')}</span>
-            </div>
-            <div className={styles.statDivider} />
             <div className={styles.stat}>
               <Calendar className={styles.statIcon} size={18} />
               <span className={styles.statValue}>{formatDate(profile.joinedAt, { year: 'numeric', month: 'long' })} 가입</span>

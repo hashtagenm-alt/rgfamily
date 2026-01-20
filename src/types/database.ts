@@ -854,6 +854,58 @@ export type Database = {
           }
         ]
       }
+      vip_personal_messages: {
+        Row: {
+          id: number
+          vip_profile_id: string
+          author_id: string
+          message_type: 'text' | 'image' | 'video'
+          content_text: string | null
+          content_url: string | null
+          is_public: boolean
+          is_deleted: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          vip_profile_id: string
+          author_id: string
+          message_type?: 'text' | 'image' | 'video'
+          content_text?: string | null
+          content_url?: string | null
+          is_public?: boolean
+          is_deleted?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          vip_profile_id?: string
+          author_id?: string
+          message_type?: 'text' | 'image' | 'video'
+          content_text?: string | null
+          content_url?: string | null
+          is_public?: boolean
+          is_deleted?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vip_personal_messages_vip_profile_id_fkey'
+            columns: ['vip_profile_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vip_personal_messages_author_id_fkey'
+            columns: ['author_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -950,12 +1002,21 @@ export type LiveStatus = Tables<'live_status'>
 export type Banner = Tables<'banners'>
 export type TributeGuestbook = Tables<'tribute_guestbook'>
 export type BjThankYouMessage = Tables<'bj_thank_you_messages'>
+export type VipPersonalMessage = Tables<'vip_personal_messages'>
 
 // BJ 감사 메시지 with JOIN data
 export interface BjThankYouMessageWithMember extends BjThankYouMessage {
   bj_member?: {
     name: string
     image_url: string | null
+  }
+}
+
+// VIP 개인 메시지 with 작성자 정보
+export interface VipPersonalMessageWithAuthor extends VipPersonalMessage {
+  author?: {
+    nickname: string
+    avatar_url: string | null
   }
 }
 
