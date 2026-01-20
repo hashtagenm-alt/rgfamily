@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useRanking } from '@/lib/hooks/useRanking'
 import { RankingPodium, RankingFullList } from '@/components/ranking'
-import { Calendar, ArrowLeft, Trophy, Users, ChevronRight, ChevronDown } from 'lucide-react'
+import { Calendar, ArrowLeft, Trophy, Users, ChevronRight, ChevronDown, Clock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import styles from './page.module.css'
 
@@ -207,9 +207,20 @@ export default function SeasonRankingPage() {
             <div className={styles.spinner} />
           </div>
         ) : rankings.length === 0 ? (
-          <div className={styles.empty}>
-            <Trophy size={32} />
-            <p>이 시즌의 데이터가 없습니다</p>
+          <div className={styles.settlementPlaceholder}>
+            <div className={styles.settlementIcon}>
+              <Loader2 size={32} className={styles.spinIcon} />
+            </div>
+            <h3 className={styles.settlementTitle}>랭킹 정산 중</h3>
+            <p className={styles.settlementDesc}>
+              {selectedSeason?.is_active
+                ? '현재 시즌의 랭킹이 정산 중입니다. 정산이 완료되면 랭킹이 공개됩니다.'
+                : '해당 시즌의 랭킹 데이터가 아직 정산되지 않았습니다.'}
+            </p>
+            <div className={styles.settlementMeta}>
+              <Clock size={14} />
+              <span>정산 완료 시 업데이트됩니다</span>
+            </div>
           </div>
         ) : (
           <>

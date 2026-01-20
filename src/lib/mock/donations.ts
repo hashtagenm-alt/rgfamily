@@ -118,36 +118,17 @@ function generateSeasonDonations(
   return donations
 }
 
-// 시즌 1 데이터 (2024.01 ~ 2024.03) - 30명
-const season1Donations = generateSeasonDonations(1, 1, 30, {
-  start: '2024-01-01',
-  end: '2024-03-31'
-})
-
-// 시즌 2 데이터 (2024.04 ~ 2024.06) - 35명
-const season2Donations = generateSeasonDonations(2, 200, 35, {
-  start: '2024-04-01',
-  end: '2024-06-30'
-})
-
-// 시즌 3 데이터 (2024.07 ~ 2024.09) - 40명
-const season3Donations = generateSeasonDonations(3, 400, 40, {
-  start: '2024-07-01',
-  end: '2024-09-30'
-})
-
-// 시즌 4 데이터 (2024.10 ~ 현재) - 50명 (진행중)
-const season4Donations = generateSeasonDonations(4, 600, 50, {
-  start: '2024-10-01',
-  end: '2025-12-31'
-})
+// 시즌 1 데이터 - 정산 중 (빈 데이터)
+// TODO: 정산 완료 후 데이터 활성화
+// const season1Donations = generateSeasonDonations(1, 1, 50, {
+//   start: '2025-01-01',
+//   end: '2025-12-31'
+// })
+const season1Donations: Donation[] = [] // 정산 중
 
 // 모든 후원 데이터 합치기
 export const mockDonations: Donation[] = [
   ...season1Donations,
-  ...season2Donations,
-  ...season3Donations,
-  ...season4Donations
 ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
 // 랭킹 계산용 집계 함수
