@@ -9,9 +9,11 @@ import styles from "./RankingPodium.module.css";
 
 interface RankingPodiumProps {
   items: RankingItem[];
+  /** 포디움 달성자 profile_id 목록 (VIP 페이지 링크용) */
+  podiumProfileIds?: string[];
 }
 
-export default function RankingPodium({ items }: RankingPodiumProps) {
+export default function RankingPodium({ items, podiumProfileIds = [] }: RankingPodiumProps) {
   // Ensure we have 3 slots even if empty (for layout stability)
   const top3 = [
     items.find((i) => i.rank === 1) || null,
@@ -109,7 +111,22 @@ export default function RankingPodium({ items }: RankingPodiumProps) {
           </div>
         );
 
-        // Top 3 표시 (클릭 비활성화)
+        // VIP 페이지가 있는 경우 (포디움 달성자) 클릭 가능
+        const hasVipPage = item.donorId && podiumProfileIds.includes(item.donorId);
+
+        if (hasVipPage) {
+          return (
+            <Link
+              key={item.donorId}
+              href={`/ranking/vip/${item.donorId}`}
+              className={styles.podiumLink}
+            >
+              {Content}
+            </Link>
+          );
+        }
+
+        // VIP 페이지가 없으면 클릭 비활성화
         return (
           <div key={item.donorId || item.donorName} className={styles.podiumLinkDisabled}>
             {Content}

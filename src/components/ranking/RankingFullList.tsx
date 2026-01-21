@@ -12,12 +12,15 @@ interface RankingFullListProps {
   rankings: RankingItem[];
   maxAmount: number;
   limit?: number;
+  /** 포디움 달성자 profile_id 목록 (VIP 페이지 링크용) */
+  podiumProfileIds?: string[];
 }
 
 export default function RankingFullList({
   rankings,
   maxAmount,
   limit = 50,
+  podiumProfileIds = [],
 }: RankingFullListProps) {
   const displayRankings = rankings.slice(0, limit);
 
@@ -113,7 +116,22 @@ export default function RankingFullList({
           </motion.div>
         );
 
-        // 모든 순위 링크 없이 표시
+        // VIP 페이지가 있는 경우 (포디움 달성자) 클릭 가능
+        const hasVipPage = item.donorId && podiumProfileIds.includes(item.donorId);
+
+        if (hasVipPage) {
+          return (
+            <Link
+              key={`${item.donorName}-${index}`}
+              href={`/ranking/vip/${item.donorId}`}
+              className={styles.vipLink}
+            >
+              {Content}
+            </Link>
+          );
+        }
+
+        // VIP 페이지가 없으면 링크 없이 표시
         return (
           <div key={`${item.donorName}-${index}`} className={styles.noLink}>
             {Content}

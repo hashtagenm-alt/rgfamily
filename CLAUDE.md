@@ -53,16 +53,79 @@ npm run lint     # ESLint 검사
 
 ---
 
+## ⚠️ 데이터는 무조건 Supabase (Mock 금지!)
+
+```
+왜? Mock 데이터로 개발하면 실제 DB 스키마와 불일치 발생. 배포 시 버그 터짐.
+
+✅ 필수 규칙:
+1. 모든 데이터 조회/저장은 Supabase 직접 연결
+2. 새 기능 개발 전 반드시 src/types/database.ts 스키마 확인
+3. Mock 파일(src/lib/mock/) 절대 사용 금지
+
+❌ 금지 사항:
+- NEXT_PUBLIC_USE_MOCK_DATA=true 설정
+- src/lib/mock/ 폴더의 데이터 import
+- 하드코딩된 더미 데이터 사용
+
+개발 전 체크리스트:
+□ Supabase 연결 확인 (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)
+□ 필요한 테이블 존재 여부 확인
+□ 컬럼 타입이 database.ts와 일치하는지 확인
+```
+
+---
+
+## Supabase 스키마 레퍼런스
+
+```
+왜? 스키마 모르고 개발하면 타입 에러, 쿼리 실패 발생. 항상 여기 먼저 참고해.
+
+📍 타입 정의 파일: src/types/database.ts
+
+주요 테이블:
+┌─────────────────────┬───────────────────────────────────────┐
+│ 테이블              │ 용도                                  │
+├─────────────────────┼───────────────────────────────────────┤
+│ profiles            │ 사용자 프로필 (닉네임, 역할, 후원총액)│
+│ seasons             │ 시즌 정보 (is_active로 현재 시즌 판별)│
+│ episodes            │ 에피소드/직급전 정보                   │
+│ donations           │ 후원 내역 (donor_name, amount, unit)  │
+│ organization        │ 조직도 멤버 (unit, role, parent_id)   │
+│ vip_rewards         │ VIP 리워드 (rank, personal_message)   │
+│ vip_images          │ VIP 보상 이미지                       │
+│ schedules           │ 캘린더 일정                           │
+│ timeline_events     │ 타임라인 이벤트                       │
+│ live_status         │ 방송 라이브 상태                      │
+│ banners             │ 메인 배너                             │
+│ notices             │ 공지사항                              │
+│ posts/comments      │ 게시판/댓글                           │
+│ signatures          │ 시그니처 콘텐츠                       │
+│ media_content       │ 숏츠/VOD                              │
+│ tribute_guestbook   │ 헌정 방명록                           │
+│ bj_thank_you_messages│ BJ 감사 메시지                       │
+│ vip_personal_messages│ VIP 개인 메시지                      │
+└─────────────────────┴───────────────────────────────────────┘
+
+주요 컬럼 타입:
+- unit: 'excel' | 'crew' (팬클럽 소속)
+- role (profiles): 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
+- event_type (schedules): 'broadcast' | 'collab' | 'event' | 'notice' | '休'
+- platform (live_status): 'chzzk' | 'twitch' | 'youtube' | 'pandatv'
+
+주요 RPC 함수:
+- get_active_season_id(): 현재 활성 시즌 ID
+- get_user_rank(p_user_id, p_season_id): 사용자 랭킹 조회
+- get_episode_rankings(p_episode_id, p_limit): 에피소드별 랭킹
+- is_vip_user(user_id): VIP 여부 확인
+- is_admin(user_id): 관리자 여부 확인
+```
+
+---
+
 ## 핵심 개발 지침 (이것만은 꼭!)
 
 > 디자이너, 기획자, 개발자 통화 회의에서 합의한 내용들이야.
-
-### 1. DB 연동은 Supabase로
-```
-왜? 지금 목업데이터로 돌아가는데, 실제 서비스하려면 DB 연결 필수
-Vercel 환경변수에 SUPABASE_URL이랑 ANON_KEY 넣어야 함
-목업 모드 끄기: NEXT_PUBLIC_USE_MOCK_DATA=false
-```
 
 ### 2. 라이브 상태는 크롤링으로
 ```
@@ -181,10 +244,11 @@ Vercel 환경변수에 SUPABASE_URL이랑 ANON_KEY 넣어야 함
 |-----|------|
 | **main 직접 푸시** | PR 통해서만 병합해야 함. CI 검증 필수 |
 | **빌드 확인 없이 PR** | `npm run build` 성공 확인 후 PR 생성 |
+| **Mock 데이터 사용** | Supabase 직접 연결만 허용. Mock 파일 import 금지 |
+| **스키마 확인 없이 개발** | src/types/database.ts 먼저 확인 필수 |
 | SOOP(별풍선) | 여긴 **PandaTV(하트)** 플랫폼임 |
 | 아이디/이메일 노출 | 닉네임만 표시해야 함 |
 | 라이브 컬러 핑크 | LIVE는 **시안색**(#00d4ff) |
-| 목업 모드로 배포 | 실서비스 전에 USE_MOCK_DATA=false 필수 |
 
 ---
 
@@ -207,19 +271,48 @@ CSS 변수: src/app/globals.css
 
 ## 환경변수
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=xxx        # Supabase 프로젝트 URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=xxx   # Supabase 익명 키
-NEXT_PUBLIC_USE_MOCK_DATA=true      # 개발용 true, 배포용 false
+```
+📍 로컬 환경변수 파일: .env.local (이미 설정됨)
+
+NEXT_PUBLIC_SUPABASE_URL=https://cdiptfmagemjfmsuphaj.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...  # 관리자 스크립트용
+
+⚠️ NEXT_PUBLIC_USE_MOCK_DATA=false 유지 필수!
+```
+
+---
+
+## Supabase 데이터 확인/수정 방법
+
+```
+왜? 코드로 데이터 수정하면 실수 위험. Dashboard에서 직접 확인하고 수정하는 게 안전함.
+
+🌐 Supabase Dashboard 접속:
+https://supabase.com/dashboard/project/cdiptfmagemjfmsuphaj
+
+브라우저에서 할 수 있는 작업:
+1. Table Editor → 테이블 데이터 직접 CRUD
+2. SQL Editor → 복잡한 쿼리 실행
+3. Authentication → 사용자 관리
+4. Storage → 이미지/파일 업로드
+
+개발 시 데이터 작업 순서:
+1. Dashboard에서 테이블 구조 확인
+2. 필요한 데이터 직접 추가/수정
+3. 코드에서 해당 데이터 조회만 구현
+
+CLI로 Supabase 확인 (선택):
+npx supabase status  # 연결 상태 확인
 ```
 
 ---
 
 ## 요약: 개발할 때 이것만 기억해
 
-1. **컬러 통일**: 핑크(#fd68ba) + 라이브는 시안(#00d4ff)
-2. **글씨 크게**: 최소 16px
-3. **닉네임만**: 아이디/이메일 절대 노출 금지
-4. **호버 효과**: 클릭 가능한 건 다 핑크로 변함
-5. **후원 단위**: 별풍선 아니고 **하트**
-6. **목업 끄기**: 배포 전에 USE_MOCK_DATA=false
+1. **Supabase만**: Mock 금지, database.ts 스키마 먼저 확인
+2. **컬러 통일**: 핑크(#fd68ba) + 라이브는 시안(#00d4ff)
+3. **글씨 크게**: 최소 16px
+4. **닉네임만**: 아이디/이메일 절대 노출 금지
+5. **호버 효과**: 클릭 가능한 건 다 핑크로 변함
+6. **후원 단위**: 별풍선 아니고 **하트**

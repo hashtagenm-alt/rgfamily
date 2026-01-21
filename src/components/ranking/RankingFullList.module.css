@@ -11,6 +11,31 @@
   display: block;
 }
 
+.vipLink {
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+}
+
+.vipLink .item {
+  transition: all 0.3s ease;
+}
+
+.vipLink:hover .item {
+  background: rgba(212, 175, 55, 0.08);
+  border-left: 2px solid #d4af37;
+}
+
+.vipLink:hover .item .borderAccent {
+  background: #d4af37;
+}
+
+.vipLink:hover .item .hoverArrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: #d4af37;
+}
+
 .noLink {
   display: block;
   cursor: default;

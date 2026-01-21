@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSupabaseContext } from "@/lib/context";
 import { USE_MOCK_DATA } from "@/lib/config";
-import { rankedProfiles } from "@/lib/mock";
+import { rankedProfiles, mockVipRewardsDB } from "@/lib/mock";
 import type { RankingItem, UnitFilter } from "@/types/common";
 import {
   RankingPodium,
@@ -28,6 +28,7 @@ export default function TotalRankingPage() {
   const [unitFilter, setUnitFilter] = useState<UnitFilter>('all');
   const [rankings, setRankings] = useState<RankingItem[]>([]);
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
+  const [podiumProfileIds, setPodiumProfileIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchRankings = useCallback(async () => {
@@ -37,6 +38,12 @@ export default function TotalRankingPage() {
     if (USE_MOCK_DATA) {
       // Mock 시즌 데이터
       setCurrentSeason({ id: 1, name: '시즌 1', is_active: true });
+
+      // 포디움 달성자 profile_id 추출 (rank 1-3)
+      const podiumIds = mockVipRewardsDB
+        .filter(r => r.rank <= 3)
+        .map(r => r.profile_id);
+      setPodiumProfileIds([...new Set(podiumIds)]);
 
       // Mock 랭킹 데이터 (unit 필터 적용)
       let filteredProfiles = rankedProfiles;
@@ -109,13 +116,14 @@ export default function TotalRankingPage() {
         .sort((a, b) => b.amount - a.amount)
         .slice(0, 50);
 
-      // vip_rewards 테이블에서 profile_id 조회 (닉네임으로 매칭)
+      // vip_rewards 테이블에서 profile_id 조회 (닉네임으로 매칭 + 포디움 달성자 추출)
       const { data: vipData } = await supabase
         .from("vip_rewards")
-        .select("profile_id, profiles:profile_id(nickname)");
+        .select("profile_id, rank, profiles:profile_id(nickname)");
 
-      // 닉네임 → profile_id 매핑 생성
+      // 닉네임 → profile_id 매핑 생성 + 포디움 달성자 추출
       const nicknameToProfileId: Record<string, string> = {};
+      const podiumIds: string[] = [];
       (vipData || []).forEach((v) => {
         const profileData = v.profiles;
         const nickname = Array.isArray(profileData)
@@ -123,6 +131,10 @@ export default function TotalRankingPage() {
           : (profileData as { nickname: string } | null)?.nickname;
         if (nickname && v.profile_id) {
           nicknameToProfileId[nickname] = v.profile_id;
+          // 포디움 달성자 (rank 1-3)
+          if (v.rank && v.rank <= 3) {
+            podiumIds.push(v.profile_id);
+          }
         }
       });
 
@@ -133,6 +145,12 @@ export default function TotalRankingPage() {
         totalAmount: item.amount,
         rank: idx + 1,
       }));
+
+      // 1~3위 후원자의 donorId도 podiumProfileIds에 추가 (실제 랭킹 기반)
+      const top3Ids = sorted
+        .filter(item => item.rank <= 3 && item.donorId)
+        .map(item => item.donorId as string);
+      setPodiumProfileIds([...new Set([...podiumIds, ...top3Ids])]);
 
       setRankings(sorted);
     }
@@ -222,7 +240,7 @@ export default function TotalRankingPage() {
                     TOP 3
                   </h2>
                 </div>
-                <RankingPodium items={top3} />
+                <RankingPodium items={top3} podiumProfileIds={podiumProfileIds} />
               </section>
 
               {/* Full Ranking List */}
@@ -238,6 +256,7 @@ export default function TotalRankingPage() {
                   rankings={rankings}
                   maxAmount={maxAmount}
                   limit={50}
+                  podiumProfileIds={podiumProfileIds}
                 />
               </section>
             </>
