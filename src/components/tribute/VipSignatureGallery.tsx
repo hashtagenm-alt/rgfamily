@@ -107,7 +107,6 @@ export default function VipSignatureGallery({
                     alt={sig.memberName}
                     fill
                     className={styles.thumbnailImage}
-                    unoptimized
                   />
                 ) : (
                   <div className={styles.thumbnailPlaceholder}>
@@ -202,7 +201,6 @@ export default function VipSignatureGallery({
                     alt={selectedSig.memberName}
                     fill
                     className={styles.lightboxImage}
-                    unoptimized
                   />
                 ) : (
                   <div className={styles.lightboxPlaceholder}>

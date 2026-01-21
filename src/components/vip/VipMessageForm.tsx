@@ -167,7 +167,6 @@ export default function VipMessageForm({
                     width={48}
                     height={48}
                     className={styles.vipAvatar}
-                    unoptimized
                   />
                 ) : (
                   <div className={styles.vipAvatarPlaceholder}>

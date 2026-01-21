@@ -96,7 +96,6 @@ export default function LiveMembers() {
                       alt={member.nickname}
                       fill
                       className={styles.avatarImage}
-                      unoptimized
                     />
                   ) : (
                     <div className={styles.avatarPlaceholder}>

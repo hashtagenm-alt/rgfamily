@@ -101,7 +101,6 @@ export default function VipMessageCard({
                 width={40}
                 height={40}
                 className={styles.avatar}
-                unoptimized
               />
             ) : (
               <div className={styles.avatarPlaceholder}>
@@ -140,7 +139,6 @@ export default function VipMessageCard({
                   alt="영상 썸네일"
                   fill
                   className={styles.lockedMediaImage}
-                  unoptimized
                 />
               ) : (
                 <div className={styles.lockedMediaBlur} />
@@ -183,7 +181,6 @@ export default function VipMessageCard({
               width={40}
               height={40}
               className={styles.avatar}
-              unoptimized
             />
           ) : (
             <div className={styles.avatarPlaceholder}>
@@ -251,7 +248,6 @@ export default function VipMessageCard({
             fill
             className={styles.mediaImage}
             onError={() => setImageError(true)}
-            unoptimized
           />
         </div>
       )}
@@ -265,7 +261,6 @@ export default function VipMessageCard({
                 alt="영상 썸네일"
                 fill
                 className={styles.mediaImage}
-                unoptimized
               />
               <div className={styles.videoOverlay}>
                 <Play size={32} />

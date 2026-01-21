@@ -78,7 +78,6 @@ export function ImageUpload({
               alt="업로드된 이미지"
               fill
               style={{ objectFit: 'cover' }}
-              unoptimized
             />
             <button
               type="button"

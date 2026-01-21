@@ -172,7 +172,6 @@ export default function BjMessageForm({
                     width={48}
                     height={48}
                     className={styles.bjAvatar}
-                    unoptimized
                   />
                 ) : (
                   <div className={styles.bjAvatarPlaceholder}>

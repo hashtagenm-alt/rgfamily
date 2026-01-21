@@ -53,7 +53,7 @@ export function ProfileSidebar({ member, onClose }: ProfileSidebarProps) {
               {member.is_live && <span className={styles.liveBadge}>LIVE</span>}
               <div className={styles.avatar}>
                 {member.image_url ? (
-                  <Image src={member.image_url} alt={member.name} fill className={styles.avatarImage} unoptimized />
+                  <Image src={member.image_url} alt={member.name} fill className={styles.avatarImage} />
                 ) : (
                   <div className={styles.avatarPlaceholder}>{member.name.charAt(0)}</div>
                 )}

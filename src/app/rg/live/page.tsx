@@ -185,7 +185,6 @@ export default function LivePage() {
                                     alt={member.name}
                                     fill
                                     className={styles.avatarImage}
-                                    unoptimized
                                   />
                                 ) : (
                                   <div className={styles.avatarPlaceholder}>
@@ -275,7 +274,6 @@ export default function LivePage() {
                                 alt={member.name}
                                 fill
                                 className={styles.avatarImage}
-                                unoptimized
                               />
                             ) : (
                               <div className={styles.avatarPlaceholder}>

@@ -140,7 +140,6 @@ export default function BroadcastNotice() {
                 fill
                 sizes="(max-width: 768px) 100vw, 35vw"
                 style={{ objectFit: 'cover', objectPosition: 'center' }}
-                unoptimized
               />
             </div>
           </div>

@@ -59,7 +59,6 @@ export default function TributeMessage({
                 width={200}
                 height={60}
                 className={styles.signatureImage}
-                unoptimized
               />
             </div>
           </div>

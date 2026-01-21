@@ -43,7 +43,6 @@ export default function TimelineModal({ event, onClose }: TimelineModalProps) {
                   alt={event.title}
                   fill
                   className={styles.modalImage}
-                  unoptimized
                 />
               </div>
             )}

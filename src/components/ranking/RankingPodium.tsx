@@ -85,7 +85,6 @@ export default function RankingPodium({ items, podiumProfileIds = [] }: RankingP
                   alt={item.donorName}
                   fill
                   className={styles.avatarImage}
-                  unoptimized
                 />
               ) : (
                 <div className={styles.initialsWrapper}>

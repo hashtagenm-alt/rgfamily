@@ -290,7 +290,6 @@ function TributeGallerySection({
                 alt={`Tribute Photo ${index + 1}`}
                 fill
                 className={styles.galleryImage}
-                unoptimized
               />
               {!isBlurred && (
                 <div className={styles.galleryOverlay}>
@@ -334,7 +333,6 @@ function TributeGallerySection({
               alt="Exclusive Signature"
               fill
               className={styles.galleryImage}
-              unoptimized
             />
             {!isBlurred && (
               <div className={styles.galleryOverlay}>

@@ -424,7 +424,6 @@ export default function VipRewardsPage() {
                             width={120}
                             height={120}
                             className={styles.galleryImage}
-                            unoptimized
                           />
                           <button
                             type="button"

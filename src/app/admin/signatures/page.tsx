@@ -211,7 +211,6 @@ export default function SignaturesPage() {
               width={80}
               height={45}
               style={{ objectFit: 'cover' }}
-              unoptimized
             />
           ) : (
             <ImageIcon size={20} style={{ color: 'var(--text-tertiary)' }} />

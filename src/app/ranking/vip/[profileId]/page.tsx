@@ -152,7 +152,6 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
                     alt={img.title || `VIP 시그니처 ${index + 1}`}
                     fill
                     className={styles.galleryImage}
-                    unoptimized
                   />
                   {img.title && <span className={styles.galleryTitle}>{img.title}</span>}
                   {index === 0 && vipData.images.length > 1 && (
@@ -374,7 +373,6 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
                 alt={vipData.images[selectedImageIndex].title || '갤러리 이미지'}
                 fill
                 className={styles.modalImage}
-                unoptimized
               />
             </motion.div>
 

@@ -72,7 +72,6 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
                 width={40}
                 height={40}
                 className={styles.bjAvatar}
-                unoptimized
               />
             ) : (
               <div className={styles.bjAvatarPlaceholder}>
@@ -122,7 +121,6 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
                       alt="영상 썸네일"
                       fill
                       className={styles.lockedMediaImage}
-                      unoptimized
                     />
                     {/* 영상 재생 아이콘 (비활성) */}
                     <div className={styles.videoThumbnailOverlay}>
@@ -174,7 +172,6 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
               width={40}
               height={40}
               className={styles.bjAvatar}
-              unoptimized
             />
           ) : (
             <div className={styles.bjAvatarPlaceholder}>
@@ -208,7 +205,6 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
             fill
             className={styles.mediaImage}
             onError={() => setImageError(true)}
-            unoptimized
           />
         </div>
       )}
@@ -222,7 +218,6 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
                 alt="영상 썸네일"
                 fill
                 className={styles.mediaImage}
-                unoptimized
               />
               <div className={styles.videoOverlay}>
                 <Play size={32} />

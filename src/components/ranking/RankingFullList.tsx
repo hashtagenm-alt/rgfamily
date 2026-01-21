@@ -73,7 +73,6 @@ export default function RankingFullList({
                   alt={item.donorName}
                   fill
                   className={styles.avatarImage}
-                  unoptimized
                 />
               ) : (
                 <span className={styles.initials}>

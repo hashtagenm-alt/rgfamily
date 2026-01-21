@@ -126,7 +126,6 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
               fill
               style={{ objectFit: 'cover' }}
               priority
-              unoptimized
             />
             <div className={styles.heroOverlay} />
           </div>

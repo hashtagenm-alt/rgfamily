@@ -90,7 +90,6 @@ export default function RankingList({
                       alt={item.donorName}
                       fill
                       className={styles.avatarImage}
-                      unoptimized
                     />
                   ) : (
                     <User size={18} className="text-gray-400 m-auto" />

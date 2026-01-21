@@ -71,7 +71,6 @@ export default function TributeGallery({ images, theme }: TributeGalleryProps) {
                   alt={image.title}
                   fill
                   className={styles.image}
-                  unoptimized
                 />
                 <div className={styles.overlay}>
                   <span className={styles.overlayTitle}>{image.title}</span>
@@ -119,7 +118,6 @@ export default function TributeGallery({ images, theme }: TributeGalleryProps) {
                   alt={images[selectedIndex].title}
                   fill
                   className={styles.lightboxImage}
-                  unoptimized
                 />
               </div>
               <div className={styles.lightboxInfo}>

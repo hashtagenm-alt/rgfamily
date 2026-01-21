@@ -71,7 +71,6 @@ export default function BjMessageModal({ message, isOpen, onClose }: BjMessageMo
                     width={56}
                     height={56}
                     className={styles.bjAvatar}
-                    unoptimized
                   />
                 ) : (
                   <div className={styles.bjAvatarPlaceholder}>
@@ -108,7 +107,6 @@ export default function BjMessageModal({ message, isOpen, onClose }: BjMessageMo
                     fill
                     className={styles.image}
                     onError={() => setImageError(true)}
-                    unoptimized
                   />
                 </div>
               )}

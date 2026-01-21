@@ -46,7 +46,6 @@ function PodiumItem({
             alt={entry.nickname}
             fill
             className={styles.avatarImage}
-            unoptimized
           />
         ) : (
           <span className={styles.initials}>{getInitials(entry.nickname)}</span>

@@ -105,7 +105,6 @@ export default function TributeHero({ profile, theme, rank, seasonName }: Tribut
                 alt={profile.nickname}
                 fill
                 className={styles.avatarImage}
-                unoptimized
               />
             ) : (
               <span className={styles.avatarPlaceholder}>

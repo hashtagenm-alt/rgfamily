@@ -37,7 +37,6 @@ export default function TributeGallerySection({
                 alt={`Tribute Photo ${index + 1}`}
                 fill
                 className={styles.galleryImage}
-                unoptimized
               />
               <div className={styles.galleryOverlay}>
                 <Download size={20} />
@@ -68,7 +67,6 @@ export default function TributeGallerySection({
               alt="Exclusive Signature"
               fill
               className={styles.galleryImage}
-              unoptimized
             />
             <div className={styles.galleryOverlay}>
               <Download size={20} />

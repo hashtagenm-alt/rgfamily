@@ -137,7 +137,6 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                   alt={`시그니처 ${signature.sigNumber}`}
                   fill
                   className={styles.signatureImage}
-                  unoptimized
                 />
               ) : (
                 <div className={styles.imagePlaceholder}>
@@ -182,7 +181,6 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                               width={28}
                               height={28}
                               className={styles.tabAvatarImage}
-                              unoptimized
                             />
                           ) : (
                             <User size={14} />

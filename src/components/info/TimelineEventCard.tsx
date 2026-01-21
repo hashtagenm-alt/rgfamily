@@ -83,7 +83,6 @@ export default function TimelineEventCard({ event, index, onSelect }: TimelineEv
               alt={event.title}
               fill
               className={styles.image}
-              unoptimized
             />
           </div>
         )}
