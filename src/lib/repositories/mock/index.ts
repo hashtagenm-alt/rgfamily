@@ -22,6 +22,7 @@ import {
   IBannerRepository,
   ILiveStatusRepository,
   IGuestbookRepository,
+  IBjMessageRepository,
 } from '../types'
 import {
   mockProfiles,
@@ -40,13 +41,14 @@ import {
   mockBanners,
   mockLiveStatus,
   mockTributeGuestbook,
+  mockBjThankYouMessages,
   type MockBanner,
 } from '@/lib/mock'
 import type { RankingItem, UnitFilter, TimelineItem } from '@/types/common'
 import type {
   Season, Profile, Organization, Notice, Donation, Post, Comment,
   Schedule, Signature, VipReward, VipImage, MediaContent, Banner,
-  LiveStatus, TributeGuestbook, InsertTables, UpdateTables
+  LiveStatus, TributeGuestbook, BjThankYouMessage, InsertTables, UpdateTables
 } from '@/types/database'
 
 // ============================================
@@ -103,6 +105,7 @@ const store = {
   banners: mockBanners.map(convertMockBannerToDBBanner),
   liveStatus: [...mockLiveStatus] as LiveStatus[],
   guestbook: [...mockTributeGuestbook] as TributeGuestbook[],
+  bjMessages: [...mockBjThankYouMessages] as BjThankYouMessage[],
 }
 
 // ============================================
@@ -1113,6 +1116,79 @@ class MockGuestbookRepository implements IGuestbookRepository {
 }
 
 // ============================================
+// Mock BJ Message Repository (Full CRUD)
+// ============================================
+class MockBjMessageRepository implements IBjMessageRepository {
+  async findById(id: number): Promise<BjThankYouMessage | null> {
+    return store.bjMessages.find(m => m.id === id && !m.is_deleted) || null
+  }
+
+  async findByVipProfile(vipProfileId: string): Promise<BjThankYouMessage[]> {
+    return store.bjMessages
+      .filter(m => m.vip_profile_id === vipProfileId && !m.is_deleted)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+
+  async findByBjMember(bjMemberId: number): Promise<BjThankYouMessage[]> {
+    return store.bjMessages
+      .filter(m => m.bj_member_id === bjMemberId && !m.is_deleted)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+
+  async findPublicByVipProfile(vipProfileId: string): Promise<BjThankYouMessage[]> {
+    return store.bjMessages
+      .filter(m => m.vip_profile_id === vipProfileId && m.is_public && !m.is_deleted)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+
+  async findAll(): Promise<BjThankYouMessage[]> {
+    return store.bjMessages.filter(m => !m.is_deleted)
+  }
+
+  async create(data: InsertTables<'bj_thank_you_messages'>): Promise<BjThankYouMessage> {
+    const now = getCurrentTimestamp()
+    const newMessage: BjThankYouMessage = {
+      id: generateMockId(),
+      vip_profile_id: data.vip_profile_id,
+      bj_member_id: data.bj_member_id,
+      message_type: data.message_type,
+      content_text: data.content_text || null,
+      content_url: data.content_url || null,
+      is_public: data.is_public ?? true,
+      is_deleted: false,
+      created_at: now,
+      updated_at: now,
+    }
+    store.bjMessages.push(newMessage)
+    return newMessage
+  }
+
+  async update(id: number, data: UpdateTables<'bj_thank_you_messages'>): Promise<BjThankYouMessage> {
+    const index = store.bjMessages.findIndex(m => m.id === id)
+    if (index === -1) throw new Error(`BJ Message ${id} not found`)
+
+    store.bjMessages[index] = {
+      ...store.bjMessages[index],
+      ...data,
+      updated_at: getCurrentTimestamp(),
+    }
+    return store.bjMessages[index]
+  }
+
+  async delete(id: number): Promise<void> {
+    const index = store.bjMessages.findIndex(m => m.id === id)
+    if (index === -1) throw new Error(`BJ Message ${id} not found`)
+    store.bjMessages.splice(index, 1)
+  }
+
+  async softDelete(id: number): Promise<void> {
+    const index = store.bjMessages.findIndex(m => m.id === id)
+    if (index === -1) throw new Error(`BJ Message ${id} not found`)
+    store.bjMessages[index].is_deleted = true
+  }
+}
+
+// ============================================
 // Mock Data Provider (Facade Pattern)
 // ============================================
 export class MockDataProvider implements IDataProvider {
@@ -1133,6 +1209,7 @@ export class MockDataProvider implements IDataProvider {
   readonly banners = new MockBannerRepository()
   readonly liveStatus = new MockLiveStatusRepository()
   readonly guestbook = new MockGuestbookRepository()
+  readonly bjMessages = new MockBjMessageRepository()
 }
 
 // Singleton instance
@@ -1158,5 +1235,6 @@ export function resetMockStore(): void {
   store.banners = mockBanners.map(convertMockBannerToDBBanner)
   store.liveStatus = [...mockLiveStatus] as LiveStatus[]
   store.guestbook = [...mockTributeGuestbook] as TributeGuestbook[]
+  store.bjMessages = [...mockBjThankYouMessages] as BjThankYouMessage[]
   mockIdCounter = 10000
 }

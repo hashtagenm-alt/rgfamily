@@ -10,11 +10,11 @@
 | 테이블 | 용도 | 설명 |
 |--------|------|------|
 | **profiles** | 가입 회원 정보 | auth.users와 1:1 연결. 로그인한 사용자의 닉네임, 아바타 등 |
-| **members** | RG Family 멤버 | 조직도에 표시되는 공식 멤버 (대표, 팀장, 멤버 등). 가입 여부와 무관 |
+| **organization** | RG Family 멤버 | 조직도에 표시되는 공식 멤버 (대표, 팀장, 멤버 등). BJ 멤버 정보 포함 |
 
-**중요**: `profiles` ≠ `members`
+**중요**: `profiles` ≠ `organization`
 - profiles: 사이트 가입자 (팬 포함)
-- members: RG Family 조직 구성원 (공식 멤버만)
+- organization: RG Family 조직 구성원 (공식 멤버, BJ 멤버)
 
 ---
 
@@ -130,7 +130,7 @@ Supabase Dashboard에서 실행하여 테이블 주석 추가:
 ```sql
 -- 테이블 주석
 COMMENT ON TABLE public.profiles IS '가입 회원 정보 (auth.users 연결)';
-COMMENT ON TABLE public.members IS 'RG Family 조직 멤버 (조직도용, 가입 여부 무관)';
+COMMENT ON TABLE public.organization IS 'RG Family 조직 멤버 (조직도용, BJ 멤버 포함)';
 COMMENT ON TABLE public.seasons IS 'RG Family 시즌 정보';
 COMMENT ON TABLE public.episodes IS '시즌별 방송 에피소드';
 COMMENT ON TABLE public.donations IS '후원 기록 (donor_name 기준 집계)';
@@ -146,7 +146,7 @@ COMMENT ON TABLE public.schedule_events IS '방송 일정 캘린더 (미래 일�
 COMMENT ON COLUMN public.donations.donor_name IS '후원자 닉네임 (랭킹 집계 기준, 필수)';
 COMMENT ON COLUMN public.donations.profile_id IS '가입 회원 연결 (선택, 비회원 후원 가능)';
 COMMENT ON COLUMN public.vip_rewards.profile_id IS 'VIP 회원 프로필 연결 (필수)';
-COMMENT ON COLUMN public.members.unit IS '소속: excel(엑셀) 또는 crew(크루)';
+COMMENT ON COLUMN public.organization.unit IS '소속: excel(엑셀) 또는 crew(크루)';
 COMMENT ON COLUMN public.profiles.unit IS '소속: excel(엑셀) 또는 crew(크루)';
 ```
 

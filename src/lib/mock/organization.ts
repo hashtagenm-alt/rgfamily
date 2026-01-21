@@ -404,7 +404,7 @@ export const mockOrganization: Organization[] = [
     position_order: 14,
     parent_id: 1,
     image_url: getMemberAvatar('queenroni'),
-    social_links: { pandatv: 'queenroni' },
+    social_links: { pandatv: 'tjdrks1771' },
     profile_info: {
       mbti: 'ENFP',
       blood_type: 'B형',

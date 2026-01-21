@@ -2,7 +2,7 @@
  * PandaTV 라이브 상태 확인 API 클라이언트
  *
  * PandaTV는 공식 API가 없으므로 채널 페이지를 fetch하여 라이브 상태를 파싱
- * - 채널 URL: https://www.pandalive.co.kr/[channel_id]
+ * - 채널 URL: https://www.pandalive.co.kr/channel/[channel_id]
  * - 라이브 상태는 HTML 응답 내 특정 패턴으로 확인
  */
 
@@ -17,7 +17,7 @@ export interface PandaTVLiveStatus {
 
 /**
  * PandaTV 채널 URL에서 채널 ID 추출
- * @example "https://www.pandalive.co.kr/rina" -> "rina"
+ * @example "https://www.pandalive.co.kr/channel/rina" -> "rina"
  */
 export function extractChannelId(url: string): string | null {
   try {
@@ -42,7 +42,7 @@ export function extractChannelId(url: string): string | null {
  * 라이브 중인 경우 HTML에 특정 메타 태그나 스크립트가 포함됩니다.
  */
 export async function checkChannelLiveStatus(channelId: string): Promise<PandaTVLiveStatus> {
-  const url = `https://www.pandalive.co.kr/${channelId}`
+  const url = `https://www.pandalive.co.kr/channel/${channelId}`
 
   try {
     const response = await fetch(url, {

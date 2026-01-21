@@ -6,6 +6,7 @@
 import type {
   Profile, Season, Donation, Organization, Notice, Post, Schedule,
   Comment, Signature, VipReward, VipImage, MediaContent, LiveStatus, Banner, TributeGuestbook,
+  BjThankYouMessage,
   InsertTables, UpdateTables
 } from '@/types/database'
 import type { RankingItem, UnitFilter, TimelineItem } from '@/types/common'
@@ -194,6 +195,18 @@ export interface IGuestbookRepository {
   delete(id: number): Promise<void>
 }
 
+export interface IBjMessageRepository {
+  findById(id: number): Promise<BjThankYouMessage | null>
+  findByVipProfile(vipProfileId: string): Promise<BjThankYouMessage[]>
+  findByBjMember(bjMemberId: number): Promise<BjThankYouMessage[]>
+  findPublicByVipProfile(vipProfileId: string): Promise<BjThankYouMessage[]>
+  findAll(): Promise<BjThankYouMessage[]>
+  create(data: InsertTables<'bj_thank_you_messages'>): Promise<BjThankYouMessage>
+  update(id: number, data: UpdateTables<'bj_thank_you_messages'>): Promise<BjThankYouMessage>
+  delete(id: number): Promise<void>
+  softDelete(id: number): Promise<void>
+}
+
 // ============================================
 // Data Provider Interface (Strategy Pattern)
 // ============================================
@@ -215,6 +228,7 @@ export interface IDataProvider {
   banners: IBannerRepository
   liveStatus: ILiveStatusRepository
   guestbook: IGuestbookRepository
+  bjMessages: IBjMessageRepository
 }
 
 // ============================================
