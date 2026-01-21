@@ -162,11 +162,39 @@
   pointer-events: none;
 }
 
+/* Header Right */
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 /* Search Area */
 .searchArea {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* Admin Write Button */
+.writeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.writeBtn:hover {
+  background: var(--color-primary-light);
 }
 
 .searchBox {
@@ -521,6 +549,17 @@
 
   .boardLeft {
     gap: var(--space-2);
+  }
+
+  .headerRight {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .writeBtn {
+    width: 100%;
+    justify-content: center;
+    padding: var(--space-3);
   }
 
   .categoryTabs {

@@ -179,10 +179,51 @@
 /* Actions */
 .actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   padding: var(--space-4) var(--space-8);
   border-top: 1px solid var(--card-border);
   background: var(--surface);
+  gap: var(--space-3);
+}
+
+.adminActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.editBtn,
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-decoration: none;
+}
+
+.editBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-pink-overlay-05);
+}
+
+.deleteBtn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.deleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .shareBtn {
@@ -198,11 +239,92 @@
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition-fast);
+  margin-left: auto;
 }
 
 .shareBtn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+/* Delete Confirmation Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+.modal {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  max-width: 400px;
+  width: 100%;
+}
+
+.modalTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.modalMessage {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
+}
+
+.modalActions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+.modalCancelBtn,
+.modalDeleteBtn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.modalCancelBtn {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+}
+
+.modalCancelBtn:hover:not(:disabled) {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.modalDeleteBtn {
+  background: #ef4444;
+  border: 1px solid #ef4444;
+  color: white;
+}
+
+.modalDeleteBtn:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.modalCancelBtn:disabled,
+.modalDeleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* =======================================
@@ -355,7 +477,20 @@
   }
 
   .actions {
+    flex-direction: column;
     padding: var(--space-4) var(--space-6);
+    gap: var(--space-3);
+  }
+
+  .adminActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .shareBtn {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
   }
 
   .navigation {
@@ -370,6 +505,10 @@
 
   .listBtn {
     order: -1;
+  }
+
+  .modal {
+    margin: var(--space-4);
   }
 }
 
@@ -479,4 +618,45 @@
 :global([data-theme="light"]) .spinner {
   border-color: rgba(0, 0, 0, 0.1);
   border-top-color: var(--color-primary);
+}
+
+:global([data-theme="light"]) .editBtn,
+:global([data-theme="light"]) .deleteBtn {
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #666666;
+}
+
+:global([data-theme="light"]) .editBtn:hover {
+  background: rgba(253, 104, 186, 0.05);
+}
+
+:global([data-theme="light"]) .deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+:global([data-theme="light"]) .modalOverlay {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme="light"]) .modal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme="light"]) .modalTitle {
+  color: #1a1a1a;
+}
+
+:global([data-theme="light"]) .modalMessage {
+  color: #666666;
+}
+
+:global([data-theme="light"]) .modalCancelBtn {
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #666666;
+}
+
+:global([data-theme="light"]) .modalCancelBtn:hover:not(:disabled) {
+  border-color: #1a1a1a;
+  color: #1a1a1a;
 }

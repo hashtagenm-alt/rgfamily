@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Pin, Calendar, Eye, Tag, ChevronLeft, ChevronRight, Share2 } from 'lucide-react'
+import { ArrowLeft, Pin, Calendar, Eye, Tag, ChevronLeft, ChevronRight, Share2, Edit2, Trash2 } from 'lucide-react'
 import { useSupabaseContext } from '@/lib/context'
+import { useAuthContext } from '@/lib/context/AuthContext'
+import { deleteNotice } from '@/lib/actions/notices'
 import { formatDate } from '@/lib/utils/format'
 import styles from './page.module.css'
 
@@ -37,10 +39,13 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
   const { id } = use(params)
   const router = useRouter()
   const supabase = useSupabaseContext()
+  const { isAdmin } = useAuthContext()
   const [notice, setNotice] = useState<NoticeDetail | null>(null)
   const [prevNotice, setPrevNotice] = useState<NavNotice | null>(null)
   const [nextNotice, setNextNotice] = useState<NavNotice | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const fetchNotice = useCallback(async () => {
     setIsLoading(true)
@@ -87,6 +92,25 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
     } else {
       await navigator.clipboard.writeText(window.location.href)
       alert('링크가 복사되었습니다.')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!notice) return
+
+    setIsDeleting(true)
+    try {
+      const result = await deleteNotice(notice.id)
+      if (result.error) {
+        alert(`삭제 실패: ${result.error}`)
+      } else {
+        router.push('/notice')
+      }
+    } catch {
+      alert('삭제 중 오류가 발생했습니다.')
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -189,14 +213,60 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
             ))}
           </div>
 
-          {/* Share Button */}
+          {/* Actions */}
           <div className={styles.actions}>
+            {/* Admin Actions */}
+            {isAdmin() && (
+              <div className={styles.adminActions}>
+                <Link href={`/notice/write?id=${id}`} className={styles.editBtn}>
+                  <Edit2 size={16} />
+                  수정
+                </Link>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className={styles.deleteBtn}
+                  disabled={isDeleting}
+                >
+                  <Trash2 size={16} />
+                  삭제
+                </button>
+              </div>
+            )}
             <button onClick={handleShare} className={styles.shareBtn}>
               <Share2 size={16} />
               공유하기
             </button>
           </div>
         </motion.article>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+              <h3 className={styles.modalTitle}>공지사항 삭제</h3>
+              <p className={styles.modalMessage}>
+                이 공지사항을 정말 삭제하시겠습니까?<br />
+                삭제된 공지사항은 복구할 수 없습니다.
+              </p>
+              <div className={styles.modalActions}>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className={styles.modalCancelBtn}
+                  disabled={isDeleting}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className={styles.modalDeleteBtn}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? '삭제 중...' : '삭제'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Navigation */}
         <div className={styles.navigation}>

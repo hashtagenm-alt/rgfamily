@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Pin, Search, Eye, ChevronDown, Bell } from 'lucide-react'
+import { Pin, Search, Eye, ChevronDown, Bell, PenSquare } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useNotices } from '@/lib/context'
+import { useAuthContext } from '@/lib/context/AuthContext'
 import { formatShortDate } from '@/lib/utils/format'
 import styles from './page.module.css'
 
@@ -29,6 +30,7 @@ function isNew(dateStr: string): boolean {
 
 export default function NoticePage() {
   const noticesRepo = useNotices()
+  const { isAdmin } = useAuthContext()
   const [notices, setNotices] = useState<NoticeItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -130,32 +132,42 @@ export default function NoticePage() {
             </div>
           </div>
 
-          {/* Right: Search */}
-          <div className={styles.searchArea}>
-            <div className={styles.searchTypeSelect}>
-              <select
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value as 'all' | 'title')}
-                className={styles.select}
-              >
-                <option value="all">전체</option>
-                <option value="title">제목</option>
-              </select>
-              <ChevronDown size={14} className={styles.selectIcon} />
+          {/* Right: Search + Admin Write Button */}
+          <div className={styles.headerRight}>
+            <div className={styles.searchArea}>
+              <div className={styles.searchTypeSelect}>
+                <select
+                  value={searchType}
+                  onChange={(e) => setSearchType(e.target.value as 'all' | 'title')}
+                  className={styles.select}
+                >
+                  <option value="all">전체</option>
+                  <option value="title">제목</option>
+                </select>
+                <ChevronDown size={14} className={styles.selectIcon} />
+              </div>
+              <div className={styles.searchBox}>
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder="검색어 입력"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && fetchNotices()}
+                />
+                <button className={styles.searchBtn}>
+                  <Search size={16} />
+                </button>
+              </div>
             </div>
-            <div className={styles.searchBox}>
-              <input
-                type="text"
-                className={styles.searchInput}
-                placeholder="검색어 입력"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && fetchNotices()}
-              />
-              <button className={styles.searchBtn}>
-                <Search size={16} />
-              </button>
-            </div>
+
+            {/* Admin Write Button */}
+            {isAdmin() && (
+              <Link href="/notice/write" className={styles.writeBtn}>
+                <PenSquare size={16} />
+                <span>글쓰기</span>
+              </Link>
+            )}
           </div>
         </div>
 

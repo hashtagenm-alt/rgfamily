@@ -98,6 +98,11 @@ export function checkTributePageAccess(
 }
 
 /**
+ * VIP 역할 목록
+ */
+const VIP_ROLES = ['vip', 'moderator', 'admin', 'superadmin'] as const
+
+/**
  * VIP 라운지 접근 권한 확인 (Top 50)
  */
 export function checkVipLoungeAccess(
@@ -110,6 +115,26 @@ export function checkVipLoungeAccess(
   }
 
   // Top 50 이내만 접근 가능
+  return userRank !== null && userRank <= 50
+}
+
+/**
+ * VIP 글쓰기 권한 확인 (Role + Rank 기반)
+ *
+ * 조건:
+ * 1. Role이 VIP_ROLES 중 하나 (vip, moderator, admin, superadmin)
+ * 2. 또는 Rank가 50 이내
+ */
+export function checkVipWriteAccess(
+  userRank: number | null,
+  profile: Profile | null
+): boolean {
+  // Role 기반 VIP 체크
+  if (profile?.role && VIP_ROLES.includes(profile.role as typeof VIP_ROLES[number])) {
+    return true
+  }
+
+  // Rank 기반 VIP 체크 (Top 50)
   return userRank !== null && userRank <= 50
 }
 

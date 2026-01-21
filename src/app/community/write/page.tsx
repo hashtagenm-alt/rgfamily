@@ -8,6 +8,7 @@ import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useAuthContext } from '@/lib/context/AuthContext'
+import { useVipStatus } from '@/lib/hooks/useVipStatus'
 import { createPost } from '@/lib/actions/posts'
 import styles from './page.module.css'
 
@@ -15,13 +16,16 @@ function WritePostContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isAuthenticated, profile } = useAuthContext()
+  const { isVip: isVipByRank, isLoading: vipLoading } = useVipStatus()
 
   // URL에서 게시판 타입 가져오기 (기본: free)
   const boardParam = searchParams.get('board') as 'free' | 'vip' | null
   const boardType = boardParam || 'free'
 
-  // VIP 게시판 접근 권한 체크
-  const canAccessVip = profile?.role && ['vip', 'moderator', 'admin', 'superadmin'].includes(profile.role)
+  // VIP 게시판 접근 권한 체크 (Role 기반 OR Rank 기반)
+  const VIP_ROLES = ['vip', 'moderator', 'admin', 'superadmin']
+  const isVipByRole = profile?.role && VIP_ROLES.includes(profile.role)
+  const canAccessVip = isVipByRole || isVipByRank
 
   const [formData, setFormData] = useState({
     title: '',
@@ -32,11 +36,12 @@ function WritePostContent() {
   const [error, setError] = useState<string | null>(null)
 
   // VIP 게시판 접근 권한 없으면 자유게시판으로 리다이렉트
+  // VIP 상태 로딩 완료 후에만 체크
   useEffect(() => {
-    if (boardType === 'vip' && !canAccessVip && isAuthenticated) {
+    if (!vipLoading && boardType === 'vip' && !canAccessVip && isAuthenticated) {
       router.replace('/community/write?board=free')
     }
-  }, [boardType, canAccessVip, isAuthenticated, router])
+  }, [boardType, canAccessVip, isAuthenticated, vipLoading, router])
 
   const boardInfo = {
     free: {

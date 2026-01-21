@@ -1,11 +1,21 @@
 # RG Family Supabase Database Schema
 
-## Overview
+> ⚠️ **이 문서는 구버전입니다.**
+>
+> 최신 스키마 문서는 다음을 참조하세요:
+> - **[DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)** - 전체 스키마 상세 문서 (22개 테이블)
+> - **[DATABASE_QUICK_REF.md](./DATABASE_QUICK_REF.md)** - 빠른 참조용 치트시트
+>
+> Last Updated: 2026-01-21
+
+---
+
+## Overview (Legacy)
 
 RG Family 프로젝트의 Supabase 데이터베이스 스키마 문서입니다.
 
-**Last Updated**: 2026-01-12
-**Total Tables**: 15개
+**Last Updated**: 2026-01-12 (구버전)
+**Total Tables**: 15개 → 22개 (최신)
 **Migrations**: `supabase/migrations/`
 
 ---
