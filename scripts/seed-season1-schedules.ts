@@ -36,7 +36,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 01화!',
     description: '대망의 첫 회! 직급전!',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-01-20T20:00:00+09:00',
+    start_datetime: '2026-01-20T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -45,7 +45,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 02화!',
     description: '황금or벌금데이',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-01-22T20:00:00+09:00',
+    start_datetime: '2026-01-22T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -54,7 +54,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 03화!',
     description: '퇴근전쟁',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-01-24T20:00:00+09:00',
+    start_datetime: '2026-01-24T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -63,7 +63,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 04화!',
     description: '난사데이',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-01-27T20:00:00+09:00',
+    start_datetime: '2026-01-27T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -72,7 +72,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 05화!',
     description: '명품데이\n· 메이져 5명, 마이너 7명 경쟁',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-01-29T20:00:00+09:00',
+    start_datetime: '2026-01-29T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -81,7 +81,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 06화!',
     description: '1vs1 데스매치',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-01-31T20:00:00+09:00',
+    start_datetime: '2026-01-31T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -90,7 +90,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 07화!',
     description: '뉴시그데이 & 중간직급전',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-03T20:00:00+09:00',
+    start_datetime: '2026-02-03T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -99,7 +99,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 08화!',
     description: '대표를 이겨라',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-05T20:00:00+09:00',
+    start_datetime: '2026-02-05T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -108,7 +108,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 09화!',
     description: '주차방지데이',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-07T20:00:00+09:00',
+    start_datetime: '2026-02-07T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -117,7 +117,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 10화!',
     description: '용병 데이_1',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-10T20:00:00+09:00',
+    start_datetime: '2026-02-10T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -126,7 +126,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 11화!',
     description: '용병 데이_2',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-12T20:00:00+09:00',
+    start_datetime: '2026-02-12T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -135,7 +135,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 12화!',
     description: '설날특집 도파민데이',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-14T20:00:00+09:00',
+    start_datetime: '2026-02-14T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -169,7 +169,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 13화!',
     description: '팀 데스매치',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-19T20:00:00+09:00',
+    start_datetime: '2026-02-19T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -178,7 +178,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 14화!',
     description: '기여도 전쟁',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-22T20:00:00+09:00',
+    start_datetime: '2026-02-22T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   },
@@ -187,7 +187,7 @@ const season1SchedulesData = [
     title: '[RG FAMILY] 시즌1 / 15화!',
     description: '최종 직급전',
     event_type: 'broadcast' as const,
-    start_datetime: '2026-02-24T20:00:00+09:00',
+    start_datetime: '2026-02-24T14:00:00+09:00',
     is_all_day: false,
     color: '#fd68ba'
   }
