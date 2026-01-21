@@ -49,13 +49,16 @@ export default function RankingFullList({
     <div className={styles.container}>
       {displayRankings.map((item, index) => {
         const percentage = getPercentage(item.totalAmount);
+        // 최적화: 지연 시간을 줄이고 최대값 제한 (0.3초 이내에 모두 시작)
+        const itemDelay = Math.min(index * 0.006, 0.3);
+        const gaugeDelay = Math.min(index * 0.006 + 0.1, 0.4);
 
         const Content = (
           <motion.div
             className={`${styles.item} ${getRankStyle(item.rank)} ${getTierStyle(item.rank)}`}
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.02 }}
+            transition={{ duration: 0.15, delay: itemDelay }}
           >
             {/* Left Border Accent */}
             <div className={styles.borderAccent} />
@@ -93,7 +96,7 @@ export default function RankingFullList({
                   className={styles.gaugeFill}
                   initial={{ width: 0 }}
                   animate={{ width: `${percentage}%` }}
-                  transition={{ duration: 0.8, delay: index * 0.02 + 0.2 }}
+                  transition={{ duration: 0.4, delay: gaugeDelay }}
                 >
                   {item.rank === 1 && <span className={styles.gaugeGlowDot} />}
                 </motion.div>
@@ -102,7 +105,7 @@ export default function RankingFullList({
                     className={styles.gaugeGlow}
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 0.8, delay: index * 0.02 + 0.2 }}
+                    transition={{ duration: 0.4, delay: gaugeDelay }}
                   />
                 )}
               </div>

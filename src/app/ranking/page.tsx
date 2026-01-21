@@ -64,14 +64,14 @@ export default function TotalRankingPage() {
       return;
     }
 
-    // 병렬 쿼리 실행: seasons, donations, vip_rewards 동시 조회
-    const donationsQuery = unitFilter !== 'all' && unitFilter !== 'vip'
-      ? supabase.from("donations").select("donor_id, donor_name, amount, unit").eq("unit", unitFilter)
-      : supabase.from("donations").select("donor_id, donor_name, amount, unit");
-
-    const [seasonResult, donationsResult, vipResult] = await Promise.all([
+    // 총 후원 랭킹: total_donation_rankings 테이블에서 조회
+    // ⚠️ total_amount는 게이지 계산용으로만 사용, UI에 숫자 노출 금지!
+    const [seasonResult, totalRankingsResult, vipResult] = await Promise.all([
       supabase.from("seasons").select("id, name, is_active").eq("is_active", true).single(),
-      donationsQuery,
+      supabase.from("total_donation_rankings")
+        .select("rank, donor_name, total_amount")
+        .order("rank", { ascending: true })
+        .limit(50),
       supabase.from("vip_rewards").select("profile_id, rank, profiles:profile_id(nickname)")
     ]);
 
@@ -81,36 +81,10 @@ export default function TotalRankingPage() {
     }
 
     // 랭킹 데이터 처리
-    if (donationsResult.error) {
-      console.error("랭킹 로드 실패:", donationsResult.error);
+    if (totalRankingsResult.error) {
+      console.error("총 후원 랭킹 로드 실패:", totalRankingsResult.error);
       setRankings([]);
     } else {
-      // donor_name 기준으로 합계 계산
-      const donorTotals: Record<string, {
-        donorId: string | null;
-        name: string;
-        amount: number;
-        unit: string | null;
-      }> = {};
-
-      (donationsResult.data || []).forEach((d) => {
-        const key = d.donor_name;
-        if (!donorTotals[key]) {
-          donorTotals[key] = {
-            donorId: d.donor_id,
-            name: d.donor_name,
-            amount: 0,
-            unit: d.unit
-          };
-        }
-        donorTotals[key].amount += d.amount;
-      });
-
-      // 정렬된 후원자 목록
-      const sortedDonors = Object.values(donorTotals)
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 50);
-
       // 닉네임 → profile_id 매핑 생성 + 포디움 달성자 추출
       const nicknameToProfileId: Record<string, string> = {};
       const podiumIds: string[] = [];
@@ -128,15 +102,15 @@ export default function TotalRankingPage() {
         }
       });
 
-      const sorted = sortedDonors.map((item, idx) => ({
-        donorId: item.donorId || nicknameToProfileId[item.name] || null,
-        donorName: item.name,
+      const sorted = (totalRankingsResult.data || []).map((item) => ({
+        donorId: nicknameToProfileId[item.donor_name] || null,
+        donorName: item.donor_name,
         avatarUrl: null,
-        totalAmount: item.amount,
-        rank: idx + 1,
+        totalAmount: item.total_amount, // 게이지 계산용 (UI에 숫자로 노출 금지)
+        rank: item.rank,
       }));
 
-      // 1~3위 후원자의 donorId도 podiumProfileIds에 추가 (실제 랭킹 기반)
+      // 1~3위 후원자의 donorId도 podiumProfileIds에 추가
       const top3Ids = sorted
         .filter(item => item.rank <= 3 && item.donorId)
         .map(item => item.donorId as string);

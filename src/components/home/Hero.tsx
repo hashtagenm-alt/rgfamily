@@ -20,28 +20,15 @@ type Banner = {
 };
 
 /**
- * 배너 목록 - 여기에 배너 추가 가능
+ * 배너 목록 - 메인 배너 고정
  */
 const banners: Banner[] = [
   {
-    id: "banner-image-1",
+    id: "banner-main",
     type: "image",
-    src: "/images/banner.png",
+    src: "/images/banner-main.png",
     alt: "RG FAMILY",
   },
-  {
-    id: "banner-text-1",
-    type: "text",
-    title: "RG FAMILY",
-    subtitle: "OFFICIAL SITE",
-  },
-  // 새 배너 추가 예시:
-  // {
-  //   id: "banner-image-2",
-  //   type: "image",
-  //   src: "/images/banner2.png",
-  //   alt: "새 배너",
-  // },
 ];
 
 const SLIDE_INTERVAL = 5000; // 5초마다 전환

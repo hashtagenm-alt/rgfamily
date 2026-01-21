@@ -18,7 +18,7 @@
 }
 
 .vipLink .item {
-  transition: all 0.3s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .vipLink:hover .item {
@@ -50,9 +50,10 @@
   padding: var(--space-5) var(--space-6);
   background: var(--card-bg);
   border-bottom: 1px solid var(--card-border);
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
   position: relative;
   overflow: hidden;
+  will-change: transform, opacity;
 }
 
 .item:first-child {
@@ -357,6 +358,7 @@
   background: var(--text-tertiary);
   border-radius: var(--radius-full);
   min-width: 2px;
+  will-change: width;
 }
 
 .gold .gaugeFill,

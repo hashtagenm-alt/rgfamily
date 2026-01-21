@@ -147,6 +147,7 @@ npm run lint     # ESLint 검사
 | `bj_thank_you_messages` | BJ 감사 메시지 | |
 | `vip_personal_messages` | VIP 개인 메시지 | |
 | `rank_battle_records` | **직급전 기록 (명예의 전당)** | 시즌/회차별 Top 50 저장 |
+| `total_donation_rankings` | **총 후원 랭킹 (역대 누적)** | Top 50, total_amount 외부 노출 금지 |
 
 ### 5.2 rank_battle_records 테이블 (명예의 전당용)
 
@@ -181,7 +182,41 @@ const { data } = await supabase
   .order('rank', { ascending: true })
 ```
 
-### 5.3 주요 컬럼 타입 (Enum)
+### 5.3 total_donation_rankings 테이블 (총 후원 랭킹)
+
+```
+왜? 역대 누적 총 후원 랭킹을 별도로 관리하여 시즌 랭킹과 분리.
+
+⚠️ 중요: total_amount(총 후원 하트)는 외부에 절대 노출 금지!
+       UI에서는 게이지(퍼센트)로만 표현해야 함.
+
+테이블 구조:
+┌──────────────────┬──────────────────────────────────────────┐
+│ 컬럼              │ 설명                                     │
+├──────────────────┼──────────────────────────────────────────┤
+│ id               │ 자동 증가 PK                              │
+│ rank             │ 순위 (1~50) - UNIQUE                      │
+│ donor_name       │ 후원자 닉네임                             │
+│ total_amount     │ 총 후원하트 ⚠️ 외부 노출 절대 금지!        │
+│ is_permanent_vip │ 영구 VIP 여부                             │
+│ updated_at       │ 업데이트 시점                             │
+│ created_at       │ 생성 시점                                 │
+└──────────────────┴──────────────────────────────────────────┘
+
+UI 표현 규칙:
+✅ 허용: 순위, 닉네임, 게이지(1위 대비 %)
+❌ 금지: 실제 하트 개수 표시, 영구VIP 표시, 숫자 노출
+
+사용 예시:
+// Top 50 조회 (total_amount, is_permanent_vip 제외!)
+const { data } = await supabase
+  .from('total_donation_rankings')
+  .select('rank, donor_name')
+  .order('rank', { ascending: true })
+  .limit(50)
+```
+
+### 5.4 주요 컬럼 타입 (Enum)
 
 ```typescript
 // 팬클럽 소속

@@ -961,6 +961,40 @@ export type Database = {
           }
         ]
       }
+      /**
+       * 총 후원 랭킹 (역대 누적) - Top 50
+       * ⚠️ total_amount는 외부 노출 절대 금지! UI에서는 게이지로만 표현
+       */
+      total_donation_rankings: {
+        Row: {
+          id: number
+          rank: number
+          donor_name: string
+          total_amount: number // ⚠️ 외부 노출 금지!
+          is_permanent_vip: boolean
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          rank: number
+          donor_name: string
+          total_amount: number
+          is_permanent_vip?: boolean
+          updated_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          rank?: number
+          donor_name?: string
+          total_amount?: number
+          is_permanent_vip?: boolean
+          updated_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1059,6 +1093,7 @@ export type TributeGuestbook = Tables<'tribute_guestbook'>
 export type BjThankYouMessage = Tables<'bj_thank_you_messages'>
 export type VipPersonalMessage = Tables<'vip_personal_messages'>
 export type RankBattleRecord = Tables<'rank_battle_records'>
+export type TotalDonationRanking = Tables<'total_donation_rankings'>
 
 // BJ 감사 메시지 with JOIN data
 export interface BjThankYouMessageWithMember extends BjThankYouMessage {
