@@ -1191,3 +1191,11 @@
   border-color: rgba(184, 134, 11, 0.2);
   color: rgba(184, 134, 11, 0.9);
 }
+
+:global([data-theme="light"]) .uploadHint {
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+
+:global([data-theme="light"]) .uploadPlaceholder:hover .uploadHint {
+  color: rgba(253, 104, 186, 0.7) !important;
+}
