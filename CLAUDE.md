@@ -1,7 +1,7 @@
 # RG Family - 개발 가이드 (Claude Code용)
 
 > 이 문서는 AI가 개발할 때 참고하는 지침서야. 모든 규칙에는 "왜?"가 있어.
-> **마지막 업데이트: 2026-01-21**
+> **마지막 업데이트: 2026-01-22**
 
 ---
 
@@ -22,6 +22,9 @@
 13. [주요 파일 위치](#13-주요-파일-위치)
 14. [금지 사항 체크리스트](#14-금지-사항-체크리스트)
 15. [참고 사이트](#15-참고-사이트)
+16. [운영 전 필수 설정](#16-운영-전-필수-설정)
+17. [관리자 페이지 목록](#17-관리자-페이지-목록)
+18. [CI 실패 시 해결 가이드](#18-ci-실패-시-해결-가이드)
 
 ---
 
@@ -552,3 +555,105 @@ src/
 6. **후원 단위**: 별풍선 아니고 **하트**
 7. **후원 정보 외부 노출 금지**: 홈페이지 내부에서만!
 8. **PR 워크플로우 필수**: main 직접 푸시 절대 금지
+
+---
+
+## 16. 운영 전 필수 설정
+
+```
+왜? 배포 전에 이것들 빠뜨리면 앱이 정상 동작 안 함.
+
+### 환경변수 체크리스트
+- [ ] NEXT_PUBLIC_SUPABASE_URL
+- [ ] NEXT_PUBLIC_SUPABASE_ANON_KEY
+- [ ] SUPABASE_SERVICE_ROLE_KEY (스크립트용)
+- [ ] NEXT_PUBLIC_USE_MOCK_DATA=false
+
+### Supabase 초기 데이터
+- [ ] seasons 테이블: 최소 1개 시즌 (is_active=true)
+- [ ] profiles 테이블: superadmin 계정 1개
+- [ ] organization 테이블: BJ 멤버 데이터
+
+### 배포 전 체크리스트
+- [ ] npm run build 성공
+- [ ] npx tsc --noEmit 성공
+- [ ] Vercel 환경변수 등록
+- [ ] Supabase RLS 정책 확인
+```
+
+---
+
+## 17. 관리자 페이지 목록
+
+```
+왜? 어떤 관리 페이지가 있고 누가 접근할 수 있는지 한눈에 보려고.
+
+| 경로 | 기능 | 권한 |
+|------|------|------|
+| /admin | 대시보드 | admin+ |
+| /admin/seasons | 시즌 관리 | admin+ |
+| /admin/episodes | 에피소드/직급전 | admin+ |
+| /admin/donations | 후원 데이터 | admin+ |
+| /admin/organization | 조직도 | admin+ |
+| /admin/members | 회원 관리 | admin+ |
+| /admin/permissions | 권한 관리 | superadmin |
+| /admin/banners | 배너 | moderator+ |
+| /admin/notices | 공지사항 | moderator+ |
+| /admin/schedules | 일정 | moderator+ |
+| /admin/timeline | 타임라인 | admin+ |
+| /admin/signatures | 시그니처 | admin+ |
+| /admin/vip-rewards | VIP 리워드 | admin+ |
+| /admin/posts | 게시글 | moderator+ |
+| /admin/media | 미디어 | admin+ |
+
+권한 레벨 설명:
+- superadmin: 최고 관리자 (모든 권한)
+- admin+: admin, superadmin
+- moderator+: moderator, admin, superadmin
+```
+
+---
+
+## 18. CI 실패 시 해결 가이드
+
+```
+왜? CI 실패하면 PR 머지 못함. 빠르게 해결해야 개발 속도 유지됨.
+
+### 흔한 CI 실패 원인 및 해결
+
+1. TypeCheck & Lint 실패
+   - 원인: ESLint 에러, TypeScript 타입 에러
+   - 해결: npm run lint && npx tsc --noEmit 로 로컬에서 먼저 확인
+   - scripts/ 폴더: CommonJS require() 허용 (eslint.config.mjs에서 제외됨)
+
+2. Build 실패
+   - 원인: 빌드 시 타입 에러, 모듈 해결 실패
+   - 해결: npm run build 로컬 빌드 성공 확인 필수
+
+3. E2E Tests 실패
+   - 원인: 브라우저 테스트 타임아웃, DOM 요소 변경
+   - 해결: 로컬에서 npm run test:e2e 실행 후 확인
+
+4. Vercel Preview 실패
+   - 원인: 환경변수 누락, 빌드 에러
+   - 해결: Vercel 대시보드에서 로그 확인
+
+5. pnpm-lock.yaml 불일치
+   - 원인: package.json 변경 후 lockfile 미업데이트
+   - 해결: pnpm install 실행하여 lockfile 업데이트 후 커밋
+
+### CI 통과 후 PR 머지 워크플로우
+
+1. CI 체크 상태 확인: gh pr view <PR번호> --json statusCheckRollup
+2. 모든 체크 통과 확인 (SUCCESS)
+3. PR 머지: gh pr merge <PR번호> --squash --delete-branch
+
+### 브랜치 리베이스 후 CI 재실행
+
+main이 업데이트된 경우 기존 PR 브랜치 리베이스 필요:
+1. git checkout <브랜치명>
+2. git fetch origin main
+3. git rebase origin/main
+4. git push --force-with-lease
+5. CI 자동 재실행 → 결과 대기
+```
