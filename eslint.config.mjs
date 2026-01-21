@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Scripts folder uses CommonJS require() - exclude from ESLint
+    "scripts/**",
   ]),
   // Custom rule overrides
   {
