@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Crown, ArrowLeft, ImageIcon,
-  Trophy, Star,
+  Trophy, Star, Edit3, Info,
   ChevronLeft, ChevronRight, X, Upload, Plus
 } from 'lucide-react'
 import Footer from '@/components/Footer'
@@ -23,6 +23,8 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
 
   const [showGate, setShowGate] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
+  const [isEditingBio, setIsEditingBio] = useState(false)
+  const [bioText, setBioText] = useState('')
 
   // 접근 권한 체크
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
@@ -35,11 +37,11 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   // 인증 로딩도 전체 로딩에 포함하여 플리커링 방지
   const isLoading = authLoading || vipLoading || dataLoading
 
-  // 2.5초 후 자동으로 게이트 열림
+  // 1.8초 후 자동으로 게이트 열림 (고급스러운 진입 효과)
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowGate(false)
-    }, 2500)
+    }, 1800)
     return () => clearTimeout(timer)
   }, [])
 
@@ -124,107 +126,71 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   const renderContent = () => {
     return (
       <>
-        {/* 1. VIP 전용 시그니처 갤러리 - 모든 사용자에게 공개 */}
-        <motion.section
-          className={styles.gallerySection}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-        >
-          <div className={styles.sectionHeader}>
-            <ImageIcon size={20} />
-            <h2>VIP 전용 시그니처</h2>
-            <div className={styles.sectionDivider} />
-          </div>
-          {vipData.images.length > 0 ? (
-            <div className={styles.galleryGrid}>
-              {vipData.images.map((img, index) => (
-                <motion.div
-                  key={img.id}
-                  className={styles.galleryItem}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + index * 0.08, duration: 0.4 }}
-                  onClick={() => setSelectedImageIndex(index)}
-                >
-                  <Image
-                    src={img.imageUrl}
-                    alt={img.title || `VIP 시그니처 ${index + 1}`}
-                    fill
-                    className={styles.galleryImage}
-                  />
-                  {img.title && <span className={styles.galleryTitle}>{img.title}</span>}
-                  {index === 0 && vipData.images.length > 1 && (
-                    <span className={styles.galleryCount}>{vipData.images.length}</span>
-                  )}
-                </motion.div>
-              ))}
-              {/* 관리자에게만 추가 업로드 버튼 표시 */}
-              {isAdmin && (
-                <motion.div
-                  className={styles.uploadPlaceholder}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + vipData.images.length * 0.08, duration: 0.4 }}
-                >
-                  <Plus size={28} className={styles.uploadIcon} />
-                  <span>시그니처 추가</span>
-                  <span className={styles.uploadHint}>클릭하여 업로드</span>
-                </motion.div>
-              )}
-            </div>
-          ) : isAdmin ? (
-            /* 관리자: 업로드 가능한 플레이스홀더 */
-            <div className={styles.uploadGrid}>
-              {[1, 2, 3, 4].map((i) => (
-                <motion.div
-                  key={i}
-                  className={styles.uploadPlaceholder}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + i * 0.1, duration: 0.4 }}
-                >
-                  {i === 1 ? (
-                    <>
-                      <Upload size={28} className={styles.uploadIcon} />
-                      <span>시그니처 업로드</span>
-                      <span className={styles.uploadHint}>이미지 파일을 선택하세요</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus size={24} className={styles.uploadIconSmall} />
-                      <span>추가 {i}</span>
-                    </>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            /* 일반 사용자: 기본 플레이스홀더 */
-            <div className={styles.placeholderGrid}>
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={styles.placeholderItem}>
-                  <ImageIcon size={24} className={styles.placeholderIcon} />
-                  <span>시그니처 {i}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.section>
-
-        {/* 2. VIP 메시지 보드 - 모든 사용자에게 표시 (VIP 본인의 글 게시) */}
+        {/* 1. VIP 메시지 보드 - FROM RG FAMILY (VIP 본인의 글 게시) */}
         <VipMessageSection
           vipProfileId={profileId}
           vipNickname={vipData.nickname}
           vipAvatarUrl={vipData.avatarUrl}
         />
 
-        {/* 3. BJ 감사 메시지 섹션 - 모든 사용자에게 표시
-            BJ들이 VIP에게 남기는 감사 메시지 (사진/글/영상 업로드 가능)
-            개별 메시지의 접근 권한은 BjMessageCard에서 처리:
-            - BJ 프로필/이름: 모두 볼 수 있음
-            - 이미지: VIP/해당 BJ만 실제 사진, 그 외 잠금 플레이스홀더
-            - 영상: VIP/해당 BJ만 재생 가능, 그 외 썸네일만 */}
+        {/* 2. VIP 전용 시그니처 갤러리 - 4개 그리드 */}
+        <motion.section
+          className={styles.gallerySection}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <div className={styles.sectionHeader}>
+            <ImageIcon size={18} />
+            <h2>VIP 시그니처</h2>
+            <div className={styles.sectionDivider} />
+          </div>
+          <div className={styles.galleryGrid}>
+            {/* 실제 이미지 표시 */}
+            {vipData.images.slice(0, 4).map((img, index) => (
+              <motion.div
+                key={img.id}
+                className={styles.galleryItem}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 + index * 0.08, duration: 0.4 }}
+                onClick={() => setSelectedImageIndex(index)}
+              >
+                <Image
+                  src={img.imageUrl}
+                  alt={img.title || `VIP 시그니처 ${index + 1}`}
+                  fill
+                  className={styles.galleryImage}
+                />
+                {img.title && <span className={styles.galleryTitle}>{img.title}</span>}
+              </motion.div>
+            ))}
+            {/* 빈 슬롯 플레이스홀더 (4개까지 채우기) */}
+            {Array.from({ length: Math.max(0, 4 - vipData.images.length) }).map((_, i) => (
+              <motion.div
+                key={`placeholder-${i}`}
+                className={isAdmin ? styles.uploadPlaceholder : styles.placeholderItem}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 + (vipData.images.length + i) * 0.08, duration: 0.4 }}
+              >
+                {isAdmin ? (
+                  <>
+                    <Plus size={24} className={styles.uploadIcon} />
+                    <span>추가</span>
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon size={20} className={styles.placeholderIcon} />
+                    <span>시그니처</span>
+                  </>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* 3. BJ 감사 콘텐츠 섹션 - 맨 아래 */}
         <BjThankYouSection
           vipProfileId={profileId}
           vipNickname={vipData.nickname}
@@ -236,48 +202,60 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
 
   return (
     <div className={styles.main}>
-      {/* Entrance Gate Animation */}
+      {/* Entrance Gate Animation - 럭셔리 진입 효과 */}
       <AnimatePresence>
         {showGate && (
           <motion.div
             className={styles.gateOverlay}
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 1, ease: 'easeInOut' }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
             onClick={() => setShowGate(false)}
           >
+            {/* 배경 글로우 효과 */}
             <motion.div
+              className={styles.gateGlow}
               initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 1.2, opacity: 0 }}
-              transition={{ duration: 0.6 }}
+              animate={{ scale: 1.2, opacity: 0.6 }}
+              exit={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 1.5, ease: 'easeOut' }}
+            />
+            {/* 크라운 아이콘 */}
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
               className={styles.gateIcon}
             >
-              <Crown size={64} strokeWidth={1} />
+              <Crown size={56} strokeWidth={1} />
             </motion.div>
+            {/* 닉네임 */}
             <motion.div
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
+              initial={{ opacity: 0, y: 30, letterSpacing: '20px' }}
+              animate={{ opacity: 1, y: 0, letterSpacing: '12px' }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ delay: 0.5, duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
               className={styles.gateText}
             >
               {vipData.nickname}
             </motion.div>
+            {/* VIP LOUNGE 서브텍스트 */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 0.6, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
               className={styles.gateSubtext}
             >
-              VIP EXCLUSIVE
+              VIP LOUNGE
             </motion.div>
+            {/* 장식 라인 */}
             <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: 60 }}
-              exit={{ width: 0 }}
-              transition={{ delay: 0.6, duration: 0.4 }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              exit={{ scaleX: 0 }}
+              transition={{ delay: 1.0, duration: 0.4 }}
               className={styles.gateLine}
             />
           </motion.div>
@@ -302,48 +280,133 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* Hero - 컴팩트 카드 형태 */}
       <motion.div
         className={styles.hero}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.5 }}
       >
-        <div className={styles.heroContent}>
-          <motion.div
-            className={styles.rankBadge}
-            style={rankStyle}
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Crown size={14} />
-            <span>{getRankLabel(vipData.rank)}</span>
-          </motion.div>
-          <motion.h1
-            className={styles.heroTitle}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            {vipData.nickname}
-          </motion.h1>
-          {vipData.seasonName && (
-            <motion.div
-              className={styles.heroSubtitle}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              <span className={styles.seasonTag}>{vipData.seasonName}</span>
-            </motion.div>
-          )}
+        <div className={styles.heroHeader}>
+          <Crown size={18} className={styles.heroHeaderIcon} />
+          <span>VIP LOUNGE</span>
         </div>
-        <div className={styles.heroDecoration}>
-          <div className={styles.glow} />
-          <Star className={styles.star1} size={20} />
-          <Star className={styles.star2} size={14} />
-          <Star className={styles.star3} size={18} />
+        <div className={styles.heroContent}>
+          {/* 프로필 이미지 */}
+          <motion.div
+            className={styles.heroProfile}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          >
+            {vipData.avatarUrl ? (
+              <Image
+                src={vipData.avatarUrl}
+                alt={vipData.nickname}
+                width={120}
+                height={120}
+                className={styles.heroProfileImage}
+              />
+            ) : (
+              <div className={styles.heroProfilePlaceholder}>
+                <Crown size={40} />
+              </div>
+            )}
+          </motion.div>
+
+          {/* 정보 영역 */}
+          <div className={styles.heroInfo}>
+            <div className={styles.heroTitleRow}>
+              <motion.h1
+                className={styles.heroTitle}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.15 }}
+              >
+                {vipData.nickname}
+              </motion.h1>
+              <motion.button
+                className={styles.infoBtn}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.25 }}
+                title="VIP 정보"
+              >
+                <Info size={16} />
+              </motion.button>
+            </div>
+            <motion.div
+              className={styles.heroMeta}
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <span className={styles.rankBadge} style={rankStyle}>
+                <Crown size={12} />
+                #{vipData.rank}
+              </span>
+              <span className={styles.metaDivider}>·</span>
+              {vipData.seasonName && (
+                <span className={styles.seasonTag}>{vipData.seasonName}</span>
+              )}
+            </motion.div>
+
+            {/* VIP 소개글 */}
+            <motion.div
+              className={styles.heroBio}
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {isEditingBio ? (
+                <div className={styles.bioEditForm}>
+                  <textarea
+                    className={styles.bioTextarea}
+                    value={bioText}
+                    onChange={(e) => setBioText(e.target.value)}
+                    placeholder="나를 소개해주세요..."
+                    maxLength={200}
+                    autoFocus
+                  />
+                  <div className={styles.bioEditActions}>
+                    <span className={styles.bioCharCount}>{bioText.length}/200</span>
+                    <button
+                      className={styles.bioCancelBtn}
+                      onClick={() => {
+                        setIsEditingBio(false)
+                        setBioText('')
+                      }}
+                    >
+                      취소
+                    </button>
+                    <button className={styles.bioSaveBtn}>저장</button>
+                  </div>
+                </div>
+              ) : bioText ? (
+                <div className={styles.bioContent}>
+                  <p className={styles.bioText}>{bioText}</p>
+                  {isOwner && (
+                    <button
+                      className={styles.bioEditBtn}
+                      onClick={() => setIsEditingBio(true)}
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                  )}
+                </div>
+              ) : isOwner ? (
+                <button
+                  className={styles.bioPlaceholderBtn}
+                  onClick={() => setIsEditingBio(true)}
+                >
+                  <Edit3 size={14} />
+                  <span>소개글을 작성해보세요</span>
+                </button>
+              ) : (
+                <p className={styles.bioEmpty}>아직 소개글이 없습니다</p>
+              )}
+            </motion.div>
+          </div>
         </div>
       </motion.div>
 

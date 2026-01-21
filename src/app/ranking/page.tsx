@@ -130,7 +130,7 @@ export default function TotalRankingPage() {
   const top3 = rankings.slice(0, 3);
 
   return (
-    <PageLayout>
+    <PageLayout showSideBanners={false}>
       <main className={styles.main}>
         <Navbar />
 

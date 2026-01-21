@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Crown, ChevronDown, Plus, Loader2 } from 'lucide-react'
+import { Heart, ChevronDown, ChevronRight, Plus, Loader2 } from 'lucide-react'
 import { useVipMessages } from '@/lib/hooks'
 import { useAuthContext } from '@/lib/context'
 import VipMessageCard from './VipMessageCard'
@@ -70,8 +70,8 @@ export default function VipMessageSection({
     return (
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <Crown size={20} className={styles.headerIcon} />
-          <h2 className={styles.sectionTitle}>VIP 메시지 보드</h2>
+          <Heart size={20} className={styles.headerIcon} />
+          <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
           <div className={styles.sectionDivider} />
         </div>
         <div className={styles.loading}>
@@ -87,21 +87,35 @@ export default function VipMessageSection({
     return (
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <Crown size={20} className={styles.headerIcon} />
-          <h2 className={styles.sectionTitle}>VIP 메시지 보드</h2>
+          <Heart size={20} className={styles.headerIcon} />
+          <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
           <div className={styles.sectionDivider} />
-        </div>
-
-        <div className={styles.emptyState}>
-          <Crown size={40} className={styles.emptyIcon} />
-          <p className={styles.emptyText}>아직 등록된 메시지가 없습니다</p>
           {canWrite && (
-            <button className={styles.writeFirstBtn} onClick={() => setShowForm(true)}>
-              <Plus size={18} />
-              <span>첫 번째 메시지 작성하기</span>
+            <button className={styles.writeBtn} onClick={() => setShowForm(true)}>
+              <Plus size={16} />
+              <span>메시지 작성</span>
             </button>
           )}
         </div>
+
+        {/* 플레이스홀더 카드 */}
+        <div className={styles.placeholderRow}>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className={styles.placeholderCard}>
+              <div className={styles.placeholderAvatar}>
+                <Heart size={20} />
+              </div>
+              <div className={styles.placeholderContent}>
+                <div className={styles.placeholderLine} style={{ width: '60%' }} />
+                <div className={styles.placeholderLine} style={{ width: '80%' }} />
+                <div className={styles.placeholderLine} style={{ width: '40%' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className={styles.placeholderText}>
+          {canWrite ? 'VIP님의 첫 번째 메시지를 남겨보세요' : '아직 등록된 메시지가 없습니다'}
+        </p>
 
         {/* VIP 작성 폼 모달 */}
         {canWrite && (
@@ -128,8 +142,8 @@ export default function VipMessageSection({
     >
       {/* 섹션 헤더 */}
       <div className={styles.sectionHeader}>
-        <Crown size={20} className={styles.headerIcon} />
-        <h2 className={styles.sectionTitle}>VIP 메시지 보드</h2>
+        <Heart size={20} className={styles.headerIcon} />
+        <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
         <span className={styles.messageCount}>{messages.length}개</span>
         <div className={styles.sectionDivider} />
 
@@ -142,8 +156,8 @@ export default function VipMessageSection({
         )}
       </div>
 
-      {/* 메시지 그리드 */}
-      <div className={styles.messagesGrid}>
+      {/* 메시지 가로 스크롤 */}
+      <div className={styles.messagesRow}>
         {displayedMessages.map((message) => (
           <VipMessageCard
             key={message.id}
@@ -159,7 +173,7 @@ export default function VipMessageSection({
       {hasMore && !showAll && (
         <button className={styles.showMoreBtn} onClick={() => setShowAll(true)}>
           <span>더 보기 ({messages.length - INITIAL_DISPLAY_COUNT}개 더)</span>
-          <ChevronDown size={18} />
+          <ChevronRight size={18} />
         </button>
       )}
 

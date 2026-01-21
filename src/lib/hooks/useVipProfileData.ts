@@ -175,7 +175,13 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
       }
 
       if (rewardError) {
-        throw rewardError
+        console.error('vip_rewards 쿼리 에러:', {
+          code: rewardError.code,
+          message: rewardError.message,
+          details: rewardError.details,
+          hint: rewardError.hint,
+        })
+        throw new Error(`VIP 데이터 조회 실패: ${rewardError.message || rewardError.code || 'Unknown error'}`)
       }
 
       // VIP 이미지 조회
@@ -216,7 +222,13 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
         })),
       })
     } catch (err) {
-      console.error('VIP 데이터 로드 실패:', err)
+      // 에러 상세 로깅
+      const errorDetails = err instanceof Error
+        ? { message: err.message, name: err.name, stack: err.stack }
+        : typeof err === 'object' && err !== null
+          ? { ...err, code: (err as { code?: string }).code, message: (err as { message?: string }).message }
+          : { raw: String(err) }
+      console.error('VIP 데이터 로드 실패:', errorDetails)
       setError('VIP 정보를 불러오는 데 실패했습니다.')
     }
 
