@@ -159,6 +159,72 @@
   }
 }
 
+@media (max-width: 480px) {
+  .hero {
+    height: 280px;
+    padding: var(--space-8) var(--space-3);
+  }
+
+  .heroBadge {
+    padding: 6px 12px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    margin-bottom: var(--space-3);
+  }
+
+  .title {
+    font-size: clamp(1.5rem, 10vw, 2rem);
+    margin-bottom: var(--space-3);
+  }
+
+  .subtitle {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+
+  .legend {
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+
+  .legendItem {
+    font-size: 10px;
+    gap: 6px;
+  }
+
+  .legendDot {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero {
+    height: 240px;
+    padding: var(--space-6) var(--space-2);
+  }
+
+  .heroBadge {
+    padding: 4px 10px;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .legend {
+    gap: var(--space-2);
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .legendItem {
+    font-size: 9px;
+  }
+}
+
 /* =======================================
    Light Mode Overrides
    ======================================= */

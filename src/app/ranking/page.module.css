@@ -235,42 +235,122 @@
   color: var(--background);
 }
 
-.unitTabs {
+/* Unit Filter - Modern Toggle Design */
+.unitFilter {
   display: flex;
-  gap: 4px;
-  padding: 4px;
-  background: var(--surface);
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.unitFilterLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.unitFilterLabel svg {
+  opacity: 0.6;
+}
+
+.unitTabs {
+  position: relative;
+  display: flex;
+  gap: 0;
+  padding: 5px;
+  background: linear-gradient(145deg, var(--surface), var(--bg-elevated));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.unitTabIndicator {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  height: calc(100% - 10px);
+  width: calc(33.333% - 3.33px);
+  background: var(--card-bg);
   border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+  z-index: 0;
+}
+
+.unitTabIndicator[data-active="all"] {
+  transform: translateX(0);
+  background: linear-gradient(135deg, var(--card-bg), var(--surface));
+}
+
+.unitTabIndicator[data-active="excel"] {
+  transform: translateX(100%);
+  background: linear-gradient(135deg, rgba(134, 165, 130, 0.2), rgba(134, 165, 130, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.unitTabIndicator[data-active="crew"] {
+  transform: translateX(200%);
+  background: linear-gradient(135deg, rgba(130, 150, 180, 0.2), rgba(130, 150, 180, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .unitTab {
-  padding: var(--space-2-5) var(--space-5);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 90px;
+  padding: var(--space-3) var(--space-5);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--text-muted);
-  font-size: var(--text-base);
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s ease;
+}
+
+.unitTab svg {
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .unitTab:hover {
   color: var(--text-secondary);
 }
 
+.unitTab:hover svg {
+  opacity: 0.8;
+}
+
 .unitTab.active {
-  background: var(--card-bg);
   color: var(--text-primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.unitTab.active svg {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .unitTab[data-unit="excel"].active {
-  color: var(--excel-color, #4ade80);
+  color: #7a9a78;
 }
 
 .unitTab[data-unit="crew"].active {
-  color: var(--crew-color, #60a5fa);
+  color: #7089a8;
+}
+
+.unitTab[data-unit="excel"].active svg {
+  color: #7a9a78;
+}
+
+.unitTab[data-unit="crew"].active svg {
+  color: #7089a8;
 }
 
 /* =======================================
@@ -423,18 +503,34 @@
 
   .filterSection {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     gap: var(--space-4);
     padding: var(--space-4) var(--space-5);
     margin-bottom: var(--space-6);
   }
 
-  .filterTabs {
-    justify-content: center;
+  .unitFilter {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .unitFilterLabel {
+    font-size: var(--text-xs);
   }
 
   .unitTabs {
     justify-content: center;
+  }
+
+  .unitTab {
+    min-width: 80px;
+    padding: var(--space-2-5) var(--space-4);
+    font-size: var(--text-sm);
+  }
+
+  .unitTabIndicator {
+    width: calc(33.333% - 3.33px);
   }
 
   .listHeader {
@@ -480,14 +576,20 @@
     padding: var(--space-3) var(--space-5);
   }
 
-  .filterTab {
-    padding: var(--space-2-5) var(--space-4);
-    font-size: var(--text-sm);
+  .unitFilterLabel {
+    display: none;
   }
 
   .unitTab {
-    padding: var(--space-2) var(--space-4);
-    font-size: var(--text-sm);
+    min-width: 72px;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+    gap: var(--space-1);
+  }
+
+  .unitTab svg {
+    width: 12px;
+    height: 12px;
   }
 
   .sectionTitle {

@@ -1,135 +1,81 @@
 /**
- * Mock Donations Data - Expanded for realistic service
- * 후원 내역 (하트 단위) - 실제 서비스 대응용 확장 데이터
+ * Mock Donations Data - 시즌 1 후원 내역 (1회차 방송 기준)
+ * 후원 내역 (하트 단위)
  */
 
 import type { Donation } from '@/types/database'
-import { mockEpisodes } from './episodes'
 
-// 후원자 이름 풀 (50명) - Top 10은 실제 랭킹 닉네임
-const donorNames = [
-  // Top 10 실제 닉네임 (닉네임만, 아이디 제외)
-  '미키', '미드', '농심육개장라면', '[RG]✨린아의발굴™', '❥CaNnOt',
-  '태린공주❤️줄여보자', '⭐건빵이미래쥐', '[RG]린아✨여행™', '가윤이꼬❤️털이', '언제나♬',
-  // 11위 이하 (랜덤)
-  '러브앤조이', '스타라이트', '팬심가득', '응원단장', '행복전도사',
-  '사랑의하트', '빛나는별', '달빛천사', '은하수', '무지개빛',
-  '햇살가득', '꿈꾸는별', '하늘빛', '바다향기', '산들바람',
-  '봄날의꽃', '여름밤꿈', '가을단풍', '겨울눈꽃', '사계절',
-  '황금날개', '은빛날개', '청동날개', '다이아몬드', '에메랄드',
-  '루비하트', '사파이어', '진주빛', '오팔빛깔', '자수정',
-  '달나라토끼', '별똥별', '유성우', '은하계', '우주탐험',
-  '판타지아', '드림캐처', '럭키스타', '매직걸', '원더풀'
+// 시즌 1 후원 랭킹 Top 50 (1회차 방송 기준)
+const season1Top50 = [
+  { rank: 1, id: 'luka831', name: '손밍매니아', hearts: 254663, unit: 'excel' },
+  { rank: 2, id: 'mickey94', name: '미키™', hearts: 215381, unit: 'excel' },
+  { rank: 3, id: 'ilcy2k', name: '쩔어서짜다', hearts: 185465, unit: 'excel' },
+  { rank: 4, id: '2395546632', name: '❥CaNnOt', hearts: 176754, unit: 'excel' },
+  { rank: 5, id: 'skypower1119', name: '까부는넌내꺼야119', hearts: 70847, unit: 'excel' },
+  { rank: 6, id: 'symail92', name: '☀칰힌사주면천사☀', hearts: 58895, unit: 'excel' },
+  { rank: 7, id: 'welcometome791', name: '한세아♡백작♡하얀만두피', hearts: 49523, unit: 'excel' },
+  { rank: 8, id: '16516385', name: '시라☆구구단☆시우', hearts: 48690, unit: 'excel' },
+  { rank: 9, id: 'yuricap85', name: '한세아내꺼♡호랭이', hearts: 47367, unit: 'excel' },
+  { rank: 10, id: 'ksbjh77', name: '[RG]✨린아의발굴™', hearts: 40685, unit: 'excel' },
+  { rank: 11, id: 'thursdayday', name: '미드굿♣️가애', hearts: 36970, unit: 'excel' },
+  { rank: 12, id: 'rhehrgks486', name: '❤️지수ෆ해린❤️치토스㉦', hearts: 36488, unit: 'excel' },
+  { rank: 13, id: 'tmdgus080222', name: '조패러갈꽈', hearts: 27020, unit: 'excel' },
+  { rank: 14, id: 'bbwin12', name: '✨바위늪✨', hearts: 25062, unit: 'excel' },
+  { rank: 15, id: 'bravo1975', name: '가윤이꼬❤️함주라', hearts: 22822, unit: 'excel' },
+  { rank: 16, id: 'tnvenvelv777', name: 'qldh라유', hearts: 22621, unit: 'excel' },
+  { rank: 17, id: 'loveday77', name: '[RG]린아✨여행™', hearts: 19032, unit: 'excel' },
+  { rank: 18, id: 'skrrrr12', name: '김스껄', hearts: 15741, unit: 'excel' },
+  { rank: 19, id: 'museent03020302', name: '[로진]43세정영민', hearts: 14432, unit: 'excel' },
+  { rank: 20, id: 'rriiiqp123', name: '이태린ෆ', hearts: 14205, unit: 'excel' },
+  { rank: 21, id: 'uuu981214', name: 'ෆ유은', hearts: 13797, unit: 'excel' },
+  { rank: 22, id: 'wony0502', name: '홍서하네❥페르소나™', hearts: 12364, unit: 'excel' },
+  { rank: 23, id: 'kim6223164', name: '57774', hearts: 12208, unit: 'excel' },
+  { rank: 24, id: 'wow486', name: '니니ღ', hearts: 12095, unit: 'excel' },
+  { rank: 25, id: 'akffkdcodl', name: '말랑채이', hearts: 12003, unit: 'excel' },
+  { rank: 26, id: 'okd12121', name: '채은S2으악❤️', hearts: 11866, unit: 'excel' },
+  { rank: 27, id: 'disk197346', name: '[RG]린아네☀둥그레', hearts: 11381, unit: 'excel' },
+  { rank: 28, id: 'bluekjhmi', name: '아름다운집', hearts: 11018, unit: 'excel' },
+  { rank: 29, id: '4427766178', name: '미쯔✨', hearts: 10673, unit: 'excel' },
+  { rank: 30, id: 'duxnqkrxn', name: '♬♪행복한베니와✨엔띠♬', hearts: 10008, unit: 'excel' },
+  { rank: 31, id: 'oxxx139', name: '소율❤️', hearts: 10001, unit: 'excel' },
+  { rank: 32, id: 'ysooa1030', name: '[S]윤수아잉❤️', hearts: 10000, unit: 'excel' },
+  { rank: 33, id: 'syk7574', name: '✧도루묵✧', hearts: 7717, unit: 'excel' },
+  { rank: 34, id: 'ejeh2472', name: '사랑해씌발™', hearts: 7257, unit: 'excel' },
+  { rank: 35, id: 'dungeon7', name: '계몽☽BJ죽어흑흑_조랭', hearts: 6878, unit: 'excel' },
+  { rank: 36, id: 'mugongja', name: '[SD]티모', hearts: 6124, unit: 'excel' },
+  { rank: 37, id: 'kingofthestock', name: '풀묶™', hearts: 5674, unit: 'excel' },
+  { rank: 38, id: 'dyeks10', name: '손밍ღ타코보이', hearts: 5647, unit: 'excel' },
+  { rank: 39, id: '365719', name: '가윤이꼬❤️털이', hearts: 5419, unit: 'excel' },
+  { rank: 40, id: 'gjsfken77', name: '[GV]케인♣️', hearts: 5036, unit: 'excel' },
+  { rank: 41, id: 'tjdsdm12', name: '시은◡*', hearts: 5000, unit: 'excel' },
+  { rank: 42, id: 'no0163', name: '유진이ෆ', hearts: 4853, unit: 'excel' },
+  { rank: 43, id: 'mmkorea', name: '이태리ෆ탤받쮸', hearts: 4848, unit: 'excel' },
+  { rank: 44, id: 'anfth1234', name: '갈색말티푸', hearts: 4564, unit: 'excel' },
+  { rank: 45, id: 'njw7920', name: '❤️사람❤️', hearts: 4462, unit: 'excel' },
+  { rank: 46, id: 'asm3158', name: 'FA진스', hearts: 4444, unit: 'excel' },
+  { rank: 47, id: 'bbbb1007', name: '✿도화살✿', hearts: 4315, unit: 'excel' },
+  { rank: 48, id: 'scv19001', name: '잔망미니언즈', hearts: 4276, unit: 'excel' },
+  { rank: 49, id: '3293064651', name: '킴소금쟁이', hearts: 4000, unit: 'excel' },
+  { rank: 50, id: 'dogyoung9157', name: '도도_♡', hearts: 3815, unit: 'excel' },
 ]
 
-// 해당 시즌의 에피소드 중 날짜에 맞는 에피소드 찾기
-function findEpisodeForDate(seasonId: number, donationDate: Date): number | null {
-  const seasonEpisodes = mockEpisodes
-    .filter(ep => ep.season_id === seasonId)
-    .sort((a, b) => new Date(a.broadcast_date).getTime() - new Date(b.broadcast_date).getTime())
+// 시즌 1 후원 데이터 생성
+const season1Donations: Donation[] = season1Top50.map((donor, index) => ({
+  id: index + 1,
+  donor_id: `user-${donor.id}`,
+  donor_name: donor.name,
+  amount: donor.hearts,
+  season_id: 1,
+  episode_id: 1, // 1회차 방송
+  unit: donor.unit as 'excel' | 'crew',
+  message: null,
+  created_at: '2025-01-20T00:00:00Z',
+}))
 
-  // 가장 가까운 이전 에피소드 찾기
-  for (let i = seasonEpisodes.length - 1; i >= 0; i--) {
-    const epDate = new Date(seasonEpisodes[i].broadcast_date)
-    if (epDate <= donationDate) {
-      return seasonEpisodes[i].id
-    }
-  }
-
-  // 첫 에피소드보다 이전이면 첫 에피소드에 배정
-  return seasonEpisodes.length > 0 ? seasonEpisodes[0].id : null
-}
-
-// 시즌별 후원 데이터 생성기
-function generateSeasonDonations(
-  seasonId: number,
-  baseId: number,
-  donorCount: number,
-  dateRange: { start: string; end: string }
-): Donation[] {
-  const donations: Donation[] = []
-  const startDate = new Date(dateRange.start)
-  const endDate = new Date(dateRange.end)
-
-  // 각 시즌의 탑 랭커 금액 기준점
-  const seasonMaxAmounts: Record<number, number> = {
-    1: 180000,  // 시즌1: 18만 하트
-    2: 250000,  // 시즌2: 25만 하트
-    3: 320000,  // 시즌3: 32만 하트
-    4: 450000,  // 시즌4: 45만 하트 (현재 진행중)
-  }
-
-  const maxAmount = seasonMaxAmounts[seasonId] || 200000
-
-  // 선택된 후원자들에게 랭킹별 금액 분배
-  const shuffledDonors = [...donorNames].sort(() => Math.random() - 0.5).slice(0, donorCount)
-
-  shuffledDonors.forEach((donorName, index) => {
-    const rank = index + 1
-    const donorId = `user-${rank}`
-
-    // 랭킹에 따른 금액 계산 (1등은 최대, 50등은 최소)
-    const rankFactor = Math.pow(0.92, rank - 1) // 지수 감소
-    const baseAmount = Math.floor(maxAmount * rankFactor * (0.9 + Math.random() * 0.2))
-
-    // 유닛 배정 (Excel vs Crew 비율 약 6:4)
-    const unit = Math.random() > 0.4 ? 'excel' : 'crew'
-
-    // 3-8개의 후원 내역으로 분산
-    const donationCount = Math.floor(Math.random() * 6) + 3
-    let remainingAmount = baseAmount
-
-    for (let i = 0; i < donationCount && remainingAmount > 0; i++) {
-      const isLast = i === donationCount - 1
-      const donationAmount = isLast
-        ? remainingAmount
-        : Math.floor(remainingAmount * (0.15 + Math.random() * 0.35))
-
-      remainingAmount -= donationAmount
-
-      // 랜덤 날짜 생성
-      const randomTime = startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())
-      const donationDate = new Date(randomTime)
-
-      // 후원 날짜에 맞는 에피소드 찾기
-      const episodeId = findEpisodeForDate(seasonId, donationDate)
-
-      // 메시지 (30% 확률로 포함)
-      const messages = [
-        '응원합니다!', '화이팅!', '최고에요!', '오늘도 수고하셨어요',
-        '항상 감사해요', '사랑해요', '영원한 팬이에요', null, null, null
-      ]
-      const message = messages[Math.floor(Math.random() * messages.length)]
-
-      donations.push({
-        id: baseId++,
-        donor_id: donorId,
-        donor_name: donorName,
-        amount: donationAmount,
-        season_id: seasonId,
-        episode_id: episodeId,
-        unit: unit as 'excel' | 'crew',
-        message,
-        created_at: donationDate.toISOString()
-      })
-    }
-  })
-
-  return donations
-}
-
-// 시즌 1 데이터 - 정산 중 (빈 데이터)
-// TODO: 정산 완료 후 데이터 활성화
-// const season1Donations = generateSeasonDonations(1, 1, 50, {
-//   start: '2025-01-01',
-//   end: '2025-12-31'
-// })
-const season1Donations: Donation[] = [] // 정산 중
-
-// 모든 후원 데이터 합치기
+// 모든 후원 데이터
 export const mockDonations: Donation[] = [
   ...season1Donations,
-].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+]
 
 // 랭킹 계산용 집계 함수
 export function aggregateDonationsByDonor(seasonId?: number) {

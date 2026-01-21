@@ -1,25 +1,27 @@
 /**
- * Mock Profiles Data - 시즌 1 후원 랭킹 (1회차 방송 기준)
- * 후원자/사용자 데이터 - Top 50
+ * Supabase SQL Seed Runner
+ * 시즌 1 후원 데이터를 Supabase에 업로드
+ *
+ * 참고: profiles.id는 auth.users UUID를 참조하므로
+ * 후원 데이터만 삽입 (donor_id 없이, donor_name만 사용)
  */
 
-import type { Profile } from '@/types/database'
-import { getPlaceholderAvatar } from './utils'
+const { createClient } = require('@supabase/supabase-js')
 
-// Mock Admin 계정 (admin/admin으로 로그인 가능)
-export const mockAdminProfile: Profile = {
-  id: 'admin-user',
-  nickname: 'Admin',
-  email: 'admin@example.com',
-  avatar_url: getPlaceholderAvatar('admin'),
-  role: 'superadmin',
-  unit: null,
-  total_donation: 0,
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-12-30T00:00:00Z',
+// 환경변수 로드
+require('dotenv').config({ path: '.env.local' })
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Error: Missing Supabase credentials')
+  process.exit(1)
 }
 
-// 시즌 1 후원 랭킹 Top 50 (1회차 방송 기준)
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+// 시즌 1 후원 Top 50 데이터
 const season1Top50 = [
   { rank: 1, id: 'luka831', name: '손밍매니아', hearts: 254663, unit: 'excel' },
   { rank: 2, id: 'mickey94', name: '미키™', hearts: 215381, unit: 'excel' },
@@ -73,27 +75,111 @@ const season1Top50 = [
   { rank: 50, id: 'dogyoung9157', name: '도도_♡', hearts: 3815, unit: 'excel' },
 ]
 
-// 후원자 프로필 생성
-function generateProfiles(): Profile[] {
-  return season1Top50.map((donor) => ({
-    id: `user-${donor.id}`,
-    nickname: donor.name,
-    email: null,
-    avatar_url: null,
-    role: donor.rank <= 10 ? 'vip' : 'member',
-    unit: donor.unit as 'excel' | 'crew',
-    total_donation: donor.hearts,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-20T00:00:00Z',
-  }))
+async function seed() {
+  console.log('🚀 시즌 1 후원 데이터 업로드 시작...\n')
+
+  try {
+    // 1. 시즌 1 생성/업데이트
+    console.log('1️⃣ 시즌 1 생성/업데이트...')
+    const { error: seasonError } = await supabase
+      .from('seasons')
+      .upsert({
+        id: 1,
+        name: '시즌 1',
+        start_date: '2025-01-01',
+        end_date: null,
+        is_active: true,
+      }, { onConflict: 'id' })
+
+    if (seasonError) throw seasonError
+    console.log('   ✅ 시즌 1 완료')
+
+    // 2. 에피소드 1 생성/업데이트
+    console.log('2️⃣ 에피소드 1 생성/업데이트...')
+    const { data: existingEpisode } = await supabase
+      .from('episodes')
+      .select('id')
+      .eq('season_id', 1)
+      .eq('episode_number', 1)
+      .single()
+
+    let episodeId = 1
+    if (existingEpisode) {
+      episodeId = existingEpisode.id
+      const { error: episodeError } = await supabase
+        .from('episodes')
+        .update({
+          title: '시즌 1 - 1회차',
+          broadcast_date: '2025-01-20',
+          is_rank_battle: false,
+          is_finalized: true,
+        })
+        .eq('id', existingEpisode.id)
+
+      if (episodeError) throw episodeError
+    } else {
+      const { data: newEpisode, error: episodeError } = await supabase
+        .from('episodes')
+        .insert({
+          season_id: 1,
+          episode_number: 1,
+          title: '시즌 1 - 1회차',
+          broadcast_date: '2025-01-20',
+          is_rank_battle: false,
+          is_finalized: true,
+        })
+        .select('id')
+        .single()
+
+      if (episodeError) throw episodeError
+      if (newEpisode) episodeId = newEpisode.id
+    }
+    console.log('   ✅ 에피소드 1 완료 (ID:', episodeId, ')')
+
+    // 3. 기존 시즌 1 후원 데이터 삭제
+    console.log('3️⃣ 기존 시즌 1 후원 데이터 삭제...')
+    const { error: deleteError } = await supabase
+      .from('donations')
+      .delete()
+      .eq('season_id', 1)
+
+    if (deleteError) throw deleteError
+    console.log('   ✅ 기존 데이터 삭제 완료')
+
+    // 4. 후원 내역 삽입 (donor_id 없이, donor_name만 사용)
+    // profiles 테이블은 auth.users UUID를 참조하므로 건드리지 않음
+    console.log('4️⃣ 후원 내역 추가 (50건)...')
+    const donations = season1Top50.map((donor) => ({
+      // donor_id는 NULL (auth.users에 등록된 사용자가 아님)
+      donor_name: donor.name,
+      amount: donor.hearts,
+      season_id: 1,
+      unit: donor.unit,
+      created_at: '2025-01-20T00:00:00Z',
+    }))
+
+    const { error: donationError } = await supabase
+      .from('donations')
+      .insert(donations)
+
+    if (donationError) throw donationError
+    console.log('   ✅ 후원 내역 50건 완료')
+
+    // 결과 확인
+    const { data: count } = await supabase
+      .from('donations')
+      .select('*', { count: 'exact', head: true })
+      .eq('season_id', 1)
+
+    console.log('\n🎉 시즌 1 후원 데이터 업로드 완료!')
+    console.log(`   - 후원 내역: 50건`)
+    console.log(`   - 엑셀부: ${season1Top50.filter(d => d.unit === 'excel').length}명`)
+
+  } catch (error) {
+    console.error('❌ 에러 발생:', error.message)
+    console.error('   상세:', error)
+    process.exit(1)
+  }
 }
 
-export const mockProfiles: Profile[] = [
-  mockAdminProfile,
-  ...generateProfiles()
-]
-
-// 랭킹용 정렬된 프로필
-export const rankedProfiles = mockProfiles
-  .filter(p => p.id !== 'admin-user')
-  .sort((a, b) => (b.total_donation || 0) - (a.total_donation || 0))
+seed()

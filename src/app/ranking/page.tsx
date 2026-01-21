@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Trophy, Users, Calendar, Crown, Flame, TrendingUp } from "lucide-react";
+import { Trophy, Crown, Flame, TrendingUp, Users, Sparkles } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -36,7 +36,7 @@ export default function TotalRankingPage() {
     // Mock 데이터 모드
     if (USE_MOCK_DATA) {
       // Mock 시즌 데이터
-      setCurrentSeason({ id: 4, name: '시즌 4', is_active: true });
+      setCurrentSeason({ id: 1, name: '시즌 1', is_active: true });
 
       // Mock 랭킹 데이터 (unit 필터 적용)
       let filteredProfiles = rankedProfiles;
@@ -68,13 +68,11 @@ export default function TotalRankingPage() {
       setCurrentSeason(seasonData);
     }
 
-    // 전체 랭킹: profiles 테이블에서 total_donation 기준
+    // 전체 랭킹: donations 테이블에서 집계 (donor_name 기준)
+    // profiles 테이블은 auth.users UUID를 참조하므로 사용하지 않음
     let query = supabase
-      .from("profiles")
-      .select("id, nickname, avatar_url, total_donation, unit")
-      .gt("total_donation", 0)
-      .order("total_donation", { ascending: false })
-      .limit(50);
+      .from("donations")
+      .select("donor_name, amount, unit");
 
     if (unitFilter !== 'all' && unitFilter !== 'vip') {
       query = query.eq("unit", unitFilter);
@@ -86,15 +84,28 @@ export default function TotalRankingPage() {
       console.error("랭킹 로드 실패:", error);
       setRankings([]);
     } else {
-      setRankings(
-        (data || []).map((p, idx) => ({
-          donorId: p.id,
-          donorName: p.nickname || "익명",
-          avatarUrl: p.avatar_url,
-          totalAmount: p.total_donation || 0,
+      // donor_name 기준으로 합계 계산
+      const donorTotals: Record<string, { name: string; amount: number; unit: string | null }> = {};
+      (data || []).forEach((d) => {
+        const key = d.donor_name;
+        if (!donorTotals[key]) {
+          donorTotals[key] = { name: d.donor_name, amount: 0, unit: d.unit };
+        }
+        donorTotals[key].amount += d.amount;
+      });
+
+      const sorted = Object.values(donorTotals)
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 50)
+        .map((item, idx) => ({
+          donorId: `donor-${item.name}`,
+          donorName: item.name,
+          avatarUrl: null,
+          totalAmount: item.amount,
           rank: idx + 1,
-        }))
-      );
+        }));
+
+      setRankings(sorted);
     }
 
     setIsLoading(false);
@@ -103,13 +114,6 @@ export default function TotalRankingPage() {
   useEffect(() => {
     fetchRankings();
   }, [fetchRankings]);
-
-  // 통계 계산
-  const stats = useMemo(() => {
-    if (rankings.length === 0) return null;
-    const participantCount = rankings.length;
-    return { participantCount };
-  }, [rankings]);
 
   const maxAmount = rankings.length > 0 ? rankings[0].totalAmount : 0;
   const top3 = rankings.slice(0, 3);
@@ -146,52 +150,30 @@ export default function TotalRankingPage() {
         </section>
 
         <div className={styles.container}>
-          {/* Stats Cards */}
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <Users size={20} />
-              </div>
-              <div className={styles.statInfo}>
-                <span className={styles.statValue}>{stats?.participantCount || 0}</span>
-                <span className={styles.statLabel}>총 후원자</span>
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <TrendingUp size={20} />
-              </div>
-              <div className={styles.statInfo}>
-                <span className={styles.statValue}>TOP 50</span>
-                <span className={styles.statLabel}>명예의 전당</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Filters */}
+          {/* Unit Filter */}
           <div className={styles.filterSection}>
-            <div className={styles.filterTabs}>
-              <Link href="/ranking" className={`${styles.filterTab} ${styles.active}`}>
-                <Crown size={14} />
-                전체 기간
-              </Link>
-              <Link href="/ranking/season/current" className={styles.filterTab}>
-                <Calendar size={14} />
-                시즌별
-              </Link>
-            </div>
-
-            <div className={styles.unitTabs}>
-              {(["all", "excel", "crew"] as const).map((unit) => (
-                <button
-                  key={unit}
-                  onClick={() => setUnitFilter(unit)}
-                  className={`${styles.unitTab} ${unitFilter === unit ? styles.active : ""}`}
-                  data-unit={unit}
-                >
-                  {unit === "all" ? "전체" : unit === "excel" ? "엑셀부" : "크루부"}
-                </button>
-              ))}
+            <div className={styles.unitFilter}>
+              <div className={styles.unitFilterLabel}>
+                <Users size={14} />
+                <span>소속별 보기</span>
+              </div>
+              <div className={styles.unitTabs}>
+                <div
+                  className={styles.unitTabIndicator}
+                  data-active={unitFilter}
+                />
+                {(["all", "excel", "crew"] as const).map((unit) => (
+                  <button
+                    key={unit}
+                    onClick={() => setUnitFilter(unit)}
+                    className={`${styles.unitTab} ${unitFilter === unit ? styles.active : ""}`}
+                    data-unit={unit}
+                  >
+                    {unit === "all" && <Sparkles size={14} />}
+                    <span>{unit === "all" ? "전체" : unit === "excel" ? "엑셀" : "크루"}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

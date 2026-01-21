@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useAuthContext } from '@/lib/context'
 import {
   getBjMessagesByVipId,
   createBjMessage,
@@ -34,7 +33,6 @@ interface UseBjMessagesResult {
  * Server Actions를 통해 Supabase와 통신
  */
 export function useBjMessages(vipProfileId: string): UseBjMessagesResult {
-  const { user } = useAuthContext()
   const [messages, setMessages] = useState<BjMessageWithMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -49,13 +47,7 @@ export function useBjMessages(vipProfileId: string): UseBjMessagesResult {
       return
     }
 
-    // 로그인하지 않은 경우
-    if (!user) {
-      setMessages([])
-      setIsLoading(false)
-      return
-    }
-
+    // 비로그인 사용자도 조회 가능 (권한에 따라 콘텐츠 제한됨)
     // Server Action 호출
     const result = await getBjMessagesByVipId(vipProfileId)
 
@@ -68,7 +60,7 @@ export function useBjMessages(vipProfileId: string): UseBjMessagesResult {
 
     setMessages(result.data || [])
     setIsLoading(false)
-  }, [vipProfileId, user])
+  }, [vipProfileId])
 
   // 메시지 작성
   const submitMessage = useCallback(

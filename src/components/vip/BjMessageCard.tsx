@@ -50,7 +50,10 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
     }
   }
 
-  // 잠금 콘텐츠 렌더링 (비공개 + 권한 없음)
+  // 미디어 잠금 콘텐츠 렌더링 (canViewContent가 false인 경우)
+  // - 텍스트는 항상 표시
+  // - 사진: 블러 처리
+  // - 영상: 썸네일만 표시, 재생 불가
   if (isLocked) {
     return (
       <motion.div
@@ -82,7 +85,7 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
             </div>
           </div>
           <div className={styles.badges}>
-            <span className={styles.lockedBadge} title="비공개 메시지">
+            <span className={styles.lockedBadge} title="VIP 전용 콘텐츠">
               <Lock size={12} />
             </span>
             <span className={styles.typeBadge}>
@@ -92,43 +95,45 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
           </div>
         </div>
 
-        {/* 잠금 콘텐츠 영역 */}
-        <div className={styles.lockedContent}>
-          {/* 이미지: 블러 처리된 플레이스홀더 */}
-          {message.message_type === 'image' && (
-            <div className={styles.lockedMediaContainer}>
-              <div className={styles.lockedMediaBlur} />
-            </div>
-          )}
-
-          {/* 영상: 썸네일 표시 (재생 불가) */}
-          {message.message_type === 'video' && message.content_url && (
-            <div className={styles.lockedMediaContainer}>
-              {getYouTubeThumbnail(message.content_url) ? (
-                <Image
-                  src={getYouTubeThumbnail(message.content_url)!}
-                  alt="영상 썸네일"
-                  fill
-                  className={styles.lockedMediaImage}
-                  unoptimized
-                />
-              ) : (
+        {/* 미디어 잠금 영역 (사진/영상만) */}
+        {(message.message_type === 'image' || message.message_type === 'video') && (
+          <div className={styles.lockedContent}>
+            {/* 이미지: 블러 처리된 플레이스홀더 */}
+            {message.message_type === 'image' && (
+              <div className={styles.lockedMediaContainer}>
                 <div className={styles.lockedMediaBlur} />
-              )}
+              </div>
+            )}
+
+            {/* 영상: 썸네일 표시 (재생 불가) */}
+            {message.message_type === 'video' && message.content_url && (
+              <div className={styles.lockedMediaContainer}>
+                {getYouTubeThumbnail(message.content_url) ? (
+                  <Image
+                    src={getYouTubeThumbnail(message.content_url)!}
+                    alt="영상 썸네일"
+                    fill
+                    className={styles.lockedMediaImage}
+                    unoptimized
+                  />
+                ) : (
+                  <div className={styles.lockedMediaBlur} />
+                )}
+              </div>
+            )}
+
+            {/* 잠금 오버레이 */}
+            <div className={styles.lockOverlay}>
+              <Lock size={28} className={styles.lockIcon} />
+              <span className={styles.lockText}>VIP 전용 콘텐츠</span>
             </div>
-          )}
-
-          {/* 텍스트: 미리보기 메시지 */}
-          {message.message_type === 'text' && (
-            <p className={styles.lockedText}>비공개 메시지입니다</p>
-          )}
-
-          {/* 잠금 오버레이 */}
-          <div className={styles.lockOverlay}>
-            <Lock size={28} className={styles.lockIcon} />
-            <span className={styles.lockText}>BJ와 VIP만 열람 가능</span>
           </div>
-        </div>
+        )}
+
+        {/* 텍스트 메시지는 항상 표시 */}
+        {message.content_text && (
+          <p className={styles.messageText}>{message.content_text}</p>
+        )}
       </motion.div>
     )
   }

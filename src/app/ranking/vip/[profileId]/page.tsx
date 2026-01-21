@@ -183,14 +183,14 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
             />
           )}
 
-          {/* BJ 감사 메시지 섹션: 로그인 사용자에게 공개 (공개/비공개 분리 적용) */}
-          {isLoggedIn && (
-            <BjThankYouSection
-              vipProfileId={profileId}
-              vipNickname={vipData.nickname}
-              hasFullAccess={false}
-            />
-          )}
+          {/* BJ 감사 메시지 섹션 (VIP 리워드): 모든 사용자에게 표시
+              - VIP 본인: 사진/영상 전체 접근
+              - 그 외: 텍스트만, 영상은 썸네일만, 사진은 ❌ */}
+          <BjThankYouSection
+            vipProfileId={profileId}
+            vipNickname={vipData.nickname}
+            hasFullAccess={hasFullAccess}
+          />
         </>
       )
     }
