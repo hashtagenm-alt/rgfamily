@@ -110,30 +110,32 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
 
       // vip_rewards에 데이터가 없으면 프로필/후원 데이터에서 직접 조회 (Fallback)
       if (rewardError && (rewardError.code === 'PGRST116' || rewardError.code === '42501')) {
-        // 프로필 조회
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('id, nickname, avatar_url, total_donation, unit')
-          .eq('id', profileId)
-          .single()
+        // 병렬 쿼리: 프로필, 시즌, 후원 데이터 동시 조회
+        const [profileResult, seasonResult, rankingResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('id, nickname, avatar_url, total_donation, unit')
+            .eq('id', profileId)
+            .single(),
+          supabase
+            .from('seasons')
+            .select('id, name')
+            .eq('is_active', true)
+            .single(),
+          supabase
+            .from('donations')
+            .select('donor_id, amount')
+        ])
+
+        const profileData = profileResult.data
+        const currentSeason = seasonResult.data
+        const rankingData = rankingResult.data
 
         if (!profileData) {
           setError('프로필 정보를 찾을 수 없습니다.')
           setIsLoading(false)
           return
         }
-
-        // 현재 시즌 조회
-        const { data: currentSeason } = await supabase
-          .from('seasons')
-          .select('id, name')
-          .eq('is_active', true)
-          .single()
-
-        // 후원 랭킹에서 순위 계산
-        const { data: rankingData } = await supabase
-          .from('donations')
-          .select('donor_id, amount')
 
         let rank = 0
         if (rankingData) {
