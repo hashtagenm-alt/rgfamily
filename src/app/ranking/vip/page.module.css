@@ -799,6 +799,51 @@
   z-index: 1;
 }
 
+.vipCardRank {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-overlay-15);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--text-overlay-70);
+  z-index: 2;
+  transition: var(--transition-base);
+}
+
+/* Top 3 랭크 스타일링 */
+.vipCardRank[data-rank="1"] {
+  background: linear-gradient(135deg, #ffd700, #ffec80);
+  border-color: #ffd700;
+  color: #1a1a1a;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+
+.vipCardRank[data-rank="2"] {
+  background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+  border-color: #c0c0c0;
+  color: #1a1a1a;
+  box-shadow: 0 0 12px rgba(192, 192, 192, 0.5);
+}
+
+.vipCardRank[data-rank="3"] {
+  background: linear-gradient(135deg, #cd7f32, #e8a860);
+  border-color: #cd7f32;
+  color: #1a1a1a;
+  box-shadow: 0 0 12px rgba(205, 127, 50, 0.5);
+}
+
+.vipCard:hover .vipCardRank {
+  transform: scale(1.1);
+}
+
 .vipCardIcon {
   width: 72px;
   height: 72px;
@@ -1544,4 +1589,40 @@
     rgba(184, 134, 11, 0.15) 0%,
     transparent 50%
   );
+}
+
+:global([data-theme="light"]) .vipCardRank {
+  background: #f4f4f5;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #52525b;
+}
+
+:global([data-theme="light"]) .vipCard {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme="light"]) .vipCard:hover {
+  border-color: rgba(184, 134, 11, 0.3);
+  box-shadow: 0 12px 32px rgba(184, 134, 11, 0.12);
+}
+
+:global([data-theme="light"]) .vipCardIcon {
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.1), rgba(184, 134, 11, 0.2));
+  border-color: rgba(184, 134, 11, 0.3);
+  color: #8b6914;
+}
+
+:global([data-theme="light"]) .vipCardName {
+  color: #27272a;
+}
+
+:global([data-theme="light"]) .vipCard:hover .vipCardName {
+  background: linear-gradient(135deg, #1a1a1a, #8b6914);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+:global([data-theme="light"]) .vipCardLabel {
+  color: #8b6914;
 }

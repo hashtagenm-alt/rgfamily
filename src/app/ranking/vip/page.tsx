@@ -19,6 +19,7 @@ interface VipMember {
   id: string;
   profileId: string | null;
   nickname: string;
+  rank: number;
   hasProfilePage: boolean;
 }
 
@@ -32,11 +33,12 @@ export default function VipLoungePage() {
 
     try {
       if (USE_MOCK_DATA) {
-        // Mock 모드: rankedProfiles에서 VIP 프로필이 있는 유저만 (상위 5명)
-        const members = rankedProfiles.slice(0, 5).map((profile) => ({
+        // Mock 모드: rankedProfiles에서 VIP 프로필이 있는 유저만 (상위 50명)
+        const members = rankedProfiles.slice(0, 50).map((profile, index) => ({
           id: profile.id,
           profileId: profile.id,
           nickname: profile.nickname || "익명",
+          rank: index + 1,
           hasProfilePage: true,
         }));
         setVipMembers(members);
@@ -58,19 +60,33 @@ export default function VipLoungePage() {
       }
 
       // vip_rewards에 등록된 유저들만 표시 (프로필 페이지 보유자)
-      const members = (rewardsData || []).map((r) => {
+      // 중복 제거: profile_id 기준으로 가장 좋은 랭크만 유지
+      const profileMap = new Map<string, { nickname: string; rank: number }>();
+
+      (rewardsData || []).forEach((r) => {
         const profile = r.profiles;
         const nickname = Array.isArray(profile)
           ? profile[0]?.nickname
           : (profile as { nickname: string } | null)?.nickname;
 
-        return {
-          id: r.profile_id,
-          profileId: r.profile_id,
-          nickname: nickname || "익명",
-          hasProfilePage: true, // vip_rewards에 있으면 모두 프로필 페이지 있음
-        };
+        const existing = profileMap.get(r.profile_id);
+        if (!existing || r.rank < existing.rank) {
+          profileMap.set(r.profile_id, {
+            nickname: nickname || "익명",
+            rank: r.rank,
+          });
+        }
       });
+
+      const members = Array.from(profileMap.entries())
+        .map(([profileId, data]) => ({
+          id: profileId,
+          profileId: profileId,
+          nickname: data.nickname,
+          rank: data.rank,
+          hasProfilePage: true,
+        }))
+        .sort((a, b) => a.rank - b.rank);
 
       setVipMembers(members);
     } catch (error) {
@@ -164,6 +180,9 @@ export default function VipLoungePage() {
                     href={`/ranking/vip/${member.profileId}`}
                     className={styles.vipCardLink}
                   >
+                    <div className={styles.vipCardRank} data-rank={member.rank}>
+                      {member.rank}
+                    </div>
                     <div className={styles.vipCardIcon}>
                       <Crown size={28} />
                     </div>

@@ -21,7 +21,7 @@ export const mockOrganization: Organization[] = [
     position_order: 1,
     parent_id: null,
     image_url: getMemberAvatar('gaea'),
-    social_links: { pandatv: 'gaea' },
+    social_links: { pandatv: 'acron5' },
     profile_info: null,
     is_live: false,
     is_active: true,
@@ -36,7 +36,7 @@ export const mockOrganization: Organization[] = [
     position_order: 2,
     parent_id: null,
     image_url: getMemberAvatar('rina'),
-    social_links: { pandatv: 'rina' },
+    social_links: { pandatv: 'qwerdf1101' },
     profile_info: {
       mbti: 'ESTP',
       blood_type: 'O형',
@@ -59,7 +59,7 @@ export const mockOrganization: Organization[] = [
     position_order: 3,
     parent_id: 1,
     image_url: getMemberAvatar('wola'),
-    social_links: { pandatv: 'wola' },
+    social_links: { pandatv: 'goldmoon04' },
     profile_info: {
       mbti: 'ESTP',
       blood_type: 'O형',
@@ -89,7 +89,7 @@ export const mockOrganization: Organization[] = [
     position_order: 4,
     parent_id: 1,
     image_url: getMemberAvatar('chaeeun'),
-    social_links: { pandatv: 'chaeeun' },
+    social_links: { pandatv: 'hj042300' },
     profile_info: {
       mbti: 'ENFP',
       blood_type: 'O형',
@@ -123,7 +123,7 @@ export const mockOrganization: Organization[] = [
     position_order: 5,
     parent_id: 1,
     image_url: getMemberAvatar('gayun'),
-    social_links: { pandatv: 'gayun' },
+    social_links: { pandatv: 'juuni9613' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'O형',
@@ -153,7 +153,7 @@ export const mockOrganization: Organization[] = [
     position_order: 6,
     parent_id: 1,
     image_url: getMemberAvatar('seolyun'),
-    social_links: { pandatv: 'seolyun' },
+    social_links: { pandatv: 'xxchosun' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'A형',
@@ -183,7 +183,7 @@ export const mockOrganization: Organization[] = [
     position_order: 7,
     parent_id: 1,
     image_url: getMemberAvatar('hansea'),
-    social_links: { pandatv: 'hansea' },
+    social_links: { pandatv: 'kkrinaa' },
     profile_info: {
       mbti: 'INTJ',
       blood_type: 'AB형',
@@ -213,7 +213,7 @@ export const mockOrganization: Organization[] = [
     position_order: 8,
     parent_id: 1,
     image_url: getMemberAvatar('cheonga'),
-    social_links: { pandatv: 'cheonga' },
+    social_links: { pandatv: 'mandoooo' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'O형',
@@ -246,7 +246,7 @@ export const mockOrganization: Organization[] = [
     position_order: 9,
     parent_id: 1,
     image_url: getMemberAvatar('sonming'),
-    social_links: { pandatv: 'sonming' },
+    social_links: { pandatv: 'sm5252' },
     profile_info: {
       mbti: 'INTP',
       blood_type: 'O형',
@@ -277,7 +277,7 @@ export const mockOrganization: Organization[] = [
     position_order: 10,
     parent_id: 1,
     image_url: getMemberAvatar('haerin'),
-    social_links: { pandatv: 'haerin' },
+    social_links: { pandatv: 'qwerty3490' },
     profile_info: {
       mbti: 'ESFP',
       blood_type: 'B형',
@@ -310,7 +310,7 @@ export const mockOrganization: Organization[] = [
     position_order: 11,
     parent_id: 1,
     image_url: getMemberAvatar('kiki'),
-    social_links: { pandatv: 'kiki' },
+    social_links: { pandatv: 'kiki0213' },
     profile_info: {
       mbti: 'ESTP',
       blood_type: 'AB형',
@@ -341,7 +341,7 @@ export const mockOrganization: Organization[] = [
     position_order: 12,
     parent_id: 1,
     image_url: getMemberAvatar('hanbaekseol'),
-    social_links: { pandatv: 'hanbaekseol' },
+    social_links: { pandatv: 'firstaplus121' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'O형',
@@ -374,7 +374,7 @@ export const mockOrganization: Organization[] = [
     position_order: 13,
     parent_id: 1,
     image_url: getMemberAvatar('hongseoha'),
-    social_links: { pandatv: 'hongseoha' },
+    social_links: { pandatv: 'lrsehwa' },
     profile_info: {
       mbti: 'ISTP',
       blood_type: 'B형',
