@@ -29,6 +29,8 @@ export type DuplicateHandling = 'skip' | 'overwrite' | 'accumulate'
 
 export interface UploadCsvOptions {
   duplicateHandling?: DuplicateHandling
+  autoCreateProfiles?: boolean // 프로필 자동 생성 여부
+  episodeId?: number // 에피소드 ID (직급전 연결용)
 }
 
 export interface UploadCsvResult {
@@ -36,6 +38,7 @@ export interface UploadCsvResult {
   errors: string[]
   skipped?: number
   updated?: number
+  profilesCreated?: number // 자동 생성된 프로필 수
 }
 
 export interface UseDonationsDataReturn {
@@ -184,26 +187,53 @@ export function useDonationsData(): UseDonationsDataReturn {
       data: { [key: string]: string }[],
       options: UploadCsvOptions = {}
     ): Promise<UploadCsvResult> => {
-      const { duplicateHandling = 'skip' } = options
+      const { duplicateHandling = 'skip', autoCreateProfiles = true, episodeId } = options
       const errors: string[] = []
       let successCount = 0
       let skippedCount = 0
       let updatedCount = 0
+      let profilesCreatedCount = 0
+
+      // 프로필 캐시 (동일 CSV 내 중복 닉네임 처리용)
+      const profileCache = new Map<string, string>() // nickname -> profile_id
+      profiles.forEach(p => profileCache.set(p.nickname.toLowerCase(), p.id))
 
       const activeSeason = seasons[0]
       if (!activeSeason) {
-        return { success: 0, errors: ['활성 시즌이 없습니다. 먼저 시즌을 생성해주세요.'], skipped: 0, updated: 0 }
+        return { success: 0, errors: ['활성 시즌이 없습니다. 먼저 시즌을 생성해주세요.'], skipped: 0, updated: 0, profilesCreated: 0 }
       }
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i]
         const rowNum = i + 2
 
-        const donorId = row['ID'] || row['donor_id'] || row['id'] || ''
-        const donorName = donorId || row['donor_name'] || ''
-        const amountStr = row['하트'] || row['amount'] || row['hearts'] || '0'
+        // 후원자 ID/이름 파싱 (여러 CSV 형식 지원)
+        let pandaTvId = '' // PandaTV 아이디 (참고용)
+        let donorName = row['ID'] || row['donor_id'] || row['id'] || row['donor_name'] || ''
+
+        // PandaTV CSV 형식: "후원 아이디(닉네임)" 컬럼에서 아이디와 닉네임 분리
+        // 예: "no0163(유진이ෆ)" -> pandaTvId: "no0163", donorName: "유진이ෆ"
+        const pandaTvIdField = row['후원 아이디(닉네임)']
+        if (pandaTvIdField) {
+          const match = pandaTvIdField.match(/^([^(]+)\(([^)]+)\)$/)
+          if (match) {
+            pandaTvId = match[1].trim() // 괄호 앞의 아이디
+            donorName = match[2].trim() // 괄호 안의 닉네임
+          } else {
+            // 괄호가 없으면 전체를 닉네임으로 사용
+            donorName = pandaTvIdField.trim()
+          }
+        }
+
+        // 하트 금액 파싱 (여러 컬럼명 지원)
+        // - 후원하트: 개별 후원 내역 CSV
+        // - 총 후원하트: 누적 랭킹 CSV
+        const amountStr = row['후원하트'] || row['총 후원하트'] || row['하트'] || row['amount'] || row['hearts'] || '0'
         const message = row['내용'] || row['message'] || ''
-        const dateStr = row['일시'] || row['date'] || ''
+        // 후원시간 또는 일시 컬럼 지원
+        const dateStr = row['후원시간'] || row['일시'] || row['date'] || ''
+        // 참여BJ 정보 (나중에 활용 가능)
+        const targetBj = row['참여BJ'] || ''
 
         if (!donorName) {
           errors.push(`행 ${rowNum}: 후원자 ID/이름이 필요합니다.`)
@@ -224,32 +254,111 @@ export function useDonationsData(): UseDonationsDataReturn {
           }
         }
 
-        const matchedProfile = profiles.find(
-          (p) => p.nickname.toLowerCase() === donorName.toLowerCase()
-        )
+        // 프로필 매칭: 캐시 → DB → 자동 생성
+        let matchedProfileId = profileCache.get(donorName.toLowerCase())
+
+        // 캐시에 없으면 DB에서 다시 검색 (다른 세션에서 생성됐을 수 있음)
+        if (!matchedProfileId) {
+          const existingProfile = profiles.find(
+            (p) => p.nickname.toLowerCase() === donorName.toLowerCase()
+          )
+          if (existingProfile) {
+            matchedProfileId = existingProfile.id
+            profileCache.set(donorName.toLowerCase(), existingProfile.id)
+          }
+        }
+
+        // 프로필이 없고 자동 생성 옵션이 켜져 있으면 새 프로필 생성
+        if (!matchedProfileId && autoCreateProfiles) {
+          try {
+            // PandaTV 아이디로 기존 프로필 검색 (이미 다른 닉네임으로 등록됐을 수 있음)
+            if (pandaTvId) {
+              const { data: existingByPandaId } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('pandatv_id', pandaTvId)
+                .single()
+
+              if (existingByPandaId) {
+                matchedProfileId = existingByPandaId.id
+                profileCache.set(donorName.toLowerCase(), existingByPandaId.id)
+              }
+            }
+
+            // 여전히 프로필이 없으면 새로 생성
+            if (!matchedProfileId) {
+              const newProfileId = crypto.randomUUID()
+
+              const { error: createProfileError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: newProfileId,
+                  nickname: donorName,
+                  pandatv_id: pandaTvId || null, // PandaTV 아이디 저장
+                  role: 'member',
+                  total_donation: 0,
+                })
+
+              if (!createProfileError) {
+                matchedProfileId = newProfileId
+                profileCache.set(donorName.toLowerCase(), newProfileId)
+                profilesCreatedCount++
+              } else {
+                // 중복 닉네임 등으로 생성 실패 시 무시 (donor_id null로 진행)
+                console.warn(`프로필 생성 실패 (${donorName}):`, createProfileError.message)
+              }
+            }
+          } catch (err) {
+            console.warn(`프로필 생성 중 오류 (${donorName}):`, err)
+          }
+        }
+
+        const matchedProfile = matchedProfileId ? { id: matchedProfileId, nickname: donorName } : null
 
         let createdAt = new Date().toISOString()
         if (dateStr) {
           try {
-            const [datePart, timePart] = dateStr.split(' ')
-            const [yy, mm, dd] = datePart.split('.')
-            const year = parseInt(yy, 10) + 2000
-            createdAt = new Date(`${year}-${mm}-${dd}T${timePart}Z`).toISOString()
+            // 여러 날짜 형식 지원
+            // 형식 1: "2026-01-21 03:40:11" (ISO-like)
+            // 형식 2: "26.01.21 03:40:11" (YY.MM.DD)
+            if (dateStr.includes('-')) {
+              // ISO 형식: 2026-01-21 03:40:11
+              const parsedDate = new Date(dateStr.replace(' ', 'T') + '+09:00')
+              if (!isNaN(parsedDate.getTime())) {
+                createdAt = parsedDate.toISOString()
+              }
+            } else if (dateStr.includes('.')) {
+              // YY.MM.DD 형식
+              const [datePart, timePart] = dateStr.split(' ')
+              const [yy, mm, dd] = datePart.split('.')
+              const year = parseInt(yy, 10) + 2000
+              createdAt = new Date(`${year}-${mm}-${dd}T${timePart}+09:00`).toISOString()
+            }
           } catch {
             // 파싱 실패 시 현재 시간 사용
           }
         }
 
         try {
-          // 중복 체크: 동일 후원자명 + 동일 시즌 + 동일 날짜(일 기준)
-          const dateOnly = createdAt.split('T')[0]
-          const { data: existingDonations } = await supabase
+          // 중복 체크: 동일 후원자명 + 동일 시즌
+          // 날짜가 없는 누적 데이터의 경우 (랭킹 CSV) 날짜 무관하게 체크
+          const isCumulativeImport = !dateStr && pandaTvIdField
+          let existingDonationsQuery = supabase
             .from('donations')
             .select('id, amount')
             .eq('donor_name', donorName)
             .eq('season_id', seasonId)
-            .gte('created_at', `${dateOnly}T00:00:00Z`)
-            .lt('created_at', `${dateOnly}T23:59:59Z`)
+
+          if (!isCumulativeImport) {
+            // 일반 CSV: 동일 날짜 기준 중복 체크
+            const dateOnly = createdAt.split('T')[0]
+            existingDonationsQuery = existingDonationsQuery
+              .gte('created_at', `${dateOnly}T00:00:00Z`)
+              .lt('created_at', `${dateOnly}T23:59:59Z`)
+          }
+          // 누적 CSV: 시즌 전체에서 해당 후원자 기록 조회
+
+          const { data: existingDonations } = await existingDonationsQuery
 
           const existingDonation = existingDonations?.[0]
 
@@ -321,6 +430,7 @@ export function useDonationsData(): UseDonationsDataReturn {
             amount: amount,
             message: message || null,
             season_id: seasonId,
+            episode_id: episodeId || null, // 에피소드 연결 (직급전용)
             created_at: createdAt,
           })
 
@@ -341,11 +451,17 @@ export function useDonationsData(): UseDonationsDataReturn {
         }
       }
 
-      if (successCount > 0 || updatedCount > 0) {
+      if (successCount > 0 || updatedCount > 0 || profilesCreatedCount > 0) {
         await fetchData()
       }
 
-      return { success: successCount, errors, skipped: skippedCount, updated: updatedCount }
+      return {
+        success: successCount,
+        errors,
+        skipped: skippedCount,
+        updated: updatedCount,
+        profilesCreated: profilesCreatedCount
+      }
     },
     [supabase, seasons, profiles, fetchData]
   )

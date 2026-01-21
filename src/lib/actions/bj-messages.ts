@@ -5,6 +5,8 @@ import { authAction, adminAction, publicAction, type ActionResult } from './inde
 import type { InsertTables, UpdateTables, BjThankYouMessage } from '@/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+import { USE_MOCK_DATA } from '@/lib/config'
+import { getBjMessagesByVipId as getMockBjMessages } from '@/lib/mock/bj-messages'
 
 type BjMessageInsert = InsertTables<'bj_thank_you_messages'>
 type BjMessageUpdate = UpdateTables<'bj_thank_you_messages'>
@@ -79,6 +81,19 @@ export async function checkBjMemberStatus(): Promise<
 export async function getBjMessagesByVipId(
   vipProfileId: string
 ): Promise<ActionResult<BjMessageWithMember[]>> {
+  // Mock 모드: Mock 데이터 사용
+  if (USE_MOCK_DATA) {
+    const mockMessages = getMockBjMessages(vipProfileId)
+    // Mock 모드에서는 canViewContent를 false로 설정하여 플레이스홀더 테스트 가능
+    // VIP 개인 페이지에서는 hasFullAccess로 제어
+    const messagesWithAccess: BjMessageWithMember[] = mockMessages.map(msg => ({
+      ...msg,
+      // Mock에서는 일반 사용자 시점으로 콘텐츠 접근 제한 (테스트용)
+      canViewContent: false,
+    }))
+    return { data: messagesWithAccess, error: null }
+  }
+
   return publicAction(async (supabase) => {
     // 현재 로그인 사용자 확인 (없을 수 있음)
     const { data: { user } } = await supabase.auth.getUser()

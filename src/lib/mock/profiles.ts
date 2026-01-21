@@ -15,6 +15,7 @@ export const mockAdminProfile: Profile = {
   role: 'superadmin',
   unit: null,
   total_donation: 0,
+  pandatv_id: null,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-12-30T00:00:00Z',
 }
@@ -76,13 +77,14 @@ const season1Top50 = [
 // 후원자 프로필 생성
 function generateProfiles(): Profile[] {
   return season1Top50.map((donor) => ({
-    id: `user-${donor.id}`,
+    id: donor.id, // PandaTV 아이디를 프로필 ID로 사용 (실제로는 UUID)
     nickname: donor.name,
     email: null,
     avatar_url: null,
     role: donor.rank <= 10 ? 'vip' : 'member',
     unit: donor.unit as 'excel' | 'crew',
     total_donation: donor.hearts,
+    pandatv_id: donor.id, // PandaTV 아이디 저장
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-20T00:00:00Z',
   }))

@@ -161,6 +161,39 @@
   background: rgba(205, 127, 50, 0.08);
 }
 
+/* 현재 직급 강조 */
+.currentRankRow {
+  background: rgba(253, 104, 186, 0.15) !important;
+  border-left: 3px solid var(--color-primary);
+  position: relative;
+}
+
+.currentRankRow:hover {
+  background: rgba(253, 104, 186, 0.22) !important;
+}
+
+.currentRankRow .pledgeTitleCell {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.currentRankRow .pledgeContentCell {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.currentRankStar {
+  color: var(--color-primary);
+  margin-right: 2px;
+  vertical-align: middle;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
 .pledgeRankCell {
   width: 32px;
   flex-shrink: 0;

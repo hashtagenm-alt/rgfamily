@@ -117,21 +117,7 @@ export default function RankingList({
             </motion.div>
           );
 
-          // 시즌 TOP 3만 개인 헌정 페이지로 이동 가능
-          const hasHonorPage = actualRank <= 3;
-
-          if (item.donorId && hasHonorPage) {
-            return (
-              <Link
-                key={item.donorId || index}
-                href={`/ranking/vip/${item.donorId}`}
-                className={styles.link}
-              >
-                {ItemContent}
-              </Link>
-            );
-          }
-
+          // 모든 순위 링크 없이 표시
           return <div key={item.donorId || index}>{ItemContent}</div>;
         })}
       </motion.div>

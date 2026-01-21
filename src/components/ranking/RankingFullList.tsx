@@ -113,22 +113,7 @@ export default function RankingFullList({
           </motion.div>
         );
 
-        // Top 3 (1,2,3위)만 개인 페이지 링크 제공
-        const isTop3 = item.rank >= 1 && item.rank <= 3;
-
-        if (isTop3 && item.donorId) {
-          return (
-            <Link
-              key={item.donorId}
-              href={`/ranking/vip/${item.donorId}`}
-              className={styles.link}
-            >
-              {Content}
-            </Link>
-          );
-        }
-
-        // 4위 이하는 링크 없이 표시
+        // 모든 순위 링크 없이 표시
         return (
           <div key={`${item.donorName}-${index}`} className={styles.noLink}>
             {Content}

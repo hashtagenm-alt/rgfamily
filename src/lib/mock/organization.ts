@@ -5,10 +5,16 @@
  * RG Family 구조:
  * - Excel Unit: 린아(대표), 가애(대표) + 12명의 멤버
  * - Crew Unit: 현재 멤버 없음
+ *
+ * 직급전 계급 (position_order 3부터 적용):
+ * 1위: 여왕 / 2위: 공주 / 3위: 황족 / 4위: 귀족
+ * 5위: 시녀장 / 6위: 시녀 / 7-9위: 하녀1,2,3
+ * 10위: 노예장 / 11위: 노예 / 12위: 쌉노예
  */
 
 import type { Organization } from '@/types/database'
 import { getMemberAvatar } from './utils'
+import { getRankName } from '@/lib/constants/ranks'
 
 export const mockOrganization: Organization[] = [
   // ========== Excel Unit 대표 ==========
@@ -25,6 +31,7 @@ export const mockOrganization: Organization[] = [
     profile_info: null,
     is_live: false,
     is_active: true,
+    current_rank: null, // 대표는 직급전 미참여
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -46,6 +53,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: null, // 대표는 직급전 미참여
     created_at: '2024-01-01T00:00:00Z',
   },
 
@@ -78,6 +86,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(11), // 노예
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -112,6 +121,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(8), // 하녀2
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -142,6 +152,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(4), // 귀족
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -172,6 +183,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(10), // 노예장
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -202,6 +214,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(3), // 황족
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -235,6 +248,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(5), // 시녀장
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -266,6 +280,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(2), // 공주
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -299,6 +314,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(6), // 시녀
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -330,6 +346,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(12), // 쌉노예
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -363,6 +380,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(9), // 하녀3
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -393,6 +411,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(1), // 여왕
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -426,6 +445,7 @@ export const mockOrganization: Organization[] = [
     },
     is_live: false,
     is_active: true,
+    current_rank: getRankName(7), // 하녀1
     created_at: '2024-01-01T00:00:00Z',
   },
 ]

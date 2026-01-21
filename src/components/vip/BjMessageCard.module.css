@@ -224,6 +224,52 @@
     rgba(253, 104, 186, 0.08) 100%
   );
   backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 잠긴 콘텐츠 플레이스홀더 아이콘 */
+.lockedPlaceholderIcon {
+  color: rgba(253, 104, 186, 0.3);
+}
+
+/* 잠긴 영상 플레이스홀더 */
+.lockedVideoPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.12) 0%,
+    rgba(253, 104, 186, 0.12) 50%,
+    rgba(139, 92, 246, 0.12) 100%
+  );
+}
+
+.lockedPlayIcon {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 48px;
+}
+
+/* 영상 썸네일 위 재생 아이콘 오버레이 */
+.videoThumbnailOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.videoPlayIcon {
+  color: rgba(255, 255, 255, 0.7);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .lockedMediaImage {
@@ -293,4 +339,25 @@
 
 :global(.light) .lockText {
   color: rgba(0, 0, 0, 0.6);
+}
+
+:global(.light) .lockedPlaceholderIcon {
+  color: rgba(253, 104, 186, 0.4);
+}
+
+:global(.light) .lockedVideoPlaceholder {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(253, 104, 186, 0.1) 50%,
+    rgba(139, 92, 246, 0.1) 100%
+  );
+}
+
+:global(.light) .lockedPlayIcon {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+:global(.light) .videoPlayIcon {
+  color: rgba(255, 255, 255, 0.8);
 }

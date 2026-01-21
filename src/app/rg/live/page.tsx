@@ -8,6 +8,7 @@ import { useLiveRoster } from "@/lib/hooks";
 import { PledgeSidebar } from "@/components/info/PledgeSidebar";
 import { ProfileSidebar } from "@/components/info/ProfileSidebar";
 import type { OrgMember, UnitFilter } from "@/types/organization";
+import { getRankByName } from "@/lib/constants/ranks";
 import { ArrowLeft, Radio, Users, FileText, Calendar } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -26,9 +27,22 @@ export default function LivePage() {
       : members.filter((member) => member.unit === unitFilter);
   }, [members, unitFilter]);
 
-  // Separate live and offline members
-  const liveMembers = useMemo(() => unitFilteredMembers.filter(m => m.is_live), [unitFilteredMembers]);
-  const offlineMembers = useMemo(() => unitFilteredMembers.filter(m => !m.is_live), [unitFilteredMembers]);
+  // 직급 순으로 정렬하는 헬퍼 함수
+  const sortByRank = (members: OrgMember[]) => {
+    return [...members].sort((a, b) => {
+      // 대표(role === '대표')는 맨 앞으로
+      if (a.role === '대표' && b.role !== '대표') return -1;
+      if (a.role !== '대표' && b.role === '대표') return 1;
+      // 그 외는 직급 순으로
+      const rankA = a.current_rank ? getRankByName(a.current_rank)?.position ?? 999 : 999;
+      const rankB = b.current_rank ? getRankByName(b.current_rank)?.position ?? 999 : 999;
+      return rankA - rankB;
+    });
+  };
+
+  // Separate live and offline members - 직급 순 정렬
+  const liveMembers = useMemo(() => sortByRank(unitFilteredMembers.filter(m => m.is_live)), [unitFilteredMembers]);
+  const offlineMembers = useMemo(() => sortByRank(unitFilteredMembers.filter(m => !m.is_live)), [unitFilteredMembers]);
 
   const liveCount = liveMembers.length;
   const totalCount = unitFilteredMembers.length;
@@ -157,7 +171,9 @@ export default function LivePage() {
                               <span className={styles.liveStatusText}>방송중</span>
                             </div>
                             <span className={styles.cardName}>{member.name}</span>
-                            <span className={styles.cardRole}>{member.role}</span>
+                            <span className={styles.cardRole}>
+                              {member.role === '대표' ? member.role : member.current_rank || member.role}
+                            </span>
                           </div>
                           {member.social_links?.pandatv && (
                             <a
@@ -219,7 +235,9 @@ export default function LivePage() {
                               {member.unit.toUpperCase()}
                             </span>
                             <span className={styles.cardName}>{member.name}</span>
-                            <span className={styles.cardRole}>{member.role}</span>
+                            <span className={styles.cardRole}>
+                              {member.role === '대표' ? member.role : member.current_rank || member.role}
+                            </span>
                           </div>
                         </motion.div>
                       ))}

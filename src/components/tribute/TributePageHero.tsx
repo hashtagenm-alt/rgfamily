@@ -37,11 +37,6 @@ export default function TributePageHero({ honor }: TributePageHeroProps) {
         </div>
         <h1 className={styles.heroTitle}>{honor.donorName}</h1>
 
-        {/* VIP 개인 페이지 링크 */}
-        <Link href={`/ranking/vip/${honor.donorId}`} className={styles.vipPageLink}>
-          <User size={16} />
-          <span>VIP 개인 페이지</span>
-        </Link>
       </motion.div>
 
       <div className={styles.heroDecoration}>

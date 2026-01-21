@@ -14,6 +14,25 @@
   margin-bottom: var(--space-8);
 }
 
+/* Podium Link Wrapper */
+.podiumLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.podiumLink:hover .podiumWrapper {
+  transform: translateY(-8px);
+  z-index: 10;
+}
+
+.podiumLinkDisabled {
+  display: block;
+  position: relative;
+}
+
 /* Stage Platform - 3D Podium Base */
 .stageLine {
   position: absolute;

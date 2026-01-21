@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Users, Radio, Calendar, FileText } from "lucide-react";
@@ -9,6 +9,7 @@ import { useOrganization } from "@/lib/hooks";
 import { MemberCard, type OrgMember } from "@/components/info";
 import { PledgeSidebar } from "@/components/info/PledgeSidebar";
 import { ProfileSidebar } from "@/components/info/ProfileSidebar";
+import { getRankByName } from "@/lib/constants/ranks";
 import styles from "./page.module.css";
 
 type UnitType = "excel" | "crew";
@@ -36,8 +37,15 @@ export default function OrganizationPage() {
     grouped.leaders.length > 0 || grouped.directors.length > 0
       ? grouped.managers
       : [];
-  // 일반 멤버
-  const regularMembers = grouped.members;
+
+  // 일반 멤버 - 직급 순으로 정렬 (여왕 1위 → 쌉노예 12위)
+  const regularMembers = useMemo(() => {
+    return [...grouped.members].sort((a, b) => {
+      const rankA = a.current_rank ? getRankByName(a.current_rank)?.position ?? 999 : 999;
+      const rankB = b.current_rank ? getRankByName(b.current_rank)?.position ?? 999 : 999;
+      return rankA - rankB;
+    });
+  }, [grouped.members]);
 
   // 섹션 타이틀
   const getLeaderTitle = () => {

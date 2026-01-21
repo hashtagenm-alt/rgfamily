@@ -58,10 +58,6 @@ export default function NotFound() {
         <div className="mt-12 text-gray-500 text-sm">
           <p>자주 찾는 페이지</p>
           <div className="flex gap-4 justify-center mt-2 flex-wrap">
-            <Link href="/ranking/vip" className="hover:text-(--color-primary)]">
-              VIP 라운지
-            </Link>
-            <span>·</span>
             <Link href="/schedule" className="hover:text-(--color-primary)]">
               일정
             </Link>

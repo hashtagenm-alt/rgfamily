@@ -18,6 +18,7 @@ export type Database = {
           role: 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
           unit: 'excel' | 'crew' | null
           total_donation: number
+          pandatv_id: string | null // PandaTV 플랫폼 아이디
           created_at: string
           updated_at: string
         }
@@ -29,6 +30,7 @@ export type Database = {
           role?: 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
           unit?: 'excel' | 'crew' | null
           total_donation?: number
+          pandatv_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -40,6 +42,7 @@ export type Database = {
           role?: 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
           unit?: 'excel' | 'crew' | null
           total_donation?: number
+          pandatv_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -86,6 +89,7 @@ export type Database = {
           profile_info: Json | null
           is_live: boolean
           is_active: boolean
+          current_rank: string | null // 직급전 현재 직급 (대표는 null)
           created_at: string
         }
         Insert: {
@@ -101,6 +105,7 @@ export type Database = {
           profile_info?: Json | null
           is_live?: boolean
           is_active?: boolean
+          current_rank?: string | null
           created_at?: string
         }
         Update: {
@@ -116,6 +121,7 @@ export type Database = {
           profile_info?: Json | null
           is_live?: boolean
           is_active?: boolean
+          current_rank?: string | null
           created_at?: string
         }
         Relationships: [

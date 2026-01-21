@@ -219,7 +219,7 @@ export default function VipRewardsPage() {
   }
 
   const handleView = (reward: VipReward) => {
-    window.open(`/ranking/vip/${reward.profileId}`, '_blank')
+    window.open(`/ranking`, '_blank')
   }
 
   const getRankBadge = (rank: number) => {

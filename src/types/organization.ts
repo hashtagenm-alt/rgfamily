@@ -55,6 +55,7 @@ export interface OrganizationRecord {
   profile_info: ProfileInfo | null
   is_live: boolean
   is_active: boolean
+  current_rank: string | null  // 직급전 현재 직급 (대표는 null)
   created_at: string
 }
 
@@ -73,6 +74,7 @@ export interface OrgMember {
   social_links?: SocialLinks
   profile_info?: ProfileInfo
   is_live?: boolean
+  current_rank?: string | null  // 직급전 현재 직급 (대표는 null)
 }
 
 /**
@@ -86,6 +88,7 @@ export interface LiveMember {
   image_url: string | null
   is_live: boolean
   social_links?: SocialLinks
+  current_rank?: string | null  // 직급전 현재 직급 (대표는 null)
 }
 
 // ==============================================

@@ -109,21 +109,9 @@ export default function RankingPodium({ items }: RankingPodiumProps) {
           </div>
         );
 
-        // Top 3 클릭 시 VIP 개인 페이지로 이동
-        if (item.donorId) {
-          return (
-            <Link
-              key={item.donorId}
-              href={`/ranking/vip/${item.donorId}`}
-              style={{ display: "contents" }}
-            >
-              {Content}
-            </Link>
-          );
-        }
-
+        // Top 3 표시 (클릭 비활성화)
         return (
-          <div key={item.donorName} style={{ display: "contents" }}>
+          <div key={item.donorId || item.donorName} className={styles.podiumLinkDisabled}>
             {Content}
           </div>
         );

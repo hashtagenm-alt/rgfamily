@@ -106,16 +106,7 @@ export default function RankingCard({ item, maxAmount, index }: RankingCardProps
     </motion.div>
   )
 
-  // VIP 헌정 페이지 링크 (Top 3만)
-  if (item.rank <= 3 && item.donorId) {
-    return (
-      <Link href={`/ranking/vip/${item.donorId}`} className={`${styles.link} ${getLinkRankClass()}`} title="헌정 페이지 보기">
-        {CardContent}
-      </Link>
-    )
-  }
-
-  // Top 3이지만 donorId가 없는 경우에도 높이 적용
+  // Top 3 표시 (링크 비활성화)
   if (item.rank <= 3) {
     return (
       <div className={`${styles.link} ${getLinkRankClass()}`}>

@@ -43,11 +43,19 @@ interface UploadResult {
   errors: string[]
   skipped?: number
   updated?: number
+  profilesCreated?: number
+}
+
+interface CsvColumn {
+  key: string
+  altKey?: string // 대체 컬럼명 (랭킹 CSV 등 다른 형식 지원)
+  label: string
+  required?: boolean
 }
 
 interface CsvUploaderProps {
   onUpload: (data: CsvRow[], options?: { duplicateHandling?: DuplicateHandling }) => Promise<UploadResult>
-  columns: { key: string; label: string; required?: boolean }[]
+  columns: CsvColumn[]
   sampleFile?: string
   showDuplicateOptions?: boolean
 }
@@ -80,12 +88,15 @@ export default function CsvUploader({ onUpload, columns, sampleFile, showDuplica
 
   const validateData = useCallback((data: CsvRow[]): string[] => {
     const errors: string[] = []
-    const requiredColumns = columns.filter(c => c.required).map(c => c.key)
+    const requiredColumns = columns.filter(c => c.required)
 
     data.forEach((row, idx) => {
       requiredColumns.forEach(col => {
-        if (!row[col] || row[col].trim() === '') {
-          errors.push(`Row ${idx + 2}: Missing required field "${col}"`)
+        // key 또는 altKey 중 하나라도 값이 있으면 OK
+        const hasValue = (row[col.key] && row[col.key].trim() !== '') ||
+                         (col.altKey && row[col.altKey] && row[col.altKey].trim() !== '')
+        if (!hasValue) {
+          errors.push(`Row ${idx + 2}: Missing required field "${col.label}"`)
         }
       })
     })
@@ -275,9 +286,11 @@ export default function CsvUploader({ onUpload, columns, sampleFile, showDuplica
               <Table.Tbody>
                 {parsedData.slice(0, 5).map((row, idx) => (
                   <Table.Tr key={idx}>
-                    {columns.map(col => (
-                      <Table.Td key={col.key}>{row[col.key] || '-'}</Table.Td>
-                    ))}
+                    {columns.map(col => {
+                      // key 또는 altKey 중 값이 있는 것 표시
+                      const value = row[col.key] || (col.altKey ? row[col.altKey] : '') || '-'
+                      return <Table.Td key={col.key}>{value}</Table.Td>
+                    })}
                   </Table.Tr>
                 ))}
               </Table.Tbody>
@@ -353,13 +366,18 @@ export default function CsvUploader({ onUpload, columns, sampleFile, showDuplica
                       </Badge>
                     )}
                     {(uploadResult.updated ?? 0) > 0 && (
-                      <Badge color="gray" variant="light" size="sm">
+                      <Badge color="blue" variant="light" size="sm">
                         업데이트: {uploadResult.updated}건
                       </Badge>
                     )}
                     {(uploadResult.skipped ?? 0) > 0 && (
                       <Badge color="gray" variant="light" size="sm">
                         건너뜀: {uploadResult.skipped}건
+                      </Badge>
+                    )}
+                    {(uploadResult.profilesCreated ?? 0) > 0 && (
+                      <Badge color="cyan" variant="light" size="sm">
+                        프로필 생성: {uploadResult.profilesCreated}건
                       </Badge>
                     )}
                   </Group>
@@ -373,13 +391,18 @@ export default function CsvUploader({ onUpload, columns, sampleFile, showDuplica
                       </Badge>
                     )}
                     {(uploadResult.updated ?? 0) > 0 && (
-                      <Badge color="gray" variant="light" size="sm">
+                      <Badge color="blue" variant="light" size="sm">
                         업데이트: {uploadResult.updated}건
                       </Badge>
                     )}
                     {(uploadResult.skipped ?? 0) > 0 && (
                       <Badge color="gray" variant="light" size="sm">
                         건너뜀: {uploadResult.skipped}건
+                      </Badge>
+                    )}
+                    {(uploadResult.profilesCreated ?? 0) > 0 && (
+                      <Badge color="cyan" variant="light" size="sm">
+                        프로필 생성: {uploadResult.profilesCreated}건
                       </Badge>
                     )}
                     <Badge color="red" variant="light" size="sm">

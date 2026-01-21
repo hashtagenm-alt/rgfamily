@@ -136,11 +136,6 @@ export default function SeasonRankingPage() {
               )}
             </div>
           </div>
-          <Link href="/ranking/vip" className={styles.vipLink}>
-            <Trophy size={14} />
-            <span>VIP</span>
-            <ChevronRight size={14} />
-          </Link>
         </div>
       </header>
 

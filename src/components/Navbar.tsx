@@ -199,13 +199,6 @@ export default function Navbar() {
               <span>Admin</span>
             </Link>
           )}
-          {/* VIP Button - 자격이 있는 사용자에게만 표시 */}
-          {isVipQualified && user?.id && (
-            <Link href={`/ranking/vip/${user.id}`} className={styles.vipBtn}>
-              <Crown size={14} />
-              <span>VIP</span>
-            </Link>
-          )}
           <ThemeToggle />
           {user ? (
             <div
@@ -279,17 +272,6 @@ export default function Navbar() {
               >
                 <Shield size={14} />
                 <span>Admin</span>
-              </Link>
-            )}
-            {/* VIP Button - 모바일 */}
-            {isVipQualified && user?.id && (
-              <Link
-                href={`/ranking/vip/${user.id}`}
-                className={styles.vipBtn}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Crown size={14} />
-                <span>VIP</span>
               </Link>
             )}
             {user ? (

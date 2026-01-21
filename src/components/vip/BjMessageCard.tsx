@@ -101,32 +101,47 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
             {/* 이미지: 블러 처리된 플레이스홀더 */}
             {message.message_type === 'image' && (
               <div className={styles.lockedMediaContainer}>
-                <div className={styles.lockedMediaBlur} />
+                <div className={styles.lockedMediaBlur}>
+                  <ImageIcon size={40} className={styles.lockedPlaceholderIcon} />
+                </div>
+                {/* 잠금 오버레이 */}
+                <div className={styles.lockOverlay}>
+                  <Lock size={28} className={styles.lockIcon} />
+                  <span className={styles.lockText}>VIP 전용 사진</span>
+                </div>
               </div>
             )}
 
-            {/* 영상: 썸네일 표시 (재생 불가) */}
-            {message.message_type === 'video' && message.content_url && (
+            {/* 영상: 썸네일 + 재생 불가 표시 */}
+            {message.message_type === 'video' && (
               <div className={styles.lockedMediaContainer}>
-                {getYouTubeThumbnail(message.content_url) ? (
-                  <Image
-                    src={getYouTubeThumbnail(message.content_url)!}
-                    alt="영상 썸네일"
-                    fill
-                    className={styles.lockedMediaImage}
-                    unoptimized
-                  />
+                {message.content_url && getYouTubeThumbnail(message.content_url) ? (
+                  <>
+                    <Image
+                      src={getYouTubeThumbnail(message.content_url)!}
+                      alt="영상 썸네일"
+                      fill
+                      className={styles.lockedMediaImage}
+                      unoptimized
+                    />
+                    {/* 영상 재생 아이콘 (비활성) */}
+                    <div className={styles.videoThumbnailOverlay}>
+                      <Play size={40} className={styles.videoPlayIcon} />
+                    </div>
+                  </>
                 ) : (
-                  <div className={styles.lockedMediaBlur} />
+                  <div className={styles.lockedVideoPlaceholder}>
+                    <Video size={40} className={styles.lockedPlaceholderIcon} />
+                    <Play size={24} className={styles.lockedPlayIcon} />
+                  </div>
                 )}
+                {/* 잠금 오버레이 */}
+                <div className={styles.lockOverlay}>
+                  <Lock size={28} className={styles.lockIcon} />
+                  <span className={styles.lockText}>VIP 전용 영상</span>
+                </div>
               </div>
             )}
-
-            {/* 잠금 오버레이 */}
-            <div className={styles.lockOverlay}>
-              <Lock size={28} className={styles.lockIcon} />
-              <span className={styles.lockText}>VIP 전용 콘텐츠</span>
-            </div>
           </div>
         )}
 

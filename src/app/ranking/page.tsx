@@ -68,11 +68,10 @@ export default function TotalRankingPage() {
       setCurrentSeason(seasonData);
     }
 
-    // 전체 랭킹: donations 테이블에서 집계 (donor_name 기준)
-    // profiles 테이블은 auth.users UUID를 참조하므로 사용하지 않음
+    // 전체 랭킹: donations 테이블에서 집계
     let query = supabase
       .from("donations")
-      .select("donor_name, amount, unit");
+      .select("donor_id, donor_name, amount, unit");
 
     if (unitFilter !== 'all' && unitFilter !== 'vip') {
       query = query.eq("unit", unitFilter);
@@ -85,25 +84,55 @@ export default function TotalRankingPage() {
       setRankings([]);
     } else {
       // donor_name 기준으로 합계 계산
-      const donorTotals: Record<string, { name: string; amount: number; unit: string | null }> = {};
+      const donorTotals: Record<string, {
+        donorId: string | null;
+        name: string;
+        amount: number;
+        unit: string | null;
+      }> = {};
+
       (data || []).forEach((d) => {
         const key = d.donor_name;
         if (!donorTotals[key]) {
-          donorTotals[key] = { name: d.donor_name, amount: 0, unit: d.unit };
+          donorTotals[key] = {
+            donorId: d.donor_id,
+            name: d.donor_name,
+            amount: 0,
+            unit: d.unit
+          };
         }
         donorTotals[key].amount += d.amount;
       });
 
-      const sorted = Object.values(donorTotals)
+      // 정렬된 후원자 목록
+      const sortedDonors = Object.values(donorTotals)
         .sort((a, b) => b.amount - a.amount)
-        .slice(0, 50)
-        .map((item, idx) => ({
-          donorId: `donor-${item.name}`,
-          donorName: item.name,
-          avatarUrl: null,
-          totalAmount: item.amount,
-          rank: idx + 1,
-        }));
+        .slice(0, 50);
+
+      // vip_rewards 테이블에서 profile_id 조회 (닉네임으로 매칭)
+      const { data: vipData } = await supabase
+        .from("vip_rewards")
+        .select("profile_id, profiles:profile_id(nickname)");
+
+      // 닉네임 → profile_id 매핑 생성
+      const nicknameToProfileId: Record<string, string> = {};
+      (vipData || []).forEach((v) => {
+        const profileData = v.profiles;
+        const nickname = Array.isArray(profileData)
+          ? profileData[0]?.nickname
+          : (profileData as { nickname: string } | null)?.nickname;
+        if (nickname && v.profile_id) {
+          nicknameToProfileId[nickname] = v.profile_id;
+        }
+      });
+
+      const sorted = sortedDonors.map((item, idx) => ({
+        donorId: item.donorId || nicknameToProfileId[item.name] || null,
+        donorName: item.name,
+        avatarUrl: null,
+        totalAmount: item.amount,
+        rank: idx + 1,
+      }));
 
       setRankings(sorted);
     }
@@ -141,10 +170,6 @@ export default function TotalRankingPage() {
                   <span>{currentSeason.name} 진행중</span>
                 </Link>
               )}
-              <Link href="/ranking/vip" className={styles.heroLinkVip}>
-                <Trophy size={16} />
-                <span>VIP 라운지</span>
-              </Link>
             </div>
           </div>
         </section>
@@ -194,7 +219,7 @@ export default function TotalRankingPage() {
                 <div className={styles.sectionHeader}>
                   <h2 className={styles.sectionTitle}>
                     <Crown size={18} />
-                    TOP 3 명예의 전당
+                    TOP 3
                   </h2>
                 </div>
                 <RankingPodium items={top3} />

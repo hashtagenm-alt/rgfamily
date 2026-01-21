@@ -14,9 +14,9 @@ export default function TributePage({ params }: { params: Promise<{ userId: stri
   const router = useRouter()
 
   useEffect(() => {
-    // VIP 개인 페이지로 리다이렉트
-    router.replace(`/ranking/vip/${userId}`)
-  }, [userId, router])
+    // 랭킹 페이지로 리다이렉트
+    router.replace('/ranking')
+  }, [router])
 
   return (
     <div className={styles.main}>

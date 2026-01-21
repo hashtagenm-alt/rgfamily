@@ -267,6 +267,7 @@ class MockProfileRepository implements IProfileRepository {
       role: data.role || 'member',
       unit: data.unit || null,
       total_donation: data.total_donation || 0,
+      pandatv_id: data.pandatv_id || null,
       created_at: getCurrentTimestamp(),
       updated_at: getCurrentTimestamp(),
     }
@@ -383,6 +384,7 @@ class MockOrganizationRepository implements IOrganizationRepository {
       profile_info: data.profile_info || null,
       is_active: data.is_active ?? true,
       is_live: data.is_live ?? false,
+      current_rank: data.current_rank || null,
       created_at: getCurrentTimestamp(),
     }
     store.organization.push(newOrg)

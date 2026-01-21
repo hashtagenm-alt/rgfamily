@@ -1,8 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Target, X } from 'lucide-react'
+import { Target, X, Star } from 'lucide-react'
 import type { OrgMember } from './MemberCard'
+import { RANKS } from '@/lib/constants/ranks'
 import styles from './PledgeSidebar.module.css'
 
 interface PledgeSidebarProps {
@@ -14,28 +15,66 @@ interface PledgeRow {
   rank: string
   title: string
   content: string
+  isCurrentRank?: boolean
 }
 
-const parsePledge = (pledgeText: string): PledgeRow[] => {
+/**
+ * 직급명으로 순위(position) 찾기
+ */
+const getPositionByRankName = (rankName: string | null | undefined): number | null => {
+  if (!rankName) return null
+  const rank = RANKS.find(r => r.name === rankName)
+  return rank?.position || null
+}
+
+/**
+ * 공약 텍스트 파싱
+ * - 묶음 순위(예: 10,11,12등)도 개별 행으로 분리
+ * - 현재 직급 강조 표시 지원
+ */
+const parsePledge = (pledgeText: string, currentRankPosition: number | null): PledgeRow[] => {
   const lines = pledgeText.split('\n').filter(line => line.trim())
   const rows: PledgeRow[] = []
 
   for (const line of lines) {
-    const match = line.match(/^\[?(\d+(?:,\d+)*등?)\]?\s*(.+?)\s*[▶ㅡ\-→]\s*(.+)$/)
+    // 패턴: [1등] 여왕 ▶ 내용 또는 1등 여왕 ▶ 내용
+    const match = line.match(/^\[?(\d+(?:[,&\s]*\d+)*(?:등)?)\]?\s*(.+?)\s*[▶ㅡ\-→]\s*(.+)$/)
     if (match) {
-      rows.push({
-        rank: match[1].replace(/등$/, ''),
-        title: match[2].trim(),
-        content: match[3].trim()
-      })
-    } else {
-      const simpleMatch = line.match(/^(\d+(?:,\d+)*등?)\s+(.+?)\s+[▶ㅡ\-→]\s*(.+)$/)
-      if (simpleMatch) {
+      const rankStr = match[1].replace(/등$/, '').replace(/\s+/g, '')
+      const title = match[2].trim()
+      const content = match[3].trim()
+
+      // 묶음 순위 분리 (예: "10,11,12" → ["10", "11", "12"])
+      const ranks = rankStr.split(/[,&]/).map(r => r.trim()).filter(Boolean)
+
+      for (const rank of ranks) {
+        const rankNum = parseInt(rank, 10)
         rows.push({
-          rank: simpleMatch[1].replace(/등$/, ''),
-          title: simpleMatch[2].trim(),
-          content: simpleMatch[3].trim()
+          rank,
+          title,
+          content,
+          isCurrentRank: currentRankPosition === rankNum
         })
+      }
+    } else {
+      // 대체 패턴: 1등 여왕 ▶ 내용
+      const simpleMatch = line.match(/^(\d+(?:[,&\s]*\d+)*(?:등)?)\s+(.+?)\s+[▶ㅡ\-→]\s*(.+)$/)
+      if (simpleMatch) {
+        const rankStr = simpleMatch[1].replace(/등$/, '').replace(/\s+/g, '')
+        const title = simpleMatch[2].trim()
+        const content = simpleMatch[3].trim()
+
+        const ranks = rankStr.split(/[,&]/).map(r => r.trim()).filter(Boolean)
+
+        for (const rank of ranks) {
+          const rankNum = parseInt(rank, 10)
+          rows.push({
+            rank,
+            title,
+            content,
+            isCurrentRank: currentRankPosition === rankNum
+          })
+        }
       }
     }
   }
@@ -83,7 +122,8 @@ export function PledgeSidebar({ member, onClose }: PledgeSidebarProps) {
           </div>
         ) : (
           (() => {
-            const pledgeRows = parsePledge(member.profile_info!.position_pledge!)
+            const currentRankPosition = getPositionByRankName(member.current_rank)
+            const pledgeRows = parsePledge(member.profile_info!.position_pledge!, currentRankPosition)
             if (pledgeRows.length > 0) {
               return (
                 <div className={styles.pledgeTable}>
@@ -96,10 +136,13 @@ export function PledgeSidebar({ member, onClose }: PledgeSidebarProps) {
                     {pledgeRows.map((row, idx) => (
                       <div
                         key={idx}
-                        className={styles.pledgeRow}
+                        className={`${styles.pledgeRow} ${row.isCurrentRank ? styles.currentRankRow : ''}`}
                         data-rank={row.rank}
                       >
-                        <span className={styles.pledgeRankCell}>{getRankIcon(row.rank)}</span>
+                        <span className={styles.pledgeRankCell}>
+                          {row.isCurrentRank && <Star size={12} className={styles.currentRankStar} />}
+                          {getRankIcon(row.rank)}
+                        </span>
                         <span className={styles.pledgeTitleCell}>{row.title}</span>
                         <span className={styles.pledgeContentCell}>{row.content}</span>
                       </div>

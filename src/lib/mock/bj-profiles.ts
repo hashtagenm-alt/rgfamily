@@ -32,7 +32,7 @@ export const generateBjProfileId = (orgId: number): string => {
 }
 
 // BJ 프로필 데이터 생성
-export const mockBjProfiles: Profile[] = BJ_MEMBERS.map((member, index) => {
+export const mockBjProfiles: Profile[] = BJ_MEMBERS.map((member) => {
   const avatarKey = member.email.split('@')[0]
   return {
     id: generateBjProfileId(member.orgId),
@@ -42,6 +42,7 @@ export const mockBjProfiles: Profile[] = BJ_MEMBERS.map((member, index) => {
     role: 'member' as const,
     unit: 'excel' as const,
     total_donation: 0,
+    pandatv_id: null, // BJ 멤버는 PandaTV 아이디 별도 없음
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
   }

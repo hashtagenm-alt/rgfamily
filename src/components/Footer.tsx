@@ -24,10 +24,6 @@ export default function Footer() {
           <p className={styles.description}>
             함께하는 즐거움, RG와 함께
           </p>
-          <Link href="/ranking/vip" className={styles.vipLink}>
-            <Crown size={14} />
-            <span>VIP LOUNGE</span>
-          </Link>
         </div>
 
         {/* Links */}

@@ -7,9 +7,10 @@
 
 import type { BjThankYouMessageWithMember } from '@/types/database'
 import { getMemberAvatar } from './utils'
+import { rankedProfiles } from './profiles'
 
-// VIP 프로필 ID (mock profiles.ts의 user-1 ~ user-20이 VIP)
-const VIP_PROFILE_IDS = Array.from({ length: 20 }, (_, i) => `user-${i + 1}`)
+// VIP 프로필 ID (rankedProfiles 상위 20명)
+const VIP_PROFILE_IDS = rankedProfiles.slice(0, 20).map(p => p.id)
 
 // BJ 멤버 정보 (organization 데이터 기준)
 const BJ_MEMBERS_INFO = [

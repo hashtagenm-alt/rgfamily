@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Heart, Plus, Upload, List } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Heart, Plus, Upload, List, Calendar, UserPlus } from 'lucide-react'
 import { DataTable, Column, CsvUploader, DonationModal } from '@/components/admin'
-import { useDonationsData, useAlert, type DonationItem } from '@/lib/hooks'
+import { useDonationsData, useAlert, useEpisodes, type DonationItem } from '@/lib/hooks'
 import { formatAmount } from '@/lib/utils/format'
+import type { Episode } from '@/types/database'
 import styles from '../shared.module.css'
 
 type ViewMode = 'list' | 'upload'
@@ -21,11 +22,28 @@ export default function DonationsPage() {
     uploadCsv,
   } = useDonationsData()
   const { showConfirm, showError } = useAlert()
+  const episodesRepo = useEpisodes()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingDonation, setEditingDonation] = useState<Partial<DonationItem> | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
+
+  // CSV 업로드 옵션
+  const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [selectedEpisodeId, setSelectedEpisodeId] = useState<number | null>(null)
+  const [autoCreateProfiles, setAutoCreateProfiles] = useState(true)
+
+  // 에피소드 목록 로드
+  useEffect(() => {
+    const loadEpisodes = async () => {
+      if (seasons.length > 0) {
+        const eps = await episodesRepo.findBySeason(seasons[0].id)
+        setEpisodes(eps)
+      }
+    }
+    loadEpisodes()
+  }, [seasons, episodesRepo])
 
   const handleAdd = () => {
     setEditingDonation({
@@ -86,9 +104,12 @@ export default function DonationsPage() {
     })
   }
 
+  // CSV 컬럼 정의 (두 가지 형식 지원)
+  // 1. 일반 CSV: ID, 하트, 일시, 내용
+  // 2. 랭킹 CSV: 순위, 후원 아이디(닉네임), 총 후원하트
   const csvColumns = [
-    { key: 'ID', label: '후원자ID', required: true },
-    { key: '하트', label: '하트', required: true },
+    { key: 'ID', altKey: '후원 아이디(닉네임)', label: '후원자ID/닉네임', required: true },
+    { key: '하트', altKey: '총 후원하트', label: '하트', required: true },
     { key: '일시', label: '일시', required: false },
     { key: '내용', label: '내용', required: false },
   ]
@@ -176,13 +197,55 @@ export default function DonationsPage() {
           <div className={styles.uploadInfo}>
             <h3>CSV 파일로 대량 등록</h3>
             <p>아래 형식의 CSV 파일을 업로드하여 여러 후원 내역을 한 번에 등록할 수 있습니다.</p>
-            <p className={styles.hint}>
-              * 후원자명이 등록된 회원 닉네임과 일치하면 자동으로 연결됩니다.
-            </p>
           </div>
+
+          {/* 업로드 옵션 */}
+          <div className={styles.uploadOptions}>
+            {/* 에피소드 선택 */}
+            <div className={styles.optionRow}>
+              <label className={styles.optionLabel}>
+                <Calendar size={16} />
+                에피소드 연결 (직급전)
+              </label>
+              <select
+                value={selectedEpisodeId ?? ''}
+                onChange={(e) => setSelectedEpisodeId(e.target.value ? Number(e.target.value) : null)}
+                className={styles.optionSelect}
+              >
+                <option value="">선택 안 함</option>
+                {episodes.map((ep) => (
+                  <option key={ep.id} value={ep.id}>
+                    {ep.episode_number}화: {ep.title}
+                    {ep.is_rank_battle && ' ⚔️ 직급전'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 프로필 자동 생성 */}
+            <div className={styles.optionRow}>
+              <label className={styles.optionCheckbox}>
+                <input
+                  type="checkbox"
+                  checked={autoCreateProfiles}
+                  onChange={(e) => setAutoCreateProfiles(e.target.checked)}
+                />
+                <UserPlus size={16} />
+                프로필 자동 생성
+              </label>
+              <span className={styles.optionHint}>
+                등록되지 않은 닉네임은 자동으로 프로필을 생성합니다
+              </span>
+            </div>
+          </div>
+
           <CsvUploader
             columns={csvColumns}
-            onUpload={uploadCsv}
+            onUpload={(data, options) => uploadCsv(data, {
+              ...options,
+              autoCreateProfiles,
+              episodeId: selectedEpisodeId ?? undefined,
+            })}
             sampleFile="/samples/donations_sample.csv"
             showDuplicateOptions
           />

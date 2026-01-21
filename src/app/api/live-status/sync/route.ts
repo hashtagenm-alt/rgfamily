@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
-import { extractChannelId, checkMultipleChannels } from '@/lib/api/pandatv'
+// 통합 모듈 사용 (API 실패 시 스크래퍼로 자동 전환)
+import { extractChannelId, checkMultipleChannels } from '@/lib/api/pandatv-unified'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY

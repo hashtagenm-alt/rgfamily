@@ -20,13 +20,8 @@ export default function TributeHashPage({ params }: { params: Promise<{ hash: st
   useEffect(() => {
     // 해시 디코딩
     const userId = decodeHashToUserId(hash)
-    if (userId) {
-      // VIP 개인 페이지로 리다이렉트 (히스토리에 남기지 않음)
-      router.replace(`/ranking/vip/${userId}`)
-    } else {
-      // 유효하지 않은 해시는 VIP 라운지로 리다이렉트
-      router.replace('/ranking/vip')
-    }
+    // 랭킹 페이지로 리다이렉트
+    router.replace('/ranking')
   }, [hash, router])
 
   return (

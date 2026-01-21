@@ -50,9 +50,10 @@ const dedicationVideos: Record<number, string> = {
 
 /**
  * VIP Rewards Mock Data
- * 시즌 1 기준 Top 50 후원자 보상 정보
+ * 포디움(1~3위)에 한 번이라도 올라갔던 후원자만 VIP 페이지 존재
+ * 상위 50명 전체가 아님!
  */
-export const mockVipRewards: VipReward[] = rankedProfiles.slice(0, 50).map((profile, index) => {
+export const mockVipRewards: VipReward[] = rankedProfiles.slice(0, 3).map((profile, index) => {
   const rank = index + 1
   return {
     id: rank,
@@ -60,8 +61,8 @@ export const mockVipRewards: VipReward[] = rankedProfiles.slice(0, 50).map((prof
     season_id: 1, // 현재 시즌
     episode_id: null, // 직급전 회차 ID (목업에서는 null)
     rank,
-    personal_message: rank <= 3 ? personalMessages[rank] : null,
-    dedication_video_url: rank <= 3 ? dedicationVideos[rank] : null,
+    personal_message: personalMessages[rank] || null,
+    dedication_video_url: dedicationVideos[rank] || null,
     created_at: new Date(2025, 0, 1).toISOString(),
   }
 })
@@ -186,8 +187,9 @@ export function getTop3Rewards(): VipReward[] {
 }
 
 /**
- * Top 50 Rewards 조회
+ * 모든 VIP Rewards 조회 (포디움 달성자만)
+ * @deprecated getTop3Rewards 사용 권장 - VIP는 포디움(1~3위) 달성자만
  */
 export function getTop50Rewards(): VipReward[] {
-  return mockVipRewards.filter(r => r.rank <= 50).sort((a, b) => a.rank - b.rank)
+  return mockVipRewards.sort((a, b) => a.rank - b.rank)
 }

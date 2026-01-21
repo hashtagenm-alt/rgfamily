@@ -32,6 +32,7 @@ export interface OrgMember {
   }
   profile_info?: ProfileInfo
   is_live?: boolean
+  current_rank?: string | null // 직급전 현재 직급 (대표는 null)
 }
 
 interface MemberCardProps {
@@ -76,7 +77,10 @@ export function MemberCard({ member, size, onClick, isSelected }: MemberCardProp
       </div>
       <div className={styles.memberInfo}>
         <span className={styles.memberName}>{member.name}</span>
-        <span className={styles.memberRole}>{member.role}</span>
+        {/* 대표는 role 표시, 멤버는 current_rank 표시 */}
+        <span className={styles.memberRole}>
+          {member.role === '대표' ? member.role : member.current_rank || member.role}
+        </span>
       </div>
     </motion.div>
   )

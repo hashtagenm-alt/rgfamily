@@ -67,7 +67,10 @@ export function ProfileSidebar({ member, onClose }: ProfileSidebarProps) {
                   {member.unit === 'excel' ? 'EXCEL' : 'CREW'}
                 </span>
               </div>
-              <span className={styles.role}>{member.role}</span>
+              {/* 대표는 role 표시, 멤버는 current_rank 표시 */}
+              <span className={styles.role}>
+                {member.role === '대표' ? member.role : member.current_rank || member.role}
+              </span>
               <span className={`${styles.statusBadge} ${member.is_live ? styles.live : ''}`}>
                 {member.is_live ? '🔴 방송 중' : '⚫ 오프라인'}
               </span>
