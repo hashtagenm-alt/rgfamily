@@ -4,22 +4,35 @@
 
 ---
 
-## ⚠️ 가장 중요한 규칙: PR 워크플로우
+## ⚠️ 가장 중요한 규칙: PR 워크플로우 (AI 필수!)
 
 ```
 왜? CI 실패, 병합 충돌, 빌드 오류를 미리 잡아야 해. main 직접 푸시는 위험함.
 
-✅ 올바른 워크플로우:
-1. feature/* 또는 fix/* 브랜치에서 작업
-2. 작업 완료 후 `npm run build` 로 로컬 빌드 성공 확인 (필수!)
-3. Pull Request 생성
-4. CI 통과 확인
-5. main에 병합
+🤖 AI(Claude)는 반드시 이 워크플로우를 따라야 함!
+   사용자가 "커밋해줘", "푸시해줘"라고 해도 main 직접 푸시 금지.
+   항상 feature 브랜치 → PR → 머지 순서로 진행할 것.
 
-❌ 절대 금지:
-- main 브랜치에 직접 푸시
+✅ 올바른 워크플로우:
+1. feature/* 또는 fix/* 브랜치 생성 (예: feature/vip-upload)
+2. 해당 브랜치에서 작업 및 커밋
+3. `npm run build` 로 로컬 빌드 성공 확인 (필수!)
+4. GitHub에 브랜치 푸시
+5. Pull Request 생성 (gh pr create 사용)
+6. CI 통과 확인
+7. main에 머지 (gh pr merge 사용)
+
+❌ 절대 금지 (AI도 예외 없음):
+- main 브랜치에 직접 커밋/푸시
 - 로컬 빌드 확인 없이 PR 생성
 - CI 실패 상태에서 병합
+
+Git 명령어 예시:
+git checkout -b feature/기능명   # 브랜치 생성
+git add -A && git commit -m "..."  # 커밋
+git push -u origin feature/기능명  # 푸시
+gh pr create --fill               # PR 생성
+gh pr merge --squash              # 머지
 
 빌드 확인 명령어:
 npm run build    # 프로덕션 빌드 (반드시 성공해야 함)
