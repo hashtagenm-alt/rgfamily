@@ -74,33 +74,82 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-4);
+  gap: var(--space-5);
   flex-wrap: wrap;
+  margin-top: var(--space-2);
 }
 
 .heroLinkSeason,
-.heroLinkVip {
+.heroLinkVip,
+.heroLinkHallOfFame {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
   border-radius: var(--radius-full);
   font-size: var(--text-base);
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
+/* Shimmer 효과 공통 */
+.heroLinkSeason::before,
+.heroLinkHallOfFame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: shimmer 3s infinite;
+}
+
+/* 시즌 진행중 버튼 - 레드/핑크 테마 */
 .heroLinkSeason {
-  background: rgba(255, 100, 100, 0.1);
-  border: 1px solid rgba(255, 100, 100, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.15) 0%,
+    rgba(255, 107, 107, 0.08) 50%,
+    rgba(255, 107, 107, 0.15) 100%
+  );
+  border: 1px solid rgba(255, 107, 107, 0.5);
   color: #ff6b6b;
+  box-shadow:
+    0 0 20px rgba(255, 107, 107, 0.15),
+    inset 0 1px 0 rgba(255, 107, 107, 0.2);
+}
+
+.heroLinkSeason::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 107, 107, 0.3) 50%,
+    transparent 100%
+  );
 }
 
 .heroLinkSeason:hover {
-  background: rgba(255, 100, 100, 0.15);
-  border-color: rgba(255, 100, 100, 0.3);
-  transform: translateY(-1px);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.25) 0%,
+    rgba(255, 107, 107, 0.15) 50%,
+    rgba(255, 107, 107, 0.25) 100%
+  );
+  border-color: #ff6b6b;
+  box-shadow:
+    0 0 30px rgba(255, 107, 107, 0.3),
+    0 4px 16px rgba(255, 107, 107, 0.2),
+    inset 0 1px 0 rgba(255, 107, 107, 0.3);
+  transform: translateY(-2px);
 }
 
 .heroLinkVip {
@@ -112,7 +161,51 @@
 .heroLinkVip:hover {
   background: rgba(255, 215, 0, 0.15);
   border-color: var(--metallic-gold);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+
+/* 명예의 전당 버튼 - 골드 테마 */
+.heroLinkHallOfFame {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(255, 180, 0, 0.08) 50%,
+    rgba(255, 215, 0, 0.15) 100%
+  );
+  border: 1px solid var(--metallic-gold);
+  color: var(--metallic-gold);
+  box-shadow:
+    0 0 20px rgba(255, 215, 0, 0.15),
+    inset 0 1px 0 rgba(255, 215, 0, 0.2);
+}
+
+.heroLinkHallOfFame::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.3) 50%,
+    transparent 100%
+  );
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  50%, 100% { left: 100%; }
+}
+
+.heroLinkHallOfFame:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.25) 0%,
+    rgba(255, 180, 0, 0.15) 50%,
+    rgba(255, 215, 0, 0.25) 100%
+  );
+  border-color: var(--metallic-gold);
+  box-shadow:
+    0 0 30px rgba(255, 215, 0, 0.3),
+    0 4px 16px rgba(255, 215, 0, 0.2),
+    inset 0 1px 0 rgba(255, 215, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 /* =======================================

@@ -912,6 +912,55 @@ export type Database = {
           }
         ]
       }
+      rank_battle_records: {
+        Row: {
+          id: number
+          season_id: number
+          battle_number: number
+          rank: number
+          donor_id: string | null
+          donor_name: string
+          total_amount: number
+          finalized_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          season_id: number
+          battle_number: number
+          rank: number
+          donor_id?: string | null
+          donor_name: string
+          total_amount: number
+          finalized_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          season_id?: number
+          battle_number?: number
+          rank?: number
+          donor_id?: string | null
+          donor_name?: string
+          total_amount?: number
+          finalized_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'rank_battle_records_season_id_fkey'
+            columns: ['season_id']
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'rank_battle_records_donor_id_fkey'
+            columns: ['donor_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1009,6 +1058,7 @@ export type Banner = Tables<'banners'>
 export type TributeGuestbook = Tables<'tribute_guestbook'>
 export type BjThankYouMessage = Tables<'bj_thank_you_messages'>
 export type VipPersonalMessage = Tables<'vip_personal_messages'>
+export type RankBattleRecord = Tables<'rank_battle_records'>
 
 // BJ 감사 메시지 with JOIN data
 export interface BjThankYouMessageWithMember extends BjThankYouMessage {

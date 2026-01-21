@@ -1,0 +1,324 @@
+/* Hall of Fame Page - Premium 명예의 전당 페이지 스타일 */
+
+.main {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+/* =======================================
+   Hero Section - Luxury Gold Theme
+   ======================================= */
+.hero {
+  position: relative;
+  padding: 140px var(--space-6) 80px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 215, 0, 0.12) 0%,
+    rgba(255, 180, 0, 0.06) 30%,
+    rgba(255, 215, 0, 0.02) 60%,
+    transparent 100%
+  );
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Animated Background Glow */
+.heroGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1000px;
+  height: 600px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(255, 180, 0, 0.08) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Decorative Particles */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.15) 0%, transparent 2%),
+    radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.12) 0%, transparent 2%),
+    radial-gradient(circle at 40% 70%, rgba(255, 215, 0, 0.1) 0%, transparent 1.5%),
+    radial-gradient(circle at 70% 60%, rgba(255, 180, 0, 0.15) 0%, transparent 2%),
+    radial-gradient(circle at 10% 80%, rgba(255, 215, 0, 0.08) 0%, transparent 1%);
+  animation: particleFloat 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.heroTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+/* Premium Crown Icon */
+.heroCrown {
+  color: var(--metallic-gold);
+  filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.6));
+  animation: crownFloat 3s ease-in-out infinite;
+}
+
+@keyframes crownFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.6));
+  }
+  25% {
+    transform: translateY(-4px) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0deg);
+    filter: drop-shadow(0 0 24px rgba(255, 215, 0, 0.8));
+  }
+  75% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+}
+
+/* Premium Title with Gradient */
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(
+    135deg,
+    var(--metallic-gold) 0%,
+    #fff8dc 25%,
+    var(--metallic-gold) 50%,
+    #fff8dc 75%,
+    var(--metallic-gold) 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmerText 4s linear infinite;
+  text-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+}
+
+@keyframes shimmerText {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* Subtitle with Elegant Typography */
+.heroSubtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-8);
+  line-height: 1.7;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroLinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* Premium Back Link */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-muted);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.backLink:hover {
+  color: var(--metallic-gold);
+  border-color: var(--metallic-gold-border);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.1) 0%,
+    rgba(255, 215, 0, 0.05) 100%
+  );
+  transform: translateX(-6px);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
+}
+
+/* =======================================
+   Main Content Container
+   ======================================= */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--space-6) var(--space-16);
+  position: relative;
+}
+
+/* Container Decorative Lines */
+.container::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--metallic-gold) 50%,
+    transparent 100%
+  );
+  opacity: 0.5;
+}
+
+/* =======================================
+   Responsive Design
+   ======================================= */
+@media (max-width: 768px) {
+  .hero {
+    padding: 120px var(--space-4) 60px;
+  }
+
+  .heroGlow {
+    width: 600px;
+    height: 400px;
+  }
+
+  .heroTitleRow {
+    gap: var(--space-3);
+  }
+
+  .heroTitle {
+    font-size: 2.25rem;
+  }
+
+  .heroSubtitle {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-6);
+  }
+
+  .container {
+    padding: 0 var(--space-4) var(--space-10);
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 100px var(--space-3) 48px;
+  }
+
+  .hero::before {
+    display: none;
+  }
+
+  .heroGlow {
+    width: 400px;
+    height: 300px;
+  }
+
+  .heroTitleRow {
+    gap: var(--space-2);
+  }
+
+  .heroCrown {
+    width: 28px;
+    height: 28px;
+  }
+
+  .heroTitle {
+    font-size: 1.75rem;
+  }
+
+  .heroSubtitle {
+    font-size: var(--text-sm);
+  }
+
+  .container {
+    padding: 0 var(--space-3) var(--space-8);
+  }
+
+  .container::before {
+    display: none;
+  }
+}
+
+/* =======================================
+   Reduced Motion
+   ======================================= */
+@media (prefers-reduced-motion: reduce) {
+  .heroCrown {
+    animation: none;
+  }
+
+  .heroGlow {
+    animation: none;
+  }
+
+  .hero::before {
+    animation: none;
+  }
+
+  .heroTitle {
+    animation: none;
+    background: var(--metallic-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+}

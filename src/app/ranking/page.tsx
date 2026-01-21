@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Trophy, Crown, Flame, TrendingUp, Users, Sparkles } from "lucide-react";
+import { Trophy, Crown, Flame, TrendingUp, Users, Sparkles, Award } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -188,6 +188,10 @@ export default function TotalRankingPage() {
                   <span>{currentSeason.name} 진행중</span>
                 </Link>
               )}
+              <Link href="/ranking/hall-of-fame" className={styles.heroLinkHallOfFame}>
+                <Award size={16} />
+                <span>명예의 전당</span>
+              </Link>
             </div>
           </div>
         </section>

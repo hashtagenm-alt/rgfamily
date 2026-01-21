@@ -1,10 +1,31 @@
 # RG Family - 개발 가이드 (Claude Code용)
 
 > 이 문서는 AI가 개발할 때 참고하는 지침서야. 모든 규칙에는 "왜?"가 있어.
+> **마지막 업데이트: 2026-01-21**
 
 ---
 
-## ⚠️ 가장 중요한 규칙: PR 워크플로우 (AI 필수!)
+## 목차
+
+1. [가장 중요한 규칙: PR 워크플로우](#1-가장-중요한-규칙-pr-워크플로우)
+2. [프로젝트 소개](#2-프로젝트-소개)
+3. [기술 스택](#3-기술-스택)
+4. [데이터 정책: Supabase 직접 연결](#4-데이터-정책-supabase-직접-연결)
+5. [Supabase 스키마 레퍼런스](#5-supabase-스키마-레퍼런스)
+6. [보안 및 개인정보 보호](#6-보안-및-개인정보-보호)
+7. [디자인 가이드라인](#7-디자인-가이드라인)
+8. [UI/UX 상세 규칙](#8-uiux-상세-규칙)
+9. [콘텐츠 관리 정책](#9-콘텐츠-관리-정책)
+10. [스타일링 원칙](#10-스타일링-원칙)
+11. [Git 브랜치 전략](#11-git-브랜치-전략)
+12. [환경변수 및 설정](#12-환경변수-및-설정)
+13. [주요 파일 위치](#13-주요-파일-위치)
+14. [금지 사항 체크리스트](#14-금지-사항-체크리스트)
+15. [참고 사이트](#15-참고-사이트)
+
+---
+
+## 1. 가장 중요한 규칙: PR 워크플로우
 
 ```
 왜? CI 실패, 병합 충돌, 빌드 오류를 미리 잡아야 해. main 직접 푸시는 위험함.
@@ -42,19 +63,23 @@ npm run lint     # ESLint 검사
 
 ---
 
-## 이 프로젝트가 뭔지 먼저 알아야 해
+## 2. 프로젝트 소개
 
 **RG Family**는 PandaTV 스트리머 "리나" 팬 커뮤니티 공식 웹사이트야.
 
-- **뭘 하는 사이트?**: 팬들이 후원 랭킹 보고, 멤버 정보 확인하고, VIP 혜택 받는 곳
-- **누가 쓰는데?**: 내부 팬들이랑 VIP 후원자들. 일반인 대상 아님
-- **배포**: Vercel / **백엔드**: Supabase
+| 항목 | 설명 |
+|-----|------|
+| **목적** | 팬들이 후원 랭킹 보고, 멤버 정보 확인하고, VIP 혜택 받는 곳 |
+| **대상** | 내부 팬들 + VIP 후원자들 (일반인 대상 아님) |
+| **플랫폼** | PandaTV (후원 단위: **하트**, 별풍선 아님!) |
+| **배포** | Vercel |
+| **백엔드** | Supabase (PostgreSQL) |
 
-왜 이걸 알아야 하냐면, 팬덤 내부용이라 복잡한 기능보다 **감성적 디자인**이랑 **후원자 감사 표현**이 더 중요해.
+> 왜 이걸 알아야 하냐면, 팬덤 내부용이라 복잡한 기능보다 **감성적 디자인**이랑 **후원자 감사 표현**이 더 중요해.
 
 ---
 
-## 기술 스택 - 왜 이걸 쓰는지
+## 3. 기술 스택
 
 | 기술 | 왜 쓰는지 |
 |-----|----------|
@@ -66,7 +91,7 @@ npm run lint     # ESLint 검사
 
 ---
 
-## ⚠️ 데이터는 무조건 Supabase (Mock 금지!)
+## 4. 데이터 정책: Supabase 직접 연결
 
 ```
 왜? Mock 데이터로 개발하면 실제 DB 스키마와 불일치 발생. 배포 시 버그 터짐.
@@ -89,104 +114,215 @@ npm run lint     # ESLint 검사
 
 ---
 
-## Supabase 스키마 레퍼런스
+## 5. Supabase 스키마 레퍼런스
 
 ```
 왜? 스키마 모르고 개발하면 타입 에러, 쿼리 실패 발생. 항상 여기 먼저 참고해.
 
 📍 타입 정의 파일: src/types/database.ts
+📍 Supabase Dashboard: https://supabase.com/dashboard/project/cdiptfmagemjfmsuphaj
+```
 
-주요 테이블:
-┌─────────────────────┬───────────────────────────────────────┐
-│ 테이블              │ 용도                                  │
-├─────────────────────┼───────────────────────────────────────┤
-│ profiles            │ 사용자 프로필 (닉네임, 역할, 후원총액)│
-│ seasons             │ 시즌 정보 (is_active로 현재 시즌 판별)│
-│ episodes            │ 에피소드/직급전 정보                   │
-│ donations           │ 후원 내역 (donor_name, amount, unit)  │
-│ organization        │ 조직도 멤버 (unit, role, parent_id)   │
-│ vip_rewards         │ VIP 리워드 (rank, personal_message)   │
-│ vip_images          │ VIP 보상 이미지                       │
-│ schedules           │ 캘린더 일정                           │
-│ timeline_events     │ 타임라인 이벤트                       │
-│ live_status         │ 방송 라이브 상태                      │
-│ banners             │ 메인 배너                             │
-│ notices             │ 공지사항                              │
-│ posts/comments      │ 게시판/댓글                           │
-│ signatures          │ 시그니처 콘텐츠                       │
-│ media_content       │ 숏츠/VOD                              │
-│ tribute_guestbook   │ 헌정 방명록                           │
-│ bj_thank_you_messages│ BJ 감사 메시지                       │
-│ vip_personal_messages│ VIP 개인 메시지                      │
-└─────────────────────┴───────────────────────────────────────┘
+### 5.1 주요 테이블 목록
 
-주요 컬럼 타입:
-- unit: 'excel' | 'crew' (팬클럽 소속)
-- role (profiles): 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
-- event_type (schedules): 'broadcast' | 'collab' | 'event' | 'notice' | '休'
-- platform (live_status): 'chzzk' | 'twitch' | 'youtube' | 'pandatv'
+| 테이블 | 용도 | 비고 |
+|--------|------|------|
+| `profiles` | 사용자 프로필 (닉네임, 역할, 후원총액) | |
+| `seasons` | 시즌 정보 | `is_active`로 현재 시즌 판별 |
+| `episodes` | 에피소드/직급전 정보 | `is_rank_battle`, `is_finalized` |
+| `donations` | 후원 내역 | donor_name, amount, unit |
+| `organization` | 조직도 멤버 | unit, role, parent_id |
+| `vip_rewards` | VIP 리워드 | rank, personal_message |
+| `vip_images` | VIP 시그니처 이미지 | **운영자만 추가** |
+| `schedules` | 캘린더 일정 | |
+| `timeline_events` | 타임라인 이벤트 | |
+| `live_status` | 방송 라이브 상태 | |
+| `banners` | 메인 배너 | |
+| `notices` | 공지사항 | |
+| `posts` / `comments` | 게시판/댓글 | |
+| `signatures` | 시그니처 콘텐츠 | |
+| `signature_videos` | 시그니처 영상 | |
+| `media_content` | 숏츠/VOD | 목업 데이터 금지 |
+| `tribute_guestbook` | 헌정 방명록 | |
+| `bj_thank_you_messages` | BJ 감사 메시지 | |
+| `vip_personal_messages` | VIP 개인 메시지 | |
+| `rank_battle_records` | **직급전 기록 (명예의 전당)** | 시즌/회차별 Top 50 저장 |
 
-주요 RPC 함수:
-- get_active_season_id(): 현재 활성 시즌 ID
-- get_user_rank(p_user_id, p_season_id): 사용자 랭킹 조회
-- get_episode_rankings(p_episode_id, p_limit): 에피소드별 랭킹
-- is_vip_user(user_id): VIP 여부 확인
-- is_admin(user_id): 관리자 여부 확인
+### 5.2 rank_battle_records 테이블 (명예의 전당용)
+
+```
+왜? 직급전 결과를 영구 보존하여 "명예의 전당"에 표시하기 위함.
+
+테이블 구조:
+┌──────────────────┬──────────────────────────────────────────┐
+│ 컬럼              │ 설명                                     │
+├──────────────────┼──────────────────────────────────────────┤
+│ id               │ 자동 증가 PK                              │
+│ season_id        │ 시즌 번호 (FK → seasons)                  │
+│ battle_number    │ 직급전 회차 (1, 2, 3...)                  │
+│ rank             │ 순위 (1~50)                               │
+│ donor_id         │ 후원자 UUID (nullable, FK → profiles)     │
+│ donor_name       │ 후원자 닉네임                             │
+│ total_amount     │ 총 후원하트                               │
+│ finalized_at     │ 확정 시점                                 │
+│ created_at       │ 생성 시점                                 │
+└──────────────────┴──────────────────────────────────────────┘
+
+UNIQUE 제약: (season_id, battle_number, rank)
+→ 같은 시즌, 같은 회차, 같은 순위는 하나만 존재
+
+사용 예시:
+// 시즌 1 / 1회 직급전 Top 50 조회
+const { data } = await supabase
+  .from('rank_battle_records')
+  .select('*')
+  .eq('season_id', 1)
+  .eq('battle_number', 1)
+  .order('rank', { ascending: true })
+```
+
+### 5.3 주요 컬럼 타입 (Enum)
+
+```typescript
+// 팬클럽 소속
+type Unit = 'excel' | 'crew'
+
+// 사용자 역할
+type Role = 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
+
+// 일정 유형
+type EventType = 'broadcast' | 'collab' | 'event' | 'notice' | '休'
+
+// 플랫폼
+type Platform = 'chzzk' | 'twitch' | 'youtube' | 'pandatv'
+
+// 미디어 콘텐츠 유형
+type ContentType = 'shorts' | 'vod'
+```
+
+### 5.4 주요 RPC 함수
+
+| 함수명 | 용도 |
+|--------|------|
+| `get_active_season_id()` | 현재 활성 시즌 ID |
+| `get_user_rank(p_user_id, p_season_id)` | 사용자 랭킹 조회 |
+| `get_episode_rankings(p_episode_id, p_limit)` | 에피소드별 랭킹 |
+| `is_vip_user(user_id)` | VIP 여부 확인 |
+| `is_admin(user_id)` | 관리자 여부 확인 |
+| `is_bj_member(user_id)` | BJ 멤버 여부 확인 |
+
+---
+
+## 6. 보안 및 개인정보 보호
+
+### 6.1 후원 정보 외부 노출 절대 금지
+
+```
+⚠️ 가장 중요한 보안 규칙!
+
+왜? 후원 하트 개수는 개인 금전 정보와 같음. 외부에 노출되면 안 됨.
+    팬들 간의 비교나 외부 유출로 인한 갈등 방지 목적.
+
+✅ 허용:
+- RG Family 홈페이지 내부 (https://www.rgfamily.kr/)
+- 로그인한 사용자에게만 랭킹 표시
+- 명예의 전당 페이지 (홈페이지 내부)
+
+❌ 절대 금지:
+- 후원 하트 개수를 외부 사이트/SNS에 공개
+- Open Graph, meta 태그에 후원 금액 포함
+- API 응답을 외부에서 접근 가능하게 노출
+- 크롤링 가능한 형태로 후원 정보 제공
+- 스크린샷/캡처 유도하는 UI (공유 버튼 등)
+
+개발 시 주의사항:
+- 랭킹 페이지에 "외부 공유 금지" 안내 문구 표시
+- og:description에 후원 금액 절대 포함 금지
+- robots.txt에서 랭킹 페이지 크롤링 차단 검토
+```
+
+### 6.2 닉네임만 표시 (아이디/이메일 노출 금지)
+
+```
+왜? "아이디 말고 닉네임으로 가는 거지" - 회의 내용
+실명이나 아이디 노출하면 안 됨. 팬들은 닉네임으로 불리길 원함
+
+❌ 금지: user.id, user.email, user.pandatv_id
+✅ 허용: user.nickname, profile.nickname, donor_name
 ```
 
 ---
 
-## 핵심 개발 지침 (이것만은 꼭!)
+## 7. 디자인 가이드라인
 
-> 디자이너, 기획자, 개발자 통화 회의에서 합의한 내용들이야.
+### 7.1 컬러 시스템
 
-### 2. 라이브 상태는 크롤링으로
-```
-왜? PandaTV는 공식 API가 없어. 방송 중인지 확인하려면 직접 긁어와야 함
-방법: 관리자 계정 즐겨찾기 페이지에서 파싱 (헤드리스 브라우저)
-메인 페이지는 모든 BJ가 나와서 파싱 어려움 → 즐겨찾기 페이지가 답
-```
-
-### 3. 컬러는 무조건 통일 (핑크 과용 주의!)
 ```css
 왜? 디자이너가 "컬러가 다 따로 논다"고 지적함. 일관성 없으면 촌스러워 보임
 그리고 핑크만 도배하면 오히려 촌스러워짐 → 뉴트럴 기반으로!
 
---color-primary: #fd68ba;    /* 메인 핑크 - 포인트에만 */
---live-color: #00d4ff;       /* 라이브는 시안색 */
+/* 브랜드 컬러 */
+--color-primary: #fd68ba;    /* 메인 핑크 - 포인트에만 사용 */
+--live-color: #00d4ff;       /* 라이브 표시 - 시안색 (핑크 아님!) */
+
+/* 랭킹 컬러 */
 --gold: #ffd700;             /* 1등 */
 --silver: #c0c0c0;           /* 2등 */
 --bronze: #cd7f32;           /* 3등 */
 
 핑크 사용 비율:
-- 뉴트럴(흰/검/회) 85-90%: 배경, 텍스트, 카드, 테두리
-- 핑크 포인트 10-15%: CTA 버튼, 활성 상태, 로고, 호버
-
-마우스 호버할 때도 핑크로 바뀌게 해야 함
+┌────────────────────────────────────────┐
+│ 뉴트럴(흰/검/회) 85-90%               │
+│ → 배경, 텍스트, 카드, 테두리           │
+├────────────────────────────────────────┤
+│ 핑크 포인트 10-15%                     │
+│ → CTA 버튼, 활성 상태, 로고, 호버      │
+└────────────────────────────────────────┘
 ```
 
-### 4. 글씨는 키워
+### 7.2 글씨 크기
+
 ```
 왜? "전체적으로 글씨가 조금 작은 느낌" - 디자이너 피드백
-어르신 팬분들 많아서 시인성 중요. 본문은 최소 16px
+어르신 팬분들 많아서 시인성 중요.
+
+최소 크기: 본문 16px
 ```
 
-### 5. 다크/라이트 모드 둘 다
+### 7.3 다크/라이트 모드
+
 ```
 왜? 이사님이 흰색 좋아하신대. 근데 다크가 더 프리미엄해 보여서 둘 다 지원
-기본값은 다크, 토글로 전환 가능하게
+기본값: 다크 모드
+토글로 전환 가능
 ```
 
-### 6. 닉네임으로 표시 (아이디 X)
-```
-왜? "아이디 말고 닉네임으로 가는 거지" - 회의 내용
-실명이나 아이디 노출하면 안 됨. 팬들은 닉네임으로 불리길 원함
+---
 
-❌ user.id, user.email
-✅ user.nickname, profile.nickname
+## 8. UI/UX 상세 규칙
+
+### 8.1 마우스 호버 효과 필수
+
+```
+왜? 인터랙션 없으면 밋밋해 보임
+"마우스 갖다 대면 시그니처 컬러로 바뀌게끔"
+
+적용 대상: 카드, 버튼, 링크, 테이블 행 전부
+호버 시: 핑크(#fd68ba)로 변경
 ```
 
-### 7. 조직도는 트리 구조로
+### 8.2 랭킹 포디움 형태
+
+```
+왜? "1등이 가운데로 제일 높게, 2등 왼쪽, 3등 오른쪽"
+올림픽 시상대처럼. 컬러는 금은동으로 구분
+
+     🥇(1등)
+  🥈(2등)  🥉(3등)
+```
+
+### 8.3 조직도 트리 구조
+
 ```
 왜? "대표 2명이 투톱으로 있고 나머지를 거미줄처럼 빠지게"
 기존: 가로 나열 (비어 보임)
@@ -194,99 +330,126 @@ npm run lint     # ESLint 검사
 참고: cnine.kr 조직도
 ```
 
-### 8. 랭킹은 포디움 형태
-```
-왜? "1등이 가운데로 제일 높게, 2등 왼쪽, 3등 오른쪽"
-올림픽 시상대처럼. 컬러는 금은동으로 구분
-```
+### 8.4 메인 배너 꽉 채우기
 
-### 9. 메인 배너는 꽉 채워
 ```
 왜? "사진을 테두리 끝까지 다 채우시게" - 디자이너 피드백
 양옆 여백 비어있으면 허전해 보임
 참고: theK 그룹 페이지처럼 꽉 채운 배너
 ```
 
-### 10. 타임라인에 엑셀부/크루부 필터
+### 8.5 타임라인 필터
+
 ```
 왜? "제일 위에 엑셀부랑 크루부로 나누시는 게 나을 것 같아요"
 시즌 필터 위쪽에 팬클럽 그룹별 탭 추가 필요
 ```
 
-### 11. 캘린더는 더케이 스타일로
+### 8.6 캘린더 더케이 스타일
+
 ```
 왜? "왼쪽 거를 날리고 날짜 안에 일정이 들어가 있었으면"
 현재: 사이드바 + 작은 캘린더
 변경: 풀 캘린더 뷰, 날짜 칸 안에 일정 직접 표시
 ```
 
-### 12. 마우스 호버 효과 필수
+### 8.7 라이브 상태 크롤링
+
 ```
-왜? 인터랙션 없으면 밋밋해 보임
-"마우스 갖다 대면 시그니처 컬러로 바뀌게끔"
-적용: 카드, 버튼, 링크, 테이블 행 전부 → 핑크(#fd68ba)로 변경
+왜? PandaTV는 공식 API가 없어. 방송 중인지 확인하려면 직접 긁어와야 함
+방법: 관리자 계정 즐겨찾기 페이지에서 파싱 (헤드리스 브라우저)
+메인 페이지는 모든 BJ가 나와서 파싱 어려움 → 즐겨찾기 페이지가 답
 ```
 
 ---
 
-## 스타일링 원칙
+## 9. 콘텐츠 관리 정책
+
+### 9.1 VIP 시그니처 이미지 (운영자만 추가)
+
+```
+왜? VIP 이미지는 품질 관리가 필요함. 아무나 업로드하면 안 됨.
+
+✅ 정책:
+- vip_images 테이블: 운영자(admin/superadmin)만 직접 추가
+- 일반 사용자 업로드 기능 없음
+- Supabase Dashboard에서 직접 관리
+
+❌ 금지:
+- 일반 사용자용 VIP 이미지 업로드 UI 만들기
+- 자동 승인 방식의 이미지 업로드
+```
+
+### 9.2 SHORTS/VOD 콘텐츠 (media_content)
+
+```
+왜? 미디어 콘텐츠는 실제 데이터만 보여줘야 함. 목업으로 채우면 안 됨.
+
+✅ 정책:
+- media_content 테이블에 실제 데이터 있을 때만 표시
+- 데이터 없으면 "콘텐츠 준비 중" 메시지 표시
+- 목업/더미 데이터 절대 삽입 금지
+
+content_type 구분:
+- 'shorts': 짧은 하이라이트 영상
+- 'vod': 전체 방송 다시보기
+```
+
+### 9.3 VIP 개인 메시지 (vip_rewards.personal_message)
+
+```
+왜? 개인 메시지는 실제 VIP가 직접 작성해야 의미 있음.
+
+✅ 정책:
+- VIP 사용자가 직접 입력/업로드해야만 저장됨
+- 운영자가 대신 입력하는 것도 금지
+- 목업/샘플 메시지 삽입 금지
+
+개발 시 주의:
+- personal_message 컬럼이 NULL이면 빈 상태로 표시
+- "메시지를 작성해주세요" 같은 placeholder만 허용
+```
+
+---
+
+## 10. 스타일링 원칙
 
 ```
 왜? Tailwind랑 CSS 모듈 섞여있으면 "스타일 어디서 바꾸지?" 혼란
-- Tailwind 우선: 일반 스타일링
-- CSS 모듈: 복잡한 애니메이션, 테마 분기, :global 필요할 때만
-- globals.css: CSS 변수/테마, *.module.css: 컴포넌트별 복잡한 스타일
+
+우선순위:
+1. Tailwind 우선: 일반 스타일링
+2. CSS 모듈: 복잡한 애니메이션, 테마 분기, :global 필요할 때만
+
+파일 구조:
+- globals.css: CSS 변수/테마
+- *.module.css: 컴포넌트별 복잡한 스타일
 ```
 
 ---
 
-## Git 브랜치 전략
+## 11. Git 브랜치 전략
 
 ```
 왜? main 직접 푸시하면 위험함. 여러 명이 작업하면 코드 충돌남
+
+브랜치 구조:
 - main: 배포 전용 (PR 통해서만 병합)
-- feature/*: 새 기능, fix/*: 버그 수정
-흐름: 브랜치 생성 → 작업 → PR → 리뷰 → main 병합 → Vercel 자동 배포
+- feature/*: 새 기능
+- fix/*: 버그 수정
+
+워크플로우:
+브랜치 생성 → 작업 → 로컬 빌드 확인 → PR → 리뷰 → main 병합 → Vercel 자동 배포
 ```
 
 ---
 
-## 절대 하면 안 되는 것들
-
-| 금지 | 이유 |
-|-----|------|
-| **main 직접 푸시** | PR 통해서만 병합해야 함. CI 검증 필수 |
-| **빌드 확인 없이 PR** | `npm run build` 성공 확인 후 PR 생성 |
-| **Mock 데이터 사용** | Supabase 직접 연결만 허용. Mock 파일 import 금지 |
-| **스키마 확인 없이 개발** | src/types/database.ts 먼저 확인 필수 |
-| SOOP(별풍선) | 여긴 **PandaTV(하트)** 플랫폼임 |
-| 아이디/이메일 노출 | 닉네임만 표시해야 함 |
-| 라이브 컬러 핑크 | LIVE는 **시안색**(#00d4ff) |
-
----
-
-## 주요 파일 위치
-
-```
-페이지: src/app/(page.tsx, rg/org/page.tsx, ranking/page.tsx, schedule/page.tsx)
-컴포넌트: src/components/
-목업 데이터: src/lib/mock/
-CSS 변수: src/app/globals.css
-타입: src/types/
-```
-
----
-
-## 참고 사이트
-- **cnine.kr** → 조직도, 라이브 (시안색 테두리) / **theK** → 캘린더 / **sooplive** → VIP
-
----
-
-## 환경변수
+## 12. 환경변수 및 설정
 
 ```
 📍 로컬 환경변수 파일: .env.local (이미 설정됨)
 
+필수 환경변수:
 NEXT_PUBLIC_SUPABASE_URL=https://cdiptfmagemjfmsuphaj.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...  # 관리자 스크립트용
@@ -296,36 +459,61 @@ SUPABASE_SERVICE_ROLE_KEY=sb_secret_...  # 관리자 스크립트용
 
 ---
 
-## Supabase 데이터 확인/수정 방법
+## 13. 주요 파일 위치
 
 ```
-왜? 코드로 데이터 수정하면 실수 위험. Dashboard에서 직접 확인하고 수정하는 게 안전함.
-
-🌐 Supabase Dashboard 접속:
-https://supabase.com/dashboard/project/cdiptfmagemjfmsuphaj
-
-브라우저에서 할 수 있는 작업:
-1. Table Editor → 테이블 데이터 직접 CRUD
-2. SQL Editor → 복잡한 쿼리 실행
-3. Authentication → 사용자 관리
-4. Storage → 이미지/파일 업로드
-
-개발 시 데이터 작업 순서:
-1. Dashboard에서 테이블 구조 확인
-2. 필요한 데이터 직접 추가/수정
-3. 코드에서 해당 데이터 조회만 구현
-
-CLI로 Supabase 확인 (선택):
-npx supabase status  # 연결 상태 확인
+src/
+├── app/                    # 페이지 (App Router)
+│   ├── page.tsx           # 메인 페이지
+│   ├── rg/org/page.tsx    # 조직도
+│   ├── ranking/page.tsx   # 랭킹
+│   ├── schedule/page.tsx  # 일정
+│   └── globals.css        # 전역 CSS 변수
+├── components/            # 재사용 컴포넌트
+├── lib/
+│   ├── actions/           # Server Actions
+│   ├── supabase/          # Supabase 클라이언트
+│   └── mock/              # ⚠️ 사용 금지
+└── types/
+    ├── database.ts        # Supabase 스키마 타입
+    └── ranking.ts         # 랭킹 관련 타입
 ```
+
+---
+
+## 14. 금지 사항 체크리스트
+
+| 금지 | 이유 |
+|-----|------|
+| **main 직접 푸시** | PR 통해서만 병합. CI 검증 필수 |
+| **빌드 확인 없이 PR** | `npm run build` 성공 확인 후 PR 생성 |
+| **Mock 데이터 사용** | Supabase 직접 연결만 허용 |
+| **스키마 확인 없이 개발** | src/types/database.ts 먼저 확인 |
+| **후원 하트 외부 노출** | 홈페이지 내부에서만 표시 |
+| **SOOP(별풍선) 용어** | 여긴 **PandaTV(하트)** 플랫폼 |
+| **아이디/이메일 노출** | 닉네임만 표시 |
+| **라이브 컬러 핑크** | LIVE는 **시안색**(#00d4ff) |
+| **VIP 이미지 일반 업로드** | 운영자만 Dashboard에서 추가 |
+
+---
+
+## 15. 참고 사이트
+
+| 사이트 | 참고 요소 |
+|--------|----------|
+| **cnine.kr** | 조직도 구조, 라이브 표시 (시안색 테두리) |
+| **theK** | 캘린더 UI, 꽉 찬 배너 |
+| **sooplive** | VIP 페이지 레이아웃 |
 
 ---
 
 ## 요약: 개발할 때 이것만 기억해
 
 1. **Supabase만**: Mock 금지, database.ts 스키마 먼저 확인
-2. **컬러 통일**: 핑크(#fd68ba) + 라이브는 시안(#00d4ff)
+2. **컬러 통일**: 핑크(#fd68ba) 포인트, 라이브는 시안(#00d4ff)
 3. **글씨 크게**: 최소 16px
 4. **닉네임만**: 아이디/이메일 절대 노출 금지
 5. **호버 효과**: 클릭 가능한 건 다 핑크로 변함
 6. **후원 단위**: 별풍선 아니고 **하트**
+7. **후원 정보 외부 노출 금지**: 홈페이지 내부에서만!
+8. **PR 워크플로우 필수**: main 직접 푸시 절대 금지
