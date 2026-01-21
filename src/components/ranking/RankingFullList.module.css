@@ -18,16 +18,39 @@
 }
 
 .vipLink .item {
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* VIP 링크 아이템에 미묘한 골드 힌트 */
+.vipLink .item::after {
+  content: '';
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: var(--metallic-gold);
+  border-radius: 50%;
+  opacity: 0.4;
+  transition: all 0.2s ease;
 }
 
 .vipLink:hover .item {
-  background: rgba(212, 175, 55, 0.08);
-  border-left: 2px solid #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+  border-left: 3px solid #d4af37;
+  transform: translateX(2px);
+}
+
+.vipLink:hover .item::after {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--metallic-gold-glow);
 }
 
 .vipLink:hover .item .borderAccent {
   background: #d4af37;
+  width: 4px;
 }
 
 .vipLink:hover .item .hoverArrow {

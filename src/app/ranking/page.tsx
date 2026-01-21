@@ -102,6 +102,27 @@ export default function TotalRankingPage() {
         }
       });
 
+      // Top 3 사용자 중 vip_rewards에 없는 경우, profiles 테이블에서 직접 검색
+      const top3Rankings = (totalRankingsResult.data || []).filter(item => item.rank <= 3);
+      const missingTop3Names = top3Rankings
+        .filter(item => !nicknameToProfileId[item.donor_name])
+        .map(item => item.donor_name);
+
+      // profiles 테이블에서 누락된 Top 3 사용자 검색
+      if (missingTop3Names.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, nickname")
+          .in("nickname", missingTop3Names);
+
+        // 검색된 프로필을 매핑에 추가
+        (profilesData || []).forEach((profile) => {
+          if (profile.nickname && profile.id) {
+            nicknameToProfileId[profile.nickname] = profile.id;
+          }
+        });
+      }
+
       const sorted = (totalRankingsResult.data || []).map((item) => ({
         donorId: nicknameToProfileId[item.donor_name] || null,
         donorName: item.donor_name,
@@ -200,14 +221,8 @@ export default function TotalRankingPage() {
             </div>
           ) : (
             <>
-              {/* Top 3 Podium */}
+              {/* Top 3 Podium - 프리미엄 소개 영역 */}
               <section className={styles.podiumSection}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    <Crown size={18} />
-                    TOP 3
-                  </h2>
-                </div>
                 <RankingPodium items={top3} podiumProfileIds={podiumProfileIds} />
               </section>
 

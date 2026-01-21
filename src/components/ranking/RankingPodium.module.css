@@ -1,581 +1,608 @@
-/* RankingPodium.module.css - Premium Dark Podium Design */
+/* RankingPodium.module.css - Premium Top3 Showcase Design */
 
-/* Container Setup */
+/* ============================================
+   Container & Layout
+   ============================================ */
 .container {
+  position: relative;
+  width: 100%;
+  padding: var(--space-8) var(--space-4);
+  background: linear-gradient(180deg,
+    rgba(255, 215, 0, 0.02) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(255, 215, 0, 0.01) 100%
+  );
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+
+/* ============================================
+   Section Header
+   ============================================ */
+.sectionHeader {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+
+.titleWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  background: linear-gradient(135deg, #ffd700 0%, #fff8dc 50%, #ffd700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* ============================================
+   Podium Grid - 2등(좌) | 1등(중앙) | 3등(우)
+   ============================================ */
+.podiumGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  gap: var(--space-6);
+  align-items: end;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.runnerUpSlot {
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-  gap: 32px;
-  padding: 48px 24px 0;
-  max-width: 720px;
-  margin: 0 auto;
-  position: relative;
+  padding-top: var(--space-8);
+}
+
+.championSlot {
+  display: flex;
+  justify-content: center;
   z-index: 10;
 }
 
-/* Podium Link Wrapper */
-.podiumLink {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  position: relative;
-  z-index: 1;
+.thirdSlot {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-10);
 }
 
-.podiumLink:hover .podiumWrapper {
-  transform: translateY(-8px);
-}
-
-.podiumLinkDisabled {
-  display: block;
-  position: relative;
-}
-
-/* Stage Platform - Subtle Base Line */
-.stageLine {
-  display: none;
-}
-
-/* Individual Podium Card Wrapper */
-.podiumWrapper {
+/* ============================================
+   Card Base Styles
+   ============================================ */
+.card {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: var(--space-6) var(--space-5);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-2xl);
   cursor: pointer;
-  z-index: 1;
-}
-
-/* CSS Animation */
-.podiumWrapper.animate {
-  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
-}
-
-.podiumWrapper.delay1 {
-  animation-delay: 0s;
-}
-
-.podiumWrapper.delay2 {
-  animation-delay: 0.1s;
-}
-
-.podiumWrapper.delay3 {
-  animation-delay: 0.2s;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.podiumWrapper:hover {
-  transform: translateY(-8px);
-}
-
-/* Rank Order - 2위(좌), 1위(중앙), 3위(우) */
-.podiumWrapper.rank1 {
-  order: 2;
-  z-index: 5;
-}
-
-.podiumWrapper.rank2 {
-  order: 1;
-}
-
-.podiumWrapper.rank3 {
-  order: 3;
-}
-
-/* =======================================
-   Avatar Section
-   ======================================= */
-.avatarSection {
-  position: relative;
-  margin-bottom: 12px;
-  z-index: 20;
-}
-
-.avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2px solid var(--card-border);
-  overflow: hidden;
-  background: var(--surface);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-/* 1위 Champion Avatar - 가장 크고 화려하게 */
-.rank1 .avatar {
-  width: 96px;
-  height: 96px;
-  border: 3px solid var(--metallic-gold);
+.cardLink {
+  text-decoration: none;
+  display: block;
+}
+
+.cardWrapper {
+  display: block;
+}
+
+/* Champion Card (1등) - 더 크고 화려하게 */
+.championCard {
+  padding: var(--space-8) var(--space-6);
+  min-width: 200px;
+  background: linear-gradient(180deg,
+    rgba(255, 215, 0, 0.08) 0%,
+    var(--card-bg) 40%,
+    var(--card-bg) 100%
+  );
+  border-color: rgba(255, 215, 0, 0.3);
   box-shadow:
-    0 0 0 4px rgba(255, 215, 0, 0.12),
-    0 8px 32px rgba(255, 215, 0, 0.2),
-    0 0 60px rgba(255, 215, 0, 0.1);
+    0 0 0 1px rgba(255, 215, 0, 0.1),
+    0 20px 50px -10px rgba(255, 215, 0, 0.15),
+    0 0 100px -20px rgba(255, 215, 0, 0.2);
 }
 
-.rank1:hover .avatar {
-  border-color: #ffd700;
+.championCard:hover {
+  border-color: rgba(255, 215, 0, 0.5);
   box-shadow:
-    0 0 0 6px rgba(255, 215, 0, 0.15),
-    0 12px 40px rgba(255, 215, 0, 0.3),
-    0 0 80px rgba(255, 215, 0, 0.15);
+    0 0 0 2px rgba(255, 215, 0, 0.15),
+    0 25px 60px -10px rgba(255, 215, 0, 0.25),
+    0 0 120px -20px rgba(255, 215, 0, 0.3);
 }
 
-/* 2위 Silver Avatar */
-.rank2 .avatar {
-  width: 72px;
-  height: 72px;
-  border: 2px solid var(--metallic-silver);
-  box-shadow:
-    0 0 0 3px rgba(192, 192, 192, 0.08),
-    0 6px 24px rgba(192, 192, 192, 0.12);
+/* Runner Card (2등, 3등) */
+.runnerCard {
+  min-width: 160px;
+  background: var(--card-bg);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
 }
 
-.rank2:hover .avatar {
-  border-color: #e8e8e8;
-  box-shadow:
-    0 0 0 4px rgba(192, 192, 192, 0.12),
-    0 8px 32px rgba(192, 192, 192, 0.2);
+.runnerCard:hover {
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.4);
 }
 
-/* 3위 Bronze Avatar */
-.rank3 .avatar {
-  width: 72px;
-  height: 72px;
-  border: 2px solid var(--metallic-bronze);
-  box-shadow:
-    0 0 0 3px rgba(205, 127, 50, 0.08),
-    0 6px 24px rgba(205, 127, 50, 0.12);
+/* ============================================
+   Card Glow Effects
+   ============================================ */
+.cardGlow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 1px;
+  background: transparent;
+  transition: all 0.3s ease;
 }
 
-.rank3:hover .avatar {
-  border-color: #d4a574;
-  box-shadow:
-    0 0 0 4px rgba(205, 127, 50, 0.12),
-    0 8px 32px rgba(205, 127, 50, 0.2);
+.goldGlow {
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.6), transparent);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
-.avatarImage {
-  object-fit: cover;
+.silverGlow {
+  background: linear-gradient(90deg, transparent, rgba(192, 192, 192, 0.5), transparent);
 }
 
-/* =======================================
-   닉네임 이니셜
-   ======================================= */
-.initialsWrapper {
+.bronzeGlow {
+  background: linear-gradient(90deg, transparent, rgba(205, 127, 50, 0.5), transparent);
+}
+
+.card:hover .cardGlow {
   width: 100%;
-  height: 100%;
+  height: 2px;
+}
+
+/* ============================================
+   Rank Label
+   ============================================ */
+.rankLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-full);
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-5);
+}
+
+.championCard .rankLabel {
+  padding: var(--space-2-5) var(--space-5);
+  font-size: var(--text-sm);
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* ============================================
+   Avatar Section
+   ============================================ */
+.avatarWrapper {
+  position: relative;
+  margin-bottom: var(--space-5);
+}
+
+.avatarRing {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  padding: 3px;
+  background: var(--card-border);
+  overflow: hidden;
+}
+
+.championAvatar .avatarRing {
+  width: 100px;
+  height: 100px;
+  padding: 4px;
+}
+
+/* Gold Ring */
+.gold .avatarRing {
+  background: linear-gradient(135deg, #ffd700 0%, #fff8dc 30%, #ffd700 60%, #b8860b 100%);
+  box-shadow:
+    0 0 0 2px rgba(255, 215, 0, 0.1),
+    0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+/* Silver Ring */
+.silver .avatarRing {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 30%, #c0c0c0 60%, #a0a0a0 100%);
+  box-shadow: 0 0 20px rgba(192, 192, 192, 0.2);
+}
+
+/* Bronze Ring */
+.bronze .avatarRing {
+  background: linear-gradient(135deg, #cd7f32 0%, #e09050 30%, #cd7f32 60%, #8b4513 100%);
+  box-shadow: 0 0 20px rgba(205, 127, 50, 0.2);
+}
+
+.initialsWrapper {
+  position: absolute;
+  inset: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+  background: var(--surface);
+  border-radius: 50%;
+}
+
+.championAvatar .initialsWrapper {
+  inset: 4px;
 }
 
 .initials {
   font-family: var(--font-display);
   font-weight: 700;
+  font-size: var(--text-xl);
   letter-spacing: 1px;
-  text-transform: uppercase;
 }
 
-.rank1 .initials {
-  font-size: 2rem;
-  background: linear-gradient(135deg, #ffd700 0%, #ffec80 50%, #ffd700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+.championAvatar .initials {
+  font-size: var(--text-3xl);
 }
 
-.rank2 .initials {
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 50%, #c0c0c0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Sparkle Effect (1위 전용) */
+.sparkleEffect {
+  position: absolute;
+  top: -8px;
+  right: -8px;
 }
 
-.rank3 .initials {
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, #cd7f32 0%, #d4a574 50%, #cd7f32 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* =======================================
-   Rank Badge - 순위 표시
-   ======================================= */
-.rankBadge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: var(--surface);
-  border: 1px solid var(--card-border);
-  margin-top: 10px;
-  transition: all 0.3s ease;
-}
-
-.rankBadge svg {
-  width: 14px;
-  height: 14px;
-}
-
-.rankNumber {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 12px;
-}
-
-/* 1위 Badge - 골드 */
-.rank1 .rankBadge {
-  padding: 6px 14px;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(255, 215, 0, 0.06) 100%);
-  border: 1px solid rgba(255, 215, 0, 0.35);
-  color: var(--metallic-gold);
-  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.15);
-}
-
-.rank1 .rankBadge svg {
-  width: 18px;
-  height: 18px;
-  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3));
-}
-
-.rank1 .rankNumber {
-  font-size: 14px;
-}
-
-.rank1:hover .rankBadge {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.18) 0%, rgba(255, 215, 0, 0.1) 100%);
-  border-color: rgba(255, 215, 0, 0.5);
-}
-
-/* 2위 Badge - 실버 */
-.rank2 .rankBadge {
-  background: linear-gradient(135deg, rgba(192, 192, 192, 0.08) 0%, rgba(192, 192, 192, 0.04) 100%);
-  border-color: rgba(192, 192, 192, 0.25);
-  color: var(--metallic-silver);
-}
-
-.rank2:hover .rankBadge {
-  background: linear-gradient(135deg, rgba(192, 192, 192, 0.12) 0%, rgba(192, 192, 192, 0.06) 100%);
-  border-color: rgba(192, 192, 192, 0.35);
-}
-
-/* 3위 Badge - 브론즈 */
-.rank3 .rankBadge {
-  background: linear-gradient(135deg, rgba(205, 127, 50, 0.08) 0%, rgba(205, 127, 50, 0.04) 100%);
-  border-color: rgba(205, 127, 50, 0.25);
-  color: var(--metallic-bronze);
-}
-
-.rank3:hover .rankBadge {
-  background: linear-gradient(135deg, rgba(205, 127, 50, 0.12) 0%, rgba(205, 127, 50, 0.06) 100%);
-  border-color: rgba(205, 127, 50, 0.35);
-}
-
-/* =======================================
-   Pedestal - 포디움 기둥
-   ======================================= */
-.nameCard {
-  width: 100%;
+/* ============================================
+   Name Section
+   ============================================ */
+.nameSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 14px 12px 20px;
-  background: linear-gradient(180deg, var(--card-bg) 0%, rgba(0,0,0,0.2) 100%);
-  border: 1px solid var(--card-border);
-  border-radius: 12px 12px 0 0;
+  gap: var(--space-2);
   text-align: center;
-  margin-top: 14px;
-  transition: all 0.3s ease;
-  position: relative;
 }
 
-/* 1위 - 가장 높은 포디움 */
-.rank1 .nameCard {
-  min-width: 130px;
-  padding: 18px 20px 64px;
-  border-color: rgba(255, 215, 0, 0.25);
-  background: linear-gradient(180deg,
-    rgba(255, 215, 0, 0.04) 0%,
-    var(--card-bg) 30%,
-    rgba(0,0,0,0.3) 100%
-  );
-}
-
-.rank1 .nameCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent);
-}
-
-.rank1:hover .nameCard {
-  border-color: rgba(255, 215, 0, 0.4);
-  background: linear-gradient(180deg,
-    rgba(255, 215, 0, 0.08) 0%,
-    var(--card-bg) 30%,
-    rgba(0,0,0,0.35) 100%
-  );
-}
-
-/* 2위 - 중간 높이 포디움 */
-.rank2 .nameCard {
-  min-width: 110px;
-  padding: 14px 14px 44px;
-  border-color: rgba(192, 192, 192, 0.18);
-  background: linear-gradient(180deg,
-    rgba(192, 192, 192, 0.03) 0%,
-    var(--card-bg) 30%,
-    rgba(0,0,0,0.25) 100%
-  );
-}
-
-.rank2 .nameCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(192, 192, 192, 0.3), transparent);
-}
-
-.rank2:hover .nameCard {
-  border-color: rgba(192, 192, 192, 0.3);
-}
-
-/* 3위 - 낮은 포디움 */
-.rank3 .nameCard {
-  min-width: 110px;
-  padding: 14px 14px 32px;
-  border-color: rgba(205, 127, 50, 0.18);
-  background: linear-gradient(180deg,
-    rgba(205, 127, 50, 0.03) 0%,
-    var(--card-bg) 30%,
-    rgba(0,0,0,0.25) 100%
-  );
-}
-
-.rank3 .nameCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(205, 127, 50, 0.3), transparent);
-}
-
-.rank3:hover .nameCard {
-  border-color: rgba(205, 127, 50, 0.3);
-}
-
-/* Empty State */
-.empty .avatar {
-  opacity: 0.3;
-}
-
-.empty .rankBadge {
-  opacity: 0.4;
-}
-
-.empty .nameCard {
-  opacity: 0.4;
-}
-
-/* Name Text */
 .name {
   font-family: var(--font-display);
+  font-size: var(--text-base);
   font-weight: 600;
-  font-size: 13px;
   color: var(--text-primary);
-  margin: 0;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
-  letter-spacing: 0.3px;
 }
 
-.rank1 .name {
-  font-size: 15px;
+.championName {
+  font-size: var(--text-lg);
   font-weight: 700;
-  background: linear-gradient(135deg, #ffd700 0%, #ffec80 50%, #ffd700 100%);
+  max-width: 180px;
+  background: linear-gradient(135deg, #ffd700 0%, #fff8dc 50%, #ffd700 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.rank2 .name {
-  color: var(--metallic-silver);
+.vipIndicator {
+  display: inline-flex;
+  padding: 2px 8px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
 }
 
-.rank3 .name {
-  color: var(--metallic-bronze);
+.vipIndicator span {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--metallic-gold);
 }
 
-/* =======================================
-   Responsive
-   ======================================= */
+/* ============================================
+   Bottom Line Decoration
+   ============================================ */
+.bottomLine {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-border);
+  transition: all 0.3s ease;
+}
+
+.gold .bottomLine {
+  background: linear-gradient(90deg, transparent 0%, #ffd700 50%, transparent 100%);
+}
+
+.silver .bottomLine {
+  background: linear-gradient(90deg, transparent 0%, #c0c0c0 50%, transparent 100%);
+}
+
+.bronze .bottomLine {
+  background: linear-gradient(90deg, transparent 0%, #cd7f32 50%, transparent 100%);
+}
+
+.card:hover .bottomLine {
+  height: 4px;
+}
+
+/* ============================================
+   Bottom Decoration
+   ============================================ */
+.bottomDecoration {
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.3) 50%,
+    transparent 100%
+  );
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  opacity: 0.3;
+}
+
+.championEmpty {
+  padding: var(--space-8);
+}
+
+.emptyAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px dashed var(--card-border);
+}
+
+.championEmpty .emptyAvatar {
+  width: 88px;
+  height: 88px;
+}
+
+.emptyText {
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
 @media (max-width: 768px) {
   .container {
-    gap: 20px;
-    padding: 40px 16px 0;
+    padding: var(--space-6) var(--space-3);
   }
 
-  .rank1 .avatar {
+  .title {
+    font-size: var(--text-xl);
+    letter-spacing: 0.1em;
+  }
+
+  .podiumGrid {
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: var(--space-3);
+    padding: 0 var(--space-2);
+  }
+
+  .championCard {
+    min-width: 150px;
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .runnerCard {
+    min-width: 120px;
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .championAvatar .avatarRing {
     width: 80px;
     height: 80px;
   }
 
-  .rank2 .avatar,
-  .rank3 .avatar {
-    width: 64px;
-    height: 64px;
+  .avatarRing {
+    width: 60px;
+    height: 60px;
   }
 
-  .rank1 .initials {
-    font-size: 1.75rem;
+  .championAvatar .initials {
+    font-size: var(--text-2xl);
   }
 
-  .rank2 .initials,
-  .rank3 .initials {
-    font-size: 1.25rem;
+  .initials {
+    font-size: var(--text-lg);
   }
 
-  .rank1 .nameCard {
-    min-width: 110px;
-    padding: 16px 14px 52px;
-  }
-
-  .rank2 .nameCard {
-    min-width: 95px;
-    padding: 12px 12px 36px;
-  }
-
-  .rank3 .nameCard {
-    min-width: 95px;
-    padding: 12px 12px 28px;
+  .championName {
+    font-size: var(--text-base);
   }
 
   .name {
-    font-size: 12px;
+    font-size: var(--text-sm);
+    max-width: 100px;
   }
 
-  .rank1 .name {
-    font-size: 14px;
+  .runnerUpSlot {
+    padding-top: var(--space-6);
+  }
+
+  .thirdSlot {
+    padding-top: var(--space-8);
   }
 }
 
 @media (max-width: 480px) {
   .container {
-    gap: 14px;
-    padding: 32px 12px 0;
+    padding: var(--space-5) var(--space-2);
   }
 
-  .rank1 .avatar {
-    width: 68px;
-    height: 68px;
-    border-width: 2px;
+  .sectionHeader {
+    margin-bottom: var(--space-6);
   }
 
-  .rank2 .avatar,
-  .rank3 .avatar {
-    width: 52px;
-    height: 52px;
+  .titleWrapper {
+    gap: var(--space-2);
   }
 
-  .rank1 .initials {
-    font-size: 1.4rem;
+  .titleWrapper svg {
+    width: 20px;
+    height: 20px;
   }
 
-  .rank2 .initials,
-  .rank3 .initials {
-    font-size: 1.1rem;
+  .title {
+    font-size: var(--text-lg);
   }
 
-  .rankBadge {
-    padding: 3px 8px;
+  .subtitle {
+    font-size: var(--text-xs);
   }
 
-  .rankBadge svg {
+  .podiumGrid {
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap: var(--space-2);
+  }
+
+  .championCard {
+    min-width: 110px;
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .runnerCard {
+    min-width: 90px;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .rankLabel {
+    padding: var(--space-1) var(--space-2);
+    font-size: 9px;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+  }
+
+  .rankLabel svg {
     width: 12px;
     height: 12px;
   }
 
-  .rank1 .rankBadge {
-    padding: 4px 10px;
+  .championCard .rankLabel {
+    padding: var(--space-1-5) var(--space-3);
+    font-size: 10px;
   }
 
-  .rank1 .rankBadge svg {
+  .championCard .rankLabel svg {
     width: 14px;
     height: 14px;
   }
 
-  .rankNumber {
-    font-size: 11px;
+  .championAvatar .avatarRing {
+    width: 64px;
+    height: 64px;
   }
 
-  .rank1 .rankNumber {
-    font-size: 12px;
+  .avatarRing {
+    width: 48px;
+    height: 48px;
+    padding: 2px;
   }
 
-  .rank1 .nameCard {
-    min-width: 90px;
-    padding: 12px 10px 44px;
+  .championAvatar .initials {
+    font-size: var(--text-xl);
   }
 
-  .rank2 .nameCard {
-    min-width: 80px;
-    padding: 10px 8px 30px;
+  .initials {
+    font-size: var(--text-base);
   }
 
-  .rank3 .nameCard {
-    min-width: 80px;
-    padding: 10px 8px 22px;
+  .avatarWrapper {
+    margin-bottom: var(--space-3);
+  }
+
+  .championName {
+    font-size: var(--text-sm);
+    max-width: 100px;
   }
 
   .name {
-    font-size: 11px;
+    font-size: var(--text-xs);
+    max-width: 80px;
   }
 
-  .rank1 .name {
-    font-size: 12px;
+  .nameSection {
+    gap: var(--space-1);
+  }
+
+  .vipIndicator {
+    padding: 1px 6px;
+  }
+
+  .vipIndicator span {
+    font-size: 8px;
+  }
+
+  .sparkleEffect {
+    top: -4px;
+    right: -4px;
+  }
+
+  .sparkleEffect svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .runnerUpSlot {
+    padding-top: var(--space-4);
+  }
+
+  .thirdSlot {
+    padding-top: var(--space-6);
   }
 }
 
-/* Reduced motion preference */
+/* ============================================
+   Reduced Motion
+   ============================================ */
 @media (prefers-reduced-motion: reduce) {
-  .podiumWrapper {
+  .card {
     transition: none;
   }
 
-  .podiumWrapper.animate {
+  .sparkleEffect {
     animation: none;
-    opacity: 1;
   }
 }

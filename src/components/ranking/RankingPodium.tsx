@@ -1,6 +1,7 @@
 "use client";
 
-import { Crown, Medal, Award } from "lucide-react";
+import { motion } from "framer-motion";
+import { Crown, Medal, Award, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { RankingItem } from "@/types/common";
@@ -14,124 +15,269 @@ interface RankingPodiumProps {
 }
 
 export default function RankingPodium({ items, podiumProfileIds = [] }: RankingPodiumProps) {
-  // Ensure we have 3 slots even if empty (for layout stability)
   const top3 = [
     items.find((i) => i.rank === 1) || null,
     items.find((i) => i.rank === 2) || null,
     items.find((i) => i.rank === 3) || null,
   ];
 
-  // Reorder for Podium: 2nd (Left), 1st (Center), 3rd (Right)
-  const podiumOrder = [top3[1], top3[0], top3[2]];
+  const champion = top3[0];
+  const runnerUp = top3[1];
+  const thirdPlace = top3[2];
 
-  const getRankClass = (rank: number) => {
-    if (rank === 1) return styles.rank1;
-    if (rank === 2) return styles.rank2;
-    return styles.rank3;
+  // 애니메이션 variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
+      },
+    },
   };
 
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Crown size={24} />;
-    if (rank === 2) return <Medal size={20} />;
-    if (rank === 3) return <Award size={20} />;
-    return null;
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        type: "spring" as const,
+        stiffness: 100,
+        damping: 15,
+      },
+    },
   };
 
-  // Get animation delay class based on position
-  const getDelayClass = (index: number) => {
-    if (index === 0) return styles.delay1;
-    if (index === 1) return styles.delay2;
-    return styles.delay3;
+  const championVariants = {
+    hidden: { opacity: 0, y: 40, scale: 0.85 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        type: "spring" as const,
+        stiffness: 80,
+        damping: 12,
+        delay: 0.2,
+      },
+    },
+  };
+
+  const getRankConfig = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return {
+          icon: Crown,
+          label: "1ST",
+          colorClass: styles.gold,
+          glowClass: styles.goldGlow,
+          borderClass: "border-yellow-500/40",
+          textClass: "text-yellow-400",
+          bgClass: "bg-yellow-500/5",
+        };
+      case 2:
+        return {
+          icon: Medal,
+          label: "2ND",
+          colorClass: styles.silver,
+          glowClass: styles.silverGlow,
+          borderClass: "border-zinc-400/30",
+          textClass: "text-zinc-300",
+          bgClass: "bg-zinc-400/5",
+        };
+      case 3:
+        return {
+          icon: Award,
+          label: "3RD",
+          colorClass: styles.bronze,
+          glowClass: styles.bronzeGlow,
+          borderClass: "border-orange-600/30",
+          textClass: "text-orange-400",
+          bgClass: "bg-orange-500/5",
+        };
+      default:
+        return {
+          icon: Award,
+          label: `${rank}TH`,
+          colorClass: "",
+          glowClass: "",
+          borderClass: "border-zinc-700",
+          textClass: "text-zinc-400",
+          bgClass: "bg-zinc-800/50",
+        };
+    }
+  };
+
+  const renderCard = (
+    item: RankingItem | null,
+    rank: number,
+    isChampion: boolean = false
+  ) => {
+    if (!item) {
+      return (
+        <div className={`${styles.emptyCard} ${isChampion ? styles.championEmpty : ""}`}>
+          <div className={styles.emptyAvatar} />
+          <span className={styles.emptyText}>-</span>
+        </div>
+      );
+    }
+
+    const config = getRankConfig(rank);
+    const Icon = config.icon;
+    const hasVipPage = item.donorId && podiumProfileIds.includes(item.donorId);
+
+    const CardContent = (
+      <motion.div
+        className={`
+          ${styles.card}
+          ${isChampion ? styles.championCard : styles.runnerCard}
+          ${config.colorClass}
+        `}
+        variants={isChampion ? championVariants : cardVariants}
+        whileHover={{
+          scale: isChampion ? 1.03 : 1.05,
+          y: -8,
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        {/* 배경 글로우 효과 */}
+        <div className={`${styles.cardGlow} ${config.glowClass}`} />
+
+        {/* 상단 랭크 라벨 */}
+        <div className={`${styles.rankLabel} ${config.textClass}`}>
+          <Icon className={isChampion ? "w-5 h-5" : "w-4 h-4"} />
+          <span>{config.label}</span>
+        </div>
+
+        {/* 아바타 영역 */}
+        <div className={`${styles.avatarWrapper} ${isChampion ? styles.championAvatar : ""}`}>
+          <div className={`${styles.avatarRing} ${config.colorClass}`}>
+            {item.avatarUrl ? (
+              <Image
+                src={item.avatarUrl}
+                alt={item.donorName}
+                fill
+                className="object-cover rounded-full"
+              />
+            ) : (
+              <div className={styles.initialsWrapper}>
+                <span className={`${styles.initials} ${config.textClass}`}>
+                  {getInitials(item.donorName)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* 1위 전용 스파클 효과 */}
+          {isChampion && (
+            <motion.div
+              className={styles.sparkleEffect}
+              animate={{
+                rotate: 360,
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+              }}
+            >
+              <Sparkles className="w-6 h-6 text-yellow-400/60" />
+            </motion.div>
+          )}
+        </div>
+
+        {/* 닉네임 */}
+        <div className={styles.nameSection}>
+          <h3 className={`${styles.name} ${isChampion ? styles.championName : ""}`}>
+            {item.donorName}
+          </h3>
+
+          {/* VIP 인디케이터 */}
+          {hasVipPage && (
+            <div className={styles.vipIndicator}>
+              <span>VIP</span>
+            </div>
+          )}
+        </div>
+
+        {/* 하단 장식 라인 */}
+        <div className={`${styles.bottomLine} ${config.colorClass}`} />
+      </motion.div>
+    );
+
+    if (hasVipPage) {
+      return (
+        <Link
+          href={`/ranking/vip/${item.donorId}`}
+          className={styles.cardLink}
+        >
+          {CardContent}
+        </Link>
+      );
+    }
+
+    return <div className={styles.cardWrapper}>{CardContent}</div>;
   };
 
   return (
-    <div className={styles.container}>
-      {/* Stage Platform Line */}
-      <div className={styles.stageLine} />
+    <motion.div
+      className={styles.container}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* 섹션 타이틀 */}
+      <motion.div
+        className={styles.sectionHeader}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <div className={styles.titleWrapper}>
+          <Crown className="w-6 h-6 text-yellow-400" />
+          <h2 className={styles.title}>TOP 3 SUPPORTERS</h2>
+          <Crown className="w-6 h-6 text-yellow-400" />
+        </div>
+        <p className={styles.subtitle}>RG Family를 빛내주시는 분들</p>
+      </motion.div>
 
-      {podiumOrder.map((item, i) => {
-        // Correct rank based on position in array
-        // i=0 -> Rank 2, i=1 -> Rank 1, i=2 -> Rank 3
-        const rank = i === 1 ? 1 : i === 0 ? 2 : 3;
+      {/* 포디움 그리드 */}
+      <div className={styles.podiumGrid}>
+        {/* 2등 - 왼쪽 */}
+        <motion.div
+          className={styles.runnerUpSlot}
+          variants={cardVariants}
+        >
+          {renderCard(runnerUp, 2)}
+        </motion.div>
 
-        if (!item) {
-          // Placeholder for empty slot
-          return (
-            <div
-              key={`empty-${rank}`}
-              className={`${styles.podiumWrapper} ${getRankClass(rank)} ${styles.empty}`}
-            >
-              <div className={styles.avatar} />
-              <div className={styles.rankBadge}>
-                {getRankIcon(rank)}
-                <span className={styles.rankNumber}>{rank}</span>
-              </div>
-              <div className={styles.nameCard}>
-                <p className={styles.name}>-</p>
-              </div>
-            </div>
-          );
-        }
+        {/* 1등 - 중앙 (가장 큼) */}
+        <motion.div
+          className={styles.championSlot}
+          variants={championVariants}
+        >
+          {renderCard(champion, 1, true)}
+        </motion.div>
 
-        const Content = (
-          <div
-            className={`${styles.podiumWrapper} ${getRankClass(rank)} ${styles.animate} ${getDelayClass(i)}`}
-          >
-            {/* Avatar */}
-            <div className={styles.avatar}>
-              {item.avatarUrl ? (
-                <Image
-                  src={item.avatarUrl}
-                  alt={item.donorName}
-                  fill
-                  className={styles.avatarImage}
-                />
-              ) : (
-                <div className={styles.initialsWrapper}>
-                  <span className={styles.initials}>
-                    {getInitials(item.donorName)}
-                  </span>
-                </div>
-              )}
-            </div>
+        {/* 3등 - 오른쪽 */}
+        <motion.div
+          className={styles.thirdSlot}
+          variants={cardVariants}
+        >
+          {renderCard(thirdPlace, 3)}
+        </motion.div>
+      </div>
 
-            {/* Rank Badge - 아바타 아래 분리 */}
-            <div className={styles.rankBadge}>
-              {getRankIcon(rank)}
-              <span className={styles.rankNumber}>{rank}</span>
-            </div>
-
-            {/* Name Card */}
-            <div className={styles.nameCard}>
-              <p className={styles.name} title={item.donorName}>
-                {item.donorName}
-              </p>
-            </div>
-          </div>
-        );
-
-        // VIP 페이지가 있는 경우 (포디움 달성자) 클릭 가능
-        const hasVipPage = item.donorId && podiumProfileIds.includes(item.donorId);
-
-        if (hasVipPage) {
-          return (
-            <Link
-              key={item.donorId}
-              href={`/ranking/vip/${item.donorId}`}
-              className={styles.podiumLink}
-            >
-              {Content}
-            </Link>
-          );
-        }
-
-        // VIP 페이지가 없으면 클릭 비활성화
-        return (
-          <div key={item.donorId || item.donorName} className={styles.podiumLinkDisabled}>
-            {Content}
-          </div>
-        );
-      })}
-    </div>
+      {/* 하단 장식 */}
+      <motion.div
+        className={styles.bottomDecoration}
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={{ scaleX: 1, opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+      />
+    </motion.div>
   );
 }
