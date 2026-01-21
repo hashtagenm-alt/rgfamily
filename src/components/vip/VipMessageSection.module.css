@@ -180,33 +180,37 @@
 }
 
 /* 라이트 테마 */
-:global(.light) .sectionTitle {
+:global([data-theme="light"]) .sectionTitle {
   color: #1a1a1a;
 }
 
-:global(.light) .loading {
+:global([data-theme="light"]) .loading {
   color: rgba(0, 0, 0, 0.5);
 }
 
-:global(.light) .emptyState {
-  background: rgba(0, 0, 0, 0.02);
-  border-color: rgba(0, 0, 0, 0.05);
-}
-
-:global(.light) .emptyText {
-  color: rgba(0, 0, 0, 0.5);
-}
-
-:global(.light) .showMoreBtn,
-:global(.light) .showLessBtn {
+:global([data-theme="light"]) .emptyState {
   background: rgba(0, 0, 0, 0.02);
   border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme="light"]) .emptyIcon {
+  color: rgba(180, 140, 20, 0.6);
+}
+
+:global([data-theme="light"]) .emptyText {
   color: rgba(0, 0, 0, 0.6);
 }
 
-:global(.light) .showMoreBtn:hover,
-:global(.light) .showLessBtn:hover {
-  background: rgba(0, 0, 0, 0.04);
+:global([data-theme="light"]) .showMoreBtn,
+:global([data-theme="light"]) .showLessBtn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+:global([data-theme="light"]) .showMoreBtn:hover,
+:global([data-theme="light"]) .showLessBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
   color: #1a1a1a;
 }
 
