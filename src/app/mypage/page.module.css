@@ -51,6 +51,13 @@
   flex: 1;
 }
 
+.avatarUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .loading {
   min-height: 100vh;
   display: flex;

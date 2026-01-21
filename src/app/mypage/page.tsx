@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { useAuthContext } from "@/lib/context";
 import { updateMyProfile, changePassword } from "@/lib/actions/profiles";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import {
   TextInput,
   PasswordInput,
@@ -15,7 +15,6 @@ import {
   Text,
   Stack,
   Group,
-  Avatar,
   Badge,
   Loader,
   Box,
@@ -25,7 +24,6 @@ import {
 import { useForm } from "@mantine/form";
 import {
   IconUser,
-  IconMail,
   IconLock,
   IconArrowLeft,
   IconCheck,
@@ -38,6 +36,7 @@ export default function MyPage() {
   const { user, profile, isAuthenticated, isLoading, signOut, refreshProfile } = useAuthContext();
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Profile form
   const profileForm = useForm({
@@ -71,6 +70,7 @@ export default function MyPage() {
   useEffect(() => {
     if (profile) {
       profileForm.setFieldValue("nickname", profile.nickname || "");
+      setAvatarUrl(profile.avatar_url || null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
@@ -79,7 +79,10 @@ export default function MyPage() {
     setSuccess(null);
     setError(null);
 
-    const result = await updateMyProfile({ nickname: values.nickname });
+    const result = await updateMyProfile({
+      nickname: values.nickname,
+      avatar_url: avatarUrl
+    });
     if (result.error) {
       setError(result.error);
     } else {
@@ -190,14 +193,15 @@ export default function MyPage() {
         {/* Profile Card */}
         <Paper className={styles.card} radius="lg" p="xl" withBorder>
           <Group gap="lg" align="flex-start">
-            <Avatar
-              src={profile.avatar_url}
-              size={80}
-              radius="xl"
-              color="gray"
-            >
-              {profile.nickname?.charAt(0).toUpperCase()}
-            </Avatar>
+            <div className={styles.avatarUpload}>
+              <ImageUpload
+                value={avatarUrl}
+                onChange={setAvatarUrl}
+                folder="avatars"
+                size={80}
+              />
+              <Text size="xs" c="dimmed" mt={4}>클릭하여 변경</Text>
+            </div>
             <div className={styles.profileInfo}>
               <Group gap="sm" align="center">
                 <Text fw={700} size="xl">

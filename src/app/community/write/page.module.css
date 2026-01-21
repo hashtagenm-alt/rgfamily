@@ -266,6 +266,14 @@
   color: var(--text-secondary);
 }
 
+/* 이미지 힌트 */
+.imageHint {
+  margin: 0.5rem 0 0;
+  padding: 0 1rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 /* 에러 메시지 */
 .errorMessage {
   display: flex;

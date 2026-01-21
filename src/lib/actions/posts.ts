@@ -112,28 +112,83 @@ export async function deletePost(
 }
 
 /**
- * 게시글 목록 조회 (공개)
+ * 게시글 목록 조회 (공개) - 검색 및 페이지네이션 지원
  */
 export async function getPosts(options: {
   boardType: 'free' | 'vip'
   page?: number
   limit?: number
-}): Promise<ActionResult<{ data: Post[]; count: number }>> {
+  searchQuery?: string
+  searchType?: 'all' | 'title' | 'author'
+}): Promise<ActionResult<{ data: (Post & { author_nickname?: string })[]; count: number }>> {
   return publicAction(async (supabase) => {
-    const { boardType, page = 1, limit = 20 } = options
+    const { boardType, page = 1, limit = 20, searchQuery, searchType = 'all' } = options
     const from = (page - 1) * limit
     const to = from + limit - 1
 
-    const { data, error, count } = await supabase
+    // 기본 쿼리
+    let query = supabase
       .from('posts')
-      .select('*', { count: 'exact' })
+      .select('*, profiles!author_id(nickname)', { count: 'exact' })
       .eq('board_type', boardType)
       .eq('is_deleted', false)
+
+    // 검색 필터 적용
+    if (searchQuery && searchQuery.trim()) {
+      const trimmedQuery = searchQuery.trim()
+
+      if (searchType === 'title') {
+        query = query.ilike('title', `%${trimmedQuery}%`)
+      } else if (searchType === 'author') {
+        // author 검색은 profiles 조인 후 nickname으로 검색
+        // Supabase에서 조인된 테이블 필터링은 제한적이므로
+        // 먼저 닉네임으로 프로필 ID를 조회 후 필터링
+        const { data: matchingProfiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('nickname', `%${trimmedQuery}%`)
+
+        if (matchingProfiles && matchingProfiles.length > 0) {
+          const authorIds = matchingProfiles.map(p => p.id)
+          query = query.in('author_id', authorIds)
+        } else {
+          // 매칭되는 작성자 없으면 빈 결과 반환
+          return { data: [], count: 0 }
+        }
+      } else {
+        // 'all': 제목 또는 작성자로 검색
+        // 먼저 제목으로 검색
+        const { data: matchingProfiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('nickname', `%${trimmedQuery}%`)
+
+        if (matchingProfiles && matchingProfiles.length > 0) {
+          const authorIds = matchingProfiles.map(p => p.id)
+          query = query.or(`title.ilike.%${trimmedQuery}%,author_id.in.(${authorIds.join(',')})`)
+        } else {
+          query = query.ilike('title', `%${trimmedQuery}%`)
+        }
+      }
+    }
+
+    const { data, error, count } = await query
       .order('created_at', { ascending: false })
       .range(from, to)
 
     if (error) throw new Error(error.message)
-    return { data: data || [], count: count || 0 }
+
+    // profiles 정보 포함하여 반환
+    const postsWithAuthor = (data || []).map(post => {
+      const profile = post.profiles as { nickname?: string } | null
+      return {
+        ...post,
+        author_nickname: profile?.nickname || '알 수 없음',
+        profiles: undefined // 중복 데이터 제거
+      }
+    })
+
+    return { data: postsWithAuthor, count: count || 0 }
   })
 }
 

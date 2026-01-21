@@ -2,17 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { MessageSquare, Eye, ChevronRight, Crown, Lock } from 'lucide-react'
+import { MessageSquare, Eye, Crown, Lock, Search, ChevronDown } from 'lucide-react'
 import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { useSupabaseContext, useAuthContext } from '@/lib/context'
+import { useAuthContext } from '@/lib/context'
 import { useVipStatus } from '@/lib/hooks'
-import { withRetry } from '@/lib/utils/fetch-with-retry'
-import { logger } from '@/lib/utils/logger'
+import { getPosts } from '@/lib/actions/posts'
 import { formatShortDate } from '@/lib/utils/format'
 import TabFilter from '@/components/community/TabFilter'
-import type { JoinedProfile } from '@/types/common'
 import styles from '../free/page.module.css'
 
 interface Post {
@@ -23,21 +21,37 @@ interface Post {
   isAnonymous: boolean
   viewCount: number
   commentCount: number
+  likeCount: number
   createdAt: string
 }
 
+const POSTS_PER_PAGE = 20
+
 export default function VipBoardPage() {
-  const supabase = useSupabaseContext()
   const { user, profile } = useAuthContext()
   const isAdmin = profile && ['admin', 'superadmin', 'moderator'].includes(profile.role)
   const { isVip, isLoading: vipStatusLoading } = useVipStatus()
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [searchType, setSearchType] = useState<'all' | 'title' | 'author'>('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
 
   const tabs = [
     { label: '자유게시판 (FREE)', value: 'free', path: '/community/free' },
     { label: 'VIP 라운지 (VIP)', value: 'vip', path: '/community/vip' },
   ]
+
+  // 검색어 디바운스 (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+      setCurrentPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const fetchPosts = useCallback(async () => {
     if (vipStatusLoading) {
@@ -51,24 +65,19 @@ export default function VipBoardPage() {
 
     setIsLoading(true)
 
-    const { data, error } = await withRetry(async () =>
-      await supabase
-        .from('posts')
-        .select('id, title, view_count, is_anonymous, created_at, profiles!author_id(nickname), comments(id)')
-        .eq('board_type', 'vip')
-        .order('created_at', { ascending: false })
-        .limit(20)
-    )
+    const result = await getPosts({
+      boardType: 'vip',
+      page: currentPage,
+      limit: POSTS_PER_PAGE,
+      searchQuery: debouncedSearch,
+      searchType
+    })
 
-    if (error) {
-      logger.dbError('select', 'posts', error)
-    } else {
+    if (result.data) {
       setPosts(
-        (data || []).map((p) => {
-          const postProfile = p.profiles as JoinedProfile | null
-          const comments = p.comments as unknown[] | null
-          const isAnon = (p as { is_anonymous?: boolean }).is_anonymous || false
-          const realNickname = postProfile?.nickname || '알 수 없음'
+        result.data.data.map((p) => {
+          const isAnon = p.is_anonymous || false
+          const realNickname = p.author_nickname || '알 수 없음'
           return {
             id: p.id,
             title: p.title,
@@ -76,19 +85,39 @@ export default function VipBoardPage() {
             authorRealName: isAnon ? realNickname : undefined,
             isAnonymous: isAnon,
             viewCount: p.view_count || 0,
-            commentCount: comments?.length || 0,
+            commentCount: p.comment_count || 0,
+            likeCount: p.like_count || 0,
             createdAt: p.created_at,
           }
         })
       )
+      setTotalCount(result.data.count)
     }
 
     setIsLoading(false)
-  }, [supabase, isVip, vipStatusLoading])
+  }, [isVip, vipStatusLoading, currentPage, debouncedSearch, searchType])
 
   useEffect(() => {
     fetchPosts()
   }, [fetchPosts])
+
+  const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE)
+
+  const getPageNumbers = () => {
+    const pages: number[] = []
+    const maxVisible = 5
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+    const end = Math.min(totalPages, start + maxVisible - 1)
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1)
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+    return pages
+  }
 
 
   return (
@@ -108,6 +137,58 @@ export default function VipBoardPage() {
 
       <div className={styles.container}>
         <TabFilter tabs={tabs} activeTab="vip" />
+
+        {/* 검색 영역 (VIP 권한 있을 때만) */}
+        {isVip && !vipStatusLoading && (
+          <div className={styles.boardHeader}>
+            <div className={styles.boardLeft}>
+              <span className={styles.totalCount}>
+                전체 <strong>{totalCount}</strong>건
+              </span>
+            </div>
+            <div className={styles.searchArea}>
+              <div className={styles.searchTypeSelect}>
+                <select
+                  value={searchType}
+                  onChange={(e) => {
+                    setSearchType(e.target.value as 'all' | 'title' | 'author')
+                    setCurrentPage(1)
+                  }}
+                  className={styles.select}
+                >
+                  <option value="all">전체</option>
+                  <option value="title">제목</option>
+                  <option value="author">작성자</option>
+                </select>
+                <ChevronDown size={14} className={styles.selectIcon} />
+              </div>
+              <div className={styles.searchBox}>
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder="검색어를 입력하세요"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setDebouncedSearch(searchQuery)
+                      setCurrentPage(1)
+                    }
+                  }}
+                />
+                <button
+                  className={styles.searchBtn}
+                  onClick={() => {
+                    setDebouncedSearch(searchQuery)
+                    setCurrentPage(1)
+                  }}
+                >
+                  <Search size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {!user ? (
           <div className={styles.locked}>
@@ -183,9 +264,43 @@ export default function VipBoardPage() {
         {isVip && (
           <div className={styles.boardFooter}>
             <div className={styles.pagination}>
-              <button className={styles.pageBtn} disabled>«</button>
-              <button className={`${styles.pageBtn} ${styles.active}`}>1</button>
-              <button className={styles.pageBtn}>»</button>
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(1)}
+              >
+                «
+              </button>
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              >
+                ‹
+              </button>
+              {getPageNumbers().map(pageNum => (
+                <button
+                  key={pageNum}
+                  className={`${styles.pageBtn} ${currentPage === pageNum ? styles.active : ''}`}
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </button>
+              ))}
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              >
+                ›
+              </button>
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage(totalPages)}
+              >
+                »
+              </button>
             </div>
             <Link href="/community/write?board=vip" className={`${styles.writeBtn} ${styles.vipWriteBtn}`}>
               <Crown size={14} />
