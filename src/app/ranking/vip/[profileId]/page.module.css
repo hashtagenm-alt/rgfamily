@@ -1066,6 +1066,18 @@
   color: #b8860b;
 }
 
+:global([data-theme="light"]) .navTitle {
+  color: #b8860b;
+}
+
+:global([data-theme="light"]) .navBtn {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme="light"]) .navBtn:hover {
+  color: #b8860b;
+}
+
 :global([data-theme="light"]) .hero::before {
   background:
     radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),

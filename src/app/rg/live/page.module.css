@@ -366,6 +366,88 @@
   font-weight: 600;
 }
 
+/* 현재 직급 공약 배지 - 라이브 카드 */
+.pledgeBadge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--space-2);
+  padding: 10px 12px;
+  background: linear-gradient(
+    135deg,
+    #fd68ba 0%,
+    #ff8dc7 50%,
+    #fd68ba 100%
+  );
+  border: 2px solid #c41e7a;
+  border-radius: 10px;
+  box-shadow:
+    0 4px 12px rgba(196, 30, 122, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation: pledgeBadgeGlow 2s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.pledgeBadge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: pledgeShine 3s ease-in-out infinite;
+}
+
+@keyframes pledgeShine {
+  0%, 100% { left: -100%; }
+  50% { left: 100%; }
+}
+
+@keyframes pledgeBadgeGlow {
+  0%, 100% {
+    box-shadow:
+      0 4px 12px rgba(196, 30, 122, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 6px 20px rgba(196, 30, 122, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+}
+
+.pledgeBadge svg {
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.pledgeRankLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.03em;
+}
+
+.pledgeContent {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  line-height: 1.4;
+  word-break: keep-all;
+}
+
 /* Watch Button */
 .watchBtn {
   display: flex;
@@ -896,6 +978,19 @@
   .watchBtn {
     width: 100%;
     justify-content: center;
+  }
+
+  .pledgeBadge {
+    padding: 8px 10px;
+    margin-top: var(--space-2);
+  }
+
+  .pledgeRankLabel {
+    font-size: 0.65rem;
+  }
+
+  .pledgeContent {
+    font-size: 0.75rem;
   }
 
   .grid {

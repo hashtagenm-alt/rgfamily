@@ -8,12 +8,45 @@ import { useLiveRoster } from "@/lib/hooks";
 import { PledgeSidebar } from "@/components/info/PledgeSidebar";
 import { ProfileSidebar } from "@/components/info/ProfileSidebar";
 import type { OrgMember, UnitFilter } from "@/types/organization";
-import { getRankByName } from "@/lib/constants/ranks";
-import { ArrowLeft, Radio, Users, FileText, Calendar } from "lucide-react";
+import { getRankByName, RANKS } from "@/lib/constants/ranks";
+import { ArrowLeft, Radio, Users, FileText, Calendar, Target } from "lucide-react";
 import styles from "./page.module.css";
 
 // PandaTV ID로 URL 생성
 const getPandaTvUrl = (id: string) => `https://www.pandalive.co.kr/play/${id}`;
+
+/**
+ * 현재 직급에 해당하는 공약 내용 추출
+ */
+const getCurrentRankPledge = (
+  pledgeText: string | undefined,
+  currentRank: string | null | undefined
+): string | null => {
+  if (!pledgeText || !currentRank) return null;
+
+  const rankInfo = getRankByName(currentRank);
+  if (!rankInfo) return null;
+
+  const position = rankInfo.position;
+  const lines = pledgeText.split('\n').filter(line => line.trim());
+
+  for (const line of lines) {
+    // 패턴: [1등] 여왕 ▶ 내용 또는 1등 여왕 ▶ 내용
+    const match = line.match(/^\[?(\d+(?:[,&\s]*\d+)*(?:등)?)\]?\s*(.+?)\s*[▶ㅡ\-→]\s*(.+)$/);
+    if (match) {
+      const rankStr = match[1].replace(/등$/, '').replace(/\s+/g, '');
+      const content = match[3].trim();
+
+      // 묶음 순위 분리 (예: "10,11,12" → ["10", "11", "12"])
+      const ranks = rankStr.split(/[,&]/).map(r => parseInt(r.trim(), 10));
+      if (ranks.includes(position)) {
+        return content;
+      }
+    }
+  }
+
+  return null;
+};
 
 export default function LivePage() {
   const { members, isLoading } = useLiveRoster({ realtime: true });
@@ -174,6 +207,26 @@ export default function LivePage() {
                             <span className={styles.cardRole}>
                               {member.role === '대표' ? member.role : member.current_rank || member.role}
                             </span>
+                            {/* 현재 직급 공약 배지 */}
+                            {(() => {
+                              const pledge = getCurrentRankPledge(
+                                member.profile_info?.position_pledge,
+                                member.current_rank
+                              );
+                              const rankInfo = member.current_rank ? getRankByName(member.current_rank) : null;
+                              if (pledge && rankInfo) {
+                                return (
+                                  <div className={styles.pledgeBadge}>
+                                    <Target size={12} />
+                                    <span className={styles.pledgeRankLabel}>
+                                      {rankInfo.emoji} {rankInfo.position}등 공약
+                                    </span>
+                                    <span className={styles.pledgeContent}>{pledge}</span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                           {member.social_links?.pandatv && (
                             <a
