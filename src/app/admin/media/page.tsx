@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Film, Plus, X, Save, ExternalLink } from 'lucide-react'
-import { DataTable, Column } from '@/components/admin'
+import Image from 'next/image'
+import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon } from 'lucide-react'
+import { DataTable, Column, AdminModal } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
@@ -18,6 +19,7 @@ interface Media {
   videoUrl: string
   thumbnailUrl: string
   unit: 'excel' | 'crew' | null
+  isFeatured: boolean
   createdAt: string
 }
 
@@ -25,6 +27,7 @@ export default function MediaPage() {
   const supabase = useSupabaseContext()
   const alertHandler = useAlert()
   const [activeType, setActiveType] = useState<ContentType>('shorts')
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const {
     items: allMediaList,
@@ -48,6 +51,7 @@ export default function MediaPage() {
       videoUrl: '',
       thumbnailUrl: '',
       unit: null,
+      isFeatured: false,
     },
     orderBy: { column: 'created_at', ascending: false },
     fromDbFormat: (row) => ({
@@ -58,6 +62,7 @@ export default function MediaPage() {
       videoUrl: row.video_url as string,
       thumbnailUrl: (row.thumbnail_url as string) || '',
       unit: row.unit as 'excel' | 'crew' | null,
+      isFeatured: row.is_featured as boolean,
       createdAt: row.created_at as string,
     }),
     toDbFormat: (item) => ({
@@ -67,6 +72,7 @@ export default function MediaPage() {
       video_url: item.videoUrl,
       thumbnail_url: item.thumbnailUrl,
       unit: item.unit,
+      is_featured: item.isFeatured,
     }),
     validate: (item) => {
       if (!item.title || !item.videoUrl) return '제목과 영상 URL을 입력해주세요.'
@@ -74,6 +80,32 @@ export default function MediaPage() {
     },
     alertHandler,
   })
+
+  // Toggle featured status
+  const handleToggleFeatured = async (media: Media) => {
+    const newFeatured = !media.isFeatured
+    const { error } = await supabase
+      .from('media_content')
+      .update({ is_featured: newFeatured })
+      .eq('id', media.id)
+
+    if (error) {
+      console.error('추천 상태 변경 실패:', error)
+      alertHandler.showError('변경에 실패했습니다.')
+    } else {
+      alertHandler.showSuccess(newFeatured ? '추천 콘텐츠로 설정되었습니다.' : '추천 해제되었습니다.')
+      refetch()
+    }
+  }
+
+  // Convert YouTube URL to embed URL
+  const getEmbedUrl = (url: string) => {
+    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
+    if (youtubeMatch) {
+      return `https://www.youtube.com/embed/${youtubeMatch[1]}`
+    }
+    return url
+  }
 
   // Filter by activeType
   const mediaList = allMediaList.filter((m) => m.contentType === activeType)
@@ -101,7 +133,50 @@ export default function MediaPage() {
   }
 
   const columns: Column<Media>[] = [
-    { key: 'title', header: '제목' },
+    {
+      key: 'thumbnailUrl',
+      header: '썸네일',
+      width: '100px',
+      render: (item) => (
+        <div
+          style={{
+            width: '80px',
+            height: '45px',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            background: 'var(--surface)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid var(--card-border)',
+          }}
+        >
+          {item.thumbnailUrl ? (
+            <Image
+              src={item.thumbnailUrl}
+              alt={item.title}
+              width={80}
+              height={45}
+              style={{ objectFit: 'cover' }}
+            />
+          ) : (
+            <ImageIcon size={20} style={{ color: 'var(--text-tertiary)' }} />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'title',
+      header: '제목',
+      render: (item) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span>{item.title}</span>
+          {item.isFeatured && (
+            <Star size={14} style={{ color: 'var(--color-warning)', fill: 'var(--color-warning)' }} />
+          )}
+        </div>
+      ),
+    },
     {
       key: 'unit',
       header: '부서',
@@ -113,24 +188,82 @@ export default function MediaPage() {
       ),
     },
     {
-      key: 'videoUrl',
-      header: '링크',
+      key: 'isFeatured',
+      header: '추천',
       width: '80px',
       render: (item) => (
-        <a
-          href={item.videoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: 'var(--color-primary)' }}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleToggleFeatured(item)
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px',
+            background: item.isFeatured ? 'var(--color-warning)' : 'transparent',
+            border: item.isFeatured ? 'none' : '1px solid var(--card-border)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+          }}
+          title={item.isFeatured ? '추천 해제' : '추천 설정'}
         >
-          <ExternalLink size={16} />
-        </a>
+          <Star
+            size={16}
+            style={{
+              color: item.isFeatured ? 'white' : 'var(--text-tertiary)',
+              fill: item.isFeatured ? 'white' : 'none',
+            }}
+          />
+        </button>
+      ),
+    },
+    {
+      key: 'videoUrl',
+      header: '재생',
+      width: '100px',
+      render: (item) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setPreviewUrl(item.videoUrl)
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '4px 10px',
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            <Play size={12} />
+            재생
+          </button>
+          <a
+            href={item.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'var(--text-tertiary)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink size={14} />
+          </a>
+        </div>
       ),
     },
     {
       key: 'createdAt',
       header: '등록일',
-      width: '140px',
+      width: '120px',
       render: (item) => formatDate(item.createdAt),
     },
   ]
@@ -293,6 +426,20 @@ export default function MediaPage() {
                     rows={3}
                   />
                 </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={editingMedia.isFeatured || false}
+                      onChange={(e) =>
+                        setEditingMedia({ ...editingMedia, isFeatured: e.target.checked })
+                      }
+                      className={styles.checkbox}
+                    />
+                    추천 콘텐츠로 설정
+                  </label>
+                </div>
               </div>
 
               <div className={styles.modalFooter}>
@@ -303,6 +450,56 @@ export default function MediaPage() {
                   <Save size={16} />
                   {isNew ? '추가' : '저장'}
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video Preview Modal */}
+      <AnimatePresence>
+        {previewUrl && (
+          <motion.div
+            className={styles.modalOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewUrl(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: '800px',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--card-border)',
+                borderRadius: '16px',
+                overflow: 'hidden',
+              }}
+            >
+              <div className={styles.modalHeader}>
+                <h2>영상 미리보기</h2>
+                <button onClick={() => setPreviewUrl(null)} className={styles.closeButton}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
+                <iframe
+                  src={getEmbedUrl(previewUrl)}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                  }}
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                />
               </div>
             </motion.div>
           </motion.div>

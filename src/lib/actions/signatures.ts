@@ -1,7 +1,7 @@
 'use server'
 
 import { adminAction, publicAction, type ActionResult } from './index'
-import type { InsertTables, UpdateTables, Signature } from '@/types/database'
+import type { InsertTables, UpdateTables, Signature, SignatureVideo } from '@/types/database'
 
 type SignatureInsert = InsertTables<'signatures'>
 type SignatureUpdate = UpdateTables<'signatures'>
@@ -94,6 +94,102 @@ export async function getSignatures(options?: {
     }
 
     const { data, error } = await query
+
+    if (error) throw new Error(error.message)
+    return data || []
+  })
+}
+
+/**
+ * 시그니처 상세 조회 (공개)
+ */
+export async function getSignatureById(
+  id: number
+): Promise<ActionResult<Signature | null>> {
+  return publicAction(async (supabase) => {
+    const { data, error } = await supabase
+      .from('signatures')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw new Error(error.message)
+    return data
+  })
+}
+
+// ==================== Signature Videos ====================
+
+type SignatureVideoInsert = InsertTables<'signature_videos'>
+type SignatureVideoUpdate = UpdateTables<'signature_videos'>
+
+/**
+ * 시그니처 영상 생성
+ */
+export async function createSignatureVideo(
+  data: SignatureVideoInsert
+): Promise<ActionResult<SignatureVideo>> {
+  return adminAction(async (supabase) => {
+    const { data: video, error } = await supabase
+      .from('signature_videos')
+      .insert(data)
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+    return video
+  }, ['/admin/signatures', '/signature'])
+}
+
+/**
+ * 시그니처 영상 수정
+ */
+export async function updateSignatureVideo(
+  id: number,
+  data: SignatureVideoUpdate
+): Promise<ActionResult<SignatureVideo>> {
+  return adminAction(async (supabase) => {
+    const { data: video, error } = await supabase
+      .from('signature_videos')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+    return video
+  }, ['/admin/signatures', '/signature'])
+}
+
+/**
+ * 시그니처 영상 삭제
+ */
+export async function deleteSignatureVideo(
+  id: number
+): Promise<ActionResult<null>> {
+  return adminAction(async (supabase) => {
+    const { error } = await supabase
+      .from('signature_videos')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    return null
+  }, ['/admin/signatures', '/signature'])
+}
+
+/**
+ * 시그니처별 영상 목록 조회 (공개)
+ */
+export async function getSignatureVideos(
+  signatureId: number
+): Promise<ActionResult<SignatureVideo[]>> {
+  return publicAction(async (supabase) => {
+    const { data, error } = await supabase
+      .from('signature_videos')
+      .select('*')
+      .eq('signature_id', signatureId)
+      .order('created_at', { ascending: true })
 
     if (error) throw new Error(error.message)
     return data || []

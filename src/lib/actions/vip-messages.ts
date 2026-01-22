@@ -1,6 +1,7 @@
 'use server'
 
 import { authAction, adminAction, type ActionResult } from './index'
+import { checkOwnerOrAdminPermission, throwPermissionError } from './permissions'
 import type { VipPersonalMessage, VipPersonalMessageWithAuthor } from '@/types/database'
 
 // ==================== 타입 정의 ====================
@@ -175,20 +176,9 @@ export async function updateVipMessage(
       throw new Error('메시지를 찾을 수 없습니다.')
     }
 
-    // 권한 확인
-    const isAuthor = existingMsg.author_id === userId
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-
-    if (!isAuthor && !isAdmin) {
-      throw new Error('수정 권한이 없습니다.')
-    }
+    // 작성자 또는 Admin 권한 확인
+    const permission = await checkOwnerOrAdminPermission(supabase, userId, existingMsg.author_id)
+    if (!permission.hasPermission) throwPermissionError('수정')
 
     // 수정 데이터 구성
     const updateData: Record<string, unknown> = {
@@ -230,20 +220,9 @@ export async function deleteVipMessage(messageId: number): Promise<ActionResult<
       throw new Error('메시지를 찾을 수 없습니다.')
     }
 
-    // 권한 확인
-    const isAuthor = existingMsg.author_id === userId
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-
-    if (!isAuthor && !isAdmin) {
-      throw new Error('삭제 권한이 없습니다.')
-    }
+    // 작성자 또는 Admin 권한 확인
+    const permission = await checkOwnerOrAdminPermission(supabase, userId, existingMsg.author_id)
+    if (!permission.hasPermission) throwPermissionError('삭제')
 
     // Soft delete
     const { error } = await supabase

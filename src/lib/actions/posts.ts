@@ -1,6 +1,7 @@
 'use server'
 
 import { adminAction, authAction, publicAction, type ActionResult } from './index'
+import { checkOwnerOrModeratorPermission, throwPermissionError } from './permissions'
 import type { InsertTables, UpdateTables, Post, Comment } from '@/types/database'
 
 type PostInsert = InsertTables<'posts'>
@@ -48,18 +49,9 @@ export async function updatePost(
 
     if (fetchError) throw new Error(fetchError.message)
 
-    // 작성자가 아니면 Admin 권한 확인
-    if (existingPost.author_id !== userId) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single()
-
-      if (!profile || !['admin', 'superadmin', 'moderator'].includes(profile.role)) {
-        throw new Error('수정 권한이 없습니다.')
-      }
-    }
+    // 작성자 또는 Moderator 권한 확인
+    const permission = await checkOwnerOrModeratorPermission(supabase, userId, existingPost.author_id)
+    if (!permission.hasPermission) throwPermissionError('수정')
 
     const { data: post, error } = await supabase
       .from('posts')
@@ -89,17 +81,9 @@ export async function deletePost(
 
     if (fetchError) throw new Error(fetchError.message)
 
-    if (existingPost.author_id !== userId) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single()
-
-      if (!profile || !['admin', 'superadmin', 'moderator'].includes(profile.role)) {
-        throw new Error('삭제 권한이 없습니다.')
-      }
-    }
+    // 작성자 또는 Moderator 권한 확인
+    const permission = await checkOwnerOrModeratorPermission(supabase, userId, existingPost.author_id)
+    if (!permission.hasPermission) throwPermissionError('삭제')
 
     const { error } = await supabase
       .from('posts')
@@ -282,17 +266,9 @@ export async function updateComment(
 
     if (fetchError) throw new Error(fetchError.message)
 
-    if (existingComment.author_id !== userId) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single()
-
-      if (!profile || !['admin', 'superadmin', 'moderator'].includes(profile.role)) {
-        throw new Error('수정 권한이 없습니다.')
-      }
-    }
+    // 작성자 또는 Moderator 권한 확인
+    const permission = await checkOwnerOrModeratorPermission(supabase, userId, existingComment.author_id)
+    if (!permission.hasPermission) throwPermissionError('수정')
 
     const { data: comment, error } = await supabase
       .from('comments')
@@ -321,17 +297,9 @@ export async function deleteComment(
 
     if (fetchError) throw new Error(fetchError.message)
 
-    if (existingComment.author_id !== userId) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single()
-
-      if (!profile || !['admin', 'superadmin', 'moderator'].includes(profile.role)) {
-        throw new Error('삭제 권한이 없습니다.')
-      }
-    }
+    // 작성자 또는 Moderator 권한 확인
+    const permission = await checkOwnerOrModeratorPermission(supabase, userId, existingComment.author_id)
+    if (!permission.hasPermission) throwPermissionError('삭제')
 
     // Soft delete
     const { error } = await supabase

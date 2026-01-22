@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import {
   Table,
   TextInput,
@@ -27,7 +27,11 @@ import {
   IconEdit,
   IconTrash,
   IconGripVertical,
+  IconSquare,
+  IconSquareCheck,
+  IconSquareMinus,
 } from '@tabler/icons-react'
+import TableFilters, { FilterConfig, FilterCondition } from './TableFilters'
 import {
   DndContext,
   closestCenter,
@@ -46,12 +50,32 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
+export type EditableType = 'text' | 'number' | 'select' | 'checkbox'
+
+export interface SelectOption {
+  value: string
+  label: string
+}
+
 export interface Column<T> {
   key: keyof T | string
   header: string
   width?: string
   render?: (item: T) => React.ReactNode
   sortable?: boolean
+  /** 인라인 편집 활성화 */
+  editable?: boolean
+  /** 편집 타입 */
+  editType?: EditableType
+  /** select 타입일 때 옵션 목록 */
+  selectOptions?: SelectOption[]
+}
+
+export interface BulkAction<T> {
+  label: string
+  icon?: React.ReactNode
+  onClick: (selectedItems: T[]) => Promise<void> | void
+  variant?: 'default' | 'danger'
 }
 
 interface DataTableProps<T> {
@@ -68,6 +92,16 @@ interface DataTableProps<T> {
   draggable?: boolean
   /** 드래그 완료 후 콜백 (새 순서의 아이템 배열) */
   onReorder?: (reorderedItems: T[]) => void
+  /** 체크박스 선택 활성화 */
+  selectable?: boolean
+  /** 벌크 삭제 콜백 */
+  onBulkDelete?: (ids: (string | number)[]) => Promise<void>
+  /** 커스텀 벌크 액션들 */
+  bulkActions?: BulkAction<T>[]
+  /** 인라인 편집 콜백 */
+  onInlineEdit?: (id: string | number, field: string, value: unknown) => Promise<void>
+  /** 고급 필터 설정 */
+  filters?: FilterConfig[]
 }
 
 // 중첩 객체 값 가져오기
@@ -241,11 +275,27 @@ export default function DataTable<T extends { id: string | number }>({
   isLoading = false,
   draggable = false,
   onReorder,
+  selectable = false,
+  onBulkDelete,
+  bulkActions,
+  onInlineEdit,
+  filters,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<string | null>(null)
   const [reverseSortDirection, setReverseSortDirection] = useState(false)
   const [activePage, setActivePage] = useState(1)
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false)
+
+  // Inline editing state
+  const [editingCell, setEditingCell] = useState<{ id: string | number; key: string } | null>(null)
+  const [editingValue, setEditingValue] = useState<unknown>(null)
+  const [isSavingInline, setIsSavingInline] = useState(false)
+
+  // Advanced filter state
+  const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([])
+  const [filterLogic, setFilterLogic] = useState<'AND' | 'OR'>('AND')
 
   // itemsPerPage가 옵션에 없으면 가장 가까운 값 선택
   const getInitialPageSize = () => {
@@ -256,6 +306,87 @@ export default function DataTable<T extends { id: string | number }>({
   const [pageSize, setPageSize] = useState<string>(getInitialPageSize())
 
   const hasActions = onEdit || onDelete || onView
+  const showSelectable = selectable && (onBulkDelete || bulkActions)
+
+  // Selection handlers
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedData.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(paginatedData.map((item) => item.id)))
+    }
+  }
+
+  const toggleSelectItem = (id: string | number) => {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  const clearSelection = () => {
+    setSelectedIds(new Set())
+  }
+
+  // Get selected items
+  const selectedItems = data.filter((item) => selectedIds.has(item.id))
+
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    if (!onBulkDelete || selectedIds.size === 0) return
+    setIsBulkProcessing(true)
+    try {
+      await onBulkDelete(Array.from(selectedIds))
+      clearSelection()
+    } finally {
+      setIsBulkProcessing(false)
+    }
+  }
+
+  // Custom bulk action handler
+  const handleBulkAction = async (action: BulkAction<T>) => {
+    if (selectedItems.length === 0) return
+    setIsBulkProcessing(true)
+    try {
+      await action.onClick(selectedItems)
+      clearSelection()
+    } finally {
+      setIsBulkProcessing(false)
+    }
+  }
+
+  // Inline editing handlers
+  const startEditing = (id: string | number, key: string, currentValue: unknown) => {
+    setEditingCell({ id, key })
+    setEditingValue(currentValue)
+  }
+
+  const cancelEditing = () => {
+    setEditingCell(null)
+    setEditingValue(null)
+  }
+
+  const saveEditing = async () => {
+    if (!editingCell || !onInlineEdit) return
+    setIsSavingInline(true)
+    try {
+      await onInlineEdit(editingCell.id, editingCell.key, editingValue)
+      cancelEditing()
+    } finally {
+      setIsSavingInline(false)
+    }
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      saveEditing()
+    } else if (e.key === 'Escape') {
+      cancelEditing()
+    }
+  }
 
   // DnD Sensors
   const sensors = useSensors(
@@ -276,9 +407,57 @@ export default function DataTable<T extends { id: string | number }>({
     setSortBy(field)
   }
 
+  // Check if a single filter condition matches an item
+  const matchesCondition = useCallback((item: T, condition: FilterCondition): boolean => {
+    const value = getNestedValue(item as Record<string, unknown>, condition.field)
+    const conditionValue = condition.value
+    const conditionValue2 = condition.value2
+
+    switch (condition.operator) {
+      case 'equals':
+        if (conditionValue === null || conditionValue === '') return true
+        return String(value).toLowerCase() === String(conditionValue).toLowerCase()
+      case 'contains':
+        if (conditionValue === null || conditionValue === '') return true
+        return String(value).toLowerCase().includes(String(conditionValue).toLowerCase())
+      case 'gt':
+        if (conditionValue === null) return true
+        return Number(value) > Number(conditionValue)
+      case 'lt':
+        if (conditionValue === null) return true
+        return Number(value) < Number(conditionValue)
+      case 'gte':
+        if (conditionValue === null) return true
+        return Number(value) >= Number(conditionValue)
+      case 'lte':
+        if (conditionValue === null) return true
+        return Number(value) <= Number(conditionValue)
+      case 'between':
+        if (conditionValue === null || conditionValue2 === null) return true
+        const numValue = Number(value)
+        return numValue >= Number(conditionValue) && numValue <= Number(conditionValue2)
+      case 'isEmpty':
+        return value === null || value === undefined || value === ''
+      case 'isNotEmpty':
+        return value !== null && value !== undefined && value !== ''
+      default:
+        return true
+    }
+  }, [])
+
   // 필터링 및 정렬된 데이터
   const processedData = useMemo(() => {
     let filtered = [...data]
+
+    // 고급 필터 적용
+    if (filterConditions.length > 0) {
+      filtered = filtered.filter((item) => {
+        const results = filterConditions.map((cond) => matchesCondition(item, cond))
+        return filterLogic === 'AND'
+          ? results.every(Boolean)
+          : results.some(Boolean)
+      })
+    }
 
     // 검색 필터
     if (search) {
@@ -307,7 +486,7 @@ export default function DataTable<T extends { id: string | number }>({
     }
 
     return filtered
-  }, [data, search, sortBy, reverseSortDirection, columns, draggable])
+  }, [data, search, sortBy, reverseSortDirection, columns, draggable, filterConditions, filterLogic, matchesCondition])
 
   // 페이지네이션
   const effectivePageSize = pageSize === 'all' ? processedData.length : parseInt(pageSize, 10)
@@ -352,16 +531,141 @@ export default function DataTable<T extends { id: string | number }>({
   const rows = paginatedData.map((item) => (
     <Table.Tr
       key={item.id}
-      style={{ cursor: onView ? 'pointer' : undefined }}
+      style={{
+        cursor: onView ? 'pointer' : undefined,
+        backgroundColor: selectedIds.has(item.id) ? 'var(--mantine-color-pink-light)' : undefined,
+      }}
       onClick={() => onView?.(item)}
     >
-      {columns.map((col) => (
-        <Table.Td key={col.key as string}>
-          {col.render
-            ? col.render(item)
-            : String(getNestedValue(item as Record<string, unknown>, col.key as string) ?? '-')}
+      {showSelectable && (
+        <Table.Td style={{ width: 40 }} onClick={(e) => e.stopPropagation()}>
+          <Center>
+            <ActionIcon
+              variant="subtle"
+              color={selectedIds.has(item.id) ? 'pink' : 'gray'}
+              size="sm"
+              onClick={() => toggleSelectItem(item.id)}
+            >
+              {selectedIds.has(item.id) ? (
+                <IconSquareCheck size={18} />
+              ) : (
+                <IconSquare size={18} />
+              )}
+            </ActionIcon>
+          </Center>
         </Table.Td>
-      ))}
+      )}
+      {columns.map((col) => {
+        const cellKey = col.key as string
+        const cellValue = getNestedValue(item as Record<string, unknown>, cellKey)
+        const isEditing = editingCell?.id === item.id && editingCell?.key === cellKey
+        const canEdit = col.editable && onInlineEdit
+
+        return (
+          <Table.Td
+            key={cellKey}
+            onDoubleClick={canEdit ? (e) => {
+              e.stopPropagation()
+              startEditing(item.id, cellKey, cellValue)
+            } : undefined}
+            style={canEdit ? { cursor: 'text' } : undefined}
+            title={canEdit ? '더블클릭하여 편집' : undefined}
+          >
+            {isEditing ? (
+              <div onClick={(e) => e.stopPropagation()}>
+                {col.editType === 'checkbox' ? (
+                  <input
+                    type="checkbox"
+                    checked={!!editingValue}
+                    onChange={(e) => {
+                      setEditingValue(e.target.checked)
+                      // Auto-save on checkbox change
+                      if (onInlineEdit) {
+                        setIsSavingInline(true)
+                        onInlineEdit(item.id, cellKey, e.target.checked)
+                          .finally(() => {
+                            setIsSavingInline(false)
+                            cancelEditing()
+                          })
+                      }
+                    }}
+                    disabled={isSavingInline}
+                    style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
+                  />
+                ) : col.editType === 'select' ? (
+                  <select
+                    value={String(editingValue ?? '')}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onBlur={saveEditing}
+                    onKeyDown={handleEditKeyDown}
+                    autoFocus
+                    disabled={isSavingInline}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      border: '1px solid var(--primary)',
+                      borderRadius: '4px',
+                      background: 'var(--card-bg)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      minWidth: '100px',
+                    }}
+                  >
+                    {col.selectOptions?.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : col.editType === 'number' ? (
+                  <input
+                    type="number"
+                    value={String(editingValue ?? '')}
+                    onChange={(e) => setEditingValue(e.target.valueAsNumber || e.target.value)}
+                    onBlur={saveEditing}
+                    onKeyDown={handleEditKeyDown}
+                    autoFocus
+                    disabled={isSavingInline}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      border: '1px solid var(--primary)',
+                      borderRadius: '4px',
+                      background: 'var(--card-bg)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      width: '100%',
+                      minWidth: '60px',
+                    }}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={String(editingValue ?? '')}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onBlur={saveEditing}
+                    onKeyDown={handleEditKeyDown}
+                    autoFocus
+                    disabled={isSavingInline}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      border: '1px solid var(--primary)',
+                      borderRadius: '4px',
+                      background: 'var(--card-bg)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      width: '100%',
+                      minWidth: '100px',
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              col.render
+                ? col.render(item)
+                : String(cellValue ?? '-')
+            )}
+          </Table.Td>
+        )
+      })}
       {hasActions && (
         <Table.Td>
           <Group justify="center">
@@ -405,12 +709,15 @@ export default function DataTable<T extends { id: string | number }>({
     </Table.Tr>
   ))
 
+  // Calculate total columns for colSpan
+  const totalColumns = columns.length + (hasActions ? 1 : 0) + (draggable ? 1 : 0) + (showSelectable ? 1 : 0)
+
   // 테이블 바디 렌더링
   const renderTableBody = () => {
     if (isLoading) {
       return (
         <Table.Tr>
-          <Table.Td colSpan={columns.length + (hasActions ? 1 : 0) + (draggable ? 1 : 0)}>
+          <Table.Td colSpan={totalColumns}>
             <Center py="xl">
               <Loader color="pink" size="md" />
               <Text ml="md" c="dimmed">
@@ -425,7 +732,7 @@ export default function DataTable<T extends { id: string | number }>({
     if (paginatedData.length === 0) {
       return (
         <Table.Tr>
-          <Table.Td colSpan={columns.length + (hasActions ? 1 : 0) + (draggable ? 1 : 0)}>
+          <Table.Td colSpan={totalColumns}>
             <Center py="xl">
               <Text c="dimmed">데이터가 없습니다</Text>
             </Center>
@@ -458,10 +765,37 @@ export default function DataTable<T extends { id: string | number }>({
     return rows
   }
 
+  // Determine checkbox state for select all
+  const selectAllState = selectedIds.size === 0
+    ? 'none'
+    : selectedIds.size === paginatedData.length
+      ? 'all'
+      : 'partial'
+
   const tableContent = (
     <Table striped highlightOnHover verticalSpacing="sm" horizontalSpacing="md">
       <Table.Thead>
         <Table.Tr>
+          {showSelectable && (
+            <Table.Th style={{ width: 40 }}>
+              <Center>
+                <ActionIcon
+                  variant="subtle"
+                  color={selectAllState !== 'none' ? 'pink' : 'gray'}
+                  size="sm"
+                  onClick={toggleSelectAll}
+                >
+                  {selectAllState === 'all' ? (
+                    <IconSquareCheck size={18} />
+                  ) : selectAllState === 'partial' ? (
+                    <IconSquareMinus size={18} />
+                  ) : (
+                    <IconSquare size={18} />
+                  )}
+                </ActionIcon>
+              </Center>
+            </Table.Th>
+          )}
           {draggable && (
             <Table.Th style={{ width: 40 }}>
               <Text fw={600} size="xs" tt="uppercase" c="dimmed">
@@ -496,20 +830,103 @@ export default function DataTable<T extends { id: string | number }>({
 
   return (
     <Paper withBorder radius="md" p={0}>
-      {/* 검색 툴바 */}
-      {searchable && (
-        <Group justify="space-between" p="md" style={{ borderBottom: '1px solid var(--card-border)' }}>
-          <TextInput
-            placeholder={searchPlaceholder}
-            leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={handleSearchChange}
-            style={{ maxWidth: 300 }}
-          />
-          <Text size="sm" c="dimmed">
-            총 {processedData.length}개
-          </Text>
+      {/* Bulk Actions Toolbar */}
+      {showSelectable && selectedIds.size > 0 && (
+        <Group justify="space-between" p="md" style={{ borderBottom: '1px solid var(--card-border)', background: 'var(--mantine-color-pink-light)' }}>
+          <Group gap="md">
+            <Text size="sm" fw={600} c="pink">
+              {selectedIds.size}개 선택됨
+            </Text>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              onClick={clearSelection}
+              title="선택 해제"
+            >
+              <IconSquare size={16} />
+            </ActionIcon>
+          </Group>
+          <Group gap="sm">
+            {bulkActions?.map((action, index) => (
+              <UnstyledButton
+                key={index}
+                onClick={() => handleBulkAction(action)}
+                disabled={isBulkProcessing}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.375rem',
+                  padding: '0.375rem 0.75rem',
+                  background: action.variant === 'danger' ? 'var(--mantine-color-red-6)' : 'var(--mantine-color-gray-6)',
+                  color: 'white',
+                  borderRadius: '6px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  opacity: isBulkProcessing ? 0.6 : 1,
+                }}
+              >
+                {action.icon}
+                {action.label}
+              </UnstyledButton>
+            ))}
+            {onBulkDelete && (
+              <UnstyledButton
+                onClick={handleBulkDelete}
+                disabled={isBulkProcessing}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.375rem',
+                  padding: '0.375rem 0.75rem',
+                  background: 'var(--mantine-color-red-6)',
+                  color: 'white',
+                  borderRadius: '6px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  opacity: isBulkProcessing ? 0.6 : 1,
+                }}
+              >
+                <IconTrash size={14} />
+                삭제
+              </UnstyledButton>
+            )}
+          </Group>
         </Group>
+      )}
+
+      {/* 검색 툴바 및 필터 */}
+      {(searchable || filters) && (
+        <div style={{ borderBottom: '1px solid var(--card-border)' }}>
+          <Group justify="space-between" p="md">
+            <Group gap="md">
+              {searchable && (
+                <TextInput
+                  placeholder={searchPlaceholder}
+                  leftSection={<IconSearch size={16} />}
+                  value={search}
+                  onChange={handleSearchChange}
+                  style={{ maxWidth: 300 }}
+                />
+              )}
+              {filters && filters.length > 0 && (
+                <TableFilters
+                  filters={filters}
+                  conditions={filterConditions}
+                  onChange={(conditions) => {
+                    setFilterConditions(conditions)
+                    setActivePage(1)
+                  }}
+                  logicOperator={filterLogic}
+                  onLogicChange={setFilterLogic}
+                />
+              )}
+            </Group>
+            <Text size="sm" c="dimmed">
+              총 {processedData.length}개
+            </Text>
+          </Group>
+        </div>
       )}
 
       {/* 테이블 */}

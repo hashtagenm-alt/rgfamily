@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Heart, Plus, Upload, List, Calendar, UserPlus } from 'lucide-react'
-import { DataTable, Column, CsvUploader, DonationModal } from '@/components/admin'
+import { DataTable, Column, CsvUploader, DonationModal, FilterConfig } from '@/components/admin'
 import { useDonationsData, useAlert, useEpisodes, type DonationItem } from '@/lib/hooks'
 import { formatAmount } from '@/lib/utils/format'
 import type { Episode } from '@/types/database'
@@ -147,6 +147,34 @@ export default function DonationsPage() {
     },
   ]
 
+  // 고급 필터 설정
+  const filterConfigs: FilterConfig[] = [
+    {
+      key: 'donorName',
+      label: '후원자',
+      type: 'text',
+    },
+    {
+      key: 'amount',
+      label: '금액',
+      type: 'number',
+    },
+    {
+      key: 'seasonName',
+      label: '시즌',
+      type: 'select',
+      options: seasons.map((s) => ({
+        value: s.name,
+        label: s.name,
+      })),
+    },
+    {
+      key: 'createdAt',
+      label: '일시',
+      type: 'date',
+    },
+  ]
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -191,6 +219,7 @@ export default function DonationsPage() {
           onDelete={handleDelete}
           searchPlaceholder="후원자 이름으로 검색..."
           isLoading={isLoading}
+          filters={filterConfigs}
         />
       ) : (
         <div className={styles.uploadSection}>

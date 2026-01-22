@@ -1,0 +1,320 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleBtn:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.toggleBtn.active {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.375rem;
+  background: var(--primary);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 600;
+  border-radius: 9999px;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.chevron.expanded {
+  transform: rotate(180deg);
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.clearBtn:hover {
+  color: var(--color-error);
+}
+
+.panel {
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.logicSelector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.logicLabel {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.logicButtons {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--background);
+  padding: 0.25rem;
+  border-radius: 6px;
+}
+
+.logicBtn {
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logicBtn:hover {
+  color: var(--text-primary);
+}
+
+.logicBtn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.conditionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.connector {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--primary);
+  padding: 0.125rem 0.375rem;
+  background: var(--color-pink-overlay-10);
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.select {
+  padding: 0.5rem 0.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  min-width: 100px;
+}
+
+.select:hover {
+  border-color: var(--text-tertiary);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.input {
+  padding: 0.5rem 0.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  min-width: 120px;
+  transition: border-color 0.2s ease;
+}
+
+.input:hover {
+  border-color: var(--text-tertiary);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.dateInputs,
+.numberInputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dateInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dateIcon {
+  position: absolute;
+  left: 0.625rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.dateInputWrapper .input {
+  padding-left: 2rem;
+}
+
+.dateConnector,
+.numberConnector {
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+}
+
+.removeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.removeBtn:hover {
+  background: var(--color-error-overlay-10, rgba(239, 68, 68, 0.1));
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px dashed var(--card-border);
+  border-radius: 8px;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.addBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--color-pink-overlay-10);
+}
+
+@media (max-width: 768px) {
+  .conditionRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.375rem;
+    padding: 0.75rem;
+    background: var(--background);
+    border-radius: 8px;
+  }
+
+  .connector {
+    align-self: flex-start;
+  }
+
+  .select,
+  .input {
+    width: 100%;
+  }
+
+  .dateInputs,
+  .numberInputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dateConnector,
+  .numberConnector {
+    align-self: center;
+  }
+
+  .removeBtn {
+    align-self: flex-end;
+  }
+
+  .logicSelector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logicButtons {
+    width: 100%;
+  }
+
+  .logicBtn {
+    flex: 1;
+    text-align: center;
+  }
+}

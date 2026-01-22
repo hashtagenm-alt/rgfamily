@@ -4,36 +4,10 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { Radio } from 'lucide-react'
 import styles from './MemberCard.module.css'
+import type { OrgMember } from '@/types/organization'
 
-export interface ProfileInfo {
-  mbti?: string
-  blood_type?: string
-  height?: string
-  weight?: string
-  birthday?: string
-  signal_price?: number
-  photo_delivery?: boolean
-  position_pledge?: string
-}
-
-export interface OrgMember {
-  id: number
-  name: string
-  role: string
-  position_order: number
-  parent_id: number | null
-  image_url: string | null
-  unit: 'excel' | 'crew'
-  social_links?: {
-    chzzk?: string
-    youtube?: string
-    instagram?: string
-    pandatv?: string
-  }
-  profile_info?: ProfileInfo
-  is_live?: boolean
-  current_rank?: string | null // 직급전 현재 직급 (대표는 null)
-}
+// Re-export for backward compatibility
+export type { OrgMember, ProfileInfo, SocialLinks } from '@/types/organization'
 
 interface MemberCardProps {
   member: OrgMember

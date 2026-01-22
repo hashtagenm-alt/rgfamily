@@ -2,7 +2,17 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Users, Heart, Calendar, FileText, TrendingUp, Clock, Radio, Eye, RefreshCw } from 'lucide-react'
+import { Users, Heart, Calendar, FileText, TrendingUp, Clock, Radio, Eye, RefreshCw, Film, PenTool, MessageSquare } from 'lucide-react'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts'
 import { StatsCard, DataTable, Column } from '@/components/admin'
 import { useSupabaseContext } from '@/lib/context'
 import { useLiveRoster } from '@/lib/hooks'
@@ -40,7 +50,19 @@ interface DashboardStats {
   activeSeasons: number
   recentDonations: RecentDonation[]
   recentMembers: RecentMember[]
+  // Content stats
+  totalPosts: number
+  totalMedia: number
+  totalSignatures: number
 }
+
+interface DonationTrendData {
+  date: string
+  amount: number
+  count: number
+}
+
+type TrendPeriod = '7d' | '30d' | '90d'
 
 interface RecentDonation {
   id: number
@@ -60,6 +82,9 @@ export default function AdminDashboardPage() {
   const supabase = useSupabaseContext()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [trendData, setTrendData] = useState<DonationTrendData[]>([])
+  const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('30d')
+  const [isTrendLoading, setIsTrendLoading] = useState(false)
 
   // 실시간 라이브 상태
   const { members, liveStatusByMemberId, isLoading: liveLoading, refetch: refetchLive } = useLiveRoster({ realtime: true })
@@ -106,6 +131,13 @@ export default function AdminDashboardPage() {
         .order('created_at', { ascending: false })
         .limit(5)
 
+      // 콘텐츠 통계 - 병렬 처리
+      const [postsCount, mediaCount, signaturesCount] = await Promise.all([
+        supabase.from('posts').select('*', { count: 'exact', head: true }),
+        supabase.from('media_content').select('*', { count: 'exact', head: true }),
+        supabase.from('signatures').select('*', { count: 'exact', head: true }),
+      ])
+
       setStats({
         totalMembers: memberCount || 0,
         totalDonations,
@@ -126,6 +158,9 @@ export default function AdminDashboardPage() {
           email: m.email || '',
           createdAt: m.created_at,
         })),
+        totalPosts: postsCount.count || 0,
+        totalMedia: mediaCount.count || 0,
+        totalSignatures: signaturesCount.count || 0,
       })
     } catch (error) {
       console.error('대시보드 데이터 로드 실패:', error)
@@ -134,9 +169,67 @@ export default function AdminDashboardPage() {
     setIsLoading(false)
   }, [supabase])
 
+  // 후원 추이 데이터 가져오기
+  const fetchTrendData = useCallback(async (period: TrendPeriod) => {
+    setIsTrendLoading(true)
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : 90
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() - days)
+
+      const { data: donations } = await supabase
+        .from('donations')
+        .select('amount, created_at')
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: true })
+
+      // 날짜별로 그룹화
+      const grouped = new Map<string, { amount: number; count: number }>()
+
+      // 모든 날짜 초기화
+      for (let i = 0; i < days; i++) {
+        const date = new Date()
+        date.setDate(date.getDate() - (days - 1 - i))
+        const dateStr = date.toISOString().split('T')[0]
+        grouped.set(dateStr, { amount: 0, count: 0 })
+      }
+
+      // 후원 데이터 집계
+      donations?.forEach((d) => {
+        const dateStr = d.created_at.split('T')[0]
+        const existing = grouped.get(dateStr)
+        if (existing) {
+          grouped.set(dateStr, {
+            amount: existing.amount + d.amount,
+            count: existing.count + 1,
+          })
+        }
+      })
+
+      // 배열로 변환
+      const trendArray: DonationTrendData[] = []
+      grouped.forEach((value, key) => {
+        trendArray.push({
+          date: key,
+          amount: value.amount,
+          count: value.count,
+        })
+      })
+
+      setTrendData(trendArray)
+    } catch (error) {
+      console.error('후원 추이 데이터 로드 실패:', error)
+    }
+    setIsTrendLoading(false)
+  }, [supabase])
+
   useEffect(() => {
     fetchStats()
   }, [fetchStats])
+
+  useEffect(() => {
+    fetchTrendData(trendPeriod)
+  }, [fetchTrendData, trendPeriod])
 
   const formatDateTime = (dateStr: string) =>
     formatDate(dateStr, {
@@ -221,6 +314,143 @@ export default function AdminDashboardPage() {
           delay={0.3}
         />
       </div>
+
+      {/* Content Stats */}
+      <motion.div
+        className={styles.contentStatsGrid}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+      >
+        <div className={styles.contentStatCard}>
+          <MessageSquare size={20} className={styles.contentStatIcon} />
+          <div className={styles.contentStatInfo}>
+            <span className={styles.contentStatValue}>{stats?.totalPosts || 0}</span>
+            <span className={styles.contentStatLabel}>게시글</span>
+          </div>
+        </div>
+        <div className={styles.contentStatCard}>
+          <Film size={20} className={styles.contentStatIcon} />
+          <div className={styles.contentStatInfo}>
+            <span className={styles.contentStatValue}>{stats?.totalMedia || 0}</span>
+            <span className={styles.contentStatLabel}>미디어</span>
+          </div>
+        </div>
+        <div className={styles.contentStatCard}>
+          <PenTool size={20} className={styles.contentStatIcon} />
+          <div className={styles.contentStatInfo}>
+            <span className={styles.contentStatValue}>{stats?.totalSignatures || 0}</span>
+            <span className={styles.contentStatLabel}>시그니처</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Donation Trend Chart */}
+      <motion.section
+        className={styles.chartSection}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <div className={styles.sectionHeader}>
+          <div className={styles.chartHeaderLeft}>
+            <TrendingUp size={20} />
+            <h2>후원 추이</h2>
+          </div>
+          <div className={styles.periodSelector}>
+            {(['7d', '30d', '90d'] as TrendPeriod[]).map((period) => (
+              <button
+                key={period}
+                onClick={() => setTrendPeriod(period)}
+                className={`${styles.periodBtn} ${trendPeriod === period ? styles.active : ''}`}
+              >
+                {period === '7d' ? '7일' : period === '30d' ? '30일' : '90일'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.chartContainer}>
+          {isTrendLoading ? (
+            <div className={styles.chartLoading}>
+              <div className={styles.spinner} />
+            </div>
+          ) : trendData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={trendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
+                <XAxis
+                  dataKey="date"
+                  stroke="var(--text-tertiary)"
+                  fontSize={12}
+                  tickFormatter={(value) => {
+                    const date = new Date(value)
+                    return `${date.getMonth() + 1}/${date.getDate()}`
+                  }}
+                />
+                <YAxis
+                  yAxisId="left"
+                  stroke="var(--text-tertiary)"
+                  fontSize={12}
+                  tickFormatter={(value) => {
+                    if (value >= 10000) return `${(value / 10000).toFixed(0)}만`
+                    return value.toLocaleString()
+                  }}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  stroke="var(--text-tertiary)"
+                  fontSize={12}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--card-border)',
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: 'var(--text-primary)' }}
+                  formatter={(value, name) => {
+                    const numValue = typeof value === 'number' ? value : 0
+                    if (name === 'amount') return [formatCurrency(numValue), '후원금']
+                    return [numValue, '후원 건수']
+                  }}
+                  labelFormatter={(label) => {
+                    const date = new Date(label as string)
+                    return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
+                  }}
+                />
+                <Legend
+                  formatter={(value) => (value === 'amount' ? '후원금' : '후원 건수')}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="var(--primary)"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 6, fill: 'var(--primary)' }}
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="count"
+                  stroke="var(--color-success)"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 6, fill: 'var(--color-success)' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className={styles.noData}>
+              <TrendingUp size={32} />
+              <p>해당 기간의 후원 데이터가 없습니다</p>
+            </div>
+          )}
+        </div>
+      </motion.section>
 
       {/* Live Status Section */}
       <motion.section

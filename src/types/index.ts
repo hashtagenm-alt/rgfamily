@@ -38,3 +38,6 @@ export {
 
 // Database types
 export * from './database'
+
+// Ranking types (HallOfFameEntry, HallOfFameSeasonData, HallOfFameData)
+export * from './ranking'

@@ -236,9 +236,13 @@ type Platform = 'chzzk' | 'twitch' | 'youtube' | 'pandatv'
 
 // 미디어 콘텐츠 유형
 type ContentType = 'shorts' | 'vod'
+
+// 권한 상수 (src/lib/actions/permissions.ts)
+ADMIN_ROLES = ['admin', 'superadmin']
+MODERATOR_ROLES = ['admin', 'superadmin', 'moderator']
 ```
 
-### 5.4 주요 RPC 함수
+### 5.5 주요 RPC 함수
 
 | 함수명 | 용도 |
 |--------|------|

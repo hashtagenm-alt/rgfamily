@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Building, Plus, X, Save, Radio, Link as LinkIcon, User } from 'lucide-react'
+import { Building, Plus, X, Save, Radio, Link as LinkIcon, User, List, GitBranch } from 'lucide-react'
 import Image from 'next/image'
-import { DataTable, Column, ImageUpload } from '@/components/admin'
+import { DataTable, Column, ImageUpload, OrgTreeView } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
@@ -42,6 +42,8 @@ interface Profile {
   nickname: string
 }
 
+type ViewMode = 'table' | 'tree'
+
 export default function OrganizationPage() {
   const supabase = useSupabaseContext()
   const alertHandler = useAlert()
@@ -49,6 +51,7 @@ export default function OrganizationPage() {
   const [activeUnit, setActiveUnit] = useState<'excel' | 'crew'>('excel')
   const [localMembers, setLocalMembers] = useState<OrgMember[]>([])
   const [isSavingOrder, setIsSavingOrder] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
 
   // Fetch profiles for linking
   const fetchProfiles = useCallback(async () => {
@@ -281,10 +284,31 @@ export default function OrganizationPage() {
             <p className={styles.subtitle}>RG 패밀리 조직도{isSavingOrder && ' (저장 중...)'}</p>
           </div>
         </div>
-        <button onClick={openAddModal} className={styles.addButton}>
-          <Plus size={18} />
-          멤버 추가
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {/* View Mode Toggle */}
+          <div className={styles.tabButtons}>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`${styles.tabButton} ${viewMode === 'table' ? styles.active : ''}`}
+              title="테이블 보기"
+            >
+              <List size={16} />
+              테이블
+            </button>
+            <button
+              onClick={() => setViewMode('tree')}
+              className={`${styles.tabButton} ${viewMode === 'tree' ? styles.active : ''}`}
+              title="트리 보기"
+            >
+              <GitBranch size={16} />
+              트리
+            </button>
+          </div>
+          <button onClick={openAddModal} className={styles.addButton}>
+            <Plus size={18} />
+            멤버 추가
+          </button>
+        </div>
       </header>
 
       {/* Unit Tabs */}
@@ -303,16 +327,25 @@ export default function OrganizationPage() {
         </button>
       </div>
 
-      <DataTable
-        data={filteredMembers}
-        columns={columns}
-        onEdit={openEditModal}
-        onDelete={handleDelete}
-        searchPlaceholder="이름으로 검색..."
-        isLoading={isLoading}
-        draggable
-        onReorder={handleReorder}
-      />
+      {/* Table or Tree View */}
+      {viewMode === 'table' ? (
+        <DataTable
+          data={filteredMembers}
+          columns={columns}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+          searchPlaceholder="이름으로 검색..."
+          isLoading={isLoading}
+          draggable
+          onReorder={handleReorder}
+        />
+      ) : (
+        <OrgTreeView
+          members={filteredMembers}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+        />
+      )}
 
       {/* Modal */}
       <AnimatePresence>

@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { authAction, adminAction, publicAction, type ActionResult } from './index'
+import { checkOwnerOrAdminPermission, throwPermissionError } from './permissions'
 import type { InsertTables, UpdateTables, BjThankYouMessage } from '@/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
@@ -325,22 +326,14 @@ export async function updateBjMessage(
       throw new Error('메시지를 찾을 수 없습니다.')
     }
 
-    // 권한 확인
+    // 작성자 profile_id 추출
     const orgData = existingMsg.organization
     const org = Array.isArray(orgData) ? orgData[0] : orgData
-    const isAuthor = org?.profile_id === userId
+    const authorProfileId = org?.profile_id || ''
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-
-    if (!isAuthor && !isAdmin) {
-      throw new Error('수정 권한이 없습니다.')
-    }
+    // 작성자 또는 Admin 권한 확인
+    const permission = await checkOwnerOrAdminPermission(supabase, userId, authorProfileId)
+    if (!permission.hasPermission) throwPermissionError('수정')
 
     // 수정 데이터 구성
     const updateData: Record<string, unknown> = {
@@ -382,22 +375,14 @@ export async function deleteBjMessage(messageId: number): Promise<ActionResult<n
       throw new Error('메시지를 찾을 수 없습니다.')
     }
 
-    // 권한 확인
+    // 작성자 profile_id 추출
     const orgData = existingMsg.organization
     const org = Array.isArray(orgData) ? orgData[0] : orgData
-    const isAuthor = org?.profile_id === userId
+    const authorProfileId = org?.profile_id || ''
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-
-    if (!isAuthor && !isAdmin) {
-      throw new Error('삭제 권한이 없습니다.')
-    }
+    // 작성자 또는 Admin 권한 확인
+    const permission = await checkOwnerOrAdminPermission(supabase, userId, authorProfileId)
+    if (!permission.hasPermission) throwPermissionError('삭제')
 
     // Soft delete
     const { error } = await supabase
