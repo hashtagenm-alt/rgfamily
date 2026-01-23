@@ -103,27 +103,62 @@ export default function TotalRankingPage() {
       });
 
       // 모든 랭킹 사용자의 프로필 정보 (id, avatar_url) 조회
-      const allDonorNames = (totalRankingsResult.data || []).map(item => item.donor_name);
-      const { data: allProfilesData } = await supabase
+      // trim 처리하여 공백 차이 해결
+      const allDonorNames = (totalRankingsResult.data || []).map(item => item.donor_name.trim());
+
+      // 프로필 조회 - 정확 매칭 + 전체 조회 fallback
+      let allProfilesData = null;
+      const { data: exactMatchProfiles } = await supabase
         .from("profiles")
         .select("id, nickname, avatar_url")
         .in("nickname", allDonorNames);
 
-      // 닉네임 → profile 정보 매핑 생성
+      if (exactMatchProfiles && exactMatchProfiles.length > 0) {
+        allProfilesData = exactMatchProfiles;
+      } else {
+        // 정확 매칭 실패 시 전체 프로필 조회 후 유사 매칭
+        const { data: allProfiles } = await supabase
+          .from("profiles")
+          .select("id, nickname, avatar_url")
+          .not("avatar_url", "is", null);
+        allProfilesData = allProfiles;
+      }
+
+      // 닉네임 → profile 정보 매핑 생성 (trim + 정규화)
       const nicknameToProfile: Record<string, { id: string; avatar_url: string | null }> = {};
+      const normalizedNicknameMap: Record<string, string> = {}; // 정규화된 닉네임 → 원본 닉네임
+
       (allProfilesData || []).forEach((profile) => {
         if (profile.nickname) {
+          const normalizedNickname = profile.nickname.trim().toLowerCase();
           nicknameToProfile[profile.nickname] = {
             id: profile.id,
             avatar_url: profile.avatar_url,
           };
+          // 정규화된 버전도 저장
+          nicknameToProfile[profile.nickname.trim()] = {
+            id: profile.id,
+            avatar_url: profile.avatar_url,
+          };
+          normalizedNicknameMap[normalizedNickname] = profile.nickname;
         }
       });
 
-      // 디버그: 프로필 매칭 상태 확인
-      console.log('[종합랭킹] donor_names:', allDonorNames.slice(0, 5));
-      console.log('[종합랭킹] 매칭된 프로필 수:', Object.keys(nicknameToProfile).length);
-      console.log('[종합랭킹] 프로필 매핑:', Object.keys(nicknameToProfile).slice(0, 5));
+      // donor_name으로 프로필 찾기 헬퍼 함수
+      const findProfile = (donorName: string) => {
+        // 1. 정확 매칭
+        if (nicknameToProfile[donorName]) return nicknameToProfile[donorName];
+        // 2. trim 매칭
+        const trimmed = donorName.trim();
+        if (nicknameToProfile[trimmed]) return nicknameToProfile[trimmed];
+        // 3. 정규화 매칭 (lowercase)
+        const normalized = trimmed.toLowerCase();
+        const originalNickname = normalizedNicknameMap[normalized];
+        if (originalNickname && nicknameToProfile[originalNickname]) {
+          return nicknameToProfile[originalNickname];
+        }
+        return null;
+      };
 
       // 기존 nicknameToProfileId에도 반영
       Object.entries(nicknameToProfile).forEach(([nickname, data]) => {
@@ -132,13 +167,16 @@ export default function TotalRankingPage() {
         }
       });
 
-      const sorted = (totalRankingsResult.data || []).map((item) => ({
-        donorId: nicknameToProfileId[item.donor_name] || nicknameToProfile[item.donor_name]?.id || null,
-        donorName: item.donor_name,
-        avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
-        totalAmount: item.total_amount, // 게이지 계산용 (UI에 숫자로 노출 금지)
-        rank: item.rank,
-      }));
+      const sorted = (totalRankingsResult.data || []).map((item) => {
+        const profile = findProfile(item.donor_name);
+        return {
+          donorId: nicknameToProfileId[item.donor_name] || profile?.id || null,
+          donorName: item.donor_name,
+          avatarUrl: profile?.avatar_url || null,
+          totalAmount: item.total_amount, // 게이지 계산용 (UI에 숫자로 노출 금지)
+          rank: item.rank,
+        };
+      });
 
       // 1~3위 후원자의 donorId도 podiumProfileIds에 추가
       const top3Ids = sorted
@@ -232,7 +270,7 @@ export default function TotalRankingPage() {
             <>
               {/* Top 3 Podium - 프리미엄 소개 영역 */}
               <section className={styles.podiumSection}>
-                <RankingPodium items={top3} podiumProfileIds={podiumProfileIds} />
+                <RankingPodium items={top3} podiumProfileIds={podiumProfileIds} onRefetch={fetchRankings} />
               </section>
 
               {/* Full Ranking List */}

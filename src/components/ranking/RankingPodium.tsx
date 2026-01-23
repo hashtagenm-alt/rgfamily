@@ -1,20 +1,36 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Medal, Award, Sparkles } from "lucide-react";
+import { Crown, Medal, Award, Sparkles, Pencil } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { RankingItem } from "@/types/common";
 import { getInitials } from "@/lib/utils";
+import { useAuthContext } from "@/lib/context";
+import AvatarEditModal from "./AvatarEditModal";
 import styles from "./RankingPodium.module.css";
 
 interface RankingPodiumProps {
   items: RankingItem[];
   /** 포디움 달성자 profile_id 목록 (VIP 페이지 링크용) */
   podiumProfileIds?: string[];
+  /** 관리자 편집 후 데이터 갱신 콜백 */
+  onRefetch?: () => void;
 }
 
-export default function RankingPodium({ items, podiumProfileIds = [] }: RankingPodiumProps) {
+interface EditTarget {
+  profileId: string;
+  profileName: string;
+  currentAvatarUrl: string | null;
+}
+
+export default function RankingPodium({ items, podiumProfileIds = [], onRefetch }: RankingPodiumProps) {
+  const { isAdmin } = useAuthContext();
+  const isAdminUser = isAdmin();
+
+  // 관리자 아바타 편집 상태
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
   const top3 = [
     items.find((i) => i.rank === 1) || null,
     items.find((i) => i.rank === 2) || null,
@@ -171,6 +187,25 @@ export default function RankingPodium({ items, podiumProfileIds = [] }: RankingP
             )}
           </div>
 
+          {/* 관리자용 아바타 편집 버튼 */}
+          {isAdminUser && item.donorId && (
+            <button
+              className={styles.avatarEditBtn}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setEditTarget({
+                  profileId: item.donorId!,
+                  profileName: item.donorName,
+                  currentAvatarUrl: item.avatarUrl || null,
+                });
+              }}
+              title="프로필 사진 변경"
+            >
+              <Pencil size={12} />
+            </button>
+          )}
+
           {/* 1위 전용 스파클 효과 */}
           {isChampion && (
             <motion.div
@@ -278,6 +313,21 @@ export default function RankingPodium({ items, podiumProfileIds = [] }: RankingP
         animate={{ scaleX: 1, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.5 }}
       />
+
+      {/* 관리자용 아바타 편집 모달 */}
+      {editTarget && (
+        <AvatarEditModal
+          isOpen={!!editTarget}
+          onClose={() => setEditTarget(null)}
+          profileId={editTarget.profileId}
+          profileName={editTarget.profileName}
+          currentAvatarUrl={editTarget.currentAvatarUrl}
+          onSaved={() => {
+            setEditTarget(null);
+            onRefetch?.();
+          }}
+        />
+      )}
     </motion.div>
   );
 }

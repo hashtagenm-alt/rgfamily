@@ -2,6 +2,7 @@
 
 import { authAction, adminAction, type ActionResult } from './index'
 import { checkOwnerOrAdminPermission, throwPermissionError } from './permissions'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { VipMessageComment, VipMessageCommentWithAuthor } from '@/types/database'
 
 // ==================== 타입 정의 ====================

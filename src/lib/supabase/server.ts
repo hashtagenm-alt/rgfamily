@@ -1,8 +1,8 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
-import { USE_MOCK_DATA, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/config'
+import { USE_MOCK_DATA, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY } from '@/lib/config'
 
 /**
  * Mock Supabase 서버 프록시
@@ -81,6 +81,28 @@ export async function createServerSupabaseClient(): Promise<SupabaseClient<Datab
             // Server Component에서는 쿠키를 삭제할 수 없음
           }
         },
+      },
+    }
+  )
+}
+
+/**
+ * Service Role 권한으로 Supabase 클라이언트 생성
+ * RLS 정책을 우회하여 관리자 작업 수행 시 사용
+ * 주의: 서버 사이드에서만 사용해야 함
+ */
+export function createServiceRoleClient(): SupabaseClient<Database> {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Service role credentials are not configured')
+  }
+
+  return createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
     }
   )

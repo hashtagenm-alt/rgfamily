@@ -275,6 +275,38 @@
   right: -8px;
 }
 
+/* 관리자용 아바타 편집 버튼 */
+.avatarEditBtn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(253, 104, 186, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.avatarWrapper:hover .avatarEditBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.avatarEditBtn:hover {
+  background: #fd68ba;
+  border-color: #fff;
+  transform: scale(1.1);
+}
+
 /* ============================================
    Name Section
    ============================================ */

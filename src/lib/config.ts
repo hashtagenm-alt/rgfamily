@@ -19,6 +19,7 @@ export const USE_MOCK_DATA =
 // Supabase 설정
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
 // Supabase 자격 증명이 유효한지 확인
 export const hasValidSupabaseCredentials = hasSupabaseCredentials

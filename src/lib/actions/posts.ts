@@ -2,6 +2,7 @@
 
 import { adminAction, authAction, publicAction, type ActionResult } from './index'
 import { checkOwnerOrModeratorPermission, throwPermissionError } from './permissions'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { InsertTables, UpdateTables, Post, Comment } from '@/types/database'
 
 type PostInsert = InsertTables<'posts'>
@@ -85,7 +86,9 @@ export async function deletePost(
     const permission = await checkOwnerOrModeratorPermission(supabase, userId, existingPost.author_id)
     if (!permission.hasPermission) throwPermissionError('삭제')
 
-    const { error } = await supabase
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const serviceClient = createServiceRoleClient()
+    const { error } = await serviceClient
       .from('posts')
       .update({ is_deleted: true })
       .eq('id', id)
@@ -301,8 +304,9 @@ export async function deleteComment(
     const permission = await checkOwnerOrModeratorPermission(supabase, userId, existingComment.author_id)
     if (!permission.hasPermission) throwPermissionError('삭제')
 
-    // Soft delete
-    const { error } = await supabase
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const serviceClient = createServiceRoleClient()
+    const { error } = await serviceClient
       .from('comments')
       .update({ is_deleted: true })
       .eq('id', id)
@@ -349,6 +353,9 @@ export async function deleteMultiplePosts(
 
     const isModerator = profile && ['admin', 'superadmin', 'moderator'].includes(profile.role)
 
+    // Service Role 클라이언트 생성 (RLS 우회)
+    const serviceClient = createServiceRoleClient()
+
     let deleted = 0
     let failed = 0
 
@@ -371,8 +378,8 @@ export async function deleteMultiplePosts(
         continue
       }
 
-      // Soft delete
-      const { error } = await supabase
+      // Soft delete (Service Role 사용하여 RLS 우회)
+      const { error } = await serviceClient
         .from('posts')
         .update({ is_deleted: true })
         .eq('id', id)

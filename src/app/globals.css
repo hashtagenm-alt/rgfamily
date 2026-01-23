@@ -9,8 +9,8 @@
   --color-primary-light: #71717a;
   --color-primary-deep: #3f3f46;
 
-  /* Live Status */
-  --color-live: #ef4444;
+  /* Live Status - 시안색 (CLAUDE.md 가이드라인) */
+  --color-live: #00d4ff;
 
   /* Ranking Colors */
   --color-gold: #ffd700;
@@ -52,9 +52,9 @@
   --font-body: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "SF Mono", "Fira Code", monospace;
 
-  /* Type Scale - Major Third (1.25) */
-  --text-2xs: 0.625rem; /* 10px */
-  --text-xs: 0.75rem; /* 12px */
+  /* Type Scale - Major Third (1.25) - 최소 12px 보장 */
+  --text-2xs: 0.75rem; /* 12px - 최소 크기 */
+  --text-xs: 0.8125rem; /* 13px */
   --text-sm: 0.875rem; /* 14px */
   --text-base: 1rem; /* 16px */
   --text-lg: 1.125rem; /* 18px */

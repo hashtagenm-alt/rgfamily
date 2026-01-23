@@ -2,6 +2,7 @@
 
 import { authAction, adminAction, type ActionResult } from './index'
 import { checkOwnerOrAdminPermission, throwPermissionError } from './permissions'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { VipPersonalMessage, VipPersonalMessageWithAuthor } from '@/types/database'
 
 // ==================== 타입 정의 ====================
@@ -347,8 +348,9 @@ export async function deleteVipMessage(messageId: number): Promise<ActionResult<
     const permission = await checkOwnerOrAdminPermission(supabase, userId, existingMsg.author_id)
     if (!permission.hasPermission) throwPermissionError('삭제')
 
-    // Soft delete
-    const { error } = await supabase
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const serviceClient = createServiceRoleClient()
+    const { error } = await serviceClient
       .from('vip_personal_messages')
       .update({ is_deleted: true })
       .eq('id', messageId)

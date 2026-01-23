@@ -297,7 +297,9 @@
 }
 
 .row:hover {
-  background: var(--color-pink-overlay-03);
+  background: var(--color-pink-overlay-05);
+  border-left: 3px solid var(--color-primary);
+  box-shadow: 0 0 20px rgba(253, 104, 186, 0.15);
 }
 
 .row.pinned {

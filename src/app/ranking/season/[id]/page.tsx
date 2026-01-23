@@ -45,6 +45,7 @@ export default function SeasonRankingPage() {
     isLoading,
     setSelectedSeasonId,
     setUnitFilter,
+    refetch,
   } = useRanking()
 
   // "current"인 경우 현재 활성 시즌 ID 사용
@@ -221,7 +222,7 @@ export default function SeasonRankingPage() {
           <>
             {/* Podium */}
             <section className={styles.podiumSection}>
-              <RankingPodium items={top3} />
+              <RankingPodium items={top3} onRefetch={refetch} />
             </section>
 
             {/* Full List */}

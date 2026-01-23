@@ -146,13 +146,13 @@
   display: none;
 }
 
-/* Live members - 빨간색 링 */
+/* Live members - 시안색 링 */
 .avatarWrapper.isLive::before {
   content: '';
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 3px solid #ef4444;
+  border: 3px solid var(--color-live, #00d4ff);
   background: transparent;
   z-index: 0;
   animation: pulseRing 2s ease-in-out infinite;
@@ -163,7 +163,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
   z-index: 0;
 }
 
@@ -172,10 +172,10 @@
   50% { opacity: 0.6; }
 }
 
-/* Combined: Live + Leader = 빨간색 링만 */
+/* Combined: Live + Leader = 시안색 링만 */
 .avatarWrapper.isLive.isLeader::before {
   inset: -4px;
-  border: 3px solid #ef4444;
+  border: 3px solid var(--color-live, #00d4ff);
   background: transparent;
 }
 
@@ -184,7 +184,7 @@
   inset: -4px;
   border: none;
   background: transparent;
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
 }
 
 .avatar {
@@ -236,7 +236,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  background: #ef4444;
+  background: var(--color-live, #00d4ff);
   color: #ffffff;
   font-size: 0.75rem;
   font-weight: 800;
@@ -245,7 +245,7 @@
   z-index: 3;
   border: 2px solid var(--background);
   box-shadow:
-    0 4px 12px rgba(239, 68, 68, 0.4),
+    0 4px 12px rgba(0, 212, 255, 0.4),
     0 2px 4px rgba(0, 0, 0, 0.2);
   animation: livePulse 1.5s ease-in-out infinite;
 }
@@ -468,19 +468,19 @@
   border-color: #71717a;
 }
 
-/* Light Mode - Live Ring (빨간색) */
+/* Light Mode - Live Ring (시안색) */
 :global([data-theme="light"]) .avatarWrapper.isLive::before {
-  border-color: #dc2626;
+  border-color: var(--color-live, #00d4ff);
 }
 
 :global([data-theme="light"]) .avatarWrapper.isLive::after {
-  box-shadow: 0 0 12px rgba(220, 38, 38, 0.35);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.35);
 }
 
 :global([data-theme="light"]) .liveBadge {
-  background: #dc2626;
+  background: var(--color-live, #00d4ff);
   border-color: #ffffff;
   box-shadow:
-    0 4px 12px rgba(220, 38, 38, 0.35),
+    0 4px 12px rgba(0, 212, 255, 0.35),
     0 2px 4px rgba(0, 0, 0, 0.1);
 }
