@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { MessageSquare, Eye, Crown, Lock, Search, ChevronDown } from 'lucide-react'
+import { MessageSquare, Eye, Crown, Lock, Search, ChevronDown, Trash2, CheckSquare, Square } from 'lucide-react'
 import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useAuthContext } from '@/lib/context'
 import { useVipStatus } from '@/lib/hooks'
-import { getPosts } from '@/lib/actions/posts'
+import { getPosts, deleteMultiplePosts } from '@/lib/actions/posts'
 import { formatShortDate } from '@/lib/utils/format'
 import TabFilter from '@/components/community/TabFilter'
 import styles from '../free/page.module.css'
@@ -38,6 +38,11 @@ export default function VipBoardPage() {
   const [searchType, setSearchType] = useState<'all' | 'title' | 'author'>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+
+  // 복수 선택 삭제 관련 상태
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isSelectMode, setIsSelectMode] = useState(false)
 
   const tabs = [
     { label: '자유게시판 (FREE)', value: 'free', path: '/community/free' },
@@ -103,6 +108,63 @@ export default function VipBoardPage() {
 
   const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE)
 
+  // 체크박스 토글
+  const toggleSelect = (id: number, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  // 전체 선택/해제
+  const toggleSelectAll = () => {
+    if (selectedIds.size === posts.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(posts.map(p => p.id)))
+    }
+  }
+
+  // 선택 모드 토글
+  const toggleSelectMode = () => {
+    setIsSelectMode(prev => !prev)
+    setSelectedIds(new Set())
+  }
+
+  // 선택된 게시글 삭제
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return
+
+    const confirmMsg = `선택한 ${selectedIds.size}개의 게시글을 삭제하시겠습니까?`
+    if (!confirm(confirmMsg)) return
+
+    setIsDeleting(true)
+    const result = await deleteMultiplePosts(Array.from(selectedIds))
+
+    if (result.error) {
+      alert(result.error)
+    } else if (result.data) {
+      const { deleted, failed } = result.data
+      if (failed > 0) {
+        alert(`${deleted}개 삭제 완료, ${failed}개 삭제 실패 (권한 없음)`)
+      } else {
+        alert(`${deleted}개 게시글이 삭제되었습니다.`)
+      }
+      setSelectedIds(new Set())
+      setIsSelectMode(false)
+      fetchPosts()
+    }
+
+    setIsDeleting(false)
+  }
+
   const getPageNumbers = () => {
     const pages: number[] = []
     const maxVisible = 5
@@ -145,6 +207,27 @@ export default function VipBoardPage() {
               <span className={styles.totalCount}>
                 전체 <strong>{totalCount}</strong>건
               </span>
+              {/* 관리자: 선택 모드 버튼 */}
+              {isAdmin && (
+                <button
+                  onClick={toggleSelectMode}
+                  className={`${styles.selectModeBtn} ${isSelectMode ? styles.active : ''}`}
+                >
+                  <CheckSquare size={14} />
+                  {isSelectMode ? '선택 취소' : '선택'}
+                </button>
+              )}
+              {/* 선택 모드일 때 삭제 버튼 */}
+              {isSelectMode && selectedIds.size > 0 && (
+                <button
+                  onClick={handleDeleteSelected}
+                  disabled={isDeleting}
+                  className={styles.deleteSelectedBtn}
+                >
+                  <Trash2 size={14} />
+                  {isDeleting ? '삭제 중...' : `${selectedIds.size}개 삭제`}
+                </button>
+              )}
             </div>
             <div className={styles.searchArea}>
               <div className={styles.searchTypeSelect}>
@@ -219,8 +302,23 @@ export default function VipBoardPage() {
             <p>등록된 게시글이 없습니다</p>
           </div>
         ) : (
-          <div className={`${styles.board} ${styles.vipBoard}`}>
+          <div className={`${styles.board} ${styles.vipBoard} ${isSelectMode ? styles.selectModeVip : ''}`}>
             <div className={styles.tableHeader}>
+              {isSelectMode && (
+                <span className={styles.colCheck}>
+                  <button
+                    onClick={toggleSelectAll}
+                    className={styles.checkBtn}
+                    title={selectedIds.size === posts.length ? '전체 해제' : '전체 선택'}
+                  >
+                    {selectedIds.size === posts.length ? (
+                      <CheckSquare size={16} className={styles.checkedIcon} />
+                    ) : (
+                      <Square size={16} />
+                    )}
+                  </button>
+                </span>
+              )}
               <span className={styles.colNumber}>번호</span>
               <span className={styles.colTitle}>제목</span>
               <span className={styles.colAuthor}>글쓴이</span>
@@ -232,8 +330,18 @@ export default function VipBoardPage() {
                 <Link
                   key={post.id}
                   href={`/community/vip/${post.id}`}
-                  className={`${styles.row} ${styles.vipRow}`}
+                  className={`${styles.row} ${styles.vipRow} ${selectedIds.has(post.id) ? styles.selected : ''}`}
                 >
+                  {/* Checkbox */}
+                  {isSelectMode && (
+                    <div className={styles.cellCheck} onClick={(e) => toggleSelect(post.id, e)}>
+                      {selectedIds.has(post.id) ? (
+                        <CheckSquare size={16} className={styles.checkedIcon} />
+                      ) : (
+                        <Square size={16} />
+                      )}
+                    </div>
+                  )}
                   <div className={styles.cellNumber}>{posts.length - index}</div>
                   <div className={styles.cellTitle}>
                     <h3 className={styles.postTitle}>{post.title}</h3>

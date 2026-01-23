@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Search, Eye, MessageSquare, ThumbsUp, PenLine, ChevronDown } from 'lucide-react'
+import { Search, Eye, MessageSquare, ThumbsUp, PenLine, ChevronDown, Trash2, CheckSquare, Square } from 'lucide-react'
 import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { useAuthContext } from '@/lib/context'
-import { getPosts } from '@/lib/actions/posts'
+import { getPosts, deleteMultiplePosts } from '@/lib/actions/posts'
 import { formatShortDate } from '@/lib/utils/format'
 import TabFilter from '@/components/community/TabFilter'
 import styles from './page.module.css'
@@ -54,6 +54,11 @@ export default function FreeBoardPage() {
   const [sortBy, setSortBy] = useState<'latest' | 'views' | 'likes'>('latest')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+
+  // 복수 선택 삭제 관련 상태
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isSelectMode, setIsSelectMode] = useState(false)
 
   const tabs = [
     { label: '자유게시판', value: 'free', path: '/community/free' },
@@ -123,6 +128,63 @@ export default function FreeBoardPage() {
 
   const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE)
 
+  // 체크박스 토글
+  const toggleSelect = (id: number, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  // 전체 선택/해제
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedPosts.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(sortedPosts.map(p => p.id)))
+    }
+  }
+
+  // 선택 모드 토글
+  const toggleSelectMode = () => {
+    setIsSelectMode(prev => !prev)
+    setSelectedIds(new Set())
+  }
+
+  // 선택된 게시글 삭제
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return
+
+    const confirmMsg = `선택한 ${selectedIds.size}개의 게시글을 삭제하시겠습니까?`
+    if (!confirm(confirmMsg)) return
+
+    setIsDeleting(true)
+    const result = await deleteMultiplePosts(Array.from(selectedIds))
+
+    if (result.error) {
+      alert(result.error)
+    } else if (result.data) {
+      const { deleted, failed } = result.data
+      if (failed > 0) {
+        alert(`${deleted}개 삭제 완료, ${failed}개 삭제 실패 (권한 없음)`)
+      } else {
+        alert(`${deleted}개 게시글이 삭제되었습니다.`)
+      }
+      setSelectedIds(new Set())
+      setIsSelectMode(false)
+      fetchPosts()
+    }
+
+    setIsDeleting(false)
+  }
+
   // 페이지 버튼 목록 생성
   const getPageNumbers = () => {
     const pages: number[] = []
@@ -163,6 +225,27 @@ export default function FreeBoardPage() {
             <span className={styles.totalCount}>
               전체 <strong>{sortedPosts.length}</strong>건
             </span>
+            {/* 관리자: 선택 모드 버튼 */}
+            {isAdmin && (
+              <button
+                onClick={toggleSelectMode}
+                className={`${styles.selectModeBtn} ${isSelectMode ? styles.active : ''}`}
+              >
+                <CheckSquare size={14} />
+                {isSelectMode ? '선택 취소' : '선택'}
+              </button>
+            )}
+            {/* 선택 모드일 때 삭제 버튼 */}
+            {isSelectMode && selectedIds.size > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                disabled={isDeleting}
+                className={styles.deleteSelectedBtn}
+              >
+                <Trash2 size={14} />
+                {isDeleting ? '삭제 중...' : `${selectedIds.size}개 삭제`}
+              </button>
+            )}
             <div className={styles.sortSelect}>
               <select
                 value={sortBy}
@@ -242,9 +325,24 @@ export default function FreeBoardPage() {
         ) : (
           <>
             {/* Board Table */}
-            <div className={styles.board}>
+            <div className={`${styles.board} ${isSelectMode ? styles.selectMode : ''}`}>
               {/* Table Header */}
               <div className={styles.tableHeader}>
+                {isSelectMode && (
+                  <span className={styles.colCheck}>
+                    <button
+                      onClick={toggleSelectAll}
+                      className={styles.checkBtn}
+                      title={selectedIds.size === sortedPosts.length ? '전체 해제' : '전체 선택'}
+                    >
+                      {selectedIds.size === sortedPosts.length ? (
+                        <CheckSquare size={16} className={styles.checkedIcon} />
+                      ) : (
+                        <Square size={16} />
+                      )}
+                    </button>
+                  </span>
+                )}
                 <span className={styles.colNumber}>번호</span>
                 <span className={styles.colCategory}>분류</span>
                 <span className={styles.colTitle}>제목</span>
@@ -260,8 +358,18 @@ export default function FreeBoardPage() {
                   <Link
                     key={post.id}
                     href={`/community/free/${post.id}`}
-                    className={`${styles.row} ${isPopular(post.likeCount) ? styles.popular : ''}`}
+                    className={`${styles.row} ${isPopular(post.likeCount) ? styles.popular : ''} ${selectedIds.has(post.id) ? styles.selected : ''}`}
                   >
+                    {/* Checkbox */}
+                    {isSelectMode && (
+                      <div className={styles.cellCheck} onClick={(e) => toggleSelect(post.id, e)}>
+                        {selectedIds.has(post.id) ? (
+                          <CheckSquare size={16} className={styles.checkedIcon} />
+                        ) : (
+                          <Square size={16} />
+                        )}
+                      </div>
+                    )}
                     {/* Number */}
                     <div className={styles.cellNumber}>
                       {sortedPosts.length - index}

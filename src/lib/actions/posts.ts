@@ -334,6 +334,61 @@ export async function getCommentsByPostId(
 // ==================== Admin Only ====================
 
 /**
+ * 게시글 복수 삭제 (관리자 또는 작성자)
+ */
+export async function deleteMultiplePosts(
+  ids: number[]
+): Promise<ActionResult<{ deleted: number; failed: number }>> {
+  return authAction(async (supabase, userId) => {
+    // 사용자 권한 확인
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    const isModerator = profile && ['admin', 'superadmin', 'moderator'].includes(profile.role)
+
+    let deleted = 0
+    let failed = 0
+
+    for (const id of ids) {
+      // 게시글 조회
+      const { data: post, error: fetchError } = await supabase
+        .from('posts')
+        .select('author_id')
+        .eq('id', id)
+        .single()
+
+      if (fetchError || !post) {
+        failed++
+        continue
+      }
+
+      // 권한 확인: 작성자 또는 관리자만 삭제 가능
+      if (post.author_id !== userId && !isModerator) {
+        failed++
+        continue
+      }
+
+      // Soft delete
+      const { error } = await supabase
+        .from('posts')
+        .update({ is_deleted: true })
+        .eq('id', id)
+
+      if (error) {
+        failed++
+      } else {
+        deleted++
+      }
+    }
+
+    return { deleted, failed }
+  }, ['/community/free', '/community/vip'])
+}
+
+/**
  * 게시글 강제 삭제 (Admin - Hard Delete)
  */
 export async function hardDeletePost(

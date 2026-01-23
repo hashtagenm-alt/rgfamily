@@ -66,6 +66,57 @@
   gap: var(--space-3);
 }
 
+/* 선택 모드 버튼 */
+.selectModeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: var(--text-xs);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.selectModeBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.selectModeBtn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+/* 선택 삭제 버튼 */
+.deleteSelectedBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: var(--text-xs);
+  background: transparent;
+  border: 1px solid #ef4444;
+  border-radius: var(--radius-md);
+  color: #ef4444;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.deleteSelectedBtn:hover:not(:disabled) {
+  background: #ef4444;
+  color: white;
+}
+
+.deleteSelectedBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .totalCount {
   font-size: var(--text-sm);
   color: var(--text-tertiary);
@@ -189,6 +240,11 @@
   text-align: center;
 }
 
+/* 선택 모드일 때 체크박스 컬럼 추가 */
+.selectMode .tableHeader {
+  grid-template-columns: 40px 60px 80px 1fr 100px 90px 60px 60px;
+}
+
 .tableHeader span {
   display: flex;
   align-items: center;
@@ -218,12 +274,19 @@
   align-items: center;
 }
 
+/* 선택 모드일 때 체크박스 컬럼 추가 */
+.selectMode .row {
+  grid-template-columns: 40px 60px 80px 1fr 100px 90px 60px 60px;
+}
+
 .row:last-child {
   border-bottom: none;
 }
 
 .row:hover {
-  background: var(--overlay-subtle);
+  background: var(--color-pink-overlay-05);
+  border-left: 3px solid var(--color-primary);
+  box-shadow: 0 0 20px rgba(253, 104, 186, 0.15);
 }
 
 .row.popular {
@@ -232,6 +295,43 @@
 
 .row.popular:hover {
   background: var(--overlay-strong);
+}
+
+/* Cell Check (체크박스) */
+.colCheck,
+.cellCheck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+}
+
+.checkBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.checkBtn:hover {
+  color: var(--color-primary);
+}
+
+.checkedIcon {
+  color: var(--color-primary);
+}
+
+.row.selected {
+  background: var(--color-pink-overlay-10);
+}
+
+.row.selected:hover {
+  background: var(--color-pink-overlay-15);
 }
 
 /* Cell Number */
@@ -278,7 +378,7 @@
 }
 
 .row:hover .postTitle {
-  color: var(--text-primary);
+  color: var(--color-primary);
 }
 
 .titleMeta {
@@ -798,6 +898,15 @@
 
 .board.vipBoard .row {
   grid-template-columns: 60px 1fr 100px 90px 60px;
+}
+
+/* VIP 선택 모드일 때 체크박스 컬럼 추가 (6 columns) */
+.selectModeVip.vipBoard .tableHeader {
+  grid-template-columns: 40px 60px 1fr 100px 90px 60px;
+}
+
+.selectModeVip.vipBoard .row {
+  grid-template-columns: 40px 60px 1fr 100px 90px 60px;
 }
 
 /* VIP Row special effect */
