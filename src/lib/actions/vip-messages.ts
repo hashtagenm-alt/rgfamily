@@ -13,6 +13,19 @@ export interface VipMessageWithAuthor extends VipPersonalMessage {
   }
   canViewContent: boolean
   is_private_for_viewer?: boolean
+  comment_count?: number
+}
+
+export interface GetVipMessagesOptions {
+  limit?: number
+  offset?: number
+  includeCommentCount?: boolean
+}
+
+export interface GetVipMessagesResult {
+  messages: VipMessageWithAuthor[]
+  total: number
+  hasMore: boolean
 }
 
 // ==================== 메시지 조회 ====================
@@ -98,6 +111,116 @@ export async function getVipMessagesByVipId(
     }
 
     return messages
+  })
+}
+
+/**
+ * 특정 VIP의 개인 메시지 조회 (페이지네이션, 댓글 수 포함)
+ * - 로그인한 모든 사용자 조회 가능
+ * - 게시판 형태의 무한 스크롤 지원
+ */
+export async function getVipMessagesPaginated(
+  vipProfileId: string,
+  options: GetVipMessagesOptions = {}
+): Promise<ActionResult<GetVipMessagesResult>> {
+  return authAction(async (supabase, userId) => {
+    const { limit = 10, offset = 0, includeCommentCount = true } = options
+
+    // 사용자 권한 조회
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
+    const isOwner = userId === vipProfileId
+
+    // 메시지 조회 (작성자 정보 포함)
+    const { data, error, count } = await supabase
+      .from('vip_personal_messages')
+      .select(`
+        *,
+        profiles:author_id (
+          nickname,
+          avatar_url
+        )
+      `, { count: 'exact' })
+      .eq('vip_profile_id', vipProfileId)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (error) throw new Error(error.message)
+
+    // 댓글 수 조회 (옵션)
+    let commentCounts: Record<number, number> = {}
+    if (includeCommentCount && data && data.length > 0) {
+      const messageIds = data.map(m => m.id)
+
+      // 각 메시지별 댓글 수 조회
+      const { data: countData, error: countError } = await supabase
+        .from('vip_message_comments')
+        .select('message_id')
+        .in('message_id', messageIds)
+        .eq('is_deleted', false)
+
+      if (!countError && countData) {
+        countData.forEach(c => {
+          commentCounts[c.message_id] = (commentCounts[c.message_id] || 0) + 1
+        })
+      }
+    }
+
+    // 데이터 변환
+    const messages: VipMessageWithAuthor[] = []
+
+    for (const msg of data || []) {
+      const authorInfo = msg.profiles
+      const author = Array.isArray(authorInfo) ? authorInfo[0] : authorInfo
+
+      const isAuthor = msg.author_id === userId
+      const canViewPrivateContent = isAdmin || isOwner || isAuthor
+      const canViewContent = msg.is_public || canViewPrivateContent
+
+      const safeContentText = canViewContent ? msg.content_text : null
+      const safeContentUrl = canViewContent
+        ? msg.content_url
+        : msg.message_type === 'video'
+          ? msg.content_url
+          : null
+
+      messages.push({
+        id: msg.id,
+        vip_profile_id: msg.vip_profile_id,
+        author_id: msg.author_id,
+        message_type: msg.message_type as 'text' | 'image' | 'video',
+        content_text: safeContentText,
+        content_url: safeContentUrl,
+        is_public: msg.is_public,
+        is_deleted: msg.is_deleted,
+        created_at: msg.created_at,
+        updated_at: msg.updated_at,
+        author: author
+          ? {
+              nickname: author.nickname,
+              avatar_url: author.avatar_url,
+            }
+          : undefined,
+        is_private_for_viewer: !msg.is_public,
+        canViewContent,
+        comment_count: commentCounts[msg.id] || 0,
+      })
+    }
+
+    const total = count || 0
+    const hasMore = offset + limit < total
+
+    return {
+      messages,
+      total,
+      hasMore,
+    }
   })
 }
 

@@ -1,0 +1,356 @@
+.commentsSection {
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* 로딩 */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 로그인 안내 */
+.loginPrompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+}
+
+/* 댓글 없음 */
+.noComments {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+}
+
+/* 댓글 목록 */
+.commentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* 개별 댓글 */
+.comment {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.comment:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.reply {
+  margin-left: 24px;
+  padding: 10px;
+  background: rgba(253, 104, 186, 0.03);
+  border-left: 2px solid rgba(253, 104, 186, 0.2);
+}
+
+/* 댓글 헤더 */
+.commentHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.commentAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.commentAvatarPlaceholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(253, 104, 186, 0.4) 0%, rgba(255, 138, 204, 0.4) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.smallAvatar {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+.commentInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.commentNameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.commentName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.commentDate {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* 역할 뱃지 */
+.vipBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffb700 100%);
+  border-radius: 50%;
+  color: #1a1a1a;
+}
+
+.adminBadge,
+.modBadge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.adminBadge {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.modBadge {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+/* 댓글 액션 */
+.commentActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.replyBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.replyBtn:hover {
+  background: rgba(253, 104, 186, 0.1);
+  color: #fd68ba;
+}
+
+.deleteCommentBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deleteCommentBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* 댓글 내용 */
+.commentContent {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 답글 폼 래퍼 */
+.replyFormWrapper {
+  margin-top: 12px;
+  padding-left: 42px;
+}
+
+/* 대댓글 목록 */
+.repliesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* 더 불러오기 */
+.loadMoreBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.loadMoreBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.loadMoreBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 라이트 테마 */
+:global([data-theme="light"]) .commentsSection {
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme="light"]) .loading {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="light"]) .loginPrompt {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.55);
+}
+
+:global([data-theme="light"]) .noComments {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+:global([data-theme="light"]) .comment {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:global([data-theme="light"]) .comment:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme="light"]) .reply {
+  background: rgba(224, 80, 144, 0.03);
+  border-left-color: rgba(224, 80, 144, 0.25);
+}
+
+:global([data-theme="light"]) .commentName {
+  color: #1a1a1a;
+}
+
+:global([data-theme="light"]) .commentDate {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+:global([data-theme="light"]) .commentContent {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+:global([data-theme="light"]) .replyBtn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="light"]) .replyBtn:hover {
+  background: rgba(224, 80, 144, 0.1);
+  color: #e05090;
+}
+
+:global([data-theme="light"]) .deleteCommentBtn {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme="light"]) .loadMoreBtn {
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="light"]) .loadMoreBtn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .reply {
+    margin-left: 16px;
+  }
+
+  .replyFormWrapper {
+    padding-left: 32px;
+  }
+
+  .commentAvatar,
+  .commentAvatarPlaceholder {
+    width: 28px;
+    height: 28px;
+  }
+
+  .smallAvatar {
+    width: 24px;
+    height: 24px;
+  }
+}

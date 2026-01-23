@@ -102,31 +102,35 @@ export default function TotalRankingPage() {
         }
       });
 
-      // Top 3 사용자 중 vip_rewards에 없는 경우, profiles 테이블에서 직접 검색
-      const top3Rankings = (totalRankingsResult.data || []).filter(item => item.rank <= 3);
-      const missingTop3Names = top3Rankings
-        .filter(item => !nicknameToProfileId[item.donor_name])
-        .map(item => item.donor_name);
+      // 모든 랭킹 사용자의 프로필 정보 (id, avatar_url) 조회
+      const allDonorNames = (totalRankingsResult.data || []).map(item => item.donor_name);
+      const { data: allProfilesData } = await supabase
+        .from("profiles")
+        .select("id, nickname, avatar_url")
+        .in("nickname", allDonorNames);
 
-      // profiles 테이블에서 누락된 Top 3 사용자 검색
-      if (missingTop3Names.length > 0) {
-        const { data: profilesData } = await supabase
-          .from("profiles")
-          .select("id, nickname")
-          .in("nickname", missingTop3Names);
+      // 닉네임 → profile 정보 매핑 생성
+      const nicknameToProfile: Record<string, { id: string; avatar_url: string | null }> = {};
+      (allProfilesData || []).forEach((profile) => {
+        if (profile.nickname) {
+          nicknameToProfile[profile.nickname] = {
+            id: profile.id,
+            avatar_url: profile.avatar_url,
+          };
+        }
+      });
 
-        // 검색된 프로필을 매핑에 추가
-        (profilesData || []).forEach((profile) => {
-          if (profile.nickname && profile.id) {
-            nicknameToProfileId[profile.nickname] = profile.id;
-          }
-        });
-      }
+      // 기존 nicknameToProfileId에도 반영
+      Object.entries(nicknameToProfile).forEach(([nickname, data]) => {
+        if (!nicknameToProfileId[nickname]) {
+          nicknameToProfileId[nickname] = data.id;
+        }
+      });
 
       const sorted = (totalRankingsResult.data || []).map((item) => ({
-        donorId: nicknameToProfileId[item.donor_name] || null,
+        donorId: nicknameToProfileId[item.donor_name] || nicknameToProfile[item.donor_name]?.id || null,
         donorName: item.donor_name,
-        avatarUrl: null,
+        avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
         totalAmount: item.total_amount, // 게이지 계산용 (UI에 숫자로 노출 금지)
         rank: item.rank,
       }));

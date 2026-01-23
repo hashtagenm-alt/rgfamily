@@ -1,0 +1,193 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.replyForm {
+  padding: 0;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.inputWrapper:focus-within {
+  border-color: rgba(253, 104, 186, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.textarea {
+  flex: 1;
+  min-height: 24px;
+  max-height: 120px;
+  padding: 6px 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #fff;
+  font-family: inherit;
+}
+
+.textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.textarea:disabled {
+  opacity: 0.6;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.submitBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #fd68ba;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #ff8acc;
+  transform: scale(1.05);
+}
+
+.submitBtn:disabled {
+  background: rgba(253, 104, 186, 0.3);
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.charCount {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* 라이트 테마 */
+:global([data-theme="light"]) .inputWrapper {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global([data-theme="light"]) .inputWrapper:focus-within {
+  border-color: rgba(224, 80, 144, 0.5);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+:global([data-theme="light"]) .textarea {
+  color: #1a1a1a;
+}
+
+:global([data-theme="light"]) .textarea::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme="light"]) .submitBtn {
+  background: #e05090;
+}
+
+:global([data-theme="light"]) .submitBtn:hover:not(:disabled) {
+  background: #d04080;
+}
+
+:global([data-theme="light"]) .submitBtn:disabled {
+  background: rgba(224, 80, 144, 0.3);
+}
+
+:global([data-theme="light"]) .cancelBtn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="light"]) .cancelBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1a1a;
+}
+
+:global([data-theme="light"]) .charCount {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+:global([data-theme="light"]) .hint {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .inputWrapper {
+    padding: 6px 10px;
+  }
+
+  .textarea {
+    font-size: 13px;
+  }
+
+  .submitBtn,
+  .cancelBtn {
+    width: 28px;
+    height: 28px;
+  }
+}

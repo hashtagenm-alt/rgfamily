@@ -29,6 +29,7 @@ interface VipReward {
   dedicationVideoUrl: string
   createdAt: string
   images?: VipImage[]
+  imageCount?: number
 }
 
 interface Season {
@@ -48,6 +49,7 @@ export default function VipRewardsPage() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [galleryImages, setGalleryImages] = useState<VipImage[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [imageCounts, setImageCounts] = useState<Record<number, number>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch related data
@@ -63,6 +65,24 @@ export default function VipRewardsPage() {
   useEffect(() => {
     fetchRelatedData()
   }, [fetchRelatedData])
+
+  // Fetch image counts for all rewards
+  const fetchImageCounts = useCallback(async (rewardIds: number[]) => {
+    if (rewardIds.length === 0) return
+
+    const { data } = await supabase
+      .from('vip_images')
+      .select('reward_id')
+      .in('reward_id', rewardIds)
+
+    // Count images per reward
+    const counts: Record<number, number> = {}
+    rewardIds.forEach((id) => (counts[id] = 0))
+    ;(data || []).forEach((img) => {
+      counts[img.reward_id] = (counts[img.reward_id] || 0) + 1
+    })
+    setImageCounts(counts)
+  }, [supabase])
 
   // Fetch gallery images for a reward
   const fetchGalleryImages = useCallback(async (rewardId: number) => {
@@ -118,6 +138,8 @@ export default function VipRewardsPage() {
 
       alertHandler.showSuccess('이미지가 업로드되었습니다')
       fetchGalleryImages(rewardId)
+      // Update image count
+      setImageCounts((prev) => ({ ...prev, [rewardId]: (prev[rewardId] || 0) + 1 }))
     } catch (err) {
       alertHandler.showError(err instanceof Error ? err.message : '업로드 실패')
     } finally {
@@ -137,6 +159,8 @@ export default function VipRewardsPage() {
     }
     alertHandler.showSuccess('이미지가 삭제되었습니다')
     fetchGalleryImages(rewardId)
+    // Update image count
+    setImageCounts((prev) => ({ ...prev, [rewardId]: Math.max(0, (prev[rewardId] || 0) - 1) }))
   }
 
   const {
@@ -206,6 +230,14 @@ export default function VipRewardsPage() {
     alertHandler,
   })
 
+  // Fetch image counts when rewards are loaded
+  useEffect(() => {
+    if (rewards.length > 0) {
+      const rewardIds = rewards.map((r) => r.id)
+      fetchImageCounts(rewardIds)
+    }
+  }, [rewards, fetchImageCounts])
+
   const openAddModal = () => {
     baseOpenAddModal()
     setGalleryImages([])
@@ -258,6 +290,22 @@ export default function VipRewardsPage() {
           {item.personalMessage || '-'}
         </span>
       ),
+    },
+    {
+      key: 'imageCount',
+      header: '시그니처',
+      width: '100px',
+      render: (item) => {
+        const count = imageCounts[item.id] || 0
+        return count > 0 ? (
+          <span className={styles.badge} style={{ background: 'rgba(253, 104, 186, 0.15)', color: '#fd68ba', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <ImageIcon size={12} />
+            {count}개
+          </span>
+        ) : (
+          <span className={styles.badge}>미등록</span>
+        )
+      },
     },
     {
       key: 'dedicationVideoUrl',

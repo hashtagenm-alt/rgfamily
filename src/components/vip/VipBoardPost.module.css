@@ -1,0 +1,365 @@
+.post {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.post:hover {
+  border-color: rgba(253, 104, 186, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* 헤더 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(253, 104, 186, 0.4);
+}
+
+.avatarPlaceholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fd68ba 0%, #ff8acc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.date {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 배지 */
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.privateBadge,
+.lockedBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.typeBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 12px;
+  background: rgba(253, 104, 186, 0.12);
+  color: #fd68ba;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 메뉴 */
+.menuContainer {
+  position: relative;
+}
+
+.menuBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s;
+}
+
+.menuBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  min-width: 150px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.menu button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+}
+
+/* 미디어 컨테이너 */
+.mediaContainer {
+  position: relative;
+  width: 100%;
+  max-height: 400px;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  margin-bottom: 16px;
+}
+
+.mediaImage {
+  object-fit: cover;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  color: white;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.videoOverlay:hover {
+  background: rgba(253, 104, 186, 0.3);
+}
+
+.videoPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+/* 텍스트 콘텐츠 */
+.contentText {
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 댓글 토글 버튼 */
+.commentToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  width: 100%;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.commentToggle:hover {
+  color: #fd68ba;
+}
+
+/* 잠금 콘텐츠 */
+.lockedPost {
+  cursor: default;
+}
+
+.lockedPost:hover {
+  transform: none;
+}
+
+.lockedBadge {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.lockedContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.lockIcon {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.lockText {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 라이트 테마 */
+:global([data-theme="light"]) .post {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme="light"]) .post:hover {
+  border-color: rgba(224, 80, 144, 0.3);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme="light"]) .name {
+  color: #1a1a1a;
+}
+
+:global([data-theme="light"]) .date {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="light"]) .avatar {
+  border-color: rgba(224, 80, 144, 0.4);
+}
+
+:global([data-theme="light"]) .typeBadge {
+  background: rgba(224, 80, 144, 0.12);
+  color: #e05090;
+}
+
+:global([data-theme="light"]) .contentText {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:global([data-theme="light"]) .commentToggle {
+  border-top-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.55);
+}
+
+:global([data-theme="light"]) .commentToggle:hover {
+  color: #e05090;
+}
+
+:global([data-theme="light"]) .menuBtn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="light"]) .menuBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1a1a;
+}
+
+:global([data-theme="light"]) .menu {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+:global([data-theme="light"]) .menu button {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+:global([data-theme="light"]) .menu button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme="light"]) .lockedContent {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme="light"]) .lockIcon {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+:global([data-theme="light"]) .lockText {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .post {
+    padding: 16px;
+  }
+
+  .mediaContainer {
+    max-height: 280px;
+  }
+
+  .avatar,
+  .avatarPlaceholder {
+    width: 38px;
+    height: 38px;
+  }
+
+  .name {
+    font-size: 14px;
+  }
+
+  .contentText {
+    font-size: 14px;
+  }
+}

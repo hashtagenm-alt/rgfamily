@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useAuthContext } from '@/lib/context'
 import {
   getVipMessagesByVipId,
+  getVipMessagesPaginated,
   createVipMessage,
   updateVipMessage,
   deleteVipMessage,
@@ -30,7 +31,10 @@ interface UseVipMessagesResult {
   messages: VipMessageWithAuthor[]
   isLoading: boolean
   error: string | null
+  total: number
+  hasMore: boolean
   refetch: () => Promise<void>
+  loadMore: () => Promise<void>
   submitMessage: (params: SubmitMessageParams) => Promise<boolean>
   updateMessage: (params: UpdateMessageParams) => Promise<boolean>
   deleteMessage: (messageId: number) => Promise<boolean>
@@ -38,22 +42,39 @@ interface UseVipMessagesResult {
   canWrite: boolean
 }
 
+interface UseVipMessagesOptions {
+  limit?: number
+  paginated?: boolean
+  includeCommentCount?: boolean
+}
+
 /**
  * VIP 개인 메시지 관리 훅
  *
  * 특정 VIP 프로필에 대한 개인 메시지 조회/작성/수정/삭제 기능 제공
  * Server Actions를 통해 Supabase와 통신
+ *
+ * @param vipProfileId - VIP 프로필 ID
+ * @param options - 옵션 (limit, paginated, includeCommentCount)
  */
-export function useVipMessages(vipProfileId: string): UseVipMessagesResult {
+export function useVipMessages(
+  vipProfileId: string,
+  options: UseVipMessagesOptions = {}
+): UseVipMessagesResult {
   const { user } = useAuthContext()
+  const { limit = 10, paginated = false, includeCommentCount = true } = options
+
   const [messages, setMessages] = useState<VipMessageWithAuthor[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [total, setTotal] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [offset, setOffset] = useState(0)
 
   // VIP 본인만 작성 가능
   const canWrite = user?.id === vipProfileId
 
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = useCallback(async (resetOffset = true) => {
     setIsLoading(true)
     setError(null)
 
@@ -70,33 +91,74 @@ export function useVipMessages(vipProfileId: string): UseVipMessagesResult {
       return
     }
 
+    const currentOffset = resetOffset ? 0 : offset
+
     try {
-      // Server Action 호출
-      const result = await getVipMessagesByVipId(vipProfileId)
+      if (paginated) {
+        // 페이지네이션 모드
+        const result = await getVipMessagesPaginated(vipProfileId, {
+          limit,
+          offset: currentOffset,
+          includeCommentCount,
+        })
 
-      if (result.error) {
-        // 테이블이 없는 경우 빈 배열로 처리 (에러 숨김)
-        if (result.error.includes('does not exist') || result.error.includes('42P01')) {
-          setMessages([])
-          setError(null)
-        } else {
-          setError(result.error)
-          setMessages([])
+        if (result.error) {
+          if (result.error.includes('does not exist') || result.error.includes('42P01')) {
+            setMessages([])
+            setError(null)
+          } else {
+            setError(result.error)
+            setMessages([])
+          }
+          setIsLoading(false)
+          return
         }
-        setIsLoading(false)
-        return
-      }
 
-      setMessages(result.data || [])
+        if (result.data) {
+          if (resetOffset) {
+            setMessages(result.data.messages)
+            setOffset(limit)
+          } else {
+            setMessages((prev) => [...prev, ...result.data!.messages])
+            setOffset((prev) => prev + limit)
+          }
+          setTotal(result.data.total)
+          setHasMore(result.data.hasMore)
+        }
+      } else {
+        // 기존 모드 (전체 조회)
+        const result = await getVipMessagesByVipId(vipProfileId)
+
+        if (result.error) {
+          if (result.error.includes('does not exist') || result.error.includes('42P01')) {
+            setMessages([])
+            setError(null)
+          } else {
+            setError(result.error)
+            setMessages([])
+          }
+          setIsLoading(false)
+          return
+        }
+
+        setMessages(result.data || [])
+        setTotal(result.data?.length || 0)
+        setHasMore(false)
+      }
     } catch (err) {
       console.error('VIP 메시지 조회 실패:', err)
-      // 테이블이 없어도 에러를 표시하지 않고 빈 상태로 처리
       setMessages([])
       setError(null)
     } finally {
       setIsLoading(false)
     }
-  }, [vipProfileId, user])
+  }, [vipProfileId, user, paginated, limit, offset, includeCommentCount])
+
+  // 더 불러오기 (페이지네이션 모드)
+  const loadMore = useCallback(async () => {
+    if (!hasMore || isLoading || !paginated) return
+    await fetchMessages(false)
+  }, [hasMore, isLoading, paginated, fetchMessages])
 
   // 메시지 작성
   const submitMessage = useCallback(
@@ -185,14 +247,17 @@ export function useVipMessages(vipProfileId: string): UseVipMessagesResult {
   )
 
   useEffect(() => {
-    fetchMessages()
-  }, [fetchMessages])
+    fetchMessages(true)
+  }, [vipProfileId, user])
 
   return {
     messages,
     isLoading,
     error,
-    refetch: fetchMessages,
+    total,
+    hasMore,
+    refetch: () => fetchMessages(true),
+    loadMore,
     submitMessage,
     updateMessage: updateMessageHandler,
     deleteMessage: deleteMessageHandler,

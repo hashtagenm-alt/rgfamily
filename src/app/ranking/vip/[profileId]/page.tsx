@@ -10,7 +10,7 @@ import {
   ChevronLeft, ChevronRight, X, Upload, Plus
 } from 'lucide-react'
 import Footer from '@/components/Footer'
-import { BjThankYouSection, VipMessageSection } from '@/components/vip'
+import { BjThankYouSection, VipBoardSection } from '@/components/vip'
 import { useAuthContext } from '@/lib/context'
 import { useVipStatus, useVipProfileData } from '@/lib/hooks'
 import styles from './page.module.css'
@@ -126,8 +126,8 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   const renderContent = () => {
     return (
       <>
-        {/* 1. VIP 메시지 보드 - FROM RG FAMILY (VIP 본인의 글 게시) */}
-        <VipMessageSection
+        {/* 1. VIP 개인 게시판 - FROM RG FAMILY (VIP 본인의 글 + 팬 댓글) */}
+        <VipBoardSection
           vipProfileId={profileId}
           vipNickname={vipData.nickname}
           vipAvatarUrl={vipData.avatarUrl}
