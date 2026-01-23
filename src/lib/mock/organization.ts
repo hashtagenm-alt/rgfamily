@@ -32,6 +32,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: null, // 대표는 직급전 미참여
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -54,6 +60,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: null, // 대표는 직급전 미참여
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
 
@@ -87,6 +99,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(11), // 노예
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -122,6 +140,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(8), // 하녀2
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -153,6 +177,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(4), // 귀족
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -184,6 +214,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(10), // 노예장
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -215,6 +251,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(3), // 황족
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -249,6 +291,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(5), // 시녀장
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -281,6 +329,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(2), // 공주
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -315,6 +369,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(6), // 시녀
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -347,6 +407,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(12), // 쌉노예
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -381,6 +447,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(9), // 하녀3
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -412,6 +484,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(1), // 여왕
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
   {
@@ -446,6 +524,12 @@ export const mockOrganization: Organization[] = [
     is_live: false,
     is_active: true,
     current_rank: getRankName(7), // 하녀1
+    current_rank_id: null,
+    total_contribution: 0,
+    season_contribution: 0,
+    total_prize: 0,
+    total_penalty: 0,
+    prize_balance: 0,
     created_at: '2024-01-01T00:00:00Z',
   },
 ]

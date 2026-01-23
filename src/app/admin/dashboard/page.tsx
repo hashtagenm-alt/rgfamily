@@ -27,6 +27,7 @@ interface BjStatus {
   image_url: string | null
   unit: 'excel' | 'crew'
   role: string
+  is_active: boolean
   current_rank_id: number | null
   current_rank?: BjRank | null
 }
@@ -67,12 +68,11 @@ export default function BjDashboardPage() {
         setRanks(ranksData || [])
       }
 
-      // 2. BJ 멤버 목록 조회 (organization 테이블에서 대표 제외)
+      // 2. BJ 멤버 목록 조회 (organization 테이블에서 대표 제외, 비활성 멤버도 포함)
       const { data: bjData, error: bjError } = await supabase
         .from('organization')
         .select('*')
         .neq('role', '대표')
-        .eq('is_active', true)
         .order('position_order', { ascending: true })
 
       if (bjError) throw bjError
@@ -84,6 +84,7 @@ export default function BjDashboardPage() {
         image_url: bj.image_url,
         unit: bj.unit,
         role: bj.role,
+        is_active: bj.is_active ?? true,
         current_rank_id: bj.current_rank_id,
         current_rank: ranksData?.find((r) => r.id === bj.current_rank_id) || null,
       })) as BjStatus[]
@@ -249,6 +250,7 @@ export default function BjDashboardPage() {
                 <th>BJ명</th>
                 <th>소속</th>
                 <th>현재 직급</th>
+                <th>상태</th>
               </tr>
             </thead>
             <tbody>
@@ -274,6 +276,11 @@ export default function BjDashboardPage() {
                     ) : (
                       <span className={styles.noRank}>미배정</span>
                     )}
+                  </td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${bj.is_active ? styles.active : styles.inactive}`}>
+                      {bj.is_active ? '활성' : '비활성'}
+                    </span>
                   </td>
                 </tr>
               ))}
