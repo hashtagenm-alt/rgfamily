@@ -20,3 +20,6 @@ export { default as VipBoardSection } from './VipBoardSection'
 export { default as VipBoardPost } from './VipBoardPost'
 export { default as VipBoardComments } from './VipBoardComments'
 export { default as VipCommentForm } from './VipCommentForm'
+
+// VIP 이미지 관리 (관리자용)
+export { default as VipImageUploadModal } from './VipImageUploadModal'
