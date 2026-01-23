@@ -65,11 +65,6 @@ export function useProfiles() {
   return provider.profiles
 }
 
-export function useDonations() {
-  const { provider } = useDataProviderContext()
-  return provider.donations
-}
-
 export function useOrganization() {
   const { provider } = useDataProviderContext()
   return provider.organization

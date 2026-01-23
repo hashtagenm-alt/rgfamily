@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   Users,
-  Heart,
   Calendar,
   Building,
   CalendarDays,
@@ -20,7 +19,6 @@ import {
   ChevronRight,
   LogOut,
   Home,
-  BarChart3,
   Clock,
   Medal,
   UserCheck,
@@ -31,11 +29,9 @@ import styles from './Sidebar.module.css'
 
 const menuItems = [
   { href: '/admin', icon: LayoutDashboard, label: '대시보드' },
-  { href: '/admin/analytics', icon: BarChart3, label: '분석' },
   { href: '/admin/members', icon: Users, label: '회원 관리' },
   { href: '/admin/dashboard', icon: UserCheck, label: '출연BJ 관리' },
   { href: '/admin/teams', icon: Swords, label: '팀/매칭 관리' },
-  { href: '/admin/donations', icon: Heart, label: '후원 관리' },
   { href: '/admin/donation-rankings', icon: Medal, label: '후원 랭킹 관리' },
   { href: '/admin/seasons', icon: Calendar, label: '시즌/에피소드' },
   { href: '/admin/organization', icon: Building, label: '조직도 관리' },

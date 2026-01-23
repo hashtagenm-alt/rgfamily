@@ -4,7 +4,13 @@
  * CSV 파일들에서 후원 데이터를 읽어서 season_donation_rankings 테이블을 업데이트합니다.
  *
  * 사용법:
- *   npx ts-node scripts/update-season-rankings.ts --season=1 --files="./data/ep1.csv,./data/ep2.csv"
+ *   npx ts-node scripts/update-season-rankings.ts --season=1 --unit=excel --files="./data/ep1.csv,./data/ep2.csv"
+ *
+ * 옵션:
+ *   --season=<ID>     시즌 ID (필수)
+ *   --unit=<excel|crew>  팬클럽 소속 (선택, 기본값: null)
+ *   --files=<파일들>   CSV 파일 경로들 (쉼표로 구분)
+ *   --dry-run         실제 저장하지 않고 미리보기만
  */
 
 import { createClient } from '@supabase/supabase-js'
@@ -32,10 +38,13 @@ interface DonorData {
   donationCount: number
 }
 
-function parseArgs(): { seasonId: number; filePaths: string[]; dryRun: boolean } {
+type Unit = 'excel' | 'crew' | null
+
+function parseArgs(): { seasonId: number; filePaths: string[]; unit: Unit; dryRun: boolean } {
   const args = process.argv.slice(2)
   let seasonId = 1
   let filePaths: string[] = []
+  let unit: Unit = null
   let dryRun = false
 
   for (const arg of args) {
@@ -44,17 +53,25 @@ function parseArgs(): { seasonId: number; filePaths: string[]; dryRun: boolean }
     } else if (arg.startsWith('--files=')) {
       const filesStr = arg.split('=')[1].replace(/^["']|["']$/g, '')
       filePaths = filesStr.split(',').map((f) => f.trim())
+    } else if (arg.startsWith('--unit=')) {
+      const unitValue = arg.split('=')[1].toLowerCase()
+      if (unitValue === 'excel' || unitValue === 'crew') {
+        unit = unitValue
+      } else {
+        console.error('❌ --unit은 excel 또는 crew만 가능합니다.')
+        process.exit(1)
+      }
     } else if (arg === '--dry-run') {
       dryRun = true
     }
   }
 
   if (filePaths.length === 0) {
-    console.error('사용법: npx ts-node scripts/update-season-rankings.ts --season=<ID> --files=<CSV파일들>')
+    console.error('사용법: npx ts-node scripts/update-season-rankings.ts --season=<ID> --unit=<excel|crew> --files=<CSV파일들>')
     process.exit(1)
   }
 
-  return { seasonId, filePaths, dryRun }
+  return { seasonId, filePaths, unit, dryRun }
 }
 
 function extractNickname(idWithNickname: string): string {
@@ -131,7 +148,10 @@ function mergeDonations(filePaths: string[]): DonorData[] {
 async function main() {
   console.log('🚀 시즌 랭킹 업데이트 시작\n')
 
-  const { seasonId, filePaths, dryRun } = parseArgs()
+  const { seasonId, filePaths, unit, dryRun } = parseArgs()
+
+  console.log(`📌 시즌: ${seasonId}`)
+  console.log(`📌 팬클럽: ${unit || '전체(미지정)'}`)
 
   if (dryRun) {
     console.log('⚠️  DRY-RUN 모드\n')
@@ -161,12 +181,18 @@ async function main() {
     return
   }
 
-  // 3. 기존 데이터 삭제
-  console.log(`\n🗑️  시즌 ${seasonId} 기존 데이터 삭제...`)
-  const { error: deleteError } = await supabase
+  // 3. 기존 데이터 삭제 (unit이 지정된 경우 해당 unit만 삭제)
+  console.log(`\n🗑️  시즌 ${seasonId} ${unit ? `(${unit})` : '전체'} 기존 데이터 삭제...`)
+  let deleteQuery = supabase
     .from('season_donation_rankings')
     .delete()
     .eq('season_id', seasonId)
+
+  if (unit) {
+    deleteQuery = deleteQuery.eq('unit', unit)
+  }
+
+  const { error: deleteError } = await deleteQuery
 
   if (deleteError) {
     console.error('❌ 삭제 실패:', deleteError.message)
@@ -181,6 +207,7 @@ async function main() {
     donor_name: donor.nickname,
     total_amount: donor.totalHearts,
     donation_count: donor.donationCount,
+    unit: unit, // 팬클럽 소속
     updated_at: new Date().toISOString(),
   }))
 

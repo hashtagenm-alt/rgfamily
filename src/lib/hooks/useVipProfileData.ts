@@ -108,10 +108,10 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
           .single()
       )
 
-      // vip_rewards에 데이터가 없으면 프로필/후원 데이터에서 직접 조회 (Fallback)
+      // vip_rewards에 데이터가 없으면 프로필/랭킹 데이터에서 직접 조회 (Fallback)
       if (rewardError && (rewardError.code === 'PGRST116' || rewardError.code === '42501')) {
-        // 병렬 쿼리: 프로필, 시즌, 후원 데이터 동시 조회
-        const [profileResult, seasonResult, rankingResult] = await Promise.all([
+        // 병렬 쿼리: 프로필, 시즌 데이터 동시 조회
+        const [profileResult, seasonResult] = await Promise.all([
           supabase
             .from('profiles')
             .select('id, nickname, avatar_url, total_donation, unit')
@@ -122,14 +122,10 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
             .select('id, name')
             .eq('is_active', true)
             .single(),
-          supabase
-            .from('donations')
-            .select('donor_id, amount')
         ])
 
         const profileData = profileResult.data
         const currentSeason = seasonResult.data
-        const rankingData = rankingResult.data
 
         if (!profileData) {
           setError('프로필 정보를 찾을 수 없습니다.')
@@ -137,21 +133,16 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
           return
         }
 
+        // 닉네임으로 total_donation_rankings에서 랭킹 조회
         let rank = 0
-        if (rankingData) {
-          const totals = rankingData.reduce((acc, d) => {
-            if (d.donor_id) {
-              acc[d.donor_id] = (acc[d.donor_id] || 0) + d.amount
-            }
-            return acc
-          }, {} as Record<string, number>)
+        if (profileData.nickname) {
+          const { data: rankingData } = await supabase
+            .from('total_donation_rankings')
+            .select('rank')
+            .eq('donor_name', profileData.nickname)
+            .single()
 
-          const sortedDonors = Object.entries(totals)
-            .sort(([, a], [, b]) => b - a)
-            .map(([id], idx) => ({ id, rank: idx + 1 }))
-
-          const found = sortedDonors.find(d => d.id === profileId)
-          rank = found?.rank || 0
+          rank = rankingData?.rank || 0
         }
 
         // 프로필 데이터는 항상 로드 (VIP 여부와 무관하게 페이지 표시)

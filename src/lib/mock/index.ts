@@ -11,7 +11,6 @@
 export { mockProfiles, mockAdminProfile, rankedProfiles } from './profiles'
 export { mockSeasons } from './seasons'
 export { mockOrganization } from './organization'
-export { mockDonations } from './donations'
 export {
   mockEpisodes,
   getEpisodesBySeason,
@@ -142,8 +141,6 @@ export {
 // ============================================
 import { mockOrganization } from './organization'
 import { mockLiveStatus } from './live-status'
-import { mockDonations } from './donations'
-import { mockSeasons } from './seasons'
 
 /**
  * 라이브 중인 멤버 정보 조회
@@ -155,32 +152,4 @@ export const getLiveMembersWithInfo = () => {
       const member = mockOrganization.find(m => m.id === status.member_id)
       return { ...status, member }
     })
-}
-
-/**
- * 시즌별 랭킹 데이터 조회
- */
-export const getRankingData = (seasonId?: number) => {
-  const targetSeasonId = seasonId || mockSeasons.find(s => s.is_active)?.id || 4
-  const seasonDonations = mockDonations.filter(d => d.season_id === targetSeasonId)
-
-  const rankingMap = new Map<string, { name: string; amount: number; unit: string | null }>()
-
-  seasonDonations.forEach(donation => {
-    const key = donation.donor_name
-    const existing = rankingMap.get(key)
-    if (existing) {
-      existing.amount += donation.amount
-    } else {
-      rankingMap.set(key, {
-        name: donation.donor_name,
-        amount: donation.amount,
-        unit: donation.unit,
-      })
-    }
-  })
-
-  return Array.from(rankingMap.values())
-    .sort((a, b) => b.amount - a.amount)
-    .map((item, index) => ({ rank: index + 1, ...item }))
 }

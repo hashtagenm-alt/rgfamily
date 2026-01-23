@@ -16,7 +16,6 @@ import {
   IOrganizationRepository,
   INoticeRepository,
   IDataProvider,
-  IDonationRepository,
   IPostRepository,
   ICommentRepository,
   ITimelineRepository,
@@ -32,7 +31,7 @@ import {
 } from '../types'
 import type { RankingItem, UnitFilter, TimelineItem, JoinedSeason } from '@/types/common'
 import type {
-  Season, Profile, Organization, Notice, Donation, Post, Schedule,
+  Season, Profile, Organization, Notice, Post, Schedule,
   Comment, Signature, VipReward, VipImage, MediaContent, LiveStatus, Banner, TributeGuestbook,
   BjThankYouMessage, InsertTables, UpdateTables
 } from '@/types/database'
@@ -51,18 +50,24 @@ class SupabaseRankingRepository implements IRankingRepository {
 
     // 시즌 ID가 있으면 season_donation_rankings 테이블에서 조회
     if (seasonId) {
-      const { data, error } = await withRetry(async () =>
-        this.supabase
+      // unit 필터가 있으면 DB 레벨에서 필터링
+      const { data, error } = await withRetry(async () => {
+        let query = this.supabase
           .from('season_donation_rankings')
-          .select('rank, donor_name, total_amount, donation_count')
+          .select('rank, donor_name, total_amount, donation_count, unit')
           .eq('season_id', seasonId)
-          .order('rank', { ascending: true })
-          .limit(50)
-      )
+
+        // unit 필터 적용 (DB 레벨)
+        if (unitFilter && unitFilter !== 'all' && unitFilter !== 'vip') {
+          query = query.eq('unit', unitFilter)
+        }
+
+        return query.order('rank', { ascending: true }).limit(50)
+      })
 
       if (error) throw error
 
-      // 닉네임으로 프로필 정보 조회
+      // 닉네임으로 프로필 정보 조회 (아바타용)
       const donorNames = (data || []).map(d => d.donor_name)
       const { data: profilesData } = await this.supabase
         .from('profiles')
@@ -76,65 +81,50 @@ class SupabaseRankingRepository implements IRankingRepository {
         }
       })
 
-      return (data || []).map(item => ({
+      // 필터 후 순위 재계산
+      return (data || []).map((item, index) => ({
         donorId: nicknameToProfile[item.donor_name]?.id || null,
         donorName: item.donor_name,
         avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
         totalAmount: item.total_amount,
-        rank: item.rank,
+        rank: index + 1, // 필터된 결과에서 새로운 순위
         seasonId,
       }))
     }
 
-    // 시즌 ID가 없으면 기존 donations 테이블에서 집계
+    // 시즌 ID가 없으면 total_donation_rankings 테이블에서 조회
     const { data, error } = await withRetry(async () => {
-      let query = this.supabase
-        .from('donations')
-        .select(`
-          donor_id,
-          donor_name,
-          amount,
-          season_id,
-          unit,
-          profiles:donor_id (nickname, avatar_url)
-        `)
-
-      if (unitFilter && unitFilter !== 'all' && unitFilter !== 'vip') {
-        query = query.eq('unit', unitFilter)
-      }
-
-      return await query
+      return this.supabase
+        .from('total_donation_rankings')
+        .select('rank, donor_name, total_amount')
+        .order('rank', { ascending: true })
+        .limit(50)
     })
 
     if (error) throw error
 
-    const aggregated = (data || []).reduce((acc, donation) => {
-      const key = donation.donor_id || donation.donor_name
-      if (!acc[key]) {
-        const profile = donation.profiles as unknown as { nickname?: string; avatar_url?: string } | null
-        acc[key] = {
-          donorId: donation.donor_id,
-          donorName: donation.donor_id
-            ? profile?.nickname || donation.donor_name
-            : donation.donor_name,
-          avatarUrl: donation.donor_id ? profile?.avatar_url || null : null,
-          totalAmount: 0,
-          seasonId: donation.season_id,
-        }
+    // 닉네임으로 프로필 정보 조회 (아바타용)
+    const donorNames = (data || []).map(d => d.donor_name)
+    const { data: profilesData } = await this.supabase
+      .from('profiles')
+      .select('id, nickname, avatar_url')
+      .in('nickname', donorNames)
+
+    const nicknameToProfile: Record<string, { id: string; avatar_url: string | null }> = {}
+    ;(profilesData || []).forEach(p => {
+      if (p.nickname) {
+        nicknameToProfile[p.nickname] = { id: p.id, avatar_url: p.avatar_url }
       }
-      acc[key].totalAmount += donation.amount
-      return acc
-    }, {} as Record<string, Omit<RankingItem, 'rank'>>)
+    })
 
-    let sorted = Object.values(aggregated)
-      .sort((a, b) => b.totalAmount - a.totalAmount)
-      .map((item, index) => ({ ...item, rank: index + 1 }))
-
-    if (unitFilter === 'vip') {
-      sorted = sorted.slice(0, 50)
-    }
-
-    return sorted
+    return (data || []).map((item) => ({
+      donorId: nicknameToProfile[item.donor_name]?.id || null,
+      donorName: item.donor_name,
+      avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
+      totalAmount: item.total_amount,
+      rank: item.rank,
+      seasonId: undefined,
+    }))
   }
 
   async getTopRankers(limit: number): Promise<RankingItem[]> {
@@ -247,69 +237,6 @@ class SupabaseProfileRepository implements IProfileRepository {
   async delete(id: string): Promise<void> {
     const { error } = await withRetry(async () =>
       await this.supabase.from('profiles').delete().eq('id', id)
-    )
-    if (error) throw error
-  }
-}
-
-// ============================================
-// Supabase Donation Repository
-// ============================================
-class SupabaseDonationRepository implements IDonationRepository {
-  constructor(private supabase: SupabaseClient) {}
-
-  async findById(id: number): Promise<Donation | null> {
-    const { data } = await withRetry(async () =>
-      await this.supabase.from('donations').select('*').eq('id', id).single()
-    )
-    return data
-  }
-
-  async findByDonor(donorId: string): Promise<Donation[]> {
-    const { data } = await withRetry(async () =>
-      await this.supabase.from('donations').select('*').eq('donor_id', donorId).order('created_at', { ascending: false })
-    )
-    return data || []
-  }
-
-  async findBySeason(seasonId: number): Promise<Donation[]> {
-    const { data } = await withRetry(async () =>
-      await this.supabase.from('donations').select('*').eq('season_id', seasonId)
-    )
-    return data || []
-  }
-
-  async findAll(): Promise<Donation[]> {
-    const { data } = await withRetry(async () =>
-      await this.supabase.from('donations').select('*').order('created_at', { ascending: false })
-    )
-    return data || []
-  }
-
-  async getTotal(donorId: string): Promise<number> {
-    const donations = await this.findByDonor(donorId)
-    return donations.reduce((sum, d) => sum + d.amount, 0)
-  }
-
-  async create(data: InsertTables<'donations'>): Promise<Donation> {
-    const { data: created, error } = await withRetry(async () =>
-      await this.supabase.from('donations').insert(data).select().single()
-    )
-    if (error) throw error
-    return created!
-  }
-
-  async update(id: number, data: UpdateTables<'donations'>): Promise<Donation> {
-    const { data: updated, error } = await withRetry(async () =>
-      await this.supabase.from('donations').update(data).eq('id', id).select().single()
-    )
-    if (error) throw error
-    return updated!
-  }
-
-  async delete(id: number): Promise<void> {
-    const { error } = await withRetry(async () =>
-      await this.supabase.from('donations').delete().eq('id', id)
     )
     if (error) throw error
   }
@@ -1223,7 +1150,6 @@ export class SupabaseDataProvider implements IDataProvider {
   readonly rankings: IRankingRepository
   readonly seasons: ISeasonRepository
   readonly profiles: IProfileRepository
-  readonly donations: IDonationRepository
   readonly organization: IOrganizationRepository
   readonly notices: INoticeRepository
   readonly posts: IPostRepository
@@ -1243,7 +1169,6 @@ export class SupabaseDataProvider implements IDataProvider {
     this.rankings = new SupabaseRankingRepository(supabase)
     this.seasons = new SupabaseSeasonRepository(supabase)
     this.profiles = new SupabaseProfileRepository(supabase)
-    this.donations = new SupabaseDonationRepository(supabase)
     this.organization = new SupabaseOrganizationRepository(supabase)
     this.notices = new SupabaseNoticeRepository(supabase)
     this.posts = new SupabasePostRepository(supabase)

@@ -43,6 +43,7 @@ export const mockBjProfiles: Profile[] = BJ_MEMBERS.map((member) => {
     unit: 'excel' as const,
     total_donation: 0,
     pandatv_id: null, // BJ 멤버는 PandaTV 아이디 별도 없음
+    account_type: 'system' as const, // 시스템 생성 계정
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
   }

@@ -16,6 +16,7 @@ export const mockAdminProfile: Profile = {
   unit: null,
   total_donation: 0,
   pandatv_id: null,
+  account_type: 'system', // 시스템 관리자 계정
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-12-30T00:00:00Z',
 }
@@ -85,6 +86,7 @@ function generateProfiles(): Profile[] {
     unit: donor.unit as 'excel' | 'crew',
     total_donation: donor.hearts,
     pandatv_id: donor.id, // PandaTV 아이디 저장
+    account_type: 'virtual', // 관리자가 임의 생성한 계정
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-20T00:00:00Z',
   }))

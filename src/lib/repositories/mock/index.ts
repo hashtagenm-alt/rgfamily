@@ -10,7 +10,6 @@ import {
   IOrganizationRepository,
   INoticeRepository,
   IDataProvider,
-  IDonationRepository,
   IPostRepository,
   ICommentRepository,
   ITimelineRepository,
@@ -30,7 +29,6 @@ import {
   mockOrganization,
   mockNotices,
   mockPosts,
-  mockDonations,
   mockTimelineEvents,
   mockSchedules,
   mockComments,
@@ -46,7 +44,7 @@ import {
 } from '@/lib/mock'
 import type { RankingItem, UnitFilter, TimelineItem } from '@/types/common'
 import type {
-  Season, Profile, Organization, Notice, Donation, Post, Comment,
+  Season, Profile, Organization, Notice, Post, Comment,
   Schedule, Signature, VipReward, VipImage, MediaContent, Banner,
   LiveStatus, TributeGuestbook, BjThankYouMessage, InsertTables, UpdateTables
 } from '@/types/database'
@@ -94,7 +92,6 @@ const store = {
   organization: [...mockOrganization] as Organization[],
   notices: [...mockNotices] as Notice[],
   posts: [...mockPosts] as Post[],
-  donations: [...mockDonations] as Donation[],
   comments: [...mockComments] as Comment[],
   timelineEvents: [...mockTimelineEvents],
   schedules: [...mockSchedules] as Schedule[],
@@ -116,53 +113,9 @@ class MockRankingRepository implements IRankingRepository {
     seasonId?: number | null
     unitFilter?: UnitFilter
   }): Promise<RankingItem[]> {
-    const { seasonId, unitFilter } = options
+    const { unitFilter } = options
 
-    if (seasonId) {
-      let seasonDonations = store.donations.filter(d => d.season_id === seasonId)
-
-      if (unitFilter && unitFilter !== 'all' && unitFilter !== 'vip') {
-        seasonDonations = seasonDonations.filter(d => d.unit === unitFilter)
-      }
-
-      const donorMap = new Map<string, {
-        donorId: string | null
-        donorName: string
-        avatarUrl: string | null
-        totalAmount: number
-      }>()
-
-      seasonDonations.forEach(donation => {
-        const key = donation.donor_id || donation.donor_name
-        const existing = donorMap.get(key)
-        if (existing) {
-          existing.totalAmount += donation.amount
-        } else {
-          const profile = store.profiles.find(p => p.id === donation.donor_id)
-          donorMap.set(key, {
-            donorId: donation.donor_id,
-            donorName: profile?.nickname || donation.donor_name,
-            avatarUrl: profile?.avatar_url || null,
-            totalAmount: donation.amount,
-          })
-        }
-      })
-
-      let sorted = Array.from(donorMap.values())
-        .sort((a, b) => b.totalAmount - a.totalAmount)
-        .map((item, index) => ({
-          ...item,
-          seasonId,
-          rank: index + 1,
-        }))
-
-      if (unitFilter === 'vip') {
-        sorted = sorted.slice(0, 50)
-      }
-
-      return sorted
-    }
-
+    // Mock에서는 profiles의 total_donation 기반으로 랭킹 생성
     let profiles = [...store.profiles]
 
     if (unitFilter && unitFilter !== 'all' && unitFilter !== 'vip') {
@@ -268,6 +221,7 @@ class MockProfileRepository implements IProfileRepository {
       unit: data.unit || null,
       total_donation: data.total_donation || 0,
       pandatv_id: data.pandatv_id || null,
+      account_type: data.account_type || 'real',
       created_at: getCurrentTimestamp(),
       updated_at: getCurrentTimestamp(),
     }
@@ -291,62 +245,6 @@ class MockProfileRepository implements IProfileRepository {
     const index = store.profiles.findIndex(p => p.id === id)
     if (index === -1) throw new Error(`Profile ${id} not found`)
     store.profiles.splice(index, 1)
-  }
-}
-
-// ============================================
-// Mock Donation Repository (Full CRUD)
-// ============================================
-class MockDonationRepository implements IDonationRepository {
-  async findById(id: number): Promise<Donation | null> {
-    return store.donations.find(d => d.id === id) || null
-  }
-
-  async findByDonor(donorId: string): Promise<Donation[]> {
-    return store.donations.filter(d => d.donor_id === donorId)
-  }
-
-  async findBySeason(seasonId: number): Promise<Donation[]> {
-    return store.donations.filter(d => d.season_id === seasonId)
-  }
-
-  async findAll(): Promise<Donation[]> {
-    return store.donations
-  }
-
-  async getTotal(donorId: string): Promise<number> {
-    const donations = await this.findByDonor(donorId)
-    return donations.reduce((sum, d) => sum + d.amount, 0)
-  }
-
-  async create(data: InsertTables<'donations'>): Promise<Donation> {
-    const newDonation: Donation = {
-      id: generateMockId(),
-      donor_id: data.donor_id || null,
-      donor_name: data.donor_name,
-      amount: data.amount,
-      season_id: data.season_id,
-      episode_id: data.episode_id ?? null,
-      unit: data.unit || null,
-      message: data.message || null,
-      created_at: getCurrentTimestamp(),
-    }
-    store.donations.push(newDonation)
-    return newDonation
-  }
-
-  async update(id: number, data: UpdateTables<'donations'>): Promise<Donation> {
-    const index = store.donations.findIndex(d => d.id === id)
-    if (index === -1) throw new Error(`Donation ${id} not found`)
-
-    store.donations[index] = { ...store.donations[index], ...data }
-    return store.donations[index]
-  }
-
-  async delete(id: number): Promise<void> {
-    const index = store.donations.findIndex(d => d.id === id)
-    if (index === -1) throw new Error(`Donation ${id} not found`)
-    store.donations.splice(index, 1)
   }
 }
 
@@ -1197,7 +1095,6 @@ export class MockDataProvider implements IDataProvider {
   readonly rankings = new MockRankingRepository()
   readonly seasons = new MockSeasonRepository()
   readonly profiles = new MockProfileRepository()
-  readonly donations = new MockDonationRepository()
   readonly organization = new MockOrganizationRepository()
   readonly notices = new MockNoticeRepository()
   readonly posts = new MockPostRepository()
@@ -1226,7 +1123,6 @@ export function resetMockStore(): void {
   store.organization = [...mockOrganization] as Organization[]
   store.notices = [...mockNotices] as Notice[]
   store.posts = [...mockPosts] as Post[]
-  store.donations = [...mockDonations] as Donation[]
   store.comments = [...mockComments] as Comment[]
   store.timelineEvents = [...mockTimelineEvents]
   store.schedules = [...mockSchedules] as Schedule[]

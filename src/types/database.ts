@@ -28,6 +28,7 @@ export type Database = {
           unit: 'excel' | 'crew' | null
           total_donation: number
           pandatv_id: string | null // PandaTV 플랫폼 아이디
+          account_type: 'real' | 'virtual' | 'system' // 계정 유형: real(실제 가입), virtual(임의 생성), system(시스템)
           created_at: string
           updated_at: string
         }
@@ -40,6 +41,7 @@ export type Database = {
           unit?: 'excel' | 'crew' | null
           total_donation?: number
           pandatv_id?: string | null
+          account_type?: 'real' | 'virtual' | 'system'
           created_at?: string
           updated_at?: string
         }
@@ -52,6 +54,7 @@ export type Database = {
           unit?: 'excel' | 'crew' | null
           total_donation?: number
           pandatv_id?: string | null
+          account_type?: 'real' | 'virtual' | 'system'
           created_at?: string
           updated_at?: string
         }
@@ -1133,6 +1136,7 @@ export type Database = {
           donor_name: string
           total_amount: number // ⚠️ 외부 노출 금지!
           donation_count: number
+          unit: 'excel' | 'crew' | null // 팬클럽 소속
           updated_at: string
           created_at: string
         }
@@ -1143,6 +1147,7 @@ export type Database = {
           donor_name: string
           total_amount: number
           donation_count?: number
+          unit?: 'excel' | 'crew' | null
           updated_at?: string
           created_at?: string
         }
@@ -1153,6 +1158,7 @@ export type Database = {
           donor_name?: string
           total_amount?: number
           donation_count?: number
+          unit?: 'excel' | 'crew' | null
           updated_at?: string
           created_at?: string
         }

@@ -42,7 +42,7 @@ export default function RankingBoard() {
         );
       }
     } else {
-      // 시즌 랭킹: 현재 활성 시즌의 donations 집계
+      // 시즌 랭킹: season_donation_rankings 테이블에서 조회
       const { data: season } = await supabase
         .from("seasons")
         .select("id")
@@ -51,31 +51,21 @@ export default function RankingBoard() {
 
       if (season) {
         const { data, error } = await supabase
-          .from("donations")
-          .select("donor_id, amount, profiles!donor_id(nickname, unit)")
-          .eq("season_id", season.id);
+          .from("season_donation_rankings")
+          .select("rank, donor_name, total_amount")
+          .eq("season_id", season.id)
+          .order("rank", { ascending: true })
+          .limit(5);
 
         if (!error && data) {
-          // 도너별 합계 계산
-          const donorTotals: Record<string, { name: string; amount: number; unit: "excel" | "crew" | null }> = {};
-          data.forEach((d) => {
-            const profile = d.profiles as unknown as { nickname: string; unit: "excel" | "crew" | null } | null;
-            if (!donorTotals[d.donor_id]) {
-              donorTotals[d.donor_id] = {
-                name: profile?.nickname || "익명",
-                amount: 0,
-                unit: profile?.unit || null,
-              };
-            }
-            donorTotals[d.donor_id].amount += d.amount;
-          });
-
-          const sorted = Object.values(donorTotals)
-            .sort((a, b) => b.amount - a.amount)
-            .slice(0, 5)
-            .map((item, idx) => ({ ...item, rank: idx + 1 }));
-
-          setRankingData(sorted);
+          setRankingData(
+            data.map((d) => ({
+              rank: d.rank,
+              name: d.donor_name,
+              amount: d.total_amount,
+              unit: null,
+            }))
+          );
         }
       } else {
         setRankingData([]);

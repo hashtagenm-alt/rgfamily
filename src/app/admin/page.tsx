@@ -3,20 +3,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Users, Heart, Calendar, FileText, TrendingUp, Clock, Radio, Eye, RefreshCw, Film, PenTool, MessageSquare } from 'lucide-react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
 import { StatsCard, DataTable, Column } from '@/components/admin'
 import { useSupabaseContext } from '@/lib/context'
 import { useLiveRoster } from '@/lib/hooks'
-import type { JoinedProfile } from '@/types/common'
 import styles from './page.module.css'
 
 // Local helper functions
@@ -45,30 +34,18 @@ const formatDate = (dateStr: string, options?: FormatDateOptions): string => {
 
 interface DashboardStats {
   totalMembers: number
-  totalDonations: number
+  // 시즌 랭킹 통계
+  seasonDonorCount: number
+  seasonTotalAmount: number
+  // 전체 랭킹 통계
+  totalDonorCount: number
   totalDonationAmount: number
   activeSeasons: number
-  recentDonations: RecentDonation[]
   recentMembers: RecentMember[]
   // Content stats
   totalPosts: number
   totalMedia: number
   totalSignatures: number
-}
-
-interface DonationTrendData {
-  date: string
-  amount: number
-  count: number
-}
-
-type TrendPeriod = '7d' | '30d' | '90d'
-
-interface RecentDonation {
-  id: number
-  donorName: string
-  amount: number
-  createdAt: string
 }
 
 interface RecentMember {
@@ -82,9 +59,6 @@ export default function AdminDashboardPage() {
   const supabase = useSupabaseContext()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [trendData, setTrendData] = useState<DonationTrendData[]>([])
-  const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('30d')
-  const [isTrendLoading, setIsTrendLoading] = useState(false)
 
   // 실시간 라이브 상태
   const { members, liveStatusByMemberId, isLoading: liveLoading, refetch: refetchLive } = useLiveRoster({ realtime: true })
@@ -103,26 +77,27 @@ export default function AdminDashboardPage() {
         .from('profiles')
         .select('*', { count: 'exact', head: true })
 
-      // 후원 통계
-      const { data: donationStats } = await supabase
-        .from('donations')
-        .select('amount')
+      // 시즌 랭킹 통계 (season_donation_rankings)
+      const { data: seasonRankings } = await supabase
+        .from('season_donation_rankings')
+        .select('total_amount, donation_count')
 
-      const totalDonations = donationStats?.length || 0
-      const totalDonationAmount = donationStats?.reduce((sum, d) => sum + d.amount, 0) || 0
+      const seasonDonorCount = seasonRankings?.length || 0
+      const seasonTotalAmount = seasonRankings?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0
+
+      // 전체 랭킹 통계 (total_donation_rankings)
+      const { data: totalRankings } = await supabase
+        .from('total_donation_rankings')
+        .select('total_amount')
+
+      const totalDonorCount = totalRankings?.length || 0
+      const totalDonationAmount = totalRankings?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0
 
       // 활성 시즌
       const { count: activeSeasonCount } = await supabase
         .from('seasons')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true)
-
-      // 최근 후원
-      const { data: recentDonations } = await supabase
-        .from('donations')
-        .select('id, amount, created_at, profiles!donor_id(nickname)')
-        .order('created_at', { ascending: false })
-        .limit(5)
 
       // 최근 가입
       const { data: recentMembers } = await supabase
@@ -140,18 +115,11 @@ export default function AdminDashboardPage() {
 
       setStats({
         totalMembers: memberCount || 0,
-        totalDonations,
+        seasonDonorCount,
+        seasonTotalAmount,
+        totalDonorCount,
         totalDonationAmount,
         activeSeasons: activeSeasonCount || 0,
-        recentDonations: (recentDonations || []).map((d) => {
-          const profile = d.profiles as JoinedProfile | null
-          return {
-            id: d.id,
-            donorName: profile?.nickname || '익명',
-            amount: d.amount,
-            createdAt: d.created_at,
-          }
-        }),
         recentMembers: (recentMembers || []).map((m) => ({
           id: m.id,
           nickname: m.nickname,
@@ -169,67 +137,9 @@ export default function AdminDashboardPage() {
     setIsLoading(false)
   }, [supabase])
 
-  // 후원 추이 데이터 가져오기
-  const fetchTrendData = useCallback(async (period: TrendPeriod) => {
-    setIsTrendLoading(true)
-    try {
-      const days = period === '7d' ? 7 : period === '30d' ? 30 : 90
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - days)
-
-      const { data: donations } = await supabase
-        .from('donations')
-        .select('amount, created_at')
-        .gte('created_at', startDate.toISOString())
-        .order('created_at', { ascending: true })
-
-      // 날짜별로 그룹화
-      const grouped = new Map<string, { amount: number; count: number }>()
-
-      // 모든 날짜 초기화
-      for (let i = 0; i < days; i++) {
-        const date = new Date()
-        date.setDate(date.getDate() - (days - 1 - i))
-        const dateStr = date.toISOString().split('T')[0]
-        grouped.set(dateStr, { amount: 0, count: 0 })
-      }
-
-      // 후원 데이터 집계
-      donations?.forEach((d) => {
-        const dateStr = d.created_at.split('T')[0]
-        const existing = grouped.get(dateStr)
-        if (existing) {
-          grouped.set(dateStr, {
-            amount: existing.amount + d.amount,
-            count: existing.count + 1,
-          })
-        }
-      })
-
-      // 배열로 변환
-      const trendArray: DonationTrendData[] = []
-      grouped.forEach((value, key) => {
-        trendArray.push({
-          date: key,
-          amount: value.amount,
-          count: value.count,
-        })
-      })
-
-      setTrendData(trendArray)
-    } catch (error) {
-      console.error('후원 추이 데이터 로드 실패:', error)
-    }
-    setIsTrendLoading(false)
-  }, [supabase])
-
   useEffect(() => {
     fetchStats()
   }, [fetchStats])
-
-  useEffect(() => {
-    fetchTrendData(trendPeriod)
-  }, [fetchTrendData, trendPeriod])
 
   const formatDateTime = (dateStr: string) =>
     formatDate(dateStr, {
@@ -238,23 +148,6 @@ export default function AdminDashboardPage() {
       hour: '2-digit',
       minute: '2-digit',
     })
-
-  const donationColumns: Column<RecentDonation>[] = [
-    { key: 'donorName', header: '후원자' },
-    {
-      key: 'amount',
-      header: '금액',
-      render: (item) => (
-        <span className={styles.amountCell}>{formatCurrency(item.amount)}</span>
-      ),
-    },
-    {
-      key: 'createdAt',
-      header: '일시',
-      width: '140px',
-      render: (item) => formatDateTime(item.createdAt),
-    },
-  ]
 
   const memberColumns: Column<RecentMember>[] = [
     { key: 'nickname', header: '닉네임' },
@@ -293,23 +186,23 @@ export default function AdminDashboardPage() {
           delay={0}
         />
         <StatsCard
-          title="전체 후원"
-          value={stats?.totalDonations.toLocaleString() || '0'}
+          title="시즌 후원자"
+          value={stats?.seasonDonorCount.toLocaleString() || '0'}
           icon={Heart}
           color="success"
           delay={0.1}
         />
         <StatsCard
-          title="총 후원금"
-          value={formatCurrency(stats?.totalDonationAmount || 0)}
+          title="시즌 후원금"
+          value={formatCurrency(stats?.seasonTotalAmount || 0)}
           icon={TrendingUp}
           color="warning"
           delay={0.2}
         />
         <StatsCard
-          title="활성 시즌"
-          value={stats?.activeSeasons || '0'}
-          icon={Calendar}
+          title="전체 후원금"
+          value={formatCurrency(stats?.totalDonationAmount || 0)}
+          icon={TrendingUp}
           color="info"
           delay={0.3}
         />
@@ -344,113 +237,6 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </motion.div>
-
-      {/* Donation Trend Chart */}
-      <motion.section
-        className={styles.chartSection}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <div className={styles.sectionHeader}>
-          <div className={styles.chartHeaderLeft}>
-            <TrendingUp size={20} />
-            <h2>후원 추이</h2>
-          </div>
-          <div className={styles.periodSelector}>
-            {(['7d', '30d', '90d'] as TrendPeriod[]).map((period) => (
-              <button
-                key={period}
-                onClick={() => setTrendPeriod(period)}
-                className={`${styles.periodBtn} ${trendPeriod === period ? styles.active : ''}`}
-              >
-                {period === '7d' ? '7일' : period === '30d' ? '30일' : '90일'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.chartContainer}>
-          {isTrendLoading ? (
-            <div className={styles.chartLoading}>
-              <div className={styles.spinner} />
-            </div>
-          ) : trendData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis
-                  dataKey="date"
-                  stroke="var(--text-tertiary)"
-                  fontSize={12}
-                  tickFormatter={(value) => {
-                    const date = new Date(value)
-                    return `${date.getMonth() + 1}/${date.getDate()}`
-                  }}
-                />
-                <YAxis
-                  yAxisId="left"
-                  stroke="var(--text-tertiary)"
-                  fontSize={12}
-                  tickFormatter={(value) => {
-                    if (value >= 10000) return `${(value / 10000).toFixed(0)}만`
-                    return value.toLocaleString()
-                  }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  stroke="var(--text-tertiary)"
-                  fontSize={12}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--card-bg)',
-                    border: '1px solid var(--card-border)',
-                    borderRadius: '8px',
-                  }}
-                  labelStyle={{ color: 'var(--text-primary)' }}
-                  formatter={(value, name) => {
-                    const numValue = typeof value === 'number' ? value : 0
-                    if (name === 'amount') return [formatCurrency(numValue), '후원금']
-                    return [numValue, '후원 건수']
-                  }}
-                  labelFormatter={(label) => {
-                    const date = new Date(label as string)
-                    return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
-                  }}
-                />
-                <Legend
-                  formatter={(value) => (value === 'amount' ? '후원금' : '후원 건수')}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="var(--primary)"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 6, fill: 'var(--primary)' }}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="count"
-                  stroke="var(--color-success)"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 6, fill: 'var(--color-success)' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className={styles.noData}>
-              <TrendingUp size={32} />
-              <p>해당 기간의 후원 데이터가 없습니다</p>
-            </div>
-          )}
-        </div>
-      </motion.section>
 
       {/* Live Status Section */}
       <motion.section
@@ -537,43 +323,23 @@ export default function AdminDashboardPage() {
       </motion.section>
 
       {/* Recent Activity */}
-      <div className={styles.activityGrid}>
-        <motion.section
-          className={styles.section}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <div className={styles.sectionHeader}>
-            <Heart size={20} />
-            <h2>최근 후원</h2>
-          </div>
-          <DataTable
-            data={stats?.recentDonations || []}
-            columns={donationColumns}
-            searchable={false}
-            itemsPerPage={5}
-          />
-        </motion.section>
-
-        <motion.section
-          className={styles.section}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className={styles.sectionHeader}>
-            <Users size={20} />
-            <h2>최근 가입</h2>
-          </div>
-          <DataTable
-            data={stats?.recentMembers || []}
-            columns={memberColumns}
-            searchable={false}
-            itemsPerPage={5}
-          />
-        </motion.section>
-      </div>
+      <motion.section
+        className={styles.section}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <div className={styles.sectionHeader}>
+          <Users size={20} />
+          <h2>최근 가입</h2>
+        </div>
+        <DataTable
+          data={stats?.recentMembers || []}
+          columns={memberColumns}
+          searchable={false}
+          itemsPerPage={5}
+        />
+      </motion.section>
 
       {/* Quick Actions */}
       <motion.section
@@ -584,10 +350,6 @@ export default function AdminDashboardPage() {
       >
         <h2>빠른 작업</h2>
         <div className={styles.actionGrid}>
-          <a href="/admin/donations" className={styles.actionCard}>
-            <Heart size={24} />
-            <span>후원 등록</span>
-          </a>
           <a href="/admin/schedules" className={styles.actionCard}>
             <Calendar size={24} />
             <span>일정 추가</span>

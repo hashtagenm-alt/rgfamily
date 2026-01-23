@@ -147,7 +147,7 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
         console.warn('VIP 보상 테이블 조회 실패, profiles에서 직접 조회:', rewardsError.message || rewardsError)
       }
 
-      // vip_rewards에 데이터가 없으면 donations/profiles에서 직접 조회 (Fallback)
+      // vip_rewards에 데이터가 없으면 profiles에서 직접 조회 (Fallback)
       if (!rewardsData || rewardsData.length === 0) {
         console.log('[Tribute] vip_rewards 비어있음, profiles에서 조회 시도. userId:', userId)
 

@@ -4,7 +4,7 @@
  */
 
 import type {
-  Profile, Season, Donation, Organization, Notice, Post, Schedule,
+  Profile, Season, Organization, Notice, Post, Schedule,
   Comment, Signature, VipReward, VipImage, MediaContent, LiveStatus, Banner, TributeGuestbook,
   BjThankYouMessage,
   InsertTables, UpdateTables
@@ -51,17 +51,6 @@ export interface IProfileRepository {
   create(data: InsertTables<'profiles'>): Promise<Profile>
   update(id: string, data: UpdateTables<'profiles'>): Promise<Profile>
   delete(id: string): Promise<void>
-}
-
-export interface IDonationRepository {
-  findById(id: number): Promise<Donation | null>
-  findByDonor(donorId: string): Promise<Donation[]>
-  findBySeason(seasonId: number): Promise<Donation[]>
-  findAll(): Promise<Donation[]>
-  getTotal(donorId: string): Promise<number>
-  create(data: InsertTables<'donations'>): Promise<Donation>
-  update(id: number, data: UpdateTables<'donations'>): Promise<Donation>
-  delete(id: number): Promise<void>
 }
 
 export interface IOrganizationRepository {
@@ -214,7 +203,6 @@ export interface IDataProvider {
   rankings: IRankingRepository
   seasons: ISeasonRepository
   profiles: IProfileRepository
-  donations: IDonationRepository
   organization: IOrganizationRepository
   notices: INoticeRepository
   posts: IPostRepository

@@ -37,7 +37,6 @@ export { useEpisodes } from './useEpisodes'
 export { useAlert, AlertProvider } from './useAlert'
 export { useLazyLoad } from './useLazyLoad'
 export { useInfiniteScroll } from './useInfiniteScroll'
-export { useDonationsData, type DonationItem, type SeasonItem, type ProfileItem } from './useDonationsData'
 export {
   useTimelineData,
   type GroupedEvents,
@@ -59,7 +58,6 @@ export {
   useRankings,
   useSeasons,
   useProfiles,
-  useDonations,
   useNotices,
   usePosts,
 } from '@/lib/context'

@@ -22,7 +22,6 @@ export {
   useRankings,
   useSeasons,
   useProfiles,
-  useDonations,
   useOrganization,
   useNotices,
   usePosts,
