@@ -154,7 +154,7 @@ export async function getVipMessagesPaginated(
     if (error) throw new Error(error.message)
 
     // 댓글 수 조회 (옵션)
-    let commentCounts: Record<number, number> = {}
+    const commentCounts: Record<number, number> = {}
     if (includeCommentCount && data && data.length > 0) {
       const messageIds = data.map(m => m.id)
 
