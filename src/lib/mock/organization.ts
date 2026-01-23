@@ -14,7 +14,17 @@
 
 import type { Organization } from '@/types/database'
 import { getMemberAvatar } from './utils'
-import { getRankName } from '@/lib/constants/ranks'
+
+/**
+ * ⚠️ Mock 데이터: 실제 운영에서는 사용 금지!
+ * 직급명 하드코딩 (DB bj_ranks 테이블과 동기화 필요 시 참조)
+ */
+const RANK_NAMES: Record<number, string> = {
+  1: '여왕', 2: '공주', 3: '황족', 4: '귀족',
+  5: '시녀장', 6: '시녀', 7: '하녀1', 8: '하녀2', 9: '하녀3',
+  10: '노예장', 11: '노예', 12: '쌉노예'
+}
+const getRankName = (level: number): string => RANK_NAMES[level] || `${level}위`
 
 export const mockOrganization: Organization[] = [
   // ========== Excel Unit 대표 ==========

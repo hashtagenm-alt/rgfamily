@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Target, X, Star } from 'lucide-react'
 import type { OrgMember, OrganizationRecord } from './MemberCard'
-import { RANKS } from '@/lib/constants/ranks'
+import { useBjRanks } from '@/lib/hooks'
 import styles from './PledgeSidebar.module.css'
 
 // OrgMember 또는 OrganizationRecord 모두 지원
@@ -19,15 +19,6 @@ interface PledgeRow {
   title: string
   content: string
   isCurrentRank?: boolean
-}
-
-/**
- * 직급명으로 순위(position) 찾기
- */
-const getPositionByRankName = (rankName: string | null | undefined): number | null => {
-  if (!rankName) return null
-  const rank = RANKS.find(r => r.name === rankName)
-  return rank?.position || null
 }
 
 /**
@@ -93,7 +84,17 @@ const getRankIcon = (rank: string) => {
 }
 
 export function PledgeSidebar({ member, onClose }: PledgeSidebarProps) {
+  const { getRankByName } = useBjRanks()
   const hasPledge = !!member?.profile_info?.position_pledge
+
+  /**
+   * 직급명으로 순위(level) 찾기
+   */
+  const getPositionByRankName = (rankName: string | null | undefined): number | null => {
+    if (!rankName) return null
+    const rank = getRankByName(rankName)
+    return rank?.level || null
+  }
 
   return (
     <motion.div

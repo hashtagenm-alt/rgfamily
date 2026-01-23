@@ -1,57 +1,57 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useLiveRoster } from "@/lib/hooks";
+import { useLiveRoster, useBjRanks } from "@/lib/hooks";
 import { PledgeSidebar } from "@/components/info/PledgeSidebar";
 import { ProfileSidebar } from "@/components/info/ProfileSidebar";
 import type { OrganizationRecord, UnitFilter } from "@/types/organization";
-import { getRankByName, RANKS } from "@/lib/constants/ranks";
 import { ArrowLeft, Radio, Users, FileText, Calendar, Target } from "lucide-react";
 import styles from "./page.module.css";
 
 // PandaTV ID로 URL 생성
 const getPandaTvUrl = (id: string) => `https://www.pandalive.co.kr/play/${id}`;
 
-/**
- * 현재 직급에 해당하는 공약 내용 추출
- */
-const getCurrentRankPledge = (
-  pledgeText: string | undefined,
-  currentRank: string | null | undefined
-): string | null => {
-  if (!pledgeText || !currentRank) return null;
-
-  const rankInfo = getRankByName(currentRank);
-  if (!rankInfo) return null;
-
-  const position = rankInfo.position;
-  const lines = pledgeText.split('\n').filter(line => line.trim());
-
-  for (const line of lines) {
-    // 패턴: [1등] 여왕 ▶ 내용 또는 1등 여왕 ▶ 내용
-    const match = line.match(/^\[?(\d+(?:[,&\s]*\d+)*(?:등)?)\]?\s*(.+?)\s*[▶ㅡ\-→]\s*(.+)$/);
-    if (match) {
-      const rankStr = match[1].replace(/등$/, '').replace(/\s+/g, '');
-      const content = match[3].trim();
-
-      // 묶음 순위 분리 (예: "10,11,12" → ["10", "11", "12"])
-      const ranks = rankStr.split(/[,&]/).map(r => parseInt(r.trim(), 10));
-      if (ranks.includes(position)) {
-        return content;
-      }
-    }
-  }
-
-  return null;
-};
-
 export default function LivePage() {
   const { members, isLoading } = useLiveRoster({ realtime: true });
+  const { getRankByName } = useBjRanks();
   const [selectedMember, setSelectedMember] = useState<OrganizationRecord | null>(null);
   const [unitFilter, setUnitFilter] = useState<UnitFilter>('all');
+
+  /**
+   * 현재 직급에 해당하는 공약 내용 추출
+   */
+  const getCurrentRankPledge = useCallback((
+    pledgeText: string | undefined,
+    currentRank: string | null | undefined
+  ): string | null => {
+    if (!pledgeText || !currentRank) return null;
+
+    const rankInfo = getRankByName(currentRank);
+    if (!rankInfo) return null;
+
+    const level = rankInfo.level;
+    const lines = pledgeText.split('\n').filter(line => line.trim());
+
+    for (const line of lines) {
+      // 패턴: [1등] 여왕 ▶ 내용 또는 1등 여왕 ▶ 내용
+      const match = line.match(/^\[?(\d+(?:[,&\s]*\d+)*(?:등)?)\]?\s*(.+?)\s*[▶ㅡ\-→]\s*(.+)$/);
+      if (match) {
+        const rankStr = match[1].replace(/등$/, '').replace(/\s+/g, '');
+        const content = match[3].trim();
+
+        // 묶음 순위 분리 (예: "10,11,12" → ["10", "11", "12"])
+        const ranks = rankStr.split(/[,&]/).map(r => parseInt(r.trim(), 10));
+        if (ranks.includes(level)) {
+          return content;
+        }
+      }
+    }
+
+    return null;
+  }, [getRankByName]);
 
   // Filter by unit
   const unitFilteredMembers = useMemo(() => {
@@ -61,21 +61,21 @@ export default function LivePage() {
   }, [members, unitFilter]);
 
   // 직급 순으로 정렬하는 헬퍼 함수
-  const sortByRank = (members: OrganizationRecord[]) => {
+  const sortByRank = useCallback((members: OrganizationRecord[]) => {
     return [...members].sort((a, b) => {
       // 대표(role === '대표')는 맨 앞으로
       if (a.role === '대표' && b.role !== '대표') return -1;
       if (a.role !== '대표' && b.role === '대표') return 1;
       // 그 외는 직급 순으로
-      const rankA = a.current_rank ? getRankByName(a.current_rank)?.position ?? 999 : 999;
-      const rankB = b.current_rank ? getRankByName(b.current_rank)?.position ?? 999 : 999;
+      const rankA = a.current_rank ? getRankByName(a.current_rank)?.level ?? 999 : 999;
+      const rankB = b.current_rank ? getRankByName(b.current_rank)?.level ?? 999 : 999;
       return rankA - rankB;
     });
-  };
+  }, [getRankByName]);
 
   // Separate live and offline members - 직급 순 정렬
-  const liveMembers = useMemo(() => sortByRank(unitFilteredMembers.filter(m => m.is_live)), [unitFilteredMembers]);
-  const offlineMembers = useMemo(() => sortByRank(unitFilteredMembers.filter(m => !m.is_live)), [unitFilteredMembers]);
+  const liveMembers = useMemo(() => sortByRank(unitFilteredMembers.filter(m => m.is_live)), [unitFilteredMembers, sortByRank]);
+  const offlineMembers = useMemo(() => sortByRank(unitFilteredMembers.filter(m => !m.is_live)), [unitFilteredMembers, sortByRank]);
 
   const liveCount = liveMembers.length;
   const totalCount = unitFilteredMembers.length;
@@ -218,7 +218,7 @@ export default function LivePage() {
                                   <div className={styles.pledgeBadge}>
                                     <Target size={12} />
                                     <span className={styles.pledgeRankLabel}>
-                                      {rankInfo.emoji} {rankInfo.position}등 공약
+                                      {rankInfo.emoji} {rankInfo.level}등 공약
                                     </span>
                                     <span className={styles.pledgeContent}>{pledge}</span>
                                   </div>

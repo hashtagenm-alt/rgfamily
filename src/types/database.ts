@@ -1199,6 +1199,8 @@ export type Database = {
           level: number
           display_order: number
           color: string | null
+          emoji: string | null
+          tier: 'royal' | 'noble' | 'servant' | 'slave' | null
           icon_url: string | null
           description: string | null
           created_at: string
@@ -1209,6 +1211,8 @@ export type Database = {
           level: number
           display_order: number
           color?: string | null
+          emoji?: string | null
+          tier?: 'royal' | 'noble' | 'servant' | 'slave' | null
           icon_url?: string | null
           description?: string | null
           created_at?: string
@@ -1219,6 +1223,8 @@ export type Database = {
           level?: number
           display_order?: number
           color?: string | null
+          emoji?: string | null
+          tier?: 'royal' | 'noble' | 'servant' | 'slave' | null
           icon_url?: string | null
           description?: string | null
           created_at?: string

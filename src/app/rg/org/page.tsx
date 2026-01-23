@@ -5,19 +5,19 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Users, Radio, Calendar, FileText } from "lucide-react";
 import Footer from "@/components/Footer";
-import { useOrganization } from "@/lib/hooks";
+import { useOrganization, useBjRanks } from "@/lib/hooks";
 import { MemberCard } from "@/components/info";
 import type { OrganizationRecord } from "@/types/organization";
 import { PledgeSidebar } from "@/components/info/PledgeSidebar";
 import { ProfileSidebar } from "@/components/info/ProfileSidebar";
 import AdminOrgOverlay, { useAdminOrgEdit } from "@/components/info/AdminOrgOverlay";
-import { getRankByName } from "@/lib/constants/ranks";
 import styles from "./page.module.css";
 
 type UnitType = "excel" | "crew";
 
 export default function OrganizationPage() {
   const { members, isLoading, getByUnit, getGroupedByRole, refresh } = useOrganization();
+  const { getRankByName } = useBjRanks();
   const [selectedMember, setSelectedMember] = useState<OrganizationRecord | null>(null);
   const [activeUnit, setActiveUnit] = useState<UnitType>("excel");
 
@@ -64,11 +64,11 @@ export default function OrganizationPage() {
   // 일반 멤버 - 직급 순으로 정렬 (여왕 1위 → 쌉노예 12위)
   const regularMembers = useMemo(() => {
     return [...grouped.members].sort((a, b) => {
-      const rankA = a.current_rank ? getRankByName(a.current_rank)?.position ?? 999 : 999;
-      const rankB = b.current_rank ? getRankByName(b.current_rank)?.position ?? 999 : 999;
+      const rankA = a.current_rank ? getRankByName(a.current_rank)?.level ?? 999 : 999;
+      const rankB = b.current_rank ? getRankByName(b.current_rank)?.level ?? 999 : 999;
       return rankA - rankB;
     });
-  }, [grouped.members]);
+  }, [grouped.members, getRankByName]);
 
   // 섹션 타이틀
   const getLeaderTitle = () => {
