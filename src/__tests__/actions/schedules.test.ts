@@ -130,7 +130,7 @@ describe('Schedules Server Actions', () => {
             }),
           })),
         })),
-      }))
+      })) as typeof mockSupabase.from
       vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as never)
 
       const result = await createSchedule({
@@ -174,7 +174,7 @@ describe('Schedules Server Actions', () => {
         return {
           insert: vi.fn(() => ({ select: insertSelect })),
         }
-      })
+      }) as unknown as typeof mockSupabase.from
 
       vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as never)
 
@@ -221,7 +221,7 @@ describe('Schedules Server Actions', () => {
             })),
           })),
         }
-      })
+      }) as unknown as typeof mockSupabase.from
 
       vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as never)
 
@@ -259,7 +259,7 @@ describe('Schedules Server Actions', () => {
             }),
           })),
         }
-      })
+      }) as unknown as typeof mockSupabase.from
 
       vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as never)
 
@@ -280,7 +280,7 @@ describe('Schedules Server Actions', () => {
             error: null,
           }),
         })),
-      }))
+      })) as typeof mockSupabase.from
       vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as never)
 
       const result = await getSchedules()
@@ -353,7 +353,7 @@ describe('Schedules Server Actions', () => {
         select: vi.fn(() => ({
           or: orMock,
         })),
-      }))
+      })) as typeof mockSupabase.from
       vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as never)
 
       const result = await getSchedulesByDate('2026-01-23')

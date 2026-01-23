@@ -152,9 +152,7 @@ export function FormField({ label, required, children }: FormFieldProps) {
   )
 }
 
-interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  // 추가 props 필요시
-}
+type FormInputProps = React.InputHTMLAttributes<HTMLInputElement>
 
 export function FormInput(props: FormInputProps) {
   return <input className={styles.input} {...props} />
@@ -172,9 +170,7 @@ export function FormSelect({ children, ...props }: FormSelectProps) {
   )
 }
 
-interface FormTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  // 추가 props 필요시
-}
+type FormTextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>
 
 export function FormTextarea(props: FormTextareaProps) {
   return <textarea className={styles.textarea} {...props} />
