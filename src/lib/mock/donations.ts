@@ -69,6 +69,8 @@ const season1Donations: Donation[] = season1Top50.map((donor, index) => ({
   episode_id: 1, // 1회차 방송
   unit: donor.unit as 'excel' | 'crew',
   message: null,
+  target_bj: null,
+  donated_at: null,
   created_at: '2025-01-20T00:00:00Z',
 }))
 

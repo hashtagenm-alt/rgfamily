@@ -234,6 +234,8 @@ export type Database = {
           episode_id: number | null
           unit: 'excel' | 'crew' | null
           message: string | null
+          target_bj: string | null
+          donated_at: string | null
           created_at: string
         }
         Insert: {
@@ -245,6 +247,8 @@ export type Database = {
           episode_id?: number | null
           unit?: 'excel' | 'crew' | null
           message?: string | null
+          target_bj?: string | null
+          donated_at?: string | null
           created_at?: string
         }
         Update: {
@@ -256,6 +260,8 @@ export type Database = {
           episode_id?: number | null
           unit?: 'excel' | 'crew' | null
           message?: string | null
+          target_bj?: string | null
+          donated_at?: string | null
           created_at?: string
         }
         Relationships: [
