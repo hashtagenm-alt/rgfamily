@@ -49,6 +49,44 @@ class SupabaseRankingRepository implements IRankingRepository {
   }): Promise<RankingItem[]> {
     const { seasonId, unitFilter } = options
 
+    // 시즌 ID가 있으면 season_donation_rankings 테이블에서 조회
+    if (seasonId) {
+      const { data, error } = await withRetry(async () =>
+        this.supabase
+          .from('season_donation_rankings')
+          .select('rank, donor_name, total_amount, donation_count')
+          .eq('season_id', seasonId)
+          .order('rank', { ascending: true })
+          .limit(50)
+      )
+
+      if (error) throw error
+
+      // 닉네임으로 프로필 정보 조회
+      const donorNames = (data || []).map(d => d.donor_name)
+      const { data: profilesData } = await this.supabase
+        .from('profiles')
+        .select('id, nickname, avatar_url')
+        .in('nickname', donorNames)
+
+      const nicknameToProfile: Record<string, { id: string; avatar_url: string | null }> = {}
+      ;(profilesData || []).forEach(p => {
+        if (p.nickname) {
+          nicknameToProfile[p.nickname] = { id: p.id, avatar_url: p.avatar_url }
+        }
+      })
+
+      return (data || []).map(item => ({
+        donorId: nicknameToProfile[item.donor_name]?.id || null,
+        donorName: item.donor_name,
+        avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
+        totalAmount: item.total_amount,
+        rank: item.rank,
+        seasonId,
+      }))
+    }
+
+    // 시즌 ID가 없으면 기존 donations 테이블에서 집계
     const { data, error } = await withRetry(async () => {
       let query = this.supabase
         .from('donations')
@@ -60,10 +98,6 @@ class SupabaseRankingRepository implements IRankingRepository {
           unit,
           profiles:donor_id (nickname, avatar_url)
         `)
-
-      if (seasonId) {
-        query = query.eq('season_id', seasonId)
-      }
 
       if (unitFilter && unitFilter !== 'all' && unitFilter !== 'vip') {
         query = query.eq('unit', unitFilter)

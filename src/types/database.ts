@@ -924,6 +924,62 @@ export type Database = {
           }
         ]
       }
+      /**
+       * VIP 개인 메시지 댓글
+       * 팬들이 VIP 게시글에 댓글/대댓글 작성
+       */
+      vip_message_comments: {
+        Row: {
+          id: number
+          message_id: number
+          author_id: string
+          content: string
+          parent_id: number | null
+          is_deleted: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          message_id: number
+          author_id: string
+          content: string
+          parent_id?: number | null
+          is_deleted?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          message_id?: number
+          author_id?: string
+          content?: string
+          parent_id?: number | null
+          is_deleted?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vip_message_comments_message_id_fkey'
+            columns: ['message_id']
+            referencedRelation: 'vip_personal_messages'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vip_message_comments_author_id_fkey'
+            columns: ['author_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vip_message_comments_parent_id_fkey'
+            columns: ['parent_id']
+            referencedRelation: 'vip_message_comments'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       rank_battle_records: {
         Row: {
           id: number
@@ -1060,6 +1116,43 @@ export type Database = {
           donor_name?: string
           total_amount?: number
           is_permanent_vip?: boolean
+          updated_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      /**
+       * 시즌별 후원 랭킹 - Top 50
+       * ⚠️ total_amount는 외부 노출 절대 금지! UI에서는 게이지로만 표현
+       */
+      season_donation_rankings: {
+        Row: {
+          id: number
+          season_id: number
+          rank: number
+          donor_name: string
+          total_amount: number // ⚠️ 외부 노출 금지!
+          donation_count: number
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          season_id: number
+          rank: number
+          donor_name: string
+          total_amount: number
+          donation_count?: number
+          updated_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          season_id?: number
+          rank?: number
+          donor_name?: string
+          total_amount?: number
+          donation_count?: number
           updated_at?: string
           created_at?: string
         }
@@ -1571,8 +1664,10 @@ export type Banner = Tables<'banners'>
 export type TributeGuestbook = Tables<'tribute_guestbook'>
 export type BjThankYouMessage = Tables<'bj_thank_you_messages'>
 export type VipPersonalMessage = Tables<'vip_personal_messages'>
+export type VipMessageComment = Tables<'vip_message_comments'>
 export type RankBattleRecord = Tables<'rank_battle_records'>
 export type TotalDonationRanking = Tables<'total_donation_rankings'>
+export type SeasonDonationRanking = Tables<'season_donation_rankings'>
 export type BjEpisodePerformance = Tables<'bj_episode_performances'>
 
 // BJ 감사 메시지 with JOIN data
@@ -1589,6 +1684,16 @@ export interface VipPersonalMessageWithAuthor extends VipPersonalMessage {
     nickname: string
     avatar_url: string | null
   }
+}
+
+// VIP 메시지 댓글 with 작성자 정보
+export interface VipMessageCommentWithAuthor extends VipMessageComment {
+  author?: {
+    nickname: string
+    avatar_url: string | null
+    role?: 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
+  }
+  replies?: VipMessageCommentWithAuthor[]
 }
 
 // BJ 에피소드 성적 with BJ 정보
