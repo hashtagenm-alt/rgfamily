@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MessageSquare, ImageIcon, Video, Send, Loader2, Globe, Lock } from 'lucide-react'
+import { X, MessageSquare, ImageIcon, Video, Send, Loader2, Globe, Lock, Upload, Trash2 } from 'lucide-react'
 import styles from './BjMessageForm.module.css'
 
 interface BjMessageFormProps {
@@ -38,13 +38,91 @@ export default function BjMessageForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // 이미지 업로드 관련 상태
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const resetForm = useCallback(() => {
     setMessageType('text')
     setContentText('')
     setContentUrl('')
     setIsPublic(true)
     setError(null)
+    setIsUploading(false)
+    setUploadProgress(0)
+    setPreviewUrl(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }, [])
+
+  // 파일 업로드 핸들러
+  const handleFileUpload = async (file: File) => {
+    if (!file) return
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      setError('이미지 파일만 업로드할 수 있습니다.')
+      return
+    }
+
+    // 파일 크기 검증 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('파일 크기는 10MB 이하여야 합니다.')
+      return
+    }
+
+    setIsUploading(true)
+    setError(null)
+    setUploadProgress(10)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'bj-messages')
+
+      setUploadProgress(30)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      setUploadProgress(80)
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || '업로드에 실패했습니다.')
+      }
+
+      const data = await response.json()
+      setContentUrl(data.url)
+      setPreviewUrl(data.url)
+      setUploadProgress(100)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '업로드에 실패했습니다.')
+      setPreviewUrl(null)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      handleFileUpload(file)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setContentUrl('')
+    setPreviewUrl(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   const handleClose = useCallback(() => {
     resetForm()
@@ -65,39 +143,26 @@ export default function BjMessageForm({
       }
     }
 
-    if (messageType === 'image' || messageType === 'video') {
+    if (messageType === 'image') {
       if (!contentUrl.trim()) {
-        setError(messageType === 'image' ? '이미지 URL을 입력해주세요.' : '영상 URL을 입력해주세요.')
+        setError('이미지를 업로드해주세요.')
+        return false
+      }
+    }
+
+    if (messageType === 'video') {
+      if (!contentUrl.trim()) {
+        setError('영상 URL을 입력해주세요.')
         return false
       }
 
-      // URL 형식 및 타입별 검증
       try {
         const parsedUrl = new URL(contentUrl)
+        const isYouTube = parsedUrl.hostname.includes('youtube.com') || parsedUrl.hostname.includes('youtu.be')
 
-        if (messageType === 'image') {
-          // 이미지 URL 검증: 이미지 확장자 또는 이미지 호스팅 서비스
-          const validImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
-          const path = parsedUrl.pathname.toLowerCase()
-          const isImageHost = ['imgur.com', 'i.imgur.com', 'drive.google.com', 'postimg.cc'].some(
-            host => parsedUrl.hostname.includes(host)
-          )
-          const hasImageExtension = validImageExtensions.some(ext => path.endsWith(ext))
-
-          if (!hasImageExtension && !isImageHost) {
-            setError('지원하는 이미지 형식: jpg, png, gif, webp 또는 Imgur/Google Drive 링크')
-            return false
-          }
-        }
-
-        if (messageType === 'video') {
-          // 영상 URL 검증: YouTube만 허용
-          const isYouTube = parsedUrl.hostname.includes('youtube.com') || parsedUrl.hostname.includes('youtu.be')
-
-          if (!isYouTube) {
-            setError('영상은 YouTube 링크만 지원합니다.')
-            return false
-          }
+        if (!isYouTube) {
+          setError('영상은 YouTube 링크만 지원합니다.')
+          return false
         }
       } catch {
         setError('올바른 URL 형식이 아닙니다.')
@@ -193,8 +258,16 @@ export default function BjMessageForm({
                 <button
                   key={tab.type}
                   className={`${styles.tab} ${messageType === tab.type ? styles.activeTab : ''}`}
-                  onClick={() => setMessageType(tab.type)}
-                  disabled={isSubmitting}
+                  onClick={() => {
+                    setMessageType(tab.type)
+                    // 탭 변경 시 URL과 미리보기 초기화
+                    setContentUrl('')
+                    setPreviewUrl(null)
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = ''
+                    }
+                  }}
+                  disabled={isSubmitting || isUploading}
                 >
                   <tab.icon size={18} />
                   <span>{tab.label}</span>
@@ -214,7 +287,7 @@ export default function BjMessageForm({
                     value={contentText}
                     onChange={(e) => setContentText(e.target.value)}
                     maxLength={1000}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isUploading}
                   />
                   <span className={styles.charCount}>
                     {contentText.length} / 1000
@@ -226,19 +299,65 @@ export default function BjMessageForm({
               {messageType === 'image' && (
                 <>
                   <div className={styles.inputGroup}>
-                    <label className={styles.label}>이미지 URL</label>
+                    <label className={styles.label}>이미지 파일</label>
+
+                    {/* 미리보기 또는 업로드 영역 */}
+                    {previewUrl ? (
+                      <div className={styles.imagePreviewWrapper}>
+                        <Image
+                          src={previewUrl}
+                          alt="업로드된 이미지"
+                          width={400}
+                          height={300}
+                          className={styles.imagePreview}
+                          style={{ objectFit: 'contain' }}
+                        />
+                        <button
+                          type="button"
+                          className={styles.removeImageBtn}
+                          onClick={handleRemoveImage}
+                          disabled={isSubmitting}
+                        >
+                          <Trash2 size={16} />
+                          <span>삭제</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        className={`${styles.uploadArea} ${isUploading ? styles.uploading : ''}`}
+                        onClick={() => !isUploading && fileInputRef.current?.click()}
+                      >
+                        {isUploading ? (
+                          <>
+                            <Loader2 size={32} className={styles.spinner} />
+                            <span className={styles.uploadText}>업로드 중... {uploadProgress}%</span>
+                            <div className={styles.progressBar}>
+                              <div
+                                className={styles.progressFill}
+                                style={{ width: `${uploadProgress}%` }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={32} />
+                            <span className={styles.uploadText}>클릭하여 이미지 선택</span>
+                            <span className={styles.uploadHint}>JPG, PNG, GIF, WEBP (최대 10MB)</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+
                     <input
-                      type="url"
-                      className={styles.input}
-                      placeholder="https://example.com/image.jpg"
-                      value={contentUrl}
-                      onChange={(e) => setContentUrl(e.target.value)}
-                      disabled={isSubmitting}
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleFileChange}
+                      className={styles.hiddenInput}
+                      disabled={isSubmitting || isUploading}
                     />
-                    <span className={styles.hint}>
-                      직접 업로드하거나 외부 이미지 URL을 입력해주세요
-                    </span>
                   </div>
+
                   <div className={styles.inputGroup}>
                     <label className={styles.label}>함께 전할 메시지 (선택)</label>
                     <textarea
@@ -247,7 +366,7 @@ export default function BjMessageForm({
                       value={contentText}
                       onChange={(e) => setContentText(e.target.value)}
                       maxLength={500}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUploading}
                     />
                   </div>
                 </>
@@ -264,7 +383,7 @@ export default function BjMessageForm({
                       placeholder="https://youtube.com/watch?v=... 또는 https://youtu.be/..."
                       value={contentUrl}
                       onChange={(e) => setContentUrl(e.target.value)}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUploading}
                     />
                     <span className={styles.hint}>
                       YouTube 영상 링크만 지원합니다
@@ -278,7 +397,7 @@ export default function BjMessageForm({
                       value={contentText}
                       onChange={(e) => setContentText(e.target.value)}
                       maxLength={500}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUploading}
                     />
                   </div>
                 </>
@@ -323,14 +442,14 @@ export default function BjMessageForm({
               <button
                 className={styles.cancelBtn}
                 onClick={handleClose}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
               >
                 취소
               </button>
               <button
                 className={styles.submitBtn}
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
               >
                 {isSubmitting ? (
                   <>

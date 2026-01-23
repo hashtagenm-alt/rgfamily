@@ -248,6 +248,133 @@
   margin-top: 6px;
 }
 
+/* 파일 업로드 영역 */
+.uploadArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uploadArea:hover:not(.uploading) {
+  border-color: rgba(253, 104, 186, 0.4);
+  background: rgba(253, 104, 186, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.uploadArea.uploading {
+  cursor: default;
+  border-color: rgba(253, 104, 186, 0.3);
+}
+
+.uploadText {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.uploadHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* 업로드 프로그레스 바 */
+.progressBar {
+  width: 100%;
+  max-width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #fd68ba, #ff8a9c);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* 이미지 미리보기 */
+.imagePreviewWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.imagePreview {
+  max-width: 100%;
+  max-height: 250px;
+  border-radius: 8px;
+}
+
+.removeImageBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.removeImageBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.removeImageBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 라이트 테마 */
+:global(.light) .uploadArea {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.4);
+}
+
+:global(.light) .uploadArea:hover:not(.uploading) {
+  border-color: rgba(253, 104, 186, 0.4);
+  background: rgba(253, 104, 186, 0.05);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+:global(.light) .uploadHint {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+:global(.light) .progressBar {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .imagePreviewWrapper {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
 /* 공개/비공개 토글 */
 .visibilityToggle {
   margin-top: 20px;
