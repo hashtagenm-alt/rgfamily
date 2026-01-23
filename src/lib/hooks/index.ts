@@ -55,6 +55,7 @@ export {
   getCategoryColor,
   getSeasonColor,
 } from './useTimelineData'
+export { useAnalytics } from './useAnalytics'
 
 // Re-export from Context (recommended)
 export {
