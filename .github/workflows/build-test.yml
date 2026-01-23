@@ -75,6 +75,11 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Remove files with invalid characters for artifact upload
+        run: |
+          # Remove files with colons (Windows-incompatible) from .next build output
+          find .next -name "*:*" -delete 2>/dev/null || true
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
