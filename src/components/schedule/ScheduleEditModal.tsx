@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Trash2, Loader2 } from 'lucide-react'
 import { createSchedule, updateSchedule, deleteSchedule } from '@/lib/actions/schedules'
+import { useScheduleEventTypes } from '@/lib/hooks'
 import type { Schedule } from '@/types/database'
 import styles from './ScheduleEditModal.module.css'
 
-type EventType = 'broadcast' | 'collab' | 'event' | 'notice' | '休'
 type Unit = 'excel' | 'crew' | null
 
 interface ScheduleEditModalProps {
@@ -18,14 +18,6 @@ interface ScheduleEditModalProps {
   onSaved: () => void
   onDeleted: () => void
 }
-
-const EVENT_TYPES: { value: EventType; label: string; color: string }[] = [
-  { value: 'broadcast', label: '방송', color: '#7f9b88' },
-  { value: 'collab', label: '콜라보', color: '#8a94a6' },
-  { value: 'event', label: '이벤트', color: '#c89b6b' },
-  { value: 'notice', label: '공지', color: '#b8a07a' },
-  { value: '休', label: '휴방', color: '#8b94a5' },
-]
 
 const UNIT_OPTIONS: { value: Unit; label: string }[] = [
   { value: null, label: '전체' },
@@ -60,13 +52,14 @@ export default function ScheduleEditModal({
   onSaved,
   onDeleted,
 }: ScheduleEditModalProps) {
+  const { activeTypes, getByCode } = useScheduleEventTypes()
   const isNew = !event
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   // 폼 상태
   const [title, setTitle] = useState('')
-  const [eventType, setEventType] = useState<EventType>('broadcast')
+  const [eventType, setEventType] = useState<string>('broadcast')
   const [unit, setUnit] = useState<Unit>(null)
   const [startDatetime, setStartDatetime] = useState('')
   const [isAllDay, setIsAllDay] = useState(false)
@@ -112,10 +105,10 @@ export default function ScheduleEditModal({
 
     setIsLoading(true)
 
-    const selectedType = EVENT_TYPES.find(t => t.value === eventType)
+    const selectedType = getByCode(eventType)
     const data = {
       title: title.trim(),
-      event_type: eventType,
+      event_type: eventType as 'broadcast' | 'collab' | 'event' | 'notice' | '休',
       unit,
       start_datetime: new Date(startDatetime).toISOString(),
       is_all_day: isAllDay,
@@ -203,15 +196,15 @@ export default function ScheduleEditModal({
                 유형 <span className={styles.required}>*</span>
               </label>
               <div className={styles.typeButtons}>
-                {EVENT_TYPES.map((type) => (
+                {activeTypes.map((type) => (
                   <button
-                    key={type.value}
+                    key={type.code}
                     type="button"
-                    className={`${styles.typeButton} ${eventType === type.value ? styles.typeButtonActive : ''}`}
+                    className={`${styles.typeButton} ${eventType === type.code ? styles.typeButtonActive : ''}`}
                     style={{
-                      '--type-color': type.color,
+                      '--type-color': type.color || '#888888',
                     } as React.CSSProperties}
-                    onClick={() => setEventType(type.value)}
+                    onClick={() => setEventType(type.code)}
                   >
                     {type.label}
                   </button>

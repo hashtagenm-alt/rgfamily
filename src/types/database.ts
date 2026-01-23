@@ -1232,6 +1232,43 @@ export type Database = {
         Relationships: []
       }
       /**
+       * 일정 이벤트 타입
+       * 캘린더 일정의 유형 (방송, 콜라보, 이벤트, 공지, 휴방)
+       */
+      schedule_event_types: {
+        Row: {
+          id: number
+          code: string
+          label: string
+          color: string | null
+          icon: string | null
+          display_order: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          code: string
+          label: string
+          color?: string | null
+          icon?: string | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          code?: string
+          label?: string
+          color?: string | null
+          icon?: string | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      /**
        * BJ 직급 변동 이력
        * 직급전 결과 및 모든 직급 변동 기록
        */
