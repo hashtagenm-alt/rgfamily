@@ -12,6 +12,15 @@ import { deleteNotice } from '@/lib/actions/notices'
 import { formatDate } from '@/lib/utils/format'
 import styles from './page.module.css'
 
+interface Attachment {
+  id: number
+  file_url: string
+  file_name: string
+  file_type: 'image' | 'video'
+  file_size: number | null
+  display_order: number
+}
+
 interface NoticeDetail {
   id: number
   title: string
@@ -21,6 +30,7 @@ interface NoticeDetail {
   isPinned: boolean
   viewCount: number
   createdAt: string
+  attachments: Attachment[]
 }
 
 interface NavNotice {
@@ -60,6 +70,13 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
     if (error) {
       console.error('공지사항 로드 실패:', error)
     } else if (data) {
+      // 첨부파일 조회
+      const { data: attachmentsData } = await supabase
+        .from('notice_attachments')
+        .select('*')
+        .eq('notice_id', currentId)
+        .order('display_order', { ascending: true })
+
       setNotice({
         id: data.id,
         title: data.title,
@@ -69,6 +86,7 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
         isPinned: data.is_pinned,
         viewCount: data.view_count || 0,
         createdAt: data.created_at,
+        attachments: (attachmentsData as Attachment[]) || [],
       })
     }
 
@@ -212,6 +230,44 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
               <p key={index}>{paragraph || '\u00A0'}</p>
             ))}
           </div>
+
+          {/* 첨부파일 */}
+          {notice.attachments && notice.attachments.length > 0 && (
+            <div className={styles.attachments}>
+              <h3 className={styles.attachmentsTitle}>첨부파일</h3>
+              <div className={styles.attachmentGrid}>
+                {notice.attachments.map((attachment) => (
+                  <div key={attachment.id} className={styles.attachmentItem}>
+                    {attachment.file_type === 'image' ? (
+                      <a
+                        href={attachment.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.attachmentLink}
+                      >
+                        <Image
+                          src={attachment.file_url}
+                          alt={attachment.file_name}
+                          width={400}
+                          height={300}
+                          className={styles.attachmentImage}
+                          style={{ objectFit: 'cover' }}
+                        />
+                      </a>
+                    ) : (
+                      <video
+                        src={attachment.file_url}
+                        controls
+                        className={styles.attachmentVideo}
+                        preload="metadata"
+                      />
+                    )}
+                    <span className={styles.attachmentName}>{attachment.file_name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className={styles.actions}>

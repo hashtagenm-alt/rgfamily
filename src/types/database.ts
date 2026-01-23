@@ -576,6 +576,50 @@ export type Database = {
           }
         ]
       }
+      /**
+       * 공지사항 첨부파일
+       * 다중 이미지/영상 첨부 지원
+       */
+      notice_attachments: {
+        Row: {
+          id: number
+          notice_id: number
+          file_url: string
+          file_name: string
+          file_type: 'image' | 'video'
+          file_size: number | null
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          notice_id: number
+          file_url: string
+          file_name: string
+          file_type: 'image' | 'video'
+          file_size?: number | null
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          notice_id?: number
+          file_url?: string
+          file_name?: string
+          file_type?: 'image' | 'video'
+          file_size?: number | null
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notice_attachments_notice_id_fkey'
+            columns: ['notice_id']
+            referencedRelation: 'notices'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       posts: {
         Row: {
           id: number
@@ -1729,6 +1773,7 @@ export type SignatureVideo = Tables<'signature_videos'>
 export type Schedule = Tables<'schedules'>
 export type TimelineEvent = Tables<'timeline_events'>
 export type Notice = Tables<'notices'>
+export type NoticeAttachment = Tables<'notice_attachments'>
 export type Post = Tables<'posts'>
 export type Comment = Tables<'comments'>
 export type MediaContent = Tables<'media_content'>
@@ -1748,6 +1793,15 @@ export interface BjThankYouMessageWithMember extends BjThankYouMessage {
   bj_member?: {
     name: string
     image_url: string | null
+  }
+}
+
+// 공지사항 with 첨부파일
+export interface NoticeWithAttachments extends Notice {
+  attachments?: NoticeAttachment[]
+  author?: {
+    nickname: string
+    avatar_url: string | null
   }
 }
 

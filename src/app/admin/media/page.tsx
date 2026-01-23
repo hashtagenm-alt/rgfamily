@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon } from 'lucide-react'
-import { DataTable, Column, AdminModal } from '@/components/admin'
+import { DataTable, Column, AdminModal, VideoUpload } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
@@ -28,6 +28,7 @@ export default function MediaPage() {
   const alertHandler = useAlert()
   const [activeType, setActiveType] = useState<ContentType>('shorts')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [uploadMode, setUploadMode] = useState<'url' | 'upload'>('url')
 
   const {
     items: allMediaList,
@@ -389,16 +390,50 @@ export default function MediaPage() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>영상 URL</label>
-                  <input
-                    type="text"
-                    value={editingMedia.videoUrl || ''}
-                    onChange={(e) =>
-                      setEditingMedia({ ...editingMedia, videoUrl: e.target.value })
-                    }
-                    className={styles.input}
-                    placeholder="https://youtube.com/..."
-                  />
+                  <label>영상</label>
+                  <div className={styles.typeSelector} style={{ marginBottom: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setUploadMode('url')}
+                      className={`${styles.typeButton} ${uploadMode === 'url' ? styles.active : ''}`}
+                    >
+                      URL 입력
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUploadMode('upload')}
+                      className={`${styles.typeButton} ${uploadMode === 'upload' ? styles.active : ''}`}
+                    >
+                      직접 업로드
+                    </button>
+                  </div>
+
+                  {uploadMode === 'url' ? (
+                    <input
+                      type="text"
+                      value={editingMedia.videoUrl || ''}
+                      onChange={(e) =>
+                        setEditingMedia({ ...editingMedia, videoUrl: e.target.value })
+                      }
+                      className={styles.input}
+                      placeholder="https://youtube.com/..."
+                    />
+                  ) : (
+                    <VideoUpload
+                      onUploadComplete={(url) => {
+                        setEditingMedia({ ...editingMedia, videoUrl: url })
+                      }}
+                      onError={(error) => alertHandler.showError(error)}
+                      bucketName="videos"
+                      folderPath={editingMedia.contentType === 'shorts' ? 'shorts' : 'vod'}
+                    />
+                  )}
+
+                  {editingMedia.videoUrl && uploadMode === 'upload' && (
+                    <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                      업로드 완료: {editingMedia.videoUrl.split('/').pop()}
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>

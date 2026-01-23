@@ -1,16 +1,26 @@
 'use server'
 
 import { adminAction, publicAction, type ActionResult } from './index'
-import type { InsertTables, UpdateTables, Notice } from '@/types/database'
+import type { InsertTables, UpdateTables, Notice, NoticeWithAttachments, NoticeAttachment } from '@/types/database'
 
 type NoticeInsert = InsertTables<'notices'>
 type NoticeUpdate = UpdateTables<'notices'>
+
+// 첨부파일 데이터 타입
+interface AttachmentInput {
+  file_url: string
+  file_name: string
+  file_type: 'image' | 'video'
+  file_size: number
+  display_order: number
+}
 
 /**
  * 공지사항 생성
  */
 export async function createNotice(
-  data: NoticeInsert
+  data: NoticeInsert,
+  attachments?: AttachmentInput[]
 ): Promise<ActionResult<Notice>> {
   return adminAction(async (supabase) => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -25,6 +35,28 @@ export async function createNotice(
       .single()
 
     if (error) throw new Error(error.message)
+
+    // 첨부파일 저장
+    if (attachments && attachments.length > 0 && notice) {
+      const attachmentsToInsert = attachments.map(att => ({
+        notice_id: notice.id,
+        file_url: att.file_url,
+        file_name: att.file_name,
+        file_type: att.file_type,
+        file_size: att.file_size,
+        display_order: att.display_order,
+      }))
+
+      const { error: attError } = await supabase
+        .from('notice_attachments')
+        .insert(attachmentsToInsert)
+
+      if (attError) {
+        console.error('Failed to save attachments:', attError)
+        // 첨부파일 저장 실패해도 공지사항은 성공으로 처리
+      }
+    }
+
     return notice
   }, ['/admin/notices', '/notice'])
 }
@@ -34,7 +66,8 @@ export async function createNotice(
  */
 export async function updateNotice(
   id: number,
-  data: NoticeUpdate
+  data: NoticeUpdate,
+  attachments?: AttachmentInput[]
 ): Promise<ActionResult<Notice>> {
   return adminAction(async (supabase) => {
     const { data: notice, error } = await supabase
@@ -45,6 +78,36 @@ export async function updateNotice(
       .single()
 
     if (error) throw new Error(error.message)
+
+    // 첨부파일 처리: 기존 삭제 후 새로 삽입
+    if (attachments !== undefined) {
+      // 기존 첨부파일 삭제
+      await supabase
+        .from('notice_attachments')
+        .delete()
+        .eq('notice_id', id)
+
+      // 새 첨부파일 삽입
+      if (attachments.length > 0) {
+        const attachmentsToInsert = attachments.map(att => ({
+          notice_id: id,
+          file_url: att.file_url,
+          file_name: att.file_name,
+          file_type: att.file_type,
+          file_size: att.file_size,
+          display_order: att.display_order,
+        }))
+
+        const { error: attError } = await supabase
+          .from('notice_attachments')
+          .insert(attachmentsToInsert)
+
+        if (attError) {
+          console.error('Failed to save attachments:', attError)
+        }
+      }
+    }
+
     return notice
   }, ['/admin/notices', '/notice', `/notice/${id}`])
 }
@@ -143,5 +206,50 @@ export async function getNoticeById(
     }
 
     return data
+  })
+}
+
+/**
+ * 공지사항 상세 조회 (첨부파일 포함)
+ */
+export async function getNoticeWithAttachments(
+  id: number
+): Promise<ActionResult<NoticeWithAttachments | null>> {
+  return publicAction(async (supabase) => {
+    // 공지사항 조회
+    const { data: notice, error } = await supabase
+      .from('notices')
+      .select(`
+        *,
+        author:profiles(nickname, avatar_url)
+      `)
+      .eq('id', id)
+      .single()
+
+    if (error) throw new Error(error.message)
+    if (!notice) return null
+
+    // 첨부파일 조회
+    const { data: attachments } = await supabase
+      .from('notice_attachments')
+      .select('*')
+      .eq('notice_id', id)
+      .order('display_order', { ascending: true })
+
+    // 조회수 증가
+    try {
+      await supabase
+        .from('notices')
+        .update({ view_count: (notice.view_count || 0) + 1 })
+        .eq('id', id)
+    } catch {
+      // 무시
+    }
+
+    return {
+      ...notice,
+      attachments: (attachments as NoticeAttachment[]) || [],
+      author: notice.author as { nickname: string; avatar_url: string | null } | undefined,
+    } as NoticeWithAttachments
   })
 }

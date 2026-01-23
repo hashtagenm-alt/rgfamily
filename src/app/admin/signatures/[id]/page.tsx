@@ -15,7 +15,7 @@ import {
   Play,
   Image as ImageIcon,
 } from 'lucide-react'
-import { DataTable, Column, AdminModal } from '@/components/admin'
+import { DataTable, Column, AdminModal, VideoUpload } from '@/components/admin'
 import { useSupabaseContext } from '@/lib/context'
 import { useAlert } from '@/lib/hooks'
 import styles from '../../shared.module.css'
@@ -65,6 +65,9 @@ export default function SignatureDetailPage() {
 
   // Video preview modal
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  // Upload mode: 'url' or 'upload'
+  const [uploadMode, setUploadMode] = useState<'url' | 'upload'>('url')
 
   // Fetch signature details
   const fetchSignature = useCallback(async () => {
@@ -547,19 +550,55 @@ export default function SignatureDetailPage() {
         </div>
 
         <div className={styles.formGroup}>
-          <label>영상 URL</label>
-          <input
-            type="text"
-            value={editingVideo?.videoUrl || ''}
-            onChange={(e) =>
-              setEditingVideo((prev) => (prev ? { ...prev, videoUrl: e.target.value } : null))
-            }
-            className={styles.input}
-            placeholder="https://youtube.com/watch?v=..."
-          />
-          <span className={styles.helperText} style={{ color: 'var(--text-tertiary)' }}>
-            YouTube, 트위치 클립 등 영상 URL을 입력하세요
-          </span>
+          <label>영상</label>
+          <div className={styles.typeSelector} style={{ marginBottom: '12px' }}>
+            <button
+              type="button"
+              onClick={() => setUploadMode('url')}
+              className={`${styles.typeButton} ${uploadMode === 'url' ? styles.active : ''}`}
+            >
+              URL 입력
+            </button>
+            <button
+              type="button"
+              onClick={() => setUploadMode('upload')}
+              className={`${styles.typeButton} ${uploadMode === 'upload' ? styles.active : ''}`}
+            >
+              직접 업로드
+            </button>
+          </div>
+
+          {uploadMode === 'url' ? (
+            <>
+              <input
+                type="text"
+                value={editingVideo?.videoUrl || ''}
+                onChange={(e) =>
+                  setEditingVideo((prev) => (prev ? { ...prev, videoUrl: e.target.value } : null))
+                }
+                className={styles.input}
+                placeholder="https://youtube.com/watch?v=..."
+              />
+              <span className={styles.helperText} style={{ color: 'var(--text-tertiary)' }}>
+                YouTube, 트위치 클립 등 영상 URL을 입력하세요
+              </span>
+            </>
+          ) : (
+            <VideoUpload
+              onUploadComplete={(url) => {
+                setEditingVideo((prev) => (prev ? { ...prev, videoUrl: url } : null))
+              }}
+              onError={(error) => showError(error)}
+              bucketName="videos"
+              folderPath="signature-videos"
+            />
+          )}
+
+          {editingVideo?.videoUrl && uploadMode === 'upload' && (
+            <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+              업로드 완료: {editingVideo.videoUrl.split('/').pop()}
+            </div>
+          )}
         </div>
       </AdminModal>
 
