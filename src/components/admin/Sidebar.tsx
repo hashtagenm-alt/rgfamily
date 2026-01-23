@@ -23,6 +23,7 @@ import {
   Home,
   Clock,
   Tv,
+  BarChart3,
   // BJ 관리 아이콘
   Trophy,
   TrendingUp,
@@ -36,6 +37,7 @@ import styles from './Sidebar.module.css'
 
 const menuItems = [
   { href: '/admin', icon: LayoutDashboard, label: '대시보드' },
+  { href: '/admin/analytics', icon: BarChart3, label: '분석' },
   // BJ 관리 섹션
   { href: '/admin/dashboard', icon: TrendingUp, label: 'BJ 통합 관리' },
   { href: '/admin/ranks', icon: Trophy, label: '직급 관리' },

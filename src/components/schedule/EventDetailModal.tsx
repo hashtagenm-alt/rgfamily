@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { X, Clock, MapPin, Calendar, Radio, Users, Megaphone, Sparkles } from 'lucide-react'
+import { X, Clock, MapPin, Calendar, Radio, Users, Megaphone, Sparkles, Pencil } from 'lucide-react'
 import type { ScheduleEvent } from '@/types/common'
 import styles from './EventDetailModal.module.css'
 
@@ -9,6 +9,8 @@ interface EventDetailModalProps {
   date: Date
   events: ScheduleEvent[]
   onClose: () => void
+  isAdmin?: boolean
+  onEditEvent?: (eventId: string) => void
 }
 
 const EVENT_ICONS: Record<string, typeof Radio> = {
@@ -27,7 +29,13 @@ const EVENT_LABELS: Record<string, string> = {
   '休': '휴방',
 }
 
-export default function EventDetailModal({ date, events, onClose }: EventDetailModalProps) {
+export default function EventDetailModal({
+  date,
+  events,
+  onClose,
+  isAdmin = false,
+  onEditEvent,
+}: EventDetailModalProps) {
   const formattedDate = date.toLocaleDateString('ko-KR', {
     month: 'long',
     day: 'numeric',
@@ -109,6 +117,19 @@ export default function EventDetailModal({ date, events, onClose }: EventDetailM
                           </span>
                         )}
                       </div>
+                      {/* Admin Edit Button */}
+                      {isAdmin && onEditEvent && (
+                        <button
+                          className={styles.editBtn}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onEditEvent(String(event.id))
+                          }}
+                          title="수정"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
                     </div>
 
                     {/* Event Title */}

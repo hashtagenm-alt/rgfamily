@@ -1,0 +1,162 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.headerTitle h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.headerTitle p {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.headerIcon {
+  color: var(--primary);
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refreshBtn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.refreshBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+}
+
+/* Season Compare List */
+.seasonCompareList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.seasonCompareItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: var(--surface);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.seasonCompareItem:hover {
+  background: var(--surface-hover, rgba(255, 255, 255, 0.05));
+}
+
+.seasonInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.seasonStats {
+  display: flex;
+  gap: 1.5rem;
+  text-align: right;
+}
+
+.seasonStats > div {
+  min-width: 80px;
+}
+
+/* Period Stats */
+.periodStats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.periodStatRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface);
+  border-radius: 6px;
+}
+
+.periodStatRow:nth-child(odd) {
+  background: transparent;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .seasonStats {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerTitle h1 {
+    font-size: 1.5rem;
+  }
+
+  .seasonCompareItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .seasonStats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .seasonStats > div {
+    text-align: left;
+  }
+}

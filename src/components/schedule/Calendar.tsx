@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useSchedule } from '@/lib/hooks/useSchedule'
+import { useAuthContext } from '@/lib/context/AuthContext'
 import {
   Group,
   Stack,
@@ -13,11 +15,15 @@ import {
 } from '@mantine/core'
 import CalendarGrid from './CalendarGrid'
 import EventDetailModal from './EventDetailModal'
+import AdminScheduleOverlay from './AdminScheduleOverlay'
+import ScheduleEditModal from './ScheduleEditModal'
+import type { Schedule } from '@/types/database'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 export default function Calendar() {
   const {
+    events,
     currentMonth,
     selectedDate,
     unitFilter,
@@ -28,7 +34,42 @@ export default function Calendar() {
     setUnitFilter,
     nextMonth,
     prevMonth,
+    refetch,
   } = useSchedule()
+
+  const { isAdmin } = useAuthContext()
+
+  // 관리자 편집 모달 상태
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingEvent, setEditingEvent] = useState<Schedule | null>(null)
+
+  // 이벤트 편집 (EventDetailModal에서 호출)
+  const handleEditEvent = (eventId: string) => {
+    const event = events.find((e) => e.id === Number(eventId))
+    if (event) {
+      setEditingEvent(event)
+      setIsEditModalOpen(true)
+    }
+  }
+
+  // 편집 모달 콜백
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false)
+    setEditingEvent(null)
+  }
+
+  const handleEventSaved = () => {
+    setIsEditModalOpen(false)
+    setEditingEvent(null)
+    refetch()
+  }
+
+  const handleEventDeleted = () => {
+    setIsEditModalOpen(false)
+    setEditingEvent(null)
+    setSelectedDate(null)  // 모달 닫기
+    refetch()
+  }
 
   const monthYear = currentMonth.toLocaleDateString('ko-KR', {
     year: 'numeric',
@@ -138,9 +179,29 @@ export default function Calendar() {
             date={selectedDate}
             events={selectedDateEvents}
             onClose={() => setSelectedDate(null)}
+            isAdmin={isAdmin()}
+            onEditEvent={handleEditEvent}
           />
         )}
       </AnimatePresence>
+
+      {/* Admin Floating Add Button */}
+      <AdminScheduleOverlay
+        selectedDate={selectedDate}
+        onEventCreated={refetch}
+        onEventUpdated={refetch}
+        onEventDeleted={refetch}
+      />
+
+      {/* Admin Edit Modal (from EventDetailModal) */}
+      <ScheduleEditModal
+        isOpen={isEditModalOpen}
+        event={editingEvent}
+        defaultDate={selectedDate}
+        onClose={handleEditModalClose}
+        onSaved={handleEventSaved}
+        onDeleted={handleEventDeleted}
+      />
       </Stack>
     </div>
   )
