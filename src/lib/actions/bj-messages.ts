@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { authAction, adminAction, publicAction, type ActionResult } from './index'
 import { checkOwnerOrAdminPermission, throwPermissionError } from './permissions'
 import type { InsertTables, UpdateTables, BjThankYouMessage } from '@/types/database'
@@ -384,8 +384,9 @@ export async function deleteBjMessage(messageId: number): Promise<ActionResult<n
     const permission = await checkOwnerOrAdminPermission(supabase, userId, authorProfileId)
     if (!permission.hasPermission) throwPermissionError('삭제')
 
-    // Soft delete
-    const { error } = await supabase
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const serviceClient = createServiceRoleClient()
+    const { error } = await serviceClient
       .from('bj_thank_you_messages')
       .update({ is_deleted: true })
       .eq('id', messageId)

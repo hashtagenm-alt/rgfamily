@@ -237,8 +237,9 @@ export async function deleteVipMessageComment(commentId: number): Promise<Action
     const permission = await checkOwnerOrAdminPermission(supabase, userId, existingComment.author_id)
     if (!permission.hasPermission) throwPermissionError('삭제')
 
-    // Soft delete
-    const { error } = await supabase
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const serviceClient = createServiceRoleClient()
+    const { error } = await serviceClient
       .from('vip_message_comments')
       .update({ is_deleted: true })
       .eq('id', commentId)
