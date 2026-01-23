@@ -7,10 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   Users,
-  Calendar,
   Building,
-  CalendarDays,
-  Megaphone,
   MessageSquare,
   Film,
   Image,
@@ -19,9 +16,7 @@ import {
   ChevronRight,
   LogOut,
   Home,
-  Clock,
   Medal,
-  UserCheck,
   BarChart3,
 } from 'lucide-react'
 import { useAuthContext } from '@/lib/context'
@@ -30,14 +25,9 @@ import styles from './Sidebar.module.css'
 const menuItems = [
   { href: '/admin', icon: LayoutDashboard, label: '대시보드' },
   { href: '/admin/members', icon: Users, label: '회원 관리' },
-  { href: '/admin/dashboard', icon: UserCheck, label: '출연BJ 관리' },
   { href: '/admin/donation-rankings', icon: Medal, label: '후원 랭킹 관리' },
   { href: '/admin/analytics', icon: BarChart3, label: '후원 분석' },
-  { href: '/admin/seasons', icon: Calendar, label: '시즌/에피소드' },
   { href: '/admin/organization', icon: Building, label: '조직도 관리' },
-  { href: '/admin/schedules', icon: CalendarDays, label: '일정 관리' },
-  { href: '/admin/timeline', icon: Clock, label: '타임라인 관리' },
-  { href: '/admin/notices', icon: Megaphone, label: '공지사항 관리' },
   { href: '/admin/posts', icon: MessageSquare, label: '게시글 관리' },
   { href: '/admin/media', icon: Film, label: '미디어 관리' },
   { href: '/admin/signatures', icon: Image, label: '시그니처 관리' },
@@ -53,16 +43,6 @@ export default function Sidebar() {
   const isActive = (href: string) => {
     if (href === '/admin') {
       return pathname === '/admin'
-    }
-    // 출연BJ 관리: dashboard, ranks 포함
-    if (href === '/admin/dashboard') {
-      return pathname.startsWith('/admin/dashboard') ||
-             pathname.startsWith('/admin/ranks')
-    }
-    // 시즌/에피소드: seasons, episodes 포함
-    if (href === '/admin/seasons') {
-      return pathname.startsWith('/admin/seasons') ||
-             pathname.startsWith('/admin/episodes')
     }
     return pathname.startsWith(href)
   }

@@ -1,14 +1,48 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Calendar, Trophy, Sparkles, ChevronRight, Clock, Archive, Zap } from 'lucide-react'
+import { ArrowLeft, Calendar, Trophy, Sparkles, ChevronRight, Clock, Archive, Zap, Pencil } from 'lucide-react'
 import { useRanking } from '@/lib/hooks/useRanking'
+import { useAuthContext } from '@/lib/context/AuthContext'
+import { AdminSeasonOverlay, SeasonEditModal } from '@/components/ranking'
+import type { Season } from '@/types/database'
 import styles from './page.module.css'
 
 export default function SeasonListPage() {
-  const { seasons, isLoading } = useRanking()
+  const { seasons, isLoading, refetch } = useRanking()
+  const { isAdmin } = useAuthContext()
+
+  // 관리자 편집 모달 상태
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingSeason, setEditingSeason] = useState<Season | null>(null)
+
+  // 시즌 편집 모달 열기
+  const handleEditSeason = (season: Season) => {
+    if (!isAdmin()) return
+    setEditingSeason(season)
+    setIsEditModalOpen(true)
+  }
+
+  // 편집 모달 닫기
+  const handleModalClose = () => {
+    setIsEditModalOpen(false)
+    setEditingSeason(null)
+  }
+
+  // 저장/삭제 후 새로고침
+  const handleSeasonSaved = () => {
+    setIsEditModalOpen(false)
+    setEditingSeason(null)
+    refetch()
+  }
+
+  const handleSeasonDeleted = () => {
+    setIsEditModalOpen(false)
+    setEditingSeason(null)
+    refetch()
+  }
 
   // 현재 진행 중인 시즌과 아카이브 시즌 분리
   const { activeSeason, archivedSeasons } = useMemo(() => {
@@ -90,34 +124,46 @@ export default function SeasonListPage() {
                   <h2>진행 중인 시즌</h2>
                 </div>
 
-                <Link
-                  href={`/ranking/season/${activeSeason.id}`}
-                  className={styles.activeCard}
-                >
-                  <div className={styles.activeGlow} />
-                  <div className={styles.activeContent}>
-                    <div className={styles.activeBadge}>
-                      <span className={styles.liveDot} />
-                      LIVE
-                    </div>
-                    <h3 className={styles.activeTitle}>{activeSeason.name}</h3>
-                    <div className={styles.activeMeta}>
-                      <span className={styles.dateRange}>
-                        <Calendar size={14} />
-                        {formatDate(activeSeason.start_date)} ~ {activeSeason.end_date ? formatDate(activeSeason.end_date) : '진행 중'}
-                      </span>
-                      {activeSeason.end_date && getDaysRemaining(activeSeason.end_date) !== null && (
-                        <span className={styles.daysLeft}>
-                          <Clock size={14} />
-                          D-{getDaysRemaining(activeSeason.end_date)}
+                <div className={styles.activeCardWrapper}>
+                  <Link
+                    href={`/ranking/season/${activeSeason.id}`}
+                    className={styles.activeCard}
+                  >
+                    <div className={styles.activeGlow} />
+                    <div className={styles.activeContent}>
+                      <div className={styles.activeBadge}>
+                        <span className={styles.liveDot} />
+                        LIVE
+                      </div>
+                      <h3 className={styles.activeTitle}>{activeSeason.name}</h3>
+                      <div className={styles.activeMeta}>
+                        <span className={styles.dateRange}>
+                          <Calendar size={14} />
+                          {formatDate(activeSeason.start_date)} ~ {activeSeason.end_date ? formatDate(activeSeason.end_date) : '진행 중'}
                         </span>
-                      )}
+                        {activeSeason.end_date && getDaysRemaining(activeSeason.end_date) !== null && (
+                          <span className={styles.daysLeft}>
+                            <Clock size={14} />
+                            D-{getDaysRemaining(activeSeason.end_date)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className={styles.activeArrow}>
-                    <ChevronRight size={24} />
-                  </div>
-                </Link>
+                    <div className={styles.activeArrow}>
+                      <ChevronRight size={24} />
+                    </div>
+                  </Link>
+                  {/* Admin Edit Button */}
+                  {isAdmin() && (
+                    <button
+                      className={styles.editBtn}
+                      onClick={() => handleEditSeason(activeSeason)}
+                      title="수정"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  )}
+                </div>
               </motion.section>
             )}
 
@@ -139,6 +185,7 @@ export default function SeasonListPage() {
                   {archivedSeasons.map((season, index) => (
                     <motion.div
                       key={season.id}
+                      className={styles.archiveCardWrapper}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 + index * 0.1 }}
@@ -158,6 +205,16 @@ export default function SeasonListPage() {
                         </div>
                         <ChevronRight size={18} className={styles.archiveArrow} />
                       </Link>
+                      {/* Admin Edit Button */}
+                      {isAdmin() && (
+                        <button
+                          className={styles.editBtn}
+                          onClick={() => handleEditSeason(season)}
+                          title="수정"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
                     </motion.div>
                   ))}
                 </div>
@@ -174,6 +231,22 @@ export default function SeasonListPage() {
           </>
         )}
       </div>
+
+      {/* Admin Floating Add Button */}
+      <AdminSeasonOverlay
+        onSeasonCreated={refetch}
+        onSeasonUpdated={refetch}
+        onSeasonDeleted={refetch}
+      />
+
+      {/* Admin Edit Modal (from card edit buttons) */}
+      <SeasonEditModal
+        isOpen={isEditModalOpen}
+        season={editingSeason}
+        onClose={handleModalClose}
+        onSaved={handleSeasonSaved}
+        onDeleted={handleSeasonDeleted}
+      />
     </main>
   )
 }

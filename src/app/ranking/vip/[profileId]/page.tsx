@@ -10,7 +10,7 @@ import {
   ChevronLeft, ChevronRight, X, Upload, Plus
 } from 'lucide-react'
 import Footer from '@/components/Footer'
-import { BjThankYouSection, VipBoardSection } from '@/components/vip'
+import { BjThankYouSection, VipBoardSection, VipImageUploadModal } from '@/components/vip'
 import { useAuthContext } from '@/lib/context'
 import { useVipStatus, useVipProfileData } from '@/lib/hooks'
 import styles from './page.module.css'
@@ -19,12 +19,13 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   const { profileId } = use(params)
   const { user, profile, isLoading: authLoading } = useAuthContext()
   const { isVip, isLoading: vipLoading } = useVipStatus()
-  const { data: vipData, isLoading: dataLoading, error } = useVipProfileData(profileId)
+  const { data: vipData, isLoading: dataLoading, error, refetch } = useVipProfileData(profileId)
 
   const [showGate, setShowGate] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const [isEditingBio, setIsEditingBio] = useState(false)
   const [bioText, setBioText] = useState('')
+  const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false)
 
   // 접근 권한 체크
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
@@ -161,6 +162,7 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
                   alt={img.title || `VIP 시그니처 ${index + 1}`}
                   fill
                   className={styles.galleryImage}
+                  unoptimized={img.imageUrl.toLowerCase().endsWith('.gif')}
                 />
                 {img.title && <span className={styles.galleryTitle}>{img.title}</span>}
               </motion.div>
@@ -173,6 +175,7 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4 + (vipData.images.length + i) * 0.08, duration: 0.4 }}
+                onClick={isAdmin ? () => setIsImageUploadModalOpen(true) : undefined}
               >
                 {isAdmin ? (
                   <>
@@ -436,6 +439,7 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
                 alt={vipData.images[selectedImageIndex].title || '갤러리 이미지'}
                 fill
                 className={styles.modalImage}
+                unoptimized={vipData.images[selectedImageIndex].imageUrl.toLowerCase().endsWith('.gif')}
               />
             </motion.div>
 
@@ -469,6 +473,25 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* VIP Image Upload Modal (Admin only) */}
+      {isAdmin && vipData.id > 0 && (
+        <VipImageUploadModal
+          isOpen={isImageUploadModalOpen}
+          rewardId={vipData.id}
+          onClose={() => setIsImageUploadModalOpen(false)}
+          onUploaded={() => {
+            setIsImageUploadModalOpen(false)
+            refetch()
+          }}
+          existingImages={vipData.images.map(img => ({
+            id: img.id,
+            imageUrl: img.imageUrl,
+            title: img.title,
+          }))}
+          onImageDeleted={refetch}
+        />
+      )}
 
       <Footer />
     </div>

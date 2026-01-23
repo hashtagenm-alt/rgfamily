@@ -489,6 +489,47 @@
 }
 
 /* =======================================
+   Admin Edit Buttons
+   ======================================= */
+.activeCardWrapper {
+  position: relative;
+}
+
+.archiveCardWrapper {
+  position: relative;
+}
+
+.editBtn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  z-index: 10;
+}
+
+.editBtn:hover {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+.activeCardWrapper:hover .editBtn,
+.archiveCardWrapper:hover .editBtn {
+  opacity: 1;
+}
+
+/* =======================================
    Responsive
    ======================================= */
 @media (max-width: 768px) {
@@ -554,5 +595,12 @@
   .activeMeta {
     flex-direction: column;
     gap: var(--space-2);
+  }
+
+  /* Always show edit button on mobile */
+  .editBtn {
+    opacity: 1;
+    width: 28px;
+    height: 28px;
   }
 }
