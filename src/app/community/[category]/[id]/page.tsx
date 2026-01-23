@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, use } from 'react'
 import { useRouter, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Eye, Calendar, User, MessageSquare, Send } from 'lucide-react'
+import { ArrowLeft, Eye, Calendar, User, MessageSquare, Send, Trash2, Edit } from 'lucide-react'
+import { deletePost } from '@/lib/actions/posts'
 import { useSupabaseContext, useAuthContext } from '@/lib/context'
 import { formatDate } from '@/lib/utils/format'
 import type { JoinedProfile } from '@/types/common'
@@ -58,6 +59,11 @@ export default function PostDetailPage({
   const [newComment, setNewComment] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // 삭제 권한 확인 (작성자 또는 관리자)
+  const canDelete = user && post && (user.id === post.authorId || isAdmin)
+  const canEdit = user && post && user.id === post.authorId
 
   const fetchPost = useCallback(async () => {
     setIsLoading(true)
@@ -153,6 +159,28 @@ export default function PostDetailPage({
     return category === 'vip' ? 'VIP 라운지' : '자유게시판'
   }
 
+  // 게시글 삭제 핸들러
+  const handleDelete = async () => {
+    if (!post) return
+
+    const confirmMessage = isAdmin && user?.id !== post.authorId
+      ? '관리자 권한으로 이 게시글을 삭제하시겠습니까?'
+      : '이 게시글을 삭제하시겠습니까?'
+
+    if (!confirm(confirmMessage)) return
+
+    setIsDeleting(true)
+    const result = await deletePost(post.id)
+
+    if (result.error) {
+      alert(result.error)
+      setIsDeleting(false)
+    } else {
+      alert('게시글이 삭제되었습니다.')
+      router.push(`/community/${category}`)
+    }
+  }
+
   if (isLoading) {
     return (
       <main className={styles.main}>
@@ -192,7 +220,33 @@ export default function PostDetailPage({
         <article className={styles.article}>
           {/* Title Area */}
           <div className={styles.titleArea}>
-            <h1 className={styles.title}>{post.title}</h1>
+            <div className={styles.titleRow}>
+              <h1 className={styles.title}>{post.title}</h1>
+              {/* 수정/삭제 버튼 */}
+              {(canEdit || canDelete) && (
+                <div className={styles.postActions}>
+                  {canEdit && (
+                    <Link
+                      href={`/community/write?edit=${post.id}&board=${category}`}
+                      className={styles.editButton}
+                    >
+                      <Edit size={16} />
+                      <span>수정</span>
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className={styles.deleteButton}
+                    >
+                      <Trash2 size={16} />
+                      <span>{isDeleting ? '삭제 중...' : '삭제'}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
             <div className={styles.meta}>
               <div className={styles.author}>
                 <div className={styles.authorAvatar}>

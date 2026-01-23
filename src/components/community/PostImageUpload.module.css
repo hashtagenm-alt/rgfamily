@@ -13,31 +13,49 @@
 .uploadBtn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  font-weight: 500;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, rgba(253, 104, 186, 0.1), rgba(253, 104, 186, 0.05));
+  border: 2px dashed var(--color-primary, #fd68ba);
+  border-radius: 8px;
+  color: var(--color-primary, #fd68ba);
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .uploadBtn:hover:not(:disabled) {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-  border-color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(253, 104, 186, 0.2), rgba(253, 104, 186, 0.1));
+  border-style: solid;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(253, 104, 186, 0.2);
 }
 
 .uploadBtn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  border-style: dashed;
+  transform: none;
+  box-shadow: none;
+}
+
+.uploadBtn svg {
+  flex-shrink: 0;
 }
 
 .input {
   display: none;
+}
+
+/* 업로드 영역 전체 스타일 */
+.uploadArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(253, 104, 186, 0.02);
+  border-radius: 8px;
 }
 
 .spinner {
