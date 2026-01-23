@@ -482,6 +482,16 @@ content_type 구분:
 
 워크플로우:
 브랜치 생성 → 작업 → 로컬 빌드 확인 → PR → 리뷰 → main 병합 → Vercel 자동 배포
+
+Git Remote 설정:
+- captain: https://github.com/captain-yun7/rg-family.git ⚠️ 프로덕션 (정식 도메인)
+- origin: 개발용 백업 저장소
+
+🚨 중요: 프로덕션 배포 시 반드시 captain 리모트에 푸시!
+   git fetch captain main
+   git merge captain/main
+   npm run build  # 빌드 검증 필수
+   git push captain HEAD:main
 ```
 
 ---
