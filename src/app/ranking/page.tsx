@@ -120,6 +120,11 @@ export default function TotalRankingPage() {
         }
       });
 
+      // 디버그: 프로필 매칭 상태 확인
+      console.log('[종합랭킹] donor_names:', allDonorNames.slice(0, 5));
+      console.log('[종합랭킹] 매칭된 프로필 수:', Object.keys(nicknameToProfile).length);
+      console.log('[종합랭킹] 프로필 매핑:', Object.keys(nicknameToProfile).slice(0, 5));
+
       // 기존 nicknameToProfileId에도 반영
       Object.entries(nicknameToProfile).forEach(([nickname, data]) => {
         if (!nicknameToProfileId[nickname]) {

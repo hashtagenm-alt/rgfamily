@@ -1,6 +1,18 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
+// Mock Next.js cache
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+  unstable_cache: vi.fn((fn) => fn),
+}))
+
+// Mock Supabase server client
+vi.mock('@/lib/supabase/server', () => ({
+  createServerSupabaseClient: vi.fn(),
+}))
+
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
