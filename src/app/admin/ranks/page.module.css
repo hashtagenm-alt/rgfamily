@@ -1,0 +1,460 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.headerTitle svg {
+  color: var(--primary);
+}
+
+.headerTitle h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.125rem;
+}
+
+.headerTitle p {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--surface);
+  padding: 0.25rem;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* Section */
+.section {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.sectionHeader h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Buttons */
+.primaryBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primaryBtn:hover {
+  opacity: 0.9;
+}
+
+.saveBtn, .cancelBtn, .editBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveBtn {
+  background: var(--primary);
+  color: white;
+}
+
+.saveBtn:hover {
+  opacity: 0.9;
+}
+
+.cancelBtn {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+}
+
+.cancelBtn:hover {
+  border-color: var(--text-tertiary);
+}
+
+.editBtn {
+  background: transparent;
+  color: var(--text-tertiary);
+  padding: 0.5rem;
+}
+
+.editBtn:hover {
+  color: var(--primary);
+}
+
+.assignActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Rank List */
+.rankList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rankCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: var(--surface);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.rankCard:hover {
+  background: var(--background);
+}
+
+.rankInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rankBadge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.rankName {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rankDesc {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.noRank {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* Edit Form */
+.editForm {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.input {
+  padding: 0.5rem 0.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.colorInput {
+  width: 40px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.editActions .saveBtn,
+.editActions .cancelBtn {
+  padding: 0.5rem;
+}
+
+/* Assign Grid */
+.assignGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.assignCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: var(--surface);
+  border-radius: 8px;
+  gap: 1rem;
+}
+
+.bjInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.bjName {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unitBadge {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.unitBadge.excel {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+}
+
+.unitBadge.crew {
+  background: rgba(253, 104, 186, 0.15);
+  color: #fd68ba;
+}
+
+.currentRank {
+  flex-shrink: 0;
+}
+
+.rankSelect {
+  padding: 0.5rem 0.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.rankSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* History List */
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.historyCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.historyInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.historyName {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 80px;
+}
+
+.historyChange {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-tertiary);
+}
+
+.historyMeta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: right;
+}
+
+.historyReason {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.historyDate {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--text-tertiary);
+  gap: 0.75rem;
+}
+
+.emptyState p {
+  font-size: 0.875rem;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+  color: var(--text-tertiary);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--card-border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .headerTitle h1 {
+    font-size: 1.5rem;
+  }
+
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .tab {
+    flex-shrink: 0;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .assignGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .assignCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .rankSelect {
+    width: 100%;
+  }
+
+  .historyCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .historyMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
