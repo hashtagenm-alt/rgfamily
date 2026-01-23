@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Pin, ChevronRight } from "lucide-react";
-import { useSupabaseContext } from "@/lib/context";
+import { useNotices } from "@/lib/context";
 import styles from "./Notice.module.css";
 
 interface NoticeItem {
@@ -17,23 +17,15 @@ interface NoticeItem {
 }
 
 export default function Notice() {
-  const supabase = useSupabaseContext();
+  const noticesRepo = useNotices();
   const [notices, setNotices] = useState<NoticeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchNotices = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("notices")
-      .select("id, title, content, is_pinned, created_at, thumbnail_url")
-      .order("is_pinned", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(2);
-
-    if (error) {
-      console.error("공지사항 로드 실패:", error);
-    } else {
+    try {
+      const data = await noticesRepo.findRecent(2);
       setNotices(
-        (data || []).map((n) => ({
+        data.map((n) => ({
           id: n.id,
           title: n.title,
           content: n.content || "",
@@ -42,16 +34,15 @@ export default function Notice() {
           thumbnailUrl: n.thumbnail_url,
         }))
       );
+    } catch (error) {
+      console.error("공지사항 로드 실패:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-  }, [supabase]);
+  }, [noticesRepo]);
 
   useEffect(() => {
-    const init = async () => {
-      await fetchNotices();
-    };
-    init();
+    fetchNotices();
   }, [fetchNotices]);
 
   const getPreviewLines = (content: string, maxLines: number = 2) => {

@@ -513,8 +513,98 @@
 }
 
 /* =======================================
+   Attachments Section
+   ======================================= */
+.attachments {
+  padding: var(--space-6) var(--space-8);
+  border-top: 1px solid var(--card-border);
+  background: var(--surface);
+}
+
+.attachmentsTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.attachmentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.attachmentItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.attachmentLink {
+  display: block;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition-fast);
+}
+
+.attachmentLink:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px rgba(253, 104, 186, 0.15);
+}
+
+.attachmentImage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+}
+
+.attachmentVideo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  background: #000;
+  object-fit: contain;
+}
+
+.attachmentName {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .attachments {
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .attachmentGrid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-3);
+  }
+}
+
+/* =======================================
    Light Mode Overrides
    ======================================= */
+:global([data-theme="light"]) .attachments {
+  background: #f8f8f8;
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme="light"]) .attachmentsTitle {
+  color: #1a1a1a;
+}
+
+:global([data-theme="light"]) .attachmentName {
+  color: #666666;
+}
+
 :global([data-theme="light"]) .hero {
   background: linear-gradient(
     180deg,

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Crown } from "lucide-react";
-import { useSupabaseContext } from "@/lib/context";
+import { useRanking } from "@/lib/hooks";
 import styles from "./RankingBoard.module.css";
 
-interface RankingItem {
+interface RankingDisplayItem {
   rank: number;
   name: string;
   amount: number;
@@ -14,70 +14,30 @@ interface RankingItem {
 }
 
 export default function RankingBoard() {
-  const supabase = useSupabaseContext();
   const [activeTab, setActiveTab] = useState<"season" | "total">("season");
-  const [rankingData, setRankingData] = useState<RankingItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    rankings,
+    currentSeason,
+    isLoading,
+    setSelectedSeasonId,
+  } = useRanking();
 
-  const fetchRankings = useCallback(async () => {
-    setIsLoading(true);
-
-    if (activeTab === "total") {
-      // 전체 랭킹: profiles에서 total_donation 기준
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, nickname, total_donation, unit")
-        .gt("total_donation", 0)
-        .order("total_donation", { ascending: false })
-        .limit(5);
-
-      if (!error && data) {
-        setRankingData(
-          data.map((p, idx) => ({
-            rank: idx + 1,
-            name: p.nickname || "익명",
-            amount: p.total_donation || 0,
-            unit: p.unit,
-          }))
-        );
-      }
-    } else {
-      // 시즌 랭킹: season_donation_rankings 테이블에서 조회
-      const { data: season } = await supabase
-        .from("seasons")
-        .select("id")
-        .eq("is_active", true)
-        .single();
-
-      if (season) {
-        const { data, error } = await supabase
-          .from("season_rankings_public")
-          .select("rank, donor_name, gauge_percent")
-          .eq("season_id", season.id)
-          .order("rank", { ascending: true })
-          .limit(5);
-
-        if (!error && data) {
-          setRankingData(
-            data.map((d) => ({
-              rank: d.rank,
-              name: d.donor_name,
-              amount: d.gauge_percent || 0, // 게이지 퍼센트 사용
-              unit: null,
-            }))
-          );
-        }
-      } else {
-        setRankingData([]);
-      }
-    }
-
-    setIsLoading(false);
-  }, [supabase, activeTab]);
-
+  // 탭 변경 시 시즌 ID 설정
   useEffect(() => {
-    fetchRankings();
-  }, [fetchRankings]);
+    if (activeTab === "season" && currentSeason) {
+      setSelectedSeasonId(currentSeason.id);
+    } else if (activeTab === "total") {
+      setSelectedSeasonId(null);
+    }
+  }, [activeTab, currentSeason, setSelectedSeasonId]);
+
+  // Top 5만 표시
+  const rankingData: RankingDisplayItem[] = rankings.slice(0, 5).map((item, idx) => ({
+    rank: idx + 1,
+    name: item.donorName,
+    amount: item.totalAmount,
+    unit: null, // Repository에서 unit 정보가 없으므로 null
+  }));
 
   // Calculate max amount for progress bars
   const maxAmount = rankingData[0]?.amount || 1;
@@ -161,5 +121,3 @@ export default function RankingBoard() {
     </section>
   );
 }
-
-// CSS for loading/empty states (add to module if needed)

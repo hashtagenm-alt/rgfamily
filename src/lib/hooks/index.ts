@@ -35,6 +35,11 @@ export { useVipMessages } from './useVipMessages'
 export { useVipMessageComments } from './useVipMessageComments'
 export { useEpisodes } from './useEpisodes'
 export { useBjRanks, type BjRank } from './useBjRanks'
+export {
+  useSignatureGallery,
+  type SignatureData,
+  type SignatureVideo,
+} from './useSignatureGallery'
 export { useScheduleEventTypes, type ScheduleEventType } from './useScheduleEventTypes'
 export { useAlert, AlertProvider } from './useAlert'
 export { useLazyLoad } from './useLazyLoad'
