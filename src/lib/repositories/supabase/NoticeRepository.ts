@@ -1,0 +1,64 @@
+/**
+ * Supabase Notice Repository
+ * 공지사항 데이터 CRUD
+ */
+
+import { SupabaseClient } from '@supabase/supabase-js'
+import { withRetry } from '@/lib/utils/fetch-with-retry'
+import { INoticeRepository } from '../types'
+import type { Notice, InsertTables, UpdateTables } from '@/types/database'
+
+export class SupabaseNoticeRepository implements INoticeRepository {
+  constructor(private supabase: SupabaseClient) {}
+
+  async findById(id: number): Promise<Notice | null> {
+    const { data } = await withRetry(async () =>
+      await this.supabase.from('notices').select('*').eq('id', id).single()
+    )
+    return data
+  }
+
+  async findRecent(limit: number): Promise<Notice[]> {
+    const { data } = await withRetry(async () =>
+      await this.supabase.from('notices').select('*').order('created_at', { ascending: false }).limit(limit)
+    )
+    return data || []
+  }
+
+  async findPublished(): Promise<Notice[]> {
+    const { data } = await withRetry(async () =>
+      await this.supabase.from('notices').select('*').order('created_at', { ascending: false })
+    )
+    return data || []
+  }
+
+  async findAll(): Promise<Notice[]> {
+    const { data } = await withRetry(async () =>
+      await this.supabase.from('notices').select('*').order('created_at', { ascending: false })
+    )
+    return data || []
+  }
+
+  async create(data: InsertTables<'notices'>): Promise<Notice> {
+    const { data: created, error } = await withRetry(async () =>
+      await this.supabase.from('notices').insert(data).select().single()
+    )
+    if (error) throw error
+    return created!
+  }
+
+  async update(id: number, data: UpdateTables<'notices'>): Promise<Notice> {
+    const { data: updated, error } = await withRetry(async () =>
+      await this.supabase.from('notices').update(data).eq('id', id).select().single()
+    )
+    if (error) throw error
+    return updated!
+  }
+
+  async delete(id: number): Promise<void> {
+    const { error } = await withRetry(async () =>
+      await this.supabase.from('notices').delete().eq('id', id)
+    )
+    if (error) throw error
+  }
+}
