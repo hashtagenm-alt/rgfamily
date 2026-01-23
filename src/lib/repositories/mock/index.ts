@@ -283,6 +283,12 @@ class MockOrganizationRepository implements IOrganizationRepository {
       is_active: data.is_active ?? true,
       is_live: data.is_live ?? false,
       current_rank: data.current_rank || null,
+      current_rank_id: data.current_rank_id || null,
+      total_contribution: data.total_contribution || 0,
+      season_contribution: data.season_contribution || 0,
+      total_prize: data.total_prize || 0,
+      total_penalty: data.total_penalty || 0,
+      prize_balance: data.prize_balance || 0,
       created_at: getCurrentTimestamp(),
     }
     store.organization.push(newOrg)

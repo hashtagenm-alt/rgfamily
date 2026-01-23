@@ -101,7 +101,13 @@ export type Database = {
           profile_info: Json | null
           is_live: boolean
           is_active: boolean
-          current_rank: string | null // 직급전 현재 직급 (대표는 null)
+          current_rank: string | null // 직급전 현재 직급 (레거시, 대표는 null)
+          current_rank_id: number | null // FK to bj_ranks
+          total_contribution: number // 누적 기여도
+          season_contribution: number // 현재 시즌 기여도
+          total_prize: number // 누적 받은 상금
+          total_penalty: number // 누적 받은 벌금
+          prize_balance: number // 상벌금 잔액 (상금 - 벌금)
           created_at: string
         }
         Insert: {
@@ -118,6 +124,12 @@ export type Database = {
           is_live?: boolean
           is_active?: boolean
           current_rank?: string | null
+          current_rank_id?: number | null
+          total_contribution?: number
+          season_contribution?: number
+          total_prize?: number
+          total_penalty?: number
+          prize_balance?: number
           created_at?: string
         }
         Update: {
@@ -134,6 +146,12 @@ export type Database = {
           is_live?: boolean
           is_active?: boolean
           current_rank?: string | null
+          current_rank_id?: number | null
+          total_contribution?: number
+          season_contribution?: number
+          total_prize?: number
+          total_penalty?: number
+          prize_balance?: number
           created_at?: string
         }
         Relationships: [
@@ -147,6 +165,12 @@ export type Database = {
             foreignKeyName: 'organization_parent_id_fkey'
             columns: ['parent_id']
             referencedRelation: 'organization'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'organization_current_rank_id_fkey'
+            columns: ['current_rank_id']
+            referencedRelation: 'bj_ranks'
             referencedColumns: ['id']
           }
         ]
