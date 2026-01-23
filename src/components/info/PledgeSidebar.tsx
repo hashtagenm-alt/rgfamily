@@ -2,12 +2,15 @@
 
 import { motion } from 'framer-motion'
 import { Target, X, Star } from 'lucide-react'
-import type { OrgMember } from './MemberCard'
+import type { OrgMember, OrganizationRecord } from './MemberCard'
 import { RANKS } from '@/lib/constants/ranks'
 import styles from './PledgeSidebar.module.css'
 
+// OrgMember 또는 OrganizationRecord 모두 지원
+type MemberType = OrgMember | OrganizationRecord
+
 interface PledgeSidebarProps {
-  member: OrgMember | null
+  member: MemberType | null
   onClose?: () => void
 }
 

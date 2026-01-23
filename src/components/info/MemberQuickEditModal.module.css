@@ -1,0 +1,52 @@
+/* Member Quick Edit Modal */
+
+.liveToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: white;
+  background: #00d4ff;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.5px;
+  animation: liveGlow 2s ease-in-out infinite;
+}
+
+@keyframes liveGlow {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(0, 212, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.8);
+  }
+}
+
+.fullEditLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--card-bg);
+  border: 1px dashed var(--card-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.fullEditLink:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-pink-overlay-05);
+}

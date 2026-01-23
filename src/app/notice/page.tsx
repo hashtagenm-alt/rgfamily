@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Pin, Search, Eye, ChevronDown, Bell, PenSquare } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import AdminNoticeActions from '@/components/notice/AdminNoticeActions'
 import { useNotices } from '@/lib/context'
 import { useAuthContext } from '@/lib/context/AuthContext'
 import { formatShortDate } from '@/lib/utils/format'
@@ -201,7 +202,7 @@ export default function NoticePage() {
                     <Link
                       key={notice.id}
                       href={`/notice/${notice.id}`}
-                      className={`${styles.row} ${styles.pinned}`}
+                      className={`${styles.row} ${styles.pinned} noticeRow`}
                     >
                       {/* Badge */}
                       <div className={styles.cellNumber}>
@@ -227,6 +228,12 @@ export default function NoticePage() {
                         {notice.isImportant && (
                           <span className={styles.importantBadge}>중요</span>
                         )}
+                        {/* Admin Actions */}
+                        <AdminNoticeActions
+                          noticeId={notice.id}
+                          isPinned={notice.isPinned}
+                          onUpdated={fetchNotices}
+                        />
                       </div>
 
                       {/* Author */}
@@ -252,7 +259,7 @@ export default function NoticePage() {
                   <Link
                     key={notice.id}
                     href={`/notice/${notice.id}`}
-                    className={styles.row}
+                    className={`${styles.row} noticeRow`}
                   >
                     {/* Number */}
                     <div className={styles.cellNumber}>
@@ -270,6 +277,12 @@ export default function NoticePage() {
                       {isNew(notice.createdAt) && (
                         <span className={styles.newBadge}>N</span>
                       )}
+                      {/* Admin Actions */}
+                      <AdminNoticeActions
+                        noticeId={notice.id}
+                        isPinned={notice.isPinned}
+                        onUpdated={fetchNotices}
+                      />
                     </div>
 
                     {/* Author */}

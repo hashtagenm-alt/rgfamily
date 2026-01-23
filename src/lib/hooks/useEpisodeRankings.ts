@@ -10,7 +10,8 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import { useEpisodes, useAuthContext, useRankings } from '@/lib/context'
+import { useAuthContext, useRankings } from '@/lib/context'
+import { useEpisodes } from './useEpisodes'
 import type { Episode } from '@/types/database'
 
 interface EpisodeRankingItem {

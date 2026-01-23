@@ -1,0 +1,74 @@
+/* Admin Notice Actions */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+/* 부모 row 호버 시 표시 */
+:global(.noticeRow):hover .actions {
+  opacity: 1;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: var(--card-hover);
+  color: var(--color-primary);
+}
+
+.actionBtn.pinned {
+  color: var(--color-primary);
+}
+
+.actionBtn.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile - 항상 표시 */
+@media (max-width: 768px) {
+  .actions {
+    opacity: 1;
+  }
+
+  .actionBtn {
+    width: 32px;
+    height: 32px;
+  }
+}

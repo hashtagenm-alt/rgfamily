@@ -30,5 +30,5 @@ export {
   useSchedules,
 } from './DataProviderContext'
 
-// Episodes (회차 기반 VIP 시스템)
-export { useEpisodes } from '@/lib/hooks/useEpisodes'
+// NOTE: useEpisodes는 @/lib/hooks에서 import 하세요 (순환 참조 방지)
+// import { useEpisodes } from '@/lib/hooks'

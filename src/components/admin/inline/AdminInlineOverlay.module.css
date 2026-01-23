@@ -1,0 +1,125 @@
+/* Admin Inline Overlay - 플로팅 버튼 스타일 */
+/* AdminScheduleOverlay.module.css 패턴 기반 */
+
+.floatingAddBtn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 12px rgba(253, 104, 186, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+.floatingAddBtn:hover {
+  box-shadow:
+    0 6px 20px rgba(253, 104, 186, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.floatingAddBtn:active {
+  transform: scale(0.95);
+}
+
+/* Action Button - 인라인 아이콘 버튼 */
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 부모 호버 시 표시 - 각 컴포넌트에서 설정 필요 */
+.actionBtn.visible,
+.actionGroup:hover .actionBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.actionBtn.md {
+  width: 32px;
+  height: 32px;
+}
+
+.actionBtn.sm {
+  width: 28px;
+  height: 28px;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: var(--card-hover);
+  color: var(--color-primary);
+}
+
+.actionBtn.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Action Group */
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.actionGroup .actionBtn {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.actionGroup:hover .actionBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .floatingAddBtn {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 52px;
+    height: 52px;
+  }
+
+  .actionBtn.md {
+    width: 28px;
+    height: 28px;
+  }
+
+  .actionBtn.sm {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .floatingAddBtn {
+    bottom: 1.75rem;
+    right: 1.75rem;
+  }
+}

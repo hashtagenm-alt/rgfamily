@@ -11,25 +11,19 @@ import {
   Calendar,
   Building,
   CalendarDays,
-  Image,
   Megaphone,
   MessageSquare,
   Film,
+  Image,
   Crown,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Settings,
   Home,
-  Clock,
-  Tv,
   BarChart3,
-  // BJ 관리 아이콘
-  Trophy,
-  TrendingUp,
-  Coins,
-  UsersRound,
-  Database,
+  Clock,
+  Medal,
+  UserCheck,
   Swords,
 } from 'lucide-react'
 import { useAuthContext } from '@/lib/context'
@@ -38,26 +32,20 @@ import styles from './Sidebar.module.css'
 const menuItems = [
   { href: '/admin', icon: LayoutDashboard, label: '대시보드' },
   { href: '/admin/analytics', icon: BarChart3, label: '분석' },
-  // BJ 관리 섹션
-  { href: '/admin/dashboard', icon: TrendingUp, label: 'BJ 통합 관리' },
-  { href: '/admin/ranks', icon: Trophy, label: '직급 관리' },
-  { href: '/admin/contributions', icon: Coins, label: '기여도 관리' },
-  { href: '/admin/prizes', icon: Coins, label: '상벌금 관리' },
-  { href: '/admin/teams', icon: Swords, label: '팀/매칭 관리' },
-  { href: '/admin/data-sync', icon: Database, label: '데이터 동기화' },
-  // 기존 메뉴
   { href: '/admin/members', icon: Users, label: '회원 관리' },
+  { href: '/admin/dashboard', icon: UserCheck, label: '출연BJ 관리' },
+  { href: '/admin/teams', icon: Swords, label: '팀/매칭 관리' },
   { href: '/admin/donations', icon: Heart, label: '후원 관리' },
-  { href: '/admin/seasons', icon: Calendar, label: '시즌 관리' },
-  { href: '/admin/episodes', icon: Tv, label: '에피소드 관리' },
+  { href: '/admin/donation-rankings', icon: Medal, label: '후원 랭킹 관리' },
+  { href: '/admin/seasons', icon: Calendar, label: '시즌/에피소드' },
   { href: '/admin/organization', icon: Building, label: '조직도 관리' },
   { href: '/admin/schedules', icon: CalendarDays, label: '일정 관리' },
   { href: '/admin/timeline', icon: Clock, label: '타임라인 관리' },
-  { href: '/admin/signatures', icon: Image, label: '시그니처 관리' },
   { href: '/admin/notices', icon: Megaphone, label: '공지사항 관리' },
   { href: '/admin/posts', icon: MessageSquare, label: '게시글 관리' },
   { href: '/admin/media', icon: Film, label: '미디어 관리' },
-  { href: '/admin/vip-rewards', icon: Crown, label: 'VIP 보상 관리' },
+  { href: '/admin/signatures', icon: Image, label: '시그니처 관리' },
+  { href: '/admin/vip-rewards', icon: Crown, label: 'VIP 관리' },
 ]
 
 export default function Sidebar() {
@@ -69,6 +57,16 @@ export default function Sidebar() {
   const isActive = (href: string) => {
     if (href === '/admin') {
       return pathname === '/admin'
+    }
+    // 출연BJ 관리: dashboard, ranks 포함
+    if (href === '/admin/dashboard') {
+      return pathname.startsWith('/admin/dashboard') ||
+             pathname.startsWith('/admin/ranks')
+    }
+    // 시즌/에피소드: seasons, episodes 포함
+    if (href === '/admin/seasons') {
+      return pathname.startsWith('/admin/seasons') ||
+             pathname.startsWith('/admin/episodes')
     }
     return pathname.startsWith(href)
   }

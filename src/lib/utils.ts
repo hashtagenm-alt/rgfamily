@@ -6,12 +6,8 @@
  *
  * @example
  * import { cn } from '@/lib/utils'
- * import { formatDate } from '@/lib/utils/format'
+ * import { formatDate } from '@/lib/utils'
  */
 
-// Re-export all utilities from utils/ folder (단일 소스)
-export * from './utils/cn';
-export * from './utils/format';
-export * from './utils/ranking';
-export * from './utils/youtube';
-export * from './utils/hash';
+// Re-export all utilities from utils/index.ts (단일 소스)
+export * from './utils/index';

@@ -5,7 +5,7 @@ import { useSupabaseContext } from '@/lib/context'
 import { USE_MOCK_DATA } from '@/lib/config'
 import { mockOrganization, mockLiveStatus } from '@/lib/mock'
 import type { JoinedProfile } from '@/types/common'
-import type { OrgMember } from '@/types/organization'
+import type { OrganizationRecord, SocialLinks, ProfileInfo } from '@/types/organization'
 import type { LiveStatus } from '@/types/database'
 
 export interface LiveStatusEntry {
@@ -23,7 +23,7 @@ interface UseLiveRosterOptions {
 }
 
 interface UseLiveRosterReturn {
-  members: OrgMember[]
+  members: OrganizationRecord[]
   liveStatusByMemberId: Record<number, LiveStatusEntry[]>
   isLoading: boolean
   refetch: () => Promise<void>
@@ -40,7 +40,7 @@ function buildLiveStatusMap(entries: LiveStatusEntry[]): Record<number, LiveStat
 export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRosterReturn {
   const { realtime = true } = options
   const supabase = useSupabaseContext()
-  const [members, setMembers] = useState<OrgMember[]>([])
+  const [members, setMembers] = useState<OrganizationRecord[]>([])
   const [liveStatusByMemberId, setLiveStatusByMemberId] = useState<Record<number, LiveStatusEntry[]>>({})
   const [isLoading, setIsLoading] = useState(true)
 
@@ -58,20 +58,24 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
         lastChecked: status.last_checked,
       }))
       const liveMap = buildLiveStatusMap(mockStatusEntries)
-      const mappedMembers: OrgMember[] = mockOrganization.map((member) => {
+      const mappedMembers: OrganizationRecord[] = mockOrganization.map((member) => {
         const liveEntries = liveMap[member.id] || []
         const isLive = liveEntries.some((entry) => entry.isLive)
         return {
           id: member.id,
+          profile_id: null,
           name: member.name,
           role: member.role,
           unit: member.unit,
           position_order: member.position_order,
           parent_id: member.parent_id,
           image_url: member.image_url,
-          social_links: (member.social_links || undefined) as OrgMember['social_links'],
-          profile_info: (member.profile_info || undefined) as OrgMember['profile_info'],
+          social_links: (member.social_links as SocialLinks | null) || null,
+          profile_info: (member.profile_info as ProfileInfo | null) || null,
           is_live: isLive,
+          is_active: true,
+          current_rank: member.current_rank || null,
+          created_at: '',
         }
       })
 
@@ -85,7 +89,7 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
     const { data: orgData, error: orgError } = await supabase
       .from('organization')
       .select(`
-        id, name, role, unit, position_order, parent_id, image_url, social_links, profile_info, is_live,
+        id, profile_id, name, role, unit, position_order, parent_id, image_url, social_links, profile_info, is_live, is_active, current_rank, created_at,
         profiles(nickname, avatar_url),
         live_status(member_id, platform, stream_url, thumbnail_url, is_live, viewer_count, last_checked)
       `)
@@ -127,7 +131,7 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
     })
 
     const liveMap = buildLiveStatusMap(liveEntries)
-    const mappedMembers: OrgMember[] = (orgData || []).map((member) => {
+    const mappedMembers: OrganizationRecord[] = (orgData || []).map((member) => {
       const profile = member.profiles as JoinedProfile | null
       const liveEntriesForMember = liveMap[member.id] || []
       // live_status 테이블에서만 라이브 상태를 가져옴 (organization.is_live 폴백 제거)
@@ -135,15 +139,19 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
 
       return {
         id: member.id,
+        profile_id: member.profile_id,
         name: profile?.nickname || member.name,
         role: member.role,
         unit: member.unit,
         position_order: member.position_order,
         parent_id: member.parent_id,
         image_url: profile?.avatar_url || member.image_url,
-        social_links: (member.social_links || undefined) as OrgMember['social_links'],
-        profile_info: (member.profile_info || undefined) as OrgMember['profile_info'],
+        social_links: member.social_links as OrganizationRecord['social_links'],
+        profile_info: member.profile_info as OrganizationRecord['profile_info'],
         is_live: isLive,
+        is_active: member.is_active,
+        current_rank: member.current_rank,
+        created_at: member.created_at,
       }
     })
 

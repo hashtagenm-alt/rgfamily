@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useLiveRoster } from "@/lib/hooks";
 import { PledgeSidebar } from "@/components/info/PledgeSidebar";
 import { ProfileSidebar } from "@/components/info/ProfileSidebar";
-import type { OrgMember, UnitFilter } from "@/types/organization";
+import type { OrganizationRecord, UnitFilter } from "@/types/organization";
 import { getRankByName, RANKS } from "@/lib/constants/ranks";
 import { ArrowLeft, Radio, Users, FileText, Calendar, Target } from "lucide-react";
 import styles from "./page.module.css";
@@ -50,7 +50,7 @@ const getCurrentRankPledge = (
 
 export default function LivePage() {
   const { members, isLoading } = useLiveRoster({ realtime: true });
-  const [selectedMember, setSelectedMember] = useState<OrgMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<OrganizationRecord | null>(null);
   const [unitFilter, setUnitFilter] = useState<UnitFilter>('all');
 
   // Filter by unit
@@ -61,7 +61,7 @@ export default function LivePage() {
   }, [members, unitFilter]);
 
   // 직급 순으로 정렬하는 헬퍼 함수
-  const sortByRank = (members: OrgMember[]) => {
+  const sortByRank = (members: OrganizationRecord[]) => {
     return [...members].sort((a, b) => {
       // 대표(role === '대표')는 맨 앞으로
       if (a.role === '대표' && b.role !== '대표') return -1;

@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
     const subfolder = (formData.get('folder') as string) || 'general'
     const folder = `rg-family/${subfolder}`
 
+    // 배너용인지 확인 (배너는 큰 크기 유지)
+    const isBanner = subfolder === 'banners'
+
     if (!file) {
       return NextResponse.json(
         { error: '파일이 없습니다' },
@@ -80,25 +83,25 @@ export async function POST(request: NextRequest) {
 
     // Cloudinary에 업로드
     const result = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
+      // 배너용 transformation (1500x350 크기)
+      const bannerTransformation = [
+        { width: 1500, height: 350, crop: 'fill', gravity: 'center' },
+        { quality: 'auto:good', fetch_format: 'auto' }
+      ]
+
+      // 일반 이미지 transformation (400x400 정사각형)
+      const defaultTransformation = isGif
+        ? [{ width: 400, height: 400, crop: 'fill' }]
+        : [
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+            { quality: 'auto', fetch_format: 'auto' }
+          ]
+
       cloudinary.uploader.upload_stream(
         {
           folder,
           resource_type: 'image',
-          // GIF는 애니메이션 유지, 일반 이미지는 최적화
-          ...(isGif
-            ? {
-                // GIF: 애니메이션 유지하면서 리사이즈
-                transformation: [
-                  { width: 400, height: 400, crop: 'fill' }
-                ]
-              }
-            : {
-                // 일반 이미지: 최적화 적용
-                transformation: [
-                  { width: 400, height: 400, crop: 'fill', gravity: 'face' },
-                  { quality: 'auto', fetch_format: 'auto' }
-                ]
-              })
+          transformation: isBanner ? bannerTransformation : defaultTransformation,
         },
         (error, result) => {
           if (error) reject(error)

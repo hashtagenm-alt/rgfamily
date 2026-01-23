@@ -12,6 +12,7 @@ interface TimelineEventCardProps {
   event: TimelineItem
   index: number
   onSelect: (event: TimelineItem) => void
+  onDoubleClick?: (event: TimelineItem) => void
 }
 
 // 미래 날짜인지 확인
@@ -22,9 +23,14 @@ const isFutureDate = (dateStr: string) => {
   return eventDate > today
 }
 
-export default function TimelineEventCard({ event, index, onSelect }: TimelineEventCardProps) {
+export default function TimelineEventCard({ event, index, onSelect, onDoubleClick }: TimelineEventCardProps) {
   const isLeft = index % 2 === 0
   const isUpcoming = isFutureDate(event.eventDate)
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDoubleClick?.(event)
+  }
 
   return (
     <motion.div
@@ -44,6 +50,7 @@ export default function TimelineEventCard({ event, index, onSelect }: TimelineEv
       <div
         className={styles.card}
         onClick={() => onSelect(event)}
+        onDoubleClick={handleDoubleClick}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && onSelect(event)}

@@ -6,21 +6,44 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Users, Radio, Calendar, FileText } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useOrganization } from "@/lib/hooks";
-import { MemberCard, type OrgMember } from "@/components/info";
+import { MemberCard } from "@/components/info";
+import type { OrganizationRecord } from "@/types/organization";
 import { PledgeSidebar } from "@/components/info/PledgeSidebar";
 import { ProfileSidebar } from "@/components/info/ProfileSidebar";
+import AdminOrgOverlay, { useAdminOrgEdit } from "@/components/info/AdminOrgOverlay";
 import { getRankByName } from "@/lib/constants/ranks";
 import styles from "./page.module.css";
 
 type UnitType = "excel" | "crew";
 
 export default function OrganizationPage() {
-  const { members, isLoading, getByUnit, getGroupedByRole } = useOrganization();
-  const [selectedMember, setSelectedMember] = useState<OrgMember | null>(null);
+  const { members, isLoading, getByUnit, getGroupedByRole, refresh } = useOrganization();
+  const [selectedMember, setSelectedMember] = useState<OrganizationRecord | null>(null);
   const [activeUnit, setActiveUnit] = useState<UnitType>("excel");
 
+  // 관리자 편집 기능
+  const {
+    isAdmin,
+    editingMember,
+    isModalOpen,
+    handleMemberClick,
+    handleModalClose,
+  } = useAdminOrgEdit(refresh);
+
+  // 멤버 클릭 핸들러 - 관리자는 더블클릭으로 편집, 일반 클릭은 선택
+  const handleCardClick = (member: OrganizationRecord) => {
+    setSelectedMember(selectedMember?.id === member.id ? null : member);
+  };
+
+  // 멤버 더블클릭 핸들러 - 관리자만 편집 모달 열기
+  const handleCardDoubleClick = (member: OrganizationRecord) => {
+    if (isAdmin) {
+      handleMemberClick(member);
+    }
+  };
+
   // 유닛별 멤버 분류
-  const unitMembers = getByUnit(activeUnit) as OrgMember[];
+  const unitMembers = getByUnit(activeUnit) as OrganizationRecord[];
 
   // 역할별 그룹화
   const grouped = getGroupedByRole(unitMembers);
@@ -151,11 +174,12 @@ export default function OrganizationPage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.05 }}
+                          onDoubleClick={() => handleCardDoubleClick(member)}
                         >
                           <MemberCard
                             member={member}
                             size="large"
-                            onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                            onClick={() => handleCardClick(member)}
                             isSelected={selectedMember?.id === member.id}
                           />
                         </motion.div>
@@ -178,11 +202,12 @@ export default function OrganizationPage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.03 }}
+                          onDoubleClick={() => handleCardDoubleClick(member)}
                         >
                           <MemberCard
                             member={member}
                             size="medium"
-                            onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                            onClick={() => handleCardClick(member)}
                             isSelected={selectedMember?.id === member.id}
                           />
                         </motion.div>
@@ -205,11 +230,12 @@ export default function OrganizationPage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.02 }}
+                          onDoubleClick={() => handleCardDoubleClick(member)}
                         >
                           <MemberCard
                             member={member}
                             size="small"
-                            onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                            onClick={() => handleCardClick(member)}
                             isSelected={selectedMember?.id === member.id}
                           />
                         </motion.div>
@@ -240,6 +266,14 @@ export default function OrganizationPage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* 관리자 오버레이 */}
+      <AdminOrgOverlay
+        editingMember={editingMember}
+        isModalOpen={isModalOpen}
+        onModalClose={handleModalClose}
+        onMembersChanged={refresh}
+      />
     </div>
   );
 }

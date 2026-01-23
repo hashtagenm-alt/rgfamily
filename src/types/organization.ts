@@ -71,8 +71,8 @@ export interface OrgMember {
   position_order: number
   parent_id: number | null
   image_url: string | null
-  social_links?: SocialLinks
-  profile_info?: ProfileInfo
+  social_links?: SocialLinks | null
+  profile_info?: ProfileInfo | null
   is_live?: boolean
   current_rank?: string | null  // 직급전 현재 직급 (대표는 null)
 }

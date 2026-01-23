@@ -4,13 +4,13 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { Radio } from 'lucide-react'
 import styles from './MemberCard.module.css'
-import type { OrgMember } from '@/types/organization'
+import type { OrganizationRecord } from '@/types/organization'
 
 // Re-export for backward compatibility
-export type { OrgMember, ProfileInfo, SocialLinks } from '@/types/organization'
+export type { OrgMember, OrganizationRecord, ProfileInfo, SocialLinks } from '@/types/organization'
 
 interface MemberCardProps {
-  member: OrgMember
+  member: OrganizationRecord
   size: 'large' | 'medium' | 'small'
   onClick: () => void
   isSelected?: boolean

@@ -6,17 +6,20 @@ import {
   Radio, Youtube, Instagram, ExternalLink,
   User, Heart, Cake, Ruler, Droplet, X
 } from 'lucide-react'
-import type { OrgMember } from './MemberCard'
+import type { OrgMember, OrganizationRecord } from './MemberCard'
 import styles from './ProfileSidebar.module.css'
 
 const getPandaTvUrl = (id: string) => `https://www.pandalive.co.kr/play/${id}`
 
+// OrgMember 또는 OrganizationRecord 모두 지원
+type MemberType = OrgMember | OrganizationRecord
+
 interface ProfileSidebarProps {
-  member: OrgMember | null
+  member: MemberType | null
   onClose?: () => void
 }
 
-const hasProfileInfo = (member: OrgMember) => {
+const hasProfileInfo = (member: MemberType) => {
   const info = member.profile_info
   if (!info) return false
   return !!(info.mbti || info.blood_type || info.height || info.weight || info.birthday)

@@ -9,7 +9,10 @@ import { formatDate } from '@/lib/utils/format'
 import TimelineFilter from './TimelineFilter'
 import TimelineEventCard from './TimelineEventCard'
 import TimelineModal from './TimelineModal'
+import AdminTimelineOverlay, { useAdminTimelineEdit } from '@/components/timeline/AdminTimelineOverlay'
+import TimelineEditModal from '@/components/timeline/TimelineEditModal'
 import type { TimelineItem } from '@/types/common'
+import type { TimelineEvent } from '@/types/database'
 import styles from './Timeline.module.css'
 
 export default function Timeline() {
@@ -27,10 +30,14 @@ export default function Timeline() {
     isLoadingMore,
     hasMore,
     loadMore,
+    refetch,
     setSelectedSeasonId,
     setSelectedCategory,
     setSelectedTimeFilter,
   } = useTimelineData({ infiniteScroll: true, pageSize: 8 })
+
+  // 관리자 편집 기능
+  const adminEdit = useAdminTimelineEdit(refetch)
 
   // 무한 스크롤
   const { sentinelRef, setCanLoadMore } = useInfiniteScroll(loadMore, {
@@ -132,6 +139,23 @@ export default function Timeline() {
                       event={event}
                       index={index}
                       onSelect={setSelectedEvent}
+                      onDoubleClick={(e) => {
+                        // TimelineItem을 TimelineEvent로 변환하여 편집 모달 열기
+                        if (adminEdit.isAdmin) {
+                          const timelineEvent: TimelineEvent = {
+                            id: e.id,
+                            title: e.title,
+                            event_date: e.eventDate,
+                            description: e.description || null,
+                            image_url: e.imageUrl || null,
+                            category: e.category || null,
+                            season_id: e.seasonId || null,
+                            order_index: 0,
+                            created_at: '',
+                          }
+                          adminEdit.openEditModal(timelineEvent)
+                        }
+                      }}
                     />
                   )
                 })}
@@ -172,6 +196,18 @@ export default function Timeline() {
 
       {/* Detail Modal */}
       <TimelineModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+
+      {/* Admin: Timeline Event Edit Modal */}
+      <TimelineEditModal
+        isOpen={adminEdit.isModalOpen}
+        event={adminEdit.editingEvent}
+        onClose={adminEdit.closeModal}
+        onSaved={adminEdit.handleSaved}
+        onDeleted={adminEdit.handleDeleted}
+      />
+
+      {/* Admin: Floating Add Button */}
+      <AdminTimelineOverlay onEventsChanged={refetch} />
     </div>
   )
 }
