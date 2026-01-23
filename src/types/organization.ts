@@ -55,7 +55,13 @@ export interface OrganizationRecord {
   profile_info: ProfileInfo | null
   is_live: boolean
   is_active: boolean
-  current_rank: string | null  // 직급전 현재 직급 (대표는 null)
+  current_rank: string | null      // 직급전 현재 직급 문자열 (레거시)
+  current_rank_id: number | null   // FK to bj_ranks (새로운 표준)
+  total_contribution: number       // 누적 기여도
+  season_contribution: number      // 현재 시즌 기여도
+  total_prize: number              // 누적 받은 상금
+  total_penalty: number            // 누적 받은 벌금
+  prize_balance: number            // 상벌금 잔액
   created_at: string
 }
 
@@ -74,7 +80,8 @@ export interface OrgMember {
   social_links?: SocialLinks | null
   profile_info?: ProfileInfo | null
   is_live?: boolean
-  current_rank?: string | null  // 직급전 현재 직급 (대표는 null)
+  current_rank?: string | null       // 직급전 현재 직급 문자열 (레거시)
+  current_rank_id?: number | null    // FK to bj_ranks
 }
 
 /**
@@ -88,7 +95,8 @@ export interface LiveMember {
   image_url: string | null
   is_live: boolean
   social_links?: SocialLinks
-  current_rank?: string | null  // 직급전 현재 직급 (대표는 null)
+  current_rank?: string | null       // 직급전 현재 직급 문자열 (레거시)
+  current_rank_id?: number | null    // FK to bj_ranks
 }
 
 // ==============================================

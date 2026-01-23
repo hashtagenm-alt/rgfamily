@@ -75,6 +75,12 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
           is_live: isLive,
           is_active: true,
           current_rank: member.current_rank || null,
+          current_rank_id: member.current_rank_id || null,
+          total_contribution: member.total_contribution || 0,
+          season_contribution: member.season_contribution || 0,
+          total_prize: member.total_prize || 0,
+          total_penalty: member.total_penalty || 0,
+          prize_balance: member.prize_balance || 0,
           created_at: '',
         }
       })
@@ -89,7 +95,7 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
     const { data: orgData, error: orgError } = await supabase
       .from('organization')
       .select(`
-        id, profile_id, name, role, unit, position_order, parent_id, image_url, social_links, profile_info, is_live, is_active, current_rank, created_at,
+        id, profile_id, name, role, unit, position_order, parent_id, image_url, social_links, profile_info, is_live, is_active, current_rank, current_rank_id, total_contribution, season_contribution, total_prize, total_penalty, prize_balance, created_at,
         profiles(nickname, avatar_url),
         live_status(member_id, platform, stream_url, thumbnail_url, is_live, viewer_count, last_checked)
       `)
@@ -142,7 +148,7 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
         profile_id: member.profile_id,
         name: profile?.nickname || member.name,
         role: member.role,
-        unit: member.unit,
+        unit: member.unit as OrganizationRecord['unit'],
         position_order: member.position_order,
         parent_id: member.parent_id,
         image_url: profile?.avatar_url || member.image_url,
@@ -151,6 +157,12 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
         is_live: isLive,
         is_active: member.is_active,
         current_rank: member.current_rank,
+        current_rank_id: member.current_rank_id,
+        total_contribution: member.total_contribution ?? 0,
+        season_contribution: member.season_contribution ?? 0,
+        total_prize: member.total_prize ?? 0,
+        total_penalty: member.total_penalty ?? 0,
+        prize_balance: member.prize_balance ?? 0,
         created_at: member.created_at,
       }
     })

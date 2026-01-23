@@ -209,10 +209,17 @@ export default function RanksPage() {
         const oldRankId = bj.current_rank_id
 
         if (newRankId !== oldRankId) {
-          // organization 테이블 업데이트
+          // 새 직급명 조회 (current_rank 문자열 동기화용)
+          const newRank = ranks.find(r => r.id === newRankId)
+          const rankName = newRank?.name || null
+
+          // organization 테이블 업데이트 (current_rank_id + current_rank 모두)
           await supabase
             .from('organization')
-            .update({ current_rank_id: newRankId || null })
+            .update({
+              current_rank_id: newRankId || null,
+              current_rank: rankName,  // 문자열 필드도 동기화
+            })
             .eq('id', bj.id)
 
           // 직급 변동 이력 추가
