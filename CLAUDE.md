@@ -1,7 +1,7 @@
 # RG Family - 개발 가이드 (Claude Code용)
 
 > 이 문서는 AI가 개발할 때 참고하는 지침서야. 모든 규칙에는 "왜?"가 있어.
-> **마지막 업데이트: 2026-01-22**
+> **마지막 업데이트: 2026-01-24**
  ㅠ
 ---
 
@@ -24,7 +24,8 @@
 15. [참고 사이트](#15-참고-사이트)
 16. [운영 전 필수 설정](#16-운영-전-필수-설정)
 17. [관리자 페이지 목록](#17-관리자-페이지-목록)
-18. [CI 실패 시 해결 가이드](#18-ci-실패-시-해결-가이드)
+18. [Supabase 작업 방법 (CLI 스크립트 우선)](#18-supabase-작업-방법-cli-스크립트-우선)
+19. [CI 실패 시 해결 가이드](#19-ci-실패-시-해결-가이드)
 
 ---
 
@@ -628,7 +629,61 @@ src/
 
 ---
 
-## 18. CI 실패 시 해결 가이드
+## 18. Supabase 작업 방법 (CLI 스크립트 우선)
+
+```
+왜? 브라우저로 Supabase Dashboard 조작하면 느리고 불안정함.
+    터미널에서 스크립트로 직접 실행하면 빠르고 자동화 가능.
+
+🤖 AI(Claude)는 Supabase 데이터 조회/확인 시 브라우저 자동화 대신
+   아래 CLI 스크립트를 우선 사용해야 함!
+
+### 데이터 조회 (SELECT)
+
+# View 조회 (보안 View 사용)
+npx tsx scripts/run-sql.ts --view season_rankings_public
+npx tsx scripts/run-sql.ts --view total_rankings_public
+
+# 테이블 조회
+npx tsx scripts/run-sql.ts --table profiles
+npx tsx scripts/run-sql.ts --table season_donation_rankings
+
+# 도움말
+npx tsx scripts/run-sql.ts
+
+### DDL 실행 (CREATE, ALTER, DROP)
+
+DDL 문(테이블/View 생성, RLS 정책 변경 등)은 스크립트로 실행 어려움.
+→ Supabase Dashboard SQL Editor 또는 supabase db execute 사용
+
+# SQL 파일 실행 (Supabase CLI 로그인 필요)
+supabase db execute --file scripts/sql/my-migration.sql
+
+### 기존 스크립트 활용
+
+scripts/ 폴더에 다양한 데이터 관리 스크립트 존재:
+- scripts/update-season-rankings.ts  # 시즌 랭킹 업데이트
+- scripts/update-total-rankings.ts   # 총 후원 랭킹 업데이트
+- scripts/check-db-schema.ts         # 스키마 검증
+- scripts/check-season-rankings.ts   # 시즌 랭킹 확인
+
+### 작업별 권장 방법
+
+| 작업 | 권장 방법 |
+|------|----------|
+| 데이터 조회 | `npx tsx scripts/run-sql.ts --table/--view` |
+| 데이터 수정 | 기존 스크립트 또는 새 스크립트 작성 |
+| DDL 실행 | Supabase Dashboard SQL Editor |
+| 마이그레이션 | `supabase db execute` 또는 Dashboard |
+
+❌ 금지:
+- 단순 데이터 조회에 브라우저 자동화 사용
+- 복잡한 브라우저 조작으로 시간 낭비
+```
+
+---
+
+## 19. CI 실패 시 해결 가이드
 
 ```
 왜? CI 실패하면 PR 머지 못함. 빠르게 해결해야 개발 속도 유지됨.
