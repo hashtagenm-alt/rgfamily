@@ -64,12 +64,11 @@ export default function TotalRankingPage() {
       return;
     }
 
-    // 총 후원 랭킹: total_donation_rankings 테이블에서 조회
-    // ⚠️ total_amount는 게이지 계산용으로만 사용, UI에 숫자 노출 금지!
+    // 총 후원 랭킹: total_rankings_public View에서 조회 (보안: total_amount 미노출)
     const [seasonResult, totalRankingsResult, vipResult] = await Promise.all([
       supabase.from("seasons").select("id, name, is_active").eq("is_active", true).single(),
-      supabase.from("total_donation_rankings")
-        .select("rank, donor_name, total_amount")
+      supabase.from("total_rankings_public")
+        .select("rank, donor_name, gauge_percent")
         .order("rank", { ascending: true })
         .limit(50),
       supabase.from("vip_rewards").select("profile_id, rank, profiles:profile_id(nickname)")
@@ -173,7 +172,7 @@ export default function TotalRankingPage() {
           donorId: nicknameToProfileId[item.donor_name] || profile?.id || null,
           donorName: item.donor_name,
           avatarUrl: profile?.avatar_url || null,
-          totalAmount: item.total_amount, // 게이지 계산용 (UI에 숫자로 노출 금지)
+          totalAmount: item.gauge_percent || 0, // 게이지 퍼센트 (1위=100 기준)
           rank: item.rank,
         };
       });

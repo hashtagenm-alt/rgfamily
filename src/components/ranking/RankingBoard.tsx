@@ -51,8 +51,8 @@ export default function RankingBoard() {
 
       if (season) {
         const { data, error } = await supabase
-          .from("season_donation_rankings")
-          .select("rank, donor_name, total_amount")
+          .from("season_rankings_public")
+          .select("rank, donor_name, gauge_percent")
           .eq("season_id", season.id)
           .order("rank", { ascending: true })
           .limit(5);
@@ -62,7 +62,7 @@ export default function RankingBoard() {
             data.map((d) => ({
               rank: d.rank,
               name: d.donor_name,
-              amount: d.total_amount,
+              amount: d.gauge_percent || 0, // 게이지 퍼센트 사용
               unit: null,
             }))
           );

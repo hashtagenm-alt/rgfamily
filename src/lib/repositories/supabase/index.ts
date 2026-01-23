@@ -48,13 +48,13 @@ class SupabaseRankingRepository implements IRankingRepository {
   }): Promise<RankingItem[]> {
     const { seasonId, unitFilter } = options
 
-    // 시즌 ID가 있으면 season_donation_rankings 테이블에서 조회
+    // 시즌 ID가 있으면 season_rankings_public View에서 조회 (보안: total_amount 미노출)
     if (seasonId) {
       // unit 필터가 있으면 DB 레벨에서 필터링
       const { data, error } = await withRetry(async () => {
         let query = this.supabase
-          .from('season_donation_rankings')
-          .select('rank, donor_name, total_amount, donation_count, unit')
+          .from('season_rankings_public')
+          .select('rank, donor_name, gauge_percent, donation_count, unit')
           .eq('season_id', seasonId)
 
         // unit 필터 적용 (DB 레벨)
@@ -86,17 +86,17 @@ class SupabaseRankingRepository implements IRankingRepository {
         donorId: nicknameToProfile[item.donor_name]?.id || null,
         donorName: item.donor_name,
         avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
-        totalAmount: item.total_amount,
+        totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
         rank: index + 1, // 필터된 결과에서 새로운 순위
         seasonId,
       }))
     }
 
-    // 시즌 ID가 없으면 total_donation_rankings 테이블에서 조회
+    // 시즌 ID가 없으면 total_rankings_public View에서 조회 (보안: total_amount 미노출)
     const { data, error } = await withRetry(async () => {
       return this.supabase
-        .from('total_donation_rankings')
-        .select('rank, donor_name, total_amount')
+        .from('total_rankings_public')
+        .select('rank, donor_name, gauge_percent')
         .order('rank', { ascending: true })
         .limit(50)
     })
@@ -121,7 +121,7 @@ class SupabaseRankingRepository implements IRankingRepository {
       donorId: nicknameToProfile[item.donor_name]?.id || null,
       donorName: item.donor_name,
       avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
-      totalAmount: item.total_amount,
+      totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
       rank: item.rank,
       seasonId: undefined,
     }))

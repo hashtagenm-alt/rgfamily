@@ -133,11 +133,11 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
           return
         }
 
-        // 닉네임으로 total_donation_rankings에서 랭킹 조회
+        // 닉네임으로 total_rankings_public View에서 랭킹 조회 (보안 강화)
         let rank = 0
         if (profileData.nickname) {
           const { data: rankingData } = await supabase
-            .from('total_donation_rankings')
+            .from('total_rankings_public')
             .select('rank')
             .eq('donor_name', profileData.nickname)
             .single()
