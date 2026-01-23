@@ -6,6 +6,15 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// 대표BJ(RG_family) 합산 성적 타입
+export interface RepresentativeBjTotal {
+  hearts: number       // 받은 하트
+  count: number        // 후원 건수
+  score: number        // 하트점수
+  contribution: number // 기여도
+  result?: string      // 순위 결과 (예: "상금 300만원")
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -150,6 +159,7 @@ export type Database = {
           description: string | null
           is_finalized: boolean
           finalized_at: string | null
+          representative_bj_total: RepresentativeBjTotal | null // 대표BJ(RG_family) 합산 성적
           created_at: string
         }
         Insert: {
@@ -162,6 +172,7 @@ export type Database = {
           description?: string | null
           is_finalized?: boolean
           finalized_at?: string | null
+          representative_bj_total?: RepresentativeBjTotal | null
           created_at?: string
         }
         Update: {
@@ -174,6 +185,7 @@ export type Database = {
           description?: string | null
           is_finalized?: boolean
           finalized_at?: string | null
+          representative_bj_total?: RepresentativeBjTotal | null
           created_at?: string
         }
         Relationships: [
@@ -962,6 +974,64 @@ export type Database = {
         ]
       }
       /**
+       * BJ별 에피소드 성적 기록
+       */
+      bj_episode_performances: {
+        Row: {
+          id: number
+          episode_id: number
+          bj_member_id: number
+          donation_hearts: number     // 받은 하트
+          donation_count: number      // 후원 건수
+          heart_score: number         // 하트점수
+          contribution: number        // 기여도
+          final_rank: number | null   // 최종 순위
+          rank_result: string | null  // 순위 결과 (예: "상금 300만원")
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          episode_id: number
+          bj_member_id: number
+          donation_hearts?: number
+          donation_count?: number
+          heart_score?: number
+          contribution?: number
+          final_rank?: number | null
+          rank_result?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          episode_id?: number
+          bj_member_id?: number
+          donation_hearts?: number
+          donation_count?: number
+          heart_score?: number
+          contribution?: number
+          final_rank?: number | null
+          rank_result?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'bj_episode_performances_episode_id_fkey'
+            columns: ['episode_id']
+            referencedRelation: 'episodes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'bj_episode_performances_bj_member_id_fkey'
+            columns: ['bj_member_id']
+            referencedRelation: 'organization'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      /**
        * 총 후원 랭킹 (역대 누적) - Top 50
        * ⚠️ total_amount는 외부 노출 절대 금지! UI에서는 게이지로만 표현
        */
@@ -1094,6 +1164,7 @@ export type BjThankYouMessage = Tables<'bj_thank_you_messages'>
 export type VipPersonalMessage = Tables<'vip_personal_messages'>
 export type RankBattleRecord = Tables<'rank_battle_records'>
 export type TotalDonationRanking = Tables<'total_donation_rankings'>
+export type BjEpisodePerformance = Tables<'bj_episode_performances'>
 
 // BJ 감사 메시지 with JOIN data
 export interface BjThankYouMessageWithMember extends BjThankYouMessage {
@@ -1108,6 +1179,15 @@ export interface VipPersonalMessageWithAuthor extends VipPersonalMessage {
   author?: {
     nickname: string
     avatar_url: string | null
+  }
+}
+
+// BJ 에피소드 성적 with BJ 정보
+export interface BjEpisodePerformanceWithMember extends BjEpisodePerformance {
+  bj_member?: {
+    name: string
+    image_url: string | null
+    unit: 'excel' | 'crew'
   }
 }
 

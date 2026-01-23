@@ -644,8 +644,9 @@ class SupabaseScheduleRepository implements IScheduleRepository {
   }
 
   async findByMonth(year: number, month: number): Promise<Schedule[]> {
-    const startOfMonth = new Date(year, month, 1)
-    const endOfMonth = new Date(year, month + 1, 0)
+    // UTC 기준으로 월의 시작과 끝을 계산
+    const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0))
+    const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999))
 
     const { data, error } = await withRetry(async () =>
       await this.supabase
@@ -661,8 +662,9 @@ class SupabaseScheduleRepository implements IScheduleRepository {
   }
 
   async findByMonthAndUnit(year: number, month: number, unit: string | null): Promise<Schedule[]> {
-    const startOfMonth = new Date(year, month, 1)
-    const endOfMonth = new Date(year, month + 1, 0)
+    // UTC 기준으로 월의 시작과 끝을 계산
+    const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0))
+    const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999))
 
     const { data, error } = await withRetry(async () => {
       let query = this.supabase

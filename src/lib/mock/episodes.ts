@@ -19,6 +19,7 @@ const season1Episodes: Episode[] = [
     description: '대망의 첫 회! 직급전!',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -31,6 +32,7 @@ const season1Episodes: Episode[] = [
     description: '황금or벌금데이',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -43,6 +45,7 @@ const season1Episodes: Episode[] = [
     description: '퇴근전쟁',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -55,6 +58,7 @@ const season1Episodes: Episode[] = [
     description: '난사데이',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -67,6 +71,7 @@ const season1Episodes: Episode[] = [
     description: '명품데이 - 메이져 5명, 마이너 7명 경쟁',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -79,6 +84,7 @@ const season1Episodes: Episode[] = [
     description: '1vs1 데스매치',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -91,6 +97,7 @@ const season1Episodes: Episode[] = [
     description: '뉴시그데이 & 중간직급전',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -103,6 +110,7 @@ const season1Episodes: Episode[] = [
     description: '대표를 이겨라',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -115,6 +123,7 @@ const season1Episodes: Episode[] = [
     description: '주차방지데이',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -127,6 +136,7 @@ const season1Episodes: Episode[] = [
     description: '용병 데이_1',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -139,6 +149,7 @@ const season1Episodes: Episode[] = [
     description: null,
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -151,6 +162,7 @@ const season1Episodes: Episode[] = [
     description: null,
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -163,6 +175,7 @@ const season1Episodes: Episode[] = [
     description: null,
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -175,6 +188,7 @@ const season1Episodes: Episode[] = [
     description: null,
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
   {
@@ -187,6 +201,7 @@ const season1Episodes: Episode[] = [
     description: '최종 직급전',
     is_finalized: false,
     finalized_at: null,
+    representative_bj_total: null,
     created_at: '2026-01-01T00:00:00Z'
   },
 ]
