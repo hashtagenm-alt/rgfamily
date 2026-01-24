@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { MessageSquare, ImageIcon, Video, Play, ExternalLink, Lock } from 'lucide-react'
+import { MessageSquare, ImageIcon, Video, Play, ExternalLink, Lock, Crown, Sparkles } from 'lucide-react'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
 import { getYouTubeThumbnail } from '@/lib/utils/youtube'
 import styles from './BjMessageCard.module.css'
@@ -51,9 +51,10 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
   }
 
   // 미디어 잠금 콘텐츠 렌더링 (canViewContent가 false인 경우)
-  // - 텍스트는 항상 표시
-  // - 사진: 블러 처리
-  // - 영상: 썸네일만 표시, 재생 불가
+  // - BJ 이름/프로필만 표시
+  // - 사진: 블러 처리된 VIP 전용 표시
+  // - 영상: 썸네일 + VIP 전용 오버레이
+  // - 텍스트: VIP 전용 메시지 표시
   if (isLocked) {
     return (
       <motion.div
@@ -84,78 +85,58 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
             </div>
           </div>
           <div className={styles.badges}>
-            <span className={styles.lockedBadge} title="VIP 전용 콘텐츠">
-              <Lock size={12} />
-            </span>
-            <span className={styles.typeBadge}>
-              {getTypeIcon()}
-              <span>{getTypeLabel()}</span>
-            </span>
+            <motion.span
+              className={styles.vipBadge}
+              title="VIP 전용 콘텐츠"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Crown size={12} />
+              <span>VIP</span>
+            </motion.span>
           </div>
         </div>
 
-        {/* 미디어 잠금 영역 (사진/영상만) */}
-        {(message.message_type === 'image' || message.message_type === 'video') && (
-          <div className={styles.lockedContent}>
-            {/* 이미지: 블러 처리된 플레이스홀더 */}
-            {message.message_type === 'image' && (
-              <div className={styles.lockedMediaContainer}>
-                <div className={styles.lockedMediaBlur}>
-                  <ImageIcon size={40} className={styles.lockedPlaceholderIcon} />
-                </div>
-                {/* 잠금 오버레이 */}
-                <div className={styles.lockOverlay}>
-                  <Lock size={28} className={styles.lockIcon} />
-                  <span className={styles.lockText}>VIP 전용 사진</span>
-                </div>
-              </div>
-            )}
+        {/* 프리미엄 잠금 콘텐츠 영역 */}
+        <div className={styles.premiumLockedContent}>
+          {/* 배경 패턴 */}
+          <div className={styles.lockedPattern} />
 
-            {/* 영상: 썸네일 + 재생 불가 표시 */}
+          {/* 콘텐츠 타입별 아이콘 */}
+          <div className={styles.lockedIconWrapper}>
+            <motion.div
+              className={styles.lockedIconGlow}
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {message.message_type === 'image' && <ImageIcon size={32} className={styles.lockedTypeIcon} />}
             {message.message_type === 'video' && (
-              <div className={styles.lockedMediaContainer}>
-                {message.content_url && getYouTubeThumbnail(message.content_url) ? (
-                  <>
-                    <Image
-                      src={getYouTubeThumbnail(message.content_url)!}
-                      alt="영상 썸네일"
-                      fill
-                      className={styles.lockedMediaImage}
-                    />
-                    {/* 영상 재생 아이콘 (비활성) */}
-                    <div className={styles.videoThumbnailOverlay}>
-                      <Play size={40} className={styles.videoPlayIcon} />
-                    </div>
-                  </>
-                ) : (
-                  <div className={styles.lockedVideoPlaceholder}>
-                    <Video size={40} className={styles.lockedPlaceholderIcon} />
-                    <Play size={24} className={styles.lockedPlayIcon} />
-                  </div>
-                )}
-                {/* 잠금 오버레이 */}
-                <div className={styles.lockOverlay}>
-                  <Lock size={28} className={styles.lockIcon} />
-                  <span className={styles.lockText}>VIP 전용 영상</span>
-                </div>
+              <div className={styles.videoIconStack}>
+                <Video size={32} className={styles.lockedTypeIcon} />
+                <Play size={16} className={styles.lockedPlayMini} />
               </div>
             )}
+            {message.message_type === 'text' && <MessageSquare size={32} className={styles.lockedTypeIcon} />}
           </div>
-        )}
 
-        {/* 텍스트 메시지도 잠금 처리 - VIP 전용 */}
-        {message.message_type === 'text' && (
-          <div className={styles.lockedTextContainer}>
-            <div className={styles.lockedTextBlur}>
-              <MessageSquare size={24} className={styles.lockedPlaceholderIcon} />
-              <span className={styles.lockedTextPreview}>메시지가 등록되었습니다</span>
-            </div>
-            <div className={styles.lockOverlayText}>
-              <Lock size={20} className={styles.lockIcon} />
-              <span className={styles.lockText}>VIP 전용 메시지</span>
-            </div>
+          {/* VIP 전용 라벨 */}
+          <div className={styles.vipOnlyLabel}>
+            <Sparkles size={14} className={styles.sparkleIcon} />
+            <span>VIP 전용 {getTypeLabel()}</span>
           </div>
-        )}
+
+          {/* 영상인 경우 썸네일 미리보기 (흐리게) */}
+          {message.message_type === 'video' && message.content_url && getYouTubeThumbnail(message.content_url) && (
+            <div className={styles.videoThumbnailPreview}>
+              <Image
+                src={getYouTubeThumbnail(message.content_url)!}
+                alt="영상 미리보기"
+                fill
+                className={styles.blurredThumbnail}
+              />
+            </div>
+          )}
+        </div>
       </motion.div>
     )
   }

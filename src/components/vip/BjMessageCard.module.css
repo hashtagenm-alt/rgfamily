@@ -178,246 +178,220 @@
   color: rgba(0, 0, 0, 0.6);
 }
 
-/* ==================== 잠금 콘텐츠 스타일 ==================== */
+/* ==================== 프리미엄 잠금 콘텐츠 스타일 ==================== */
 
 .lockedCard {
   cursor: default;
   position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.03) 0%,
+    rgba(253, 104, 186, 0.02) 50%,
+    rgba(139, 92, 246, 0.03) 100%
+  );
+  border: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 .lockedCard:hover {
   transform: none;
-}
-
-.lockedBadge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
-
-.lockedContent {
-  position: relative;
-  min-height: 100px;
-}
-
-.lockedMediaContainer {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4/3;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.lockedMediaBlur {
-  position: absolute;
-  inset: 0;
+  border-color: rgba(212, 175, 55, 0.25);
   background: linear-gradient(
     135deg,
-    rgba(253, 104, 186, 0.08) 0%,
-    rgba(139, 92, 246, 0.08) 50%,
-    rgba(253, 104, 186, 0.08) 100%
+    rgba(212, 175, 55, 0.05) 0%,
+    rgba(253, 104, 186, 0.03) 50%,
+    rgba(139, 92, 246, 0.05) 100%
   );
-  backdrop-filter: blur(8px);
+}
+
+/* VIP 배지 */
+.vipBadge {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(253, 104, 186, 0.15) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
-/* 잠긴 콘텐츠 플레이스홀더 아이콘 */
-.lockedPlaceholderIcon {
-  color: rgba(253, 104, 186, 0.3);
-}
-
-/* 잠긴 영상 플레이스홀더 */
-.lockedVideoPlaceholder {
-  position: absolute;
-  inset: 0;
+/* 프리미엄 잠금 콘텐츠 영역 */
+.premiumLockedContent {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/10;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(
+    145deg,
+    rgba(15, 15, 20, 0.95) 0%,
+    rgba(25, 20, 35, 0.9) 50%,
+    rgba(15, 15, 20, 0.95) 100%
+  );
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.12) 0%,
-    rgba(253, 104, 186, 0.12) 50%,
-    rgba(139, 92, 246, 0.12) 100%
-  );
+  gap: 12px;
 }
 
-.lockedPlayIcon {
-  position: absolute;
-  color: rgba(255, 255, 255, 0.4);
-  margin-top: 48px;
-}
-
-/* 영상 썸네일 위 재생 아이콘 오버레이 */
-.videoThumbnailOverlay {
+/* 배경 패턴 */
+.lockedPattern {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(253, 104, 186, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 50%);
   pointer-events: none;
 }
 
-.videoPlayIcon {
-  color: rgba(255, 255, 255, 0.7);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.lockedMediaImage {
-  object-fit: cover;
-  filter: brightness(0.6);
-}
-
-.lockedText {
-  font-size: 14px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0;
-  padding: 16px;
-  text-align: center;
-  font-style: italic;
-}
-
-.lockOverlay {
-  position: absolute;
-  inset: 0;
+/* 잠금 아이콘 래퍼 */
+.lockedIconWrapper {
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  border-radius: 12px;
+  width: 64px;
+  height: 64px;
   z-index: 1;
 }
 
-.lockIcon {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.lockText {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-  text-align: center;
-}
-
-/* 라이트 테마 - 잠금 콘텐츠 */
-:global(.light) .lockedBadge {
-  background: rgba(239, 68, 68, 0.1);
-}
-
-:global(.light) .lockedMediaBlur {
-  background: linear-gradient(
-    135deg,
-    rgba(253, 104, 186, 0.1) 0%,
-    rgba(139, 92, 246, 0.1) 50%,
-    rgba(253, 104, 186, 0.1) 100%
+/* 아이콘 글로우 효과 */
+.lockedIconGlow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(212, 175, 55, 0.3) 0%,
+    rgba(253, 104, 186, 0.15) 50%,
+    transparent 70%
   );
+  filter: blur(8px);
 }
 
-:global(.light) .lockedText {
-  color: rgba(0, 0, 0, 0.45);
+/* 타입 아이콘 */
+.lockedTypeIcon {
+  color: rgba(212, 175, 55, 0.7);
+  filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.3));
 }
 
-:global(.light) .lockOverlay {
-  background: rgba(255, 255, 255, 0.8);
-}
-
-:global(.light) .lockIcon {
-  color: rgba(0, 0, 0, 0.5);
-}
-
-:global(.light) .lockText {
-  color: rgba(0, 0, 0, 0.6);
-}
-
-:global(.light) .lockedPlaceholderIcon {
-  color: rgba(253, 104, 186, 0.4);
-}
-
-:global(.light) .lockedVideoPlaceholder {
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(253, 104, 186, 0.1) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-}
-
-:global(.light) .lockedPlayIcon {
-  color: rgba(0, 0, 0, 0.3);
-}
-
-:global(.light) .videoPlayIcon {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* ==================== 텍스트 잠금 스타일 ==================== */
-
-.lockedTextContainer {
+/* 영상 아이콘 스택 */
+.videoIconStack {
   position: relative;
-  padding: 16px;
-  background: linear-gradient(
-    135deg,
-    rgba(253, 104, 186, 0.05) 0%,
-    rgba(139, 92, 246, 0.05) 100%
-  );
-  border-radius: 12px;
-  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.lockedTextBlur {
+.lockedPlayMini {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  color: rgba(253, 104, 186, 0.8);
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  padding: 2px;
+}
+
+/* VIP 전용 라벨 */
+.vipOnlyLabel {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  opacity: 0.4;
-}
-
-.lockedTextPreview {
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.12) 0%,
+    rgba(253, 104, 186, 0.08) 100%
+  );
+  border: 1px solid rgba(212, 175, 55, 0.2);
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  font-style: italic;
+  font-weight: 500;
+  color: rgba(212, 175, 55, 0.9);
+  letter-spacing: 0.3px;
+  z-index: 1;
 }
 
-.lockOverlayText {
+.sparkleIcon {
+  color: rgba(253, 104, 186, 0.8);
+}
+
+/* 영상 썸네일 미리보기 (흐리게) */
+.videoThumbnailPreview {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  border-radius: 12px;
+  z-index: 0;
 }
 
-:global(.light) .lockedTextContainer {
+.blurredThumbnail {
+  object-fit: cover;
+  filter: blur(20px) brightness(0.3) saturate(0.5);
+  transform: scale(1.1);
+}
+
+/* ==================== 라이트 테마 ==================== */
+
+:global(.light) .lockedCard {
   background: linear-gradient(
     135deg,
-    rgba(253, 104, 186, 0.08) 0%,
-    rgba(139, 92, 246, 0.08) 100%
+    rgba(212, 175, 55, 0.04) 0%,
+    rgba(253, 104, 186, 0.03) 50%,
+    rgba(139, 92, 246, 0.04) 100%
+  );
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+:global(.light) .lockedCard:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+}
+
+:global(.light) .vipBadge {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(253, 104, 186, 0.1) 100%);
+  border-color: rgba(212, 175, 55, 0.25);
+  color: #b8860b;
+}
+
+:global(.light) .premiumLockedContent {
+  background: linear-gradient(
+    145deg,
+    rgba(250, 248, 245, 0.98) 0%,
+    rgba(255, 250, 245, 0.95) 50%,
+    rgba(250, 248, 245, 0.98) 100%
   );
 }
 
-:global(.light) .lockedTextPreview {
-  color: rgba(0, 0, 0, 0.5);
+:global(.light) .lockedPattern {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(253, 104, 186, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
 }
 
-:global(.light) .lockOverlayText {
-  background: rgba(255, 255, 255, 0.7);
+:global(.light) .lockedTypeIcon {
+  color: rgba(178, 134, 11, 0.7);
+  filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.2));
+}
+
+:global(.light) .vipOnlyLabel {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.1) 0%,
+    rgba(253, 104, 186, 0.06) 100%
+  );
+  border-color: rgba(212, 175, 55, 0.25);
+  color: rgba(178, 134, 11, 0.9);
+}
+
+:global(.light) .sparkleIcon {
+  color: rgba(253, 104, 186, 0.7);
+}
+
+:global(.light) .blurredThumbnail {
+  filter: blur(20px) brightness(0.8) saturate(0.5);
 }
