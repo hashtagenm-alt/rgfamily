@@ -143,9 +143,18 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
           </div>
         )}
 
-        {/* 텍스트 메시지는 항상 표시 */}
-        {message.content_text && (
-          <p className={styles.messageText}>{message.content_text}</p>
+        {/* 텍스트 메시지도 잠금 처리 - VIP 전용 */}
+        {message.message_type === 'text' && (
+          <div className={styles.lockedTextContainer}>
+            <div className={styles.lockedTextBlur}>
+              <MessageSquare size={24} className={styles.lockedPlaceholderIcon} />
+              <span className={styles.lockedTextPreview}>메시지가 등록되었습니다</span>
+            </div>
+            <div className={styles.lockOverlayText}>
+              <Lock size={20} className={styles.lockIcon} />
+              <span className={styles.lockText}>VIP 전용 메시지</span>
+            </div>
+          </div>
         )}
       </motion.div>
     )
