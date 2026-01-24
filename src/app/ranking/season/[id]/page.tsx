@@ -35,6 +35,12 @@ export default function SeasonRankingPage() {
   const router = useRouter()
   const listRef = useRef<HTMLDivElement>(null)
 
+  // URL에서 시즌 ID 추출 (current가 아닌 경우)
+  const urlSeasonId = useMemo(() => {
+    if (params.id === 'current') return null
+    return params.id ? Number(params.id) : null
+  }, [params.id])
+
   const {
     rankings,
     seasons,
@@ -46,22 +52,22 @@ export default function SeasonRankingPage() {
     setSelectedSeasonId,
     setUnitFilter,
     refetch,
-  } = useRanking()
+  } = useRanking({ initialSeasonId: urlSeasonId })
 
   // "current"인 경우 현재 활성 시즌 ID 사용
   const seasonId = useMemo(() => {
     if (params.id === 'current') {
       return currentSeason?.id || null
     }
-    return params.id ? Number(params.id) : null
-  }, [params.id, currentSeason])
+    return urlSeasonId
+  }, [params.id, currentSeason, urlSeasonId])
 
-  // URL의 시즌 ID로 설정
+  // "current" URL이고 currentSeason이 로드되면 시즌 ID 설정
   useEffect(() => {
-    if (seasonId && seasonId !== selectedSeasonId) {
-      setSelectedSeasonId(seasonId)
+    if (params.id === 'current' && currentSeason && selectedSeasonId !== currentSeason.id) {
+      setSelectedSeasonId(currentSeason.id)
     }
-  }, [seasonId, selectedSeasonId, setSelectedSeasonId])
+  }, [params.id, currentSeason, selectedSeasonId, setSelectedSeasonId])
 
   // 선택된 시즌 정보
   const selectedSeason = useMemo(() => {

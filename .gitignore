@@ -54,3 +54,7 @@ __pycache__/
 *$py.class
 .Python
 *.so
+
+# sensitive data (accounts, passwords)
+/data/*.csv
+/data/*.xlsx

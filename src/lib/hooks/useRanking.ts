@@ -7,12 +7,17 @@
  * - Mock/Supabase 자동 전환 (Repository 계층에서 처리)
  * - 시즌별/유닛별 필터링
  * - VIP Top 50 지원
+ * - initialSeasonId: 초기 시즌 ID (시즌 페이지에서 사용)
  */
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRankings, useSeasons } from '@/lib/context'
 import type { Season } from '@/types/database'
 import type { RankingItem, UnitFilter } from '@/types/common'
+
+interface UseRankingOptions {
+  initialSeasonId?: number | null
+}
 
 interface UseRankingReturn {
   rankings: RankingItem[]
@@ -28,16 +33,18 @@ interface UseRankingReturn {
   refetch: () => Promise<void>
 }
 
-export function useRanking(): UseRankingReturn {
+export function useRanking(options: UseRankingOptions = {}): UseRankingReturn {
+  const { initialSeasonId } = options
+
   // Repository hooks
   const rankingsRepo = useRankings()
   const seasonsRepo = useSeasons()
 
-  // State
+  // State - initialSeasonId가 있으면 그 값으로 초기화
   const [rankings, setRankings] = useState<RankingItem[]>([])
   const [seasons, setSeasons] = useState<Season[]>([])
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null)
-  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null)
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(initialSeasonId ?? null)
   const [unitFilter, setUnitFilter] = useState<UnitFilter>('all')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
