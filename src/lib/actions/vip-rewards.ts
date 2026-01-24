@@ -236,6 +236,148 @@ export async function getVipImagesByRewardId(
   })
 }
 
+// ==================== VIP 프로필 데이터 조회 (공개) ====================
+
+export interface VipProfileData {
+  id: number
+  profileId: string
+  nickname: string
+  avatarUrl: string | null
+  rank: number
+  personalMessage: string | null
+  dedicationVideoUrl: string | null
+  seasonName: string
+  totalDonation: number
+  images: {
+    id: number
+    imageUrl: string
+    title: string
+    orderIndex: number
+  }[]
+}
+
+/**
+ * VIP 프로필 데이터 조회 (공개 - 비로그인 사용자도 접근 가능)
+ *
+ * 왜? VIP 시그니처 이미지는 누구나 볼 수 있어야 함.
+ * BJ 감사 콘텐츠는 별도 API에서 권한 제어함.
+ */
+export async function getVipProfileData(
+  profileId: string
+): Promise<ActionResult<VipProfileData | null>> {
+  return publicAction(async (supabase) => {
+    // VIP reward 조회
+    const { data: reward, error: rewardError } = await supabase
+      .from('vip_rewards')
+      .select(`
+        id,
+        profile_id,
+        rank,
+        personal_message,
+        dedication_video_url,
+        season_id,
+        profiles:profile_id (nickname, avatar_url, total_donation),
+        seasons:season_id (name)
+      `)
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    // vip_rewards에 데이터가 없으면 프로필/랭킹 데이터에서 직접 조회 (Fallback)
+    if (rewardError && (rewardError.code === 'PGRST116' || rewardError.code === '42501')) {
+      // 병렬 쿼리: 프로필, 시즌 데이터 동시 조회
+      const [profileResult, seasonResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, nickname, avatar_url, total_donation, unit')
+          .eq('id', profileId)
+          .single(),
+        supabase
+          .from('seasons')
+          .select('id, name')
+          .eq('is_active', true)
+          .single(),
+      ])
+
+      const profileData = profileResult.data
+      const currentSeason = seasonResult.data
+
+      if (!profileData) {
+        return null
+      }
+
+      // 닉네임으로 total_rankings_public View에서 랭킹 조회 (보안 강화)
+      // Note: View는 타입 정의에 없으므로 타입 단언 사용
+      let rank = 0
+      if (profileData.nickname) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: rankingData } = await (supabase as any)
+          .from('total_rankings_public')
+          .select('rank')
+          .eq('donor_name', profileData.nickname)
+          .single()
+
+        rank = rankingData?.rank || 0
+      }
+
+      // Fallback 데이터 반환
+      return {
+        id: 0,
+        profileId: profileData.id,
+        nickname: profileData.nickname || '알 수 없음',
+        avatarUrl: profileData.avatar_url || null,
+        rank: rank,
+        personalMessage: null,
+        dedicationVideoUrl: null,
+        seasonName: currentSeason?.name || '',
+        totalDonation: profileData.total_donation || 0,
+        images: [],
+      }
+    }
+
+    if (rewardError) {
+      throw new Error(`VIP 데이터 조회 실패: ${rewardError.message}`)
+    }
+
+    // VIP 이미지 조회
+    const { data: images } = await supabase
+      .from('vip_images')
+      .select('id, image_url, title, order_index')
+      .eq('reward_id', reward.id)
+      .order('order_index', { ascending: true })
+
+    // Supabase returns joined data - handle both array and object cases
+    const profileData = reward.profiles
+    const profile = Array.isArray(profileData)
+      ? profileData[0] as { nickname: string; avatar_url: string | null; total_donation: number } | undefined
+      : profileData as { nickname: string; avatar_url: string | null; total_donation: number } | null
+
+    const seasonData = reward.seasons
+    const season = Array.isArray(seasonData)
+      ? seasonData[0] as { name: string } | undefined
+      : seasonData as { name: string } | null
+
+    return {
+      id: reward.id,
+      profileId: reward.profile_id,
+      nickname: profile?.nickname || '알 수 없음',
+      avatarUrl: profile?.avatar_url || null,
+      rank: reward.rank,
+      personalMessage: reward.personal_message,
+      dedicationVideoUrl: reward.dedication_video_url,
+      seasonName: season?.name || '',
+      totalDonation: profile?.total_donation || 0,
+      images: (images || []).map((img) => ({
+        id: img.id,
+        imageUrl: img.image_url,
+        title: img.title || '',
+        orderIndex: img.order_index,
+      })),
+    }
+  })
+}
+
 // ==================== Timeline Events (VIP related) ====================
 
 /**

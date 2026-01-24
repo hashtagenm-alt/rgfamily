@@ -361,3 +361,63 @@
 :global(.light) .videoPlayIcon {
   color: rgba(255, 255, 255, 0.8);
 }
+
+/* ==================== 텍스트 잠금 스타일 ==================== */
+
+.lockedTextContainer {
+  position: relative;
+  padding: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(253, 104, 186, 0.05) 0%,
+    rgba(139, 92, 246, 0.05) 100%
+  );
+  border-radius: 12px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lockedTextBlur {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.4;
+}
+
+.lockedTextPreview {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+.lockOverlayText {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+}
+
+:global(.light) .lockedTextContainer {
+  background: linear-gradient(
+    135deg,
+    rgba(253, 104, 186, 0.08) 0%,
+    rgba(139, 92, 246, 0.08) 100%
+  );
+}
+
+:global(.light) .lockedTextPreview {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global(.light) .lockOverlayText {
+  background: rgba(255, 255, 255, 0.7);
+}
