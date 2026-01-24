@@ -50,13 +50,13 @@ export class SupabaseRankingRepository implements IRankingRepository {
         }
       })
 
-      // 필터 후 순위 재계산
-      return (data || []).map((item, index) => ({
+      // DB에서 가져온 rank 값 그대로 사용
+      return (data || []).map((item) => ({
         donorId: nicknameToProfile[item.donor_name]?.id || null,
         donorName: item.donor_name,
         avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
         totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
-        rank: index + 1, // 필터된 결과에서 새로운 순위
+        rank: item.rank, // DB에서 가져온 rank 사용 (필터 시에도 원래 순위 유지)
         seasonId,
       }))
     }

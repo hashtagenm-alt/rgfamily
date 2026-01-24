@@ -1,0 +1,84 @@
+/* Admin Season Overlay */
+
+.floatingAddBtn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-success);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 12px rgba(16, 185, 129, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+.floatingAddBtn:hover {
+  box-shadow:
+    0 6px 20px rgba(16, 185, 129, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.floatingAddBtn:active {
+  transform: scale(0.95);
+}
+
+/* Edit Button (for inline card editing) */
+.editBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.editBtn:hover {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+/* Show edit button on parent hover */
+:global(.activeCard):hover .editBtn,
+:global(.archiveCard):hover .editBtn {
+  opacity: 1;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .floatingAddBtn {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 52px;
+    height: 52px;
+  }
+
+  .editBtn {
+    opacity: 1;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .floatingAddBtn {
+    bottom: 1.75rem;
+    right: 1.75rem;
+  }
+}
