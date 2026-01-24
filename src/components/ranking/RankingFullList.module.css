@@ -548,7 +548,7 @@
 
 @media (max-width: 480px) {
   .item {
-    grid-template-columns: 36px 32px 1fr;
+    grid-template-columns: 36px 40px 1fr;
     padding: 10px 12px;
     gap: 10px;
   }
@@ -576,8 +576,8 @@
 
   .gold .avatar,
   .champion .avatar {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-width: 2px;
   }
 
@@ -617,7 +617,7 @@
 /* 360px 이하 소형 기기 */
 @media (max-width: 360px) {
   .item {
-    grid-template-columns: 32px 28px 1fr;
+    grid-template-columns: 30px 36px 1fr;
     padding: 8px 10px;
     gap: 8px;
   }
@@ -645,8 +645,8 @@
 
   .gold .avatar,
   .champion .avatar {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-width: 2px;
     box-shadow: 0 0 4px var(--metallic-gold-glow);
   }
