@@ -356,6 +356,24 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.seasonRankBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  background: rgba(253, 104, 186, 0.1);
+  border: 1px solid rgba(253, 104, 186, 0.2);
+  color: #fd68ba;
+}
+
+.seasonRankBadge svg {
+  opacity: 0.8;
+}
+
 /* VIP 소개글 */
 .heroBio {
   margin-top: 12px;

@@ -244,6 +244,10 @@ export interface VipProfileData {
   nickname: string
   avatarUrl: string | null
   rank: number
+  /** 종합 후원 랭킹 (역대 누적) */
+  totalRank: number | null
+  /** 현재 시즌 랭킹 */
+  seasonRank: number | null
   personalMessage: string | null
   dedicationVideoUrl: string | null
   seasonName: string
@@ -307,18 +311,32 @@ export async function getVipProfileData(
         return null
       }
 
-      // 닉네임으로 total_rankings_public View에서 랭킹 조회 (보안 강화)
-      // Note: View는 타입 정의에 없으므로 타입 단언 사용
-      let rank = 0
+      // 닉네임으로 종합/시즌 랭킹 모두 조회
+      let totalRank: number | null = null
+      let seasonRank: number | null = null
+
       if (profileData.nickname) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: rankingData } = await (supabase as any)
-          .from('total_rankings_public')
-          .select('rank')
-          .eq('donor_name', profileData.nickname)
-          .single()
+        const [totalResult, seasonRankResult] = await Promise.all([
+          // 종합 랭킹 조회
+          (supabase as any)
+            .from('total_rankings_public')
+            .select('rank')
+            .eq('donor_name', profileData.nickname)
+            .single(),
+          // 시즌 랭킹 조회
+          currentSeason?.id
+            ? (supabase as any)
+                .from('season_rankings_public')
+                .select('rank')
+                .eq('season_id', currentSeason.id)
+                .eq('donor_name', profileData.nickname)
+                .single()
+            : Promise.resolve({ data: null }),
+        ])
 
-        rank = rankingData?.rank || 0
+        totalRank = totalResult.data?.rank || null
+        seasonRank = seasonRankResult.data?.rank || null
       }
 
       // Fallback 데이터 반환
@@ -327,7 +345,9 @@ export async function getVipProfileData(
         profileId: profileData.id,
         nickname: profileData.nickname || '알 수 없음',
         avatarUrl: profileData.avatar_url || null,
-        rank: rank,
+        rank: totalRank || seasonRank || 0,
+        totalRank,
+        seasonRank,
         personalMessage: null,
         dedicationVideoUrl: null,
         seasonName: currentSeason?.name || '',
@@ -358,12 +378,42 @@ export async function getVipProfileData(
       ? seasonData[0] as { name: string } | undefined
       : seasonData as { name: string } | null
 
+    // 닉네임으로 종합/시즌 랭킹 조회
+    let totalRank: number | null = null
+    let seasonRank: number | null = null
+
+    if (profile?.nickname) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const [totalResult, seasonRankResult] = await Promise.all([
+        // 종합 랭킹 조회
+        (supabase as any)
+          .from('total_rankings_public')
+          .select('rank')
+          .eq('donor_name', profile.nickname)
+          .single(),
+        // 시즌 랭킹 조회 (현재 시즌)
+        reward.season_id
+          ? (supabase as any)
+              .from('season_rankings_public')
+              .select('rank')
+              .eq('season_id', reward.season_id)
+              .eq('donor_name', profile.nickname)
+              .single()
+          : Promise.resolve({ data: null }),
+      ])
+
+      totalRank = totalResult.data?.rank || null
+      seasonRank = seasonRankResult.data?.rank || null
+    }
+
     return {
       id: reward.id,
       profileId: reward.profile_id,
       nickname: profile?.nickname || '알 수 없음',
       avatarUrl: profile?.avatar_url || null,
       rank: reward.rank,
+      totalRank,
+      seasonRank,
       personalMessage: reward.personal_message,
       dedicationVideoUrl: reward.dedication_video_url,
       seasonName: season?.name || '',

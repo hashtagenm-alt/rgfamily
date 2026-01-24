@@ -440,27 +440,82 @@
   color: var(--text-tertiary);
 }
 
+/* =======================================
+   Dual Ranking Badges - 종합 + 시즌 표시
+   ======================================= */
+.dualRankBadges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: var(--space-2);
+  flex-shrink: 0;
+}
+
+.seasonBadge,
+.totalBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.seasonBadge {
+  background: var(--color-primary-bg, rgba(253, 104, 186, 0.1));
+  border: 1px solid var(--color-primary-border, rgba(253, 104, 186, 0.3));
+  color: var(--color-primary, #fd68ba);
+}
+
+.seasonBadge svg {
+  color: var(--color-primary, #fd68ba);
+}
+
+.totalBadge {
+  background: var(--metallic-gold-bg, rgba(255, 215, 0, 0.1));
+  border: 1px solid var(--metallic-gold-border, rgba(255, 215, 0, 0.3));
+  color: var(--metallic-gold, #ffd700);
+}
+
+.totalBadge svg {
+  color: var(--metallic-gold, #ffd700);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .item {
-    grid-template-columns: 36px 32px 1fr;
-    padding: var(--space-2) var(--space-3);
-    gap: var(--space-2);
+    grid-template-columns: 40px 36px 1fr;
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-3);
   }
 
   .rank {
     font-size: var(--text-sm);
-    width: 28px;
+    width: 32px;
+    padding: var(--space-1);
   }
 
   .gold .rank,
+  .champion .rank {
+    font-size: var(--text-lg);
+  }
+
   .elite .rank {
     font-size: var(--text-base);
   }
 
   .avatar {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .gold .avatar,
+  .champion .avatar {
+    width: 40px;
+    height: 40px;
   }
 
   .initials {
@@ -471,40 +526,68 @@
     font-size: var(--text-sm);
   }
 
-  .amount {
-    font-size: var(--text-base);
-  }
-
   .gaugeContainer {
     height: 3px;
+  }
+
+  .infoSection {
+    gap: var(--space-1);
+  }
+
+  .dualRankBadges {
+    margin-left: var(--space-1);
+    gap: var(--space-1);
+  }
+
+  .seasonBadge,
+  .totalBadge {
+    padding: 1px 4px;
+    font-size: 9px;
   }
 }
 
 @media (max-width: 480px) {
   .item {
-    grid-template-columns: 32px 28px 1fr;
-    padding: 8px 10px;
-    gap: 8px;
+    grid-template-columns: 36px 32px 1fr;
+    padding: 10px 12px;
+    gap: 10px;
   }
 
   .rank {
-    font-size: 12px;
-    width: 24px;
+    font-size: 13px;
+    width: 28px;
+    padding: 2px;
   }
 
   .gold .rank,
+  .champion .rank {
+    font-size: var(--text-base);
+  }
+
   .elite .rank {
     font-size: var(--text-sm);
   }
 
   .avatar {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-width: 1.5px;
   }
 
+  .gold .avatar,
+  .champion .avatar {
+    width: 36px;
+    height: 36px;
+    border-width: 2px;
+  }
+
+  .elite .avatar {
+    width: 34px;
+    height: 34px;
+  }
+
   .initials {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .name {
@@ -518,38 +601,63 @@
   .hoverArrow {
     display: none;
   }
+
+  /* VIP 링크 아이템 힌트 도트 조정 */
+  .vipLink .item::after {
+    width: 5px;
+    height: 5px;
+    right: var(--space-3);
+  }
+
+  .dualRankBadges {
+    display: none;
+  }
 }
 
-/* 360px 소형 기기 */
+/* 360px 이하 소형 기기 */
 @media (max-width: 360px) {
   .item {
-    grid-template-columns: 28px 24px 1fr;
-    padding: 6px 8px;
-    gap: 6px;
+    grid-template-columns: 32px 28px 1fr;
+    padding: 8px 10px;
+    gap: 8px;
   }
 
   .rank {
-    font-size: 11px;
-    width: 22px;
+    font-size: 12px;
+    width: 24px;
+    padding: 2px;
   }
 
   .gold .rank,
+  .champion .rank {
+    font-size: 14px;
+  }
+
   .elite .rank {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .avatar {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-width: 1px;
   }
 
-  .gold .avatar {
+  .gold .avatar,
+  .champion .avatar {
+    width: 32px;
+    height: 32px;
+    border-width: 2px;
     box-shadow: 0 0 4px var(--metallic-gold-glow);
   }
 
+  .elite .avatar {
+    width: 30px;
+    height: 30px;
+  }
+
   .initials {
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .name {
@@ -558,5 +666,11 @@
 
   .gaugeContainer {
     height: 2px;
+  }
+
+  .vipLink .item::after {
+    width: 4px;
+    height: 4px;
+    right: var(--space-2);
   }
 }

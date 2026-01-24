@@ -74,6 +74,21 @@ export default function TotalRankingPage() {
       supabase.from("vip_rewards").select("profile_id, rank, profiles:profile_id(nickname)")
     ]);
 
+    // 현재 시즌 랭킹도 가져오기 (듀얼 랭킹 표시용)
+    let seasonRankingsMap: Record<string, number> = {};
+    if (seasonResult.data?.id) {
+      const { data: seasonRankingsData } = await supabase
+        .from("season_rankings_public")
+        .select("rank, donor_name")
+        .eq("season_id", seasonResult.data.id)
+        .order("rank", { ascending: true })
+        .limit(50);
+
+      (seasonRankingsData || []).forEach(item => {
+        seasonRankingsMap[item.donor_name.trim()] = item.rank;
+      });
+    }
+
     // 시즌 데이터 설정
     if (seasonResult.data) {
       setCurrentSeason(seasonResult.data);
@@ -168,12 +183,15 @@ export default function TotalRankingPage() {
 
       const sorted = (totalRankingsResult.data || []).map((item) => {
         const profile = findProfile(item.donor_name);
+        const trimmedName = item.donor_name.trim();
         return {
           donorId: nicknameToProfileId[item.donor_name] || profile?.id || null,
           donorName: item.donor_name,
           avatarUrl: profile?.avatar_url || null,
           totalAmount: item.gauge_percent || 0, // 게이지 퍼센트 (1위=100 기준)
           rank: item.rank,
+          totalRank: item.rank, // 종합 랭킹 페이지이므로 rank = totalRank
+          seasonRank: seasonRankingsMap[trimmedName] || undefined, // 시즌 랭킹
         };
       });
 
@@ -286,7 +304,7 @@ export default function TotalRankingPage() {
                   maxAmount={maxAmount}
                   limit={50}
                   podiumProfileIds={podiumProfileIds}
-                />
+                                  />
               </section>
             </>
           )}

@@ -356,6 +356,49 @@
 }
 
 /* ============================================
+   Dual Ranking Badges - 종합 + 시즌 표시
+   ============================================ */
+.dualRankBadges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.seasonBadge,
+.totalBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.seasonBadge {
+  background: rgba(253, 104, 186, 0.15);
+  border: 1px solid rgba(253, 104, 186, 0.3);
+  color: var(--color-primary, #fd68ba);
+}
+
+.seasonBadge svg {
+  color: var(--color-primary, #fd68ba);
+}
+
+.totalBadge {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: var(--metallic-gold, #ffd700);
+}
+
+.totalBadge svg {
+  color: var(--metallic-gold, #ffd700);
+}
+
+/* ============================================
    Bottom Line Decoration
    ============================================ */
 .bottomLine {
@@ -454,23 +497,25 @@
   }
 
   .championCard {
-    min-width: 150px;
+    min-width: 0;
+    width: 100%;
     padding: var(--space-5) var(--space-4);
   }
 
   .runnerCard {
-    min-width: 120px;
+    min-width: 0;
+    width: 100%;
     padding: var(--space-4) var(--space-3);
   }
 
   .championAvatar .avatarRing {
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
   }
 
   .avatarRing {
-    width: 80px;
-    height: 80px;
+    width: 72px;
+    height: 72px;
   }
 
   .championAvatar .initials {
@@ -501,11 +546,11 @@
 
 @media (max-width: 480px) {
   .container {
-    padding: var(--space-5) var(--space-2);
+    padding: var(--space-4) var(--space-2);
   }
 
   .sectionHeader {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
   }
 
   .titleWrapper {
@@ -513,116 +558,241 @@
   }
 
   .titleWrapper svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 
   .title {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
+    letter-spacing: 0.08em;
   }
 
   .subtitle {
     font-size: var(--text-xs);
+    display: none;
   }
 
   .podiumGrid {
-    grid-template-columns: 1fr 1.15fr 1fr;
+    grid-template-columns: 1fr 1.1fr 1fr;
     gap: var(--space-2);
+    padding: 0;
   }
 
   .championCard {
-    min-width: 110px;
-    padding: var(--space-4) var(--space-3);
+    min-width: 0;
+    padding: var(--space-3) var(--space-2);
   }
 
   .runnerCard {
-    min-width: 90px;
+    min-width: 0;
     padding: var(--space-3) var(--space-2);
   }
 
   .rankLabel {
-    padding: var(--space-1) var(--space-2);
-    font-size: 9px;
-    gap: var(--space-1);
-    margin-bottom: var(--space-3);
+    padding: 3px 8px;
+    font-size: 8px;
+    gap: 3px;
+    margin-bottom: var(--space-2);
   }
 
   .rankLabel svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .championCard .rankLabel {
+    padding: 4px 10px;
+    font-size: 9px;
+  }
+
+  .championCard .rankLabel svg {
     width: 12px;
     height: 12px;
   }
 
-  .championCard .rankLabel {
-    padding: var(--space-1-5) var(--space-3);
-    font-size: 10px;
-  }
-
-  .championCard .rankLabel svg {
-    width: 14px;
-    height: 14px;
-  }
-
   .championAvatar .avatarRing {
-    width: 90px;
-    height: 90px;
+    width: 72px;
+    height: 72px;
+    padding: 2px;
   }
 
   .avatarRing {
-    width: 70px;
-    height: 70px;
+    width: 56px;
+    height: 56px;
     padding: 2px;
   }
 
   .championAvatar .initials {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
   }
 
   .initials {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
   }
 
   .avatarWrapper {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
   }
 
   .championName {
-    font-size: var(--text-sm);
-    max-width: 100px;
-  }
-
-  .name {
     font-size: var(--text-xs);
     max-width: 80px;
   }
 
+  .name {
+    font-size: 10px;
+    max-width: 60px;
+  }
+
   .nameSection {
-    gap: var(--space-1);
+    gap: 2px;
   }
 
   .vipIndicator {
-    padding: 1px 6px;
+    padding: 1px 5px;
   }
 
   .vipIndicator span {
-    font-size: 8px;
+    font-size: 7px;
+  }
+
+  .dualRankBadges {
+    gap: 2px;
+    margin-top: 2px;
+  }
+
+  .seasonBadge,
+  .totalBadge {
+    padding: 1px 4px;
+    font-size: 7px;
+  }
+
+  .seasonBadge svg,
+  .totalBadge svg {
+    width: 8px;
+    height: 8px;
   }
 
   .sparkleEffect {
-    top: -4px;
-    right: -4px;
+    top: -3px;
+    right: -3px;
   }
 
   .sparkleEffect svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .runnerUpSlot {
+    padding-top: var(--space-3);
+  }
+
+  .thirdSlot {
+    padding-top: var(--space-5);
+  }
+}
+
+/* 360px 이하 소형 기기 */
+@media (max-width: 360px) {
+  .container {
+    padding: var(--space-3) var(--space-1);
+  }
+
+  .sectionHeader {
+    margin-bottom: var(--space-4);
+  }
+
+  .titleWrapper svg {
     width: 16px;
     height: 16px;
   }
 
+  .title {
+    font-size: var(--text-sm);
+    letter-spacing: 0.05em;
+  }
+
+  .podiumGrid {
+    gap: var(--space-1);
+  }
+
+  .championCard,
+  .runnerCard {
+    padding: var(--space-2) var(--space-1);
+    border-radius: var(--radius-xl);
+  }
+
+  .rankLabel {
+    padding: 2px 6px;
+    font-size: 7px;
+    margin-bottom: var(--space-1);
+  }
+
+  .rankLabel svg {
+    width: 8px;
+    height: 8px;
+  }
+
+  .championCard .rankLabel {
+    padding: 3px 8px;
+    font-size: 8px;
+  }
+
+  .championAvatar .avatarRing {
+    width: 60px;
+    height: 60px;
+  }
+
+  .avatarRing {
+    width: 48px;
+    height: 48px;
+  }
+
+  .championAvatar .initials {
+    font-size: var(--text-base);
+  }
+
+  .initials {
+    font-size: var(--text-xs);
+  }
+
+  .avatarWrapper {
+    margin-bottom: var(--space-1);
+  }
+
+  .championName {
+    font-size: 11px;
+    max-width: 70px;
+  }
+
+  .name {
+    font-size: 9px;
+    max-width: 50px;
+  }
+
+  .vipIndicator {
+    padding: 1px 4px;
+  }
+
+  .vipIndicator span {
+    font-size: 6px;
+  }
+
+  .dualRankBadges {
+    display: none;
+  }
+
+  .sparkleEffect svg {
+    width: 12px;
+    height: 12px;
+  }
+
   .runnerUpSlot {
-    padding-top: var(--space-4);
+    padding-top: var(--space-2);
   }
 
   .thirdSlot {
-    padding-top: var(--space-6);
+    padding-top: var(--space-4);
   }
 }
 

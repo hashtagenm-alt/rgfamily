@@ -50,6 +50,18 @@ export class SupabaseRankingRepository implements IRankingRepository {
         }
       })
 
+      // 종합 랭킹도 가져오기 (듀얼 랭킹 표시용)
+      const { data: totalRankingsData } = await this.supabase
+        .from('total_rankings_public')
+        .select('rank, donor_name')
+        .order('rank', { ascending: true })
+        .limit(50)
+
+      const totalRankingsMap: Record<string, number> = {}
+      ;(totalRankingsData || []).forEach(item => {
+        totalRankingsMap[item.donor_name.trim()] = item.rank
+      })
+
       // DB에서 가져온 rank 값 그대로 사용
       return (data || []).map((item) => ({
         donorId: nicknameToProfile[item.donor_name]?.id || null,
@@ -58,6 +70,8 @@ export class SupabaseRankingRepository implements IRankingRepository {
         totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
         rank: item.rank, // DB에서 가져온 rank 사용 (필터 시에도 원래 순위 유지)
         seasonId,
+        seasonRank: item.rank, // 시즌 랭킹 페이지이므로 rank = seasonRank
+        totalRank: totalRankingsMap[item.donor_name.trim()] || undefined, // 종합 랭킹
       }))
     }
 

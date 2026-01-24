@@ -13,6 +13,8 @@ import type { Database } from '@/types/database'
 
 export const ADMIN_ROLES = ['admin', 'superadmin'] as const
 export const MODERATOR_ROLES = ['admin', 'superadmin', 'moderator'] as const
+export const BJ_ROLES = ['bj'] as const
+export const VIP_ROLES = ['vip'] as const
 
 export interface PermissionCheckResult {
   hasPermission: boolean
@@ -48,6 +50,20 @@ export function isAdmin(role: string | null): boolean {
  */
 export function isModerator(role: string | null): boolean {
   return role !== null && MODERATOR_ROLES.includes(role as (typeof MODERATOR_ROLES)[number])
+}
+
+/**
+ * BJ 권한 확인 (role = 'bj')
+ */
+export function isBj(role: string | null): boolean {
+  return role === 'bj'
+}
+
+/**
+ * VIP 권한 확인 (role = 'vip')
+ */
+export function isVip(role: string | null): boolean {
+  return role === 'vip'
 }
 
 /**

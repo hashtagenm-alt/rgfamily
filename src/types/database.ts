@@ -24,7 +24,7 @@ export type Database = {
           nickname: string
           email: string | null
           avatar_url: string | null
-          role: 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
+          role: 'member' | 'bj' | 'vip' | 'moderator' | 'admin' | 'superadmin'
           unit: 'excel' | 'crew' | null
           total_donation: number
           pandatv_id: string | null // PandaTV 플랫폼 아이디
@@ -37,7 +37,7 @@ export type Database = {
           nickname: string
           email?: string | null
           avatar_url?: string | null
-          role?: 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
+          role?: 'member' | 'bj' | 'vip' | 'moderator' | 'admin' | 'superadmin'
           unit?: 'excel' | 'crew' | null
           total_donation?: number
           pandatv_id?: string | null
@@ -50,7 +50,7 @@ export type Database = {
           nickname?: string
           email?: string | null
           avatar_url?: string | null
-          role?: 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
+          role?: 'member' | 'bj' | 'vip' | 'moderator' | 'admin' | 'superadmin'
           unit?: 'excel' | 'crew' | null
           total_donation?: number
           pandatv_id?: string | null
@@ -1842,7 +1842,7 @@ export interface BjEpisodePerformanceWithMember extends BjEpisodePerformance {
 export type Unit = 'excel' | 'crew'
 
 // Role type
-export type Role = 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
+export type Role = 'member' | 'bj' | 'vip' | 'moderator' | 'admin' | 'superadmin'
 
 // ============================================
 // BJ 직급/기여도/상벌금 관리 타입 (Admin Only)

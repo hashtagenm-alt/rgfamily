@@ -63,6 +63,9 @@ export interface RankingItem {
   lastDonationDate?: string   // 마지막 후원 날짜
   seasonId?: number
   seasonName?: string
+  // 듀얼 랭킹 표시용 (종합 + 시즌)
+  totalRank?: number          // 역대 총 후원 순위
+  seasonRank?: number         // 현재 시즌 순위
 }
 
 // Calendar types

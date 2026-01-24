@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Image as ImageIcon, Plus, X, Save, Hash, Video } from 'lucide-react'
+import { Image as ImageIcon, Plus, X, Save, Hash, Video, Upload, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { DataTable, Column, ImageUpload } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
@@ -28,6 +28,9 @@ export default function SignaturesPage() {
   const alertHandler = useAlert()
   const [activeUnit, setActiveUnit] = useState<'excel' | 'crew'>('excel')
   const [videoCounts, setVideoCounts] = useState<Record<number, number>>({})
+  const [uploadingId, setUploadingId] = useState<number | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [targetSigId, setTargetSigId] = useState<number | null>(null)
 
   const {
     items: allSignatures,
@@ -178,6 +181,58 @@ export default function SignaturesPage() {
     router.push(`/admin/signatures/${sig.id}`)
   }
 
+  // 인라인 썸네일 업로드 핸들러
+  const handleInlineThumbnailClick = (sigId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setTargetSigId(sigId)
+    fileInputRef.current?.click()
+  }
+
+  const handleInlineFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !targetSigId) return
+
+    setUploadingId(targetSigId)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'signatures')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '업로드 실패')
+      }
+
+      // DB 업데이트
+      const { error } = await supabase
+        .from('signatures')
+        .update({ thumbnail_url: data.url })
+        .eq('id', targetSigId)
+
+      if (error) {
+        throw new Error('저장 실패')
+      }
+
+      alertHandler.showSuccess('썸네일이 변경되었습니다.')
+      refetch()
+    } catch (err) {
+      alertHandler.showError(err instanceof Error ? err.message : '업로드 실패')
+    } finally {
+      setUploadingId(null)
+      setTargetSigId(null)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
   const columns: Column<Signature>[] = [
     {
       key: 'sigNumber',
@@ -194,26 +249,61 @@ export default function SignaturesPage() {
       header: '썸네일',
       width: '100px',
       render: (item) => (
-        <div style={{
-          width: '80px',
-          height: '45px',
-          borderRadius: '4px',
-          overflow: 'hidden',
-          background: 'var(--surface)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          {item.thumbnailUrl ? (
-            <Image
-              src={item.thumbnailUrl}
-              alt={item.title}
-              width={80}
-              height={45}
-              style={{ objectFit: 'cover' }}
-            />
+        <div
+          onClick={(e) => handleInlineThumbnailClick(item.id, e)}
+          style={{
+            width: '80px',
+            height: '45px',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            background: 'var(--surface)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            position: 'relative',
+            border: '2px dashed transparent',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'var(--primary)'
+            e.currentTarget.style.opacity = '0.8'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'transparent'
+            e.currentTarget.style.opacity = '1'
+          }}
+          title="클릭하여 썸네일 변경"
+        >
+          {uploadingId === item.id ? (
+            <Loader2 size={20} style={{ color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+          ) : item.thumbnailUrl ? (
+            <>
+              <Image
+                src={item.thumbnailUrl}
+                alt={item.title}
+                width={80}
+                height={45}
+                style={{ objectFit: 'cover' }}
+              />
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0,
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+              >
+                <Upload size={16} style={{ color: 'white' }} />
+              </div>
+            </>
           ) : (
-            <ImageIcon size={20} style={{ color: 'var(--text-tertiary)' }} />
+            <Upload size={20} style={{ color: 'var(--text-tertiary)' }} />
           )}
         </div>
       ),
@@ -297,6 +387,15 @@ export default function SignaturesPage() {
         onDelete={handleDelete}
         searchPlaceholder="시그 제목으로 검색..."
         isLoading={isLoading}
+      />
+
+      {/* 인라인 썸네일 업로드용 숨김 input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleInlineFileChange}
+        style={{ display: 'none' }}
       />
 
       {/* Modal */}
