@@ -22,6 +22,10 @@ export interface VipRewardData {
   nickname: string
   avatarUrl: string | null
   rank: number
+  /** 종합 후원 랭킹 (역대 누적) */
+  totalRank: number | null
+  /** 현재 시즌 랭킹 */
+  seasonRank: number | null
   personalMessage: string | null
   dedicationVideoUrl: string | null
   seasonName: string
@@ -73,6 +77,8 @@ export function useVipProfileData(profileId: string): UseVipProfileDataResult {
           nickname: profile?.nickname || '알 수 없음',
           avatarUrl: profile?.avatar_url || null,
           rank: reward.rank,
+          totalRank: reward.rank, // Mock에서는 rank를 totalRank로 사용
+          seasonRank: reward.rank, // Mock에서는 rank를 seasonRank로 사용
           personalMessage: reward.personal_message,
           dedicationVideoUrl: reward.dedication_video_url,
           seasonName: season?.name || '',

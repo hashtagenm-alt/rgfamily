@@ -496,30 +496,35 @@
 
   .filterSection {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     gap: var(--space-4);
-    padding: var(--space-4) var(--space-5);
+    padding: var(--space-4);
     margin-bottom: var(--space-6);
   }
 
   .unitFilter {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     gap: var(--space-3);
+    width: 100%;
   }
 
   .unitFilterLabel {
     font-size: var(--text-xs);
+    justify-content: center;
   }
 
   .unitTabs {
     justify-content: center;
+    width: 100%;
   }
 
   .unitTab {
-    min-width: 80px;
-    padding: var(--space-2-5) var(--space-4);
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-2-5) var(--space-3);
     font-size: var(--text-sm);
+    justify-content: center;
   }
 
   .unitTabIndicator {
@@ -541,11 +546,12 @@
   }
 
   .heroTitle {
-    font-size: 1.875rem;
+    font-size: 1.75rem;
   }
 
   .heroSubtitle {
     font-size: var(--text-sm);
+    padding: 0 var(--space-2);
   }
 
   .heroTitleRow {
@@ -553,29 +559,47 @@
   }
 
   .heroCrown {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
 
   .heroLinks {
     flex-direction: column;
     gap: var(--space-3);
+    width: 100%;
+    padding: 0 var(--space-2);
   }
 
   .heroLinkSeason,
-  .heroLinkVip {
+  .heroLinkVip,
+  .heroLinkHallOfFame {
     width: 100%;
     justify-content: center;
-    padding: var(--space-3) var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+  }
+
+  .container {
+    padding: 0 var(--space-3) var(--space-6);
+  }
+
+  .filterSection {
+    padding: var(--space-3);
+    border-radius: var(--radius-xl);
   }
 
   .unitFilterLabel {
     display: none;
   }
 
+  .unitTabs {
+    padding: 3px;
+  }
+
   .unitTab {
-    min-width: 72px;
-    padding: var(--space-2) var(--space-3);
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-2) var(--space-2);
     font-size: var(--text-xs);
     gap: var(--space-1);
   }
@@ -589,7 +613,75 @@
     font-size: var(--text-lg);
   }
 
+  .listHeader {
+    padding: var(--space-3) var(--space-4);
+  }
+
   .listTitle {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
+  }
+
+  .listBadge {
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-3);
+  }
+
+  .loading,
+  .empty {
+    min-height: 300px;
+    padding: var(--space-6);
+  }
+
+  .podiumSection {
+    margin-bottom: var(--space-6);
+  }
+}
+
+/* 360px 이하 소형 기기 */
+@media (max-width: 360px) {
+  .hero {
+    padding: 70px var(--space-3) 40px;
+  }
+
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+
+  .heroSubtitle {
+    font-size: var(--text-xs);
+  }
+
+  .heroLinkSeason,
+  .heroLinkVip,
+  .heroLinkHallOfFame {
+    padding: var(--space-2-5) var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  .filterSection {
+    margin-bottom: var(--space-4);
+  }
+
+  .unitTab {
+    padding: var(--space-1-5) var(--space-1);
+    font-size: 10px;
+  }
+
+  .unitTab svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .listHeader {
+    padding: var(--space-2-5) var(--space-3);
+  }
+
+  .listTitle {
+    font-size: var(--text-xs);
+  }
+
+  .listBadge {
+    font-size: 10px;
+    padding: var(--space-1) var(--space-2);
   }
 }

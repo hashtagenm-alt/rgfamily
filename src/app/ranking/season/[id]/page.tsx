@@ -241,7 +241,7 @@ export default function SeasonRankingPage() {
                 rankings={top50}
                 maxAmount={maxAmount}
                 limit={50}
-              />
+                              />
             </section>
           </>
         )}

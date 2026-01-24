@@ -537,12 +537,29 @@
     justify-content: center;
   }
 
+  .unitBtn {
+    flex: 1;
+    justify-content: center;
+  }
+
   .listHeader {
     padding: var(--space-3) var(--space-4);
+  }
+
+  .podiumSection {
+    margin-bottom: var(--space-5);
   }
 }
 
 @media (max-width: 480px) {
+  .headerInner {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .headerLeft {
+    gap: var(--space-2);
+  }
+
   .pageTitle {
     font-size: var(--text-sm);
   }
@@ -551,15 +568,22 @@
     font-size: 10px;
   }
 
+  .container {
+    padding: var(--space-3);
+  }
+
   .statsBar {
     gap: var(--space-2);
     padding: var(--space-3);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-3);
   }
 
   .statItem {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
+    min-width: 60px;
   }
 
   .statItem svg {
@@ -574,9 +598,24 @@
     font-size: 10px;
   }
 
+  .filters {
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .filterGroup {
+    padding: 2px;
+  }
+
   .typeTab {
     padding: var(--space-2) var(--space-3);
     font-size: 11px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .seasonDropdown {
+    order: -1;
   }
 
   .seasonSelect {
@@ -584,14 +623,36 @@
     padding: var(--space-2) var(--space-6) var(--space-2) var(--space-3);
   }
 
+  .unitFilter {
+    padding: 2px;
+  }
+
   .unitBtn {
     padding: var(--space-2) var(--space-3);
     font-size: 10px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .listSection {
+    border-radius: var(--radius-lg);
+  }
+
+  .listHeader {
+    padding: var(--space-3);
+  }
+
+  .podiumSection {
+    margin-bottom: var(--space-4);
   }
 }
 
-/* 360px 소형 기기 */
+/* 360px 이하 소형 기기 */
 @media (max-width: 360px) {
+  .headerInner {
+    padding: var(--space-2);
+  }
+
   .pageTitle {
     font-size: 13px;
   }
@@ -610,8 +671,33 @@
     padding: 1px 4px;
   }
 
+  .container {
+    padding: var(--space-2);
+  }
+
+  .statsBar {
+    padding: var(--space-2);
+  }
+
+  .statItem {
+    min-width: 50px;
+  }
+
+  .statValue {
+    font-size: 12px;
+  }
+
+  .statLabel {
+    font-size: 9px;
+  }
+
+  .filterGroup,
+  .unitFilter {
+    padding: 1px;
+  }
+
   .typeTab {
-    padding: var(--space-1-5) var(--space-2);
+    padding: 6px 8px;
     font-size: 10px;
   }
 
@@ -621,12 +707,12 @@
   }
 
   .unitBtn {
-    padding: var(--space-1-5) var(--space-2);
-    font-size: 10px;
+    padding: 6px 8px;
+    font-size: 9px;
   }
 
-  .statValue {
-    font-size: 13px;
+  .listHeader {
+    padding: var(--space-2) var(--space-3);
   }
 
   .listTitle {

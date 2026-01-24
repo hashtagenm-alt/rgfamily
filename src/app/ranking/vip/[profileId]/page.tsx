@@ -6,8 +6,8 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Crown, ArrowLeft, ImageIcon,
-  Trophy, Star, Edit3, Info,
-  ChevronLeft, ChevronRight, X, Upload, Plus
+  Trophy, Edit3, Info,
+  ChevronLeft, ChevronRight, X, Plus
 } from 'lucide-react'
 import Footer from '@/components/Footer'
 import { BjThankYouSection, VipBoardSection, VipImageUploadModal } from '@/components/vip'
@@ -344,10 +344,30 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <span className={styles.rankBadge} style={rankStyle}>
-                <Crown size={12} />
-                #{vipData.rank}
-              </span>
+              {/* 종합 랭킹 */}
+              {vipData.totalRank && (
+                <span className={styles.rankBadge} style={getRankBadgeStyle(vipData.totalRank)}>
+                  <Crown size={12} />
+                  종합 {vipData.totalRank}위
+                </span>
+              )}
+              {/* 시즌 랭킹 */}
+              {vipData.seasonRank && (
+                <>
+                  {vipData.totalRank && <span className={styles.metaDivider}>·</span>}
+                  <span className={styles.seasonRankBadge}>
+                    <Trophy size={12} />
+                    시즌 {vipData.seasonRank}위
+                  </span>
+                </>
+              )}
+              {/* 종합/시즌 둘 다 없으면 기존 rank 표시 */}
+              {!vipData.totalRank && !vipData.seasonRank && vipData.rank > 0 && (
+                <span className={styles.rankBadge} style={rankStyle}>
+                  <Crown size={12} />
+                  #{vipData.rank}
+                </span>
+              )}
               <span className={styles.metaDivider}>·</span>
               {vipData.seasonName && (
                 <span className={styles.seasonTag}>{vipData.seasonName}</span>

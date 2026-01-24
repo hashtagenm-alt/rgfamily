@@ -542,22 +542,22 @@
   }
 
   .hero {
-    min-height: 40vh;
-    padding: var(--space-16) var(--space-4);
+    min-height: 35vh;
+    padding: var(--space-14) var(--space-4);
   }
 
   .title {
-    font-size: clamp(2rem, 12vw, 3rem);
+    font-size: clamp(2rem, 10vw, 3rem);
   }
 
   .container {
-    padding: 0 var(--space-4) var(--space-16);
+    padding: 0 var(--space-4) var(--space-12);
   }
 
   .activeCard {
     flex-direction: column;
     text-align: center;
-    padding: var(--space-6);
+    padding: var(--space-5);
   }
 
   .activeMeta {
@@ -565,7 +565,13 @@
   }
 
   .activeArrow {
-    margin-top: var(--space-4);
+    margin-top: var(--space-3);
+    width: 40px;
+    height: 40px;
+  }
+
+  .archiveSection {
+    margin-bottom: var(--space-6);
   }
 
   .archiveCard {
@@ -579,17 +585,108 @@
 }
 
 @media (max-width: 480px) {
+  .pageNav {
+    padding: var(--space-2) var(--space-3);
+  }
+
   .backBtn {
     width: 36px;
     height: 36px;
   }
 
+  .navTitle {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  .totalBtn {
+    padding: var(--space-2) var(--space-3);
+    font-size: 10px;
+  }
+
+  .hero {
+    min-height: 30vh;
+    padding: var(--space-12) var(--space-3);
+  }
+
+  .heroBadge {
+    font-size: 9px;
+    letter-spacing: 4px;
+  }
+
+  .title {
+    font-size: clamp(1.75rem, 12vw, 2.5rem);
+  }
+
+  .subtitle {
+    font-size: var(--text-xs);
+  }
+
+  .container {
+    padding: 0 var(--space-3) var(--space-10);
+  }
+
+  .sectionHeader {
+    margin-bottom: var(--space-4);
+  }
+
+  .sectionHeader h2 {
+    font-size: var(--text-sm);
+  }
+
+  .sectionHeader svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .count {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .activeSection {
+    margin-bottom: var(--space-8);
+  }
+
+  .activeCard {
+    padding: var(--space-4);
+  }
+
   .activeBadge {
     font-size: 9px;
+    padding: 3px 8px;
+    letter-spacing: 1.5px;
+    margin-bottom: var(--space-3);
+  }
+
+  .liveDot {
+    width: 5px;
+    height: 5px;
   }
 
   .activeTitle {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-2);
+  }
+
+  .dateRange {
+    font-size: var(--text-xs);
+    gap: var(--space-1);
+  }
+
+  .dateRange svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .daysLeft {
+    font-size: var(--text-xs);
+    gap: var(--space-1);
+  }
+
+  .daysLeft svg {
+    width: 12px;
+    height: 12px;
   }
 
   .activeMeta {
@@ -597,10 +694,154 @@
     gap: var(--space-2);
   }
 
+  .activeArrow {
+    width: 36px;
+    height: 36px;
+    margin-top: var(--space-3);
+  }
+
+  .activeArrow svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .archiveGrid {
+    gap: var(--space-2);
+  }
+
+  .archiveCard {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .archiveIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .archiveIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .archiveInfo h3 {
+    font-size: var(--text-sm);
+  }
+
+  .archiveDate {
+    font-size: 10px;
+  }
+
+  .archiveArrow {
+    width: 16px;
+    height: 16px;
+  }
+
   /* Always show edit button on mobile */
   .editBtn {
     opacity: 1;
     width: 28px;
     height: 28px;
+  }
+}
+
+/* 360px 이하 소형 기기 */
+@media (max-width: 360px) {
+  .pageNav {
+    padding: var(--space-2);
+  }
+
+  .backBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .navTitle {
+    font-size: 9px;
+  }
+
+  .totalBtn {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+
+  .hero {
+    min-height: 25vh;
+    padding: var(--space-10) var(--space-2);
+  }
+
+  .heroBadge {
+    font-size: 8px;
+    letter-spacing: 3px;
+    margin-bottom: var(--space-3);
+  }
+
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .subtitle {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+
+  .container {
+    padding: 0 var(--space-2) var(--space-8);
+  }
+
+  .sectionHeader h2 {
+    font-size: var(--text-xs);
+  }
+
+  .activeCard {
+    padding: var(--space-3);
+  }
+
+  .activeBadge {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+
+  .activeTitle {
+    font-size: var(--text-base);
+  }
+
+  .dateRange,
+  .daysLeft {
+    font-size: 10px;
+  }
+
+  .activeArrow {
+    width: 32px;
+    height: 32px;
+  }
+
+  .archiveCard {
+    padding: var(--space-2-5);
+    gap: var(--space-2);
+  }
+
+  .archiveIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .archiveInfo h3 {
+    font-size: var(--text-xs);
+  }
+
+  .archiveDate {
+    font-size: 9px;
+  }
+
+  .editBtn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .editBtn svg {
+    width: 12px;
+    height: 12px;
   }
 }
