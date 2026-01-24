@@ -1,6 +1,7 @@
 'use server'
 
 import { adminAction, publicAction, type ActionResult } from './index'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { InsertTables, UpdateTables, VipReward, VipImage } from '@/types/database'
 
 type VipRewardInsert = InsertTables<'vip_rewards'>
@@ -220,20 +221,29 @@ export async function updateVipImageOrder(
 
 /**
  * VIP 보상의 이미지 목록 조회 (공개)
+ * 왜? VIP 시그니처 이미지는 비로그인 사용자도 볼 수 있어야 함
+ * RLS 우회를 위해 service role 클라이언트 사용
  */
 export async function getVipImagesByRewardId(
   rewardId: number
 ): Promise<ActionResult<VipImage[]>> {
-  return publicAction(async (supabase) => {
-    const { data, error } = await supabase
+  try {
+    const serviceClient = createServiceRoleClient()
+    const { data, error } = await serviceClient
       .from('vip_images')
       .select('*')
       .eq('reward_id', rewardId)
       .order('order_index', { ascending: true })
 
     if (error) throw new Error(error.message)
-    return data || []
-  })
+    return { data: data || [], error: null }
+  } catch (err) {
+    console.error('VIP Images Error:', err)
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'
+    }
+  }
 }
 
 // ==================== VIP 프로필 데이터 조회 (공개) ====================
@@ -360,8 +370,10 @@ export async function getVipProfileData(
       throw new Error(`VIP 데이터 조회 실패: ${rewardError.message}`)
     }
 
-    // VIP 이미지 조회
-    const { data: images } = await supabase
+    // VIP 이미지 조회 - RLS 우회를 위해 service role 클라이언트 사용
+    // 왜? vip_images는 공개 조회가 필요하지만 RLS 정책이 없어서 anon key로 조회 불가
+    const serviceClient = createServiceRoleClient()
+    const { data: images } = await serviceClient
       .from('vip_images')
       .select('id, image_url, title, order_index')
       .eq('reward_id', reward.id)
