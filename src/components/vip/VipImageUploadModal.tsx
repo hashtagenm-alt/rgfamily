@@ -187,7 +187,7 @@ export default function VipImageUploadModal({
                         width={80}
                         height={80}
                         className={styles.thumbnail}
-                        unoptimized={img.imageUrl.toLowerCase().endsWith('.gif')}
+                        unoptimized
                       />
                       <button
                         className={styles.deleteImageBtn}
