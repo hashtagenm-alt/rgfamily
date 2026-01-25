@@ -6,6 +6,7 @@ import { Pin, Search, Eye, ChevronDown, Bell, PenSquare } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import AdminNoticeActions from '@/components/notice/AdminNoticeActions'
+import { InlineError } from '@/components/common/InlineError'
 import { useNotices } from '@/lib/context'
 import { useAuthContext } from '@/lib/context/AuthContext'
 import { formatShortDate } from '@/lib/utils/format'
@@ -34,14 +35,18 @@ export default function NoticePage() {
   const { isAdmin } = useAuthContext()
   const [notices, setNotices] = useState<NoticeItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchType, setSearchType] = useState<'all' | 'title'>('all')
   const [filterCategory, setFilterCategory] = useState<string>('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 15
 
   const categories = ['전체', '공지', '이벤트', '업데이트', '안내']
 
   const fetchNotices = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
 
     try {
       // Repository 패턴 사용 (withRetry 적용됨)
@@ -65,8 +70,9 @@ export default function NoticePage() {
           category: n.category || '공지',
         }))
       )
-    } catch (error) {
-      console.error('공지사항 로드 실패:', error)
+    } catch (err) {
+      console.error('공지사항 로드 실패:', err)
+      setError('공지사항을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.')
     } finally {
       setIsLoading(false)
     }
@@ -96,7 +102,34 @@ export default function NoticePage() {
 
   // 고정글과 일반글 분리
   const pinnedNotices = filteredNotices.filter(n => n.isPinned)
-  const normalNotices = filteredNotices.filter(n => !n.isPinned)
+  const allNormalNotices = filteredNotices.filter(n => !n.isPinned)
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(allNormalNotices.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const normalNotices = allNormalNotices.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+
+  // 페이지 버튼 생성
+  const getPageNumbers = () => {
+    const pages: number[] = []
+    const maxVisible = 5
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+    const end = Math.min(totalPages, start + maxVisible - 1)
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1)
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+    return pages
+  }
+
+  // 필터/검색 변경 시 페이지 리셋
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, filterCategory])
 
   return (
       <div className={styles.main}>
@@ -172,7 +205,9 @@ export default function NoticePage() {
           </div>
         </div>
 
-        {isLoading ? (
+        {error ? (
+          <InlineError message={error} onRetry={fetchNotices} />
+        ) : isLoading ? (
           <div className={styles.loading}>
             <div className={styles.spinner} />
             <span>공지사항을 불러오는 중...</span>
@@ -357,15 +392,47 @@ export default function NoticePage() {
             </div>
 
             {/* Pagination */}
-            <div className={styles.pagination}>
-              <button className={styles.pageBtn} disabled>«</button>
-              <button className={styles.pageBtn} disabled>‹</button>
-              <button className={`${styles.pageBtn} ${styles.active}`}>1</button>
-              <button className={styles.pageBtn}>2</button>
-              <button className={styles.pageBtn}>3</button>
-              <button className={styles.pageBtn}>›</button>
-              <button className={styles.pageBtn}>»</button>
-            </div>
+            {totalPages > 1 && (
+              <div className={styles.pagination}>
+                <button
+                  className={styles.pageBtn}
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(1)}
+                >
+                  «
+                </button>
+                <button
+                  className={styles.pageBtn}
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                >
+                  ‹
+                </button>
+                {getPageNumbers().map(pageNum => (
+                  <button
+                    key={pageNum}
+                    className={`${styles.pageBtn} ${currentPage === pageNum ? styles.active : ''}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+                <button
+                  className={styles.pageBtn}
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                >
+                  ›
+                </button>
+                <button
+                  className={styles.pageBtn}
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(totalPages)}
+                >
+                  »
+                </button>
+              </div>
+            )}
           </>
         )}
         </div>

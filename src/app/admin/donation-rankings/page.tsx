@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trophy, Upload, X, Save, Trash2, Edit3, AlertCircle } from 'lucide-react'
+import { Trophy, Upload, Download, X, Save, Trash2, Edit3, AlertCircle } from 'lucide-react'
+import { exportToExcel } from '@/lib/utils/excel'
 import { DataTable, Column, CsvUploader } from '@/components/admin'
 import { useAlert } from '@/lib/hooks'
 import {
@@ -308,6 +309,55 @@ export default function DonationRankingsPage() {
     })
   }
 
+  // Download handlers
+  const handleDownloadSeasonRankings = () => {
+    if (seasonRankings.length === 0) {
+      alert.showError('다운로드할 데이터가 없습니다.')
+      return
+    }
+
+    const selectedSeason = seasons.find(s => s.id === selectedSeasonId)
+    const seasonName = selectedSeason?.name || `시즌${selectedSeasonId}`
+
+    exportToExcel(
+      seasonRankings,
+      [
+        { key: 'rank', header: '순위' },
+        { key: 'donorName', header: '닉네임' },
+        { key: 'totalAmount', header: '총 하트', format: (v) => Number(v) },
+        { key: 'donationCount', header: '건수', format: (v) => Number(v) },
+        { key: 'updatedAt', header: '업데이트', format: (v) => formatDate(String(v)) },
+      ],
+      {
+        sheetName: seasonName,
+        fileName: `시즌랭킹_${seasonName}`,
+      }
+    )
+    alert.showSuccess('다운로드가 시작되었습니다.')
+  }
+
+  const handleDownloadTotalRankings = () => {
+    if (totalRankings.length === 0) {
+      alert.showError('다운로드할 데이터가 없습니다.')
+      return
+    }
+
+    exportToExcel(
+      totalRankings,
+      [
+        { key: 'rank', header: '순위' },
+        { key: 'donorName', header: '닉네임' },
+        { key: 'totalAmount', header: '총 하트', format: (v) => Number(v) },
+        { key: 'updatedAt', header: '업데이트', format: (v) => formatDate(String(v)) },
+      ],
+      {
+        sheetName: '종합랭킹',
+        fileName: '종합랭킹',
+      }
+    )
+    alert.showSuccess('다운로드가 시작되었습니다.')
+  }
+
   // Season Ranking Columns
   const seasonColumns: Column<SeasonRankingUI>[] = [
     {
@@ -432,6 +482,32 @@ export default function DonationRankingsPage() {
                 </option>
               ))}
             </select>
+            {activeTab === 'season' && (
+              <button
+                className={styles.downloadButton}
+                onClick={handleDownloadSeasonRankings}
+                disabled={isLoading || seasonRankings.length === 0}
+              >
+                <Download size={16} />
+                Excel 다운로드
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Download button for total rankings */}
+      {activeTab === 'total' && (
+        <div className={styles.uploadOptions}>
+          <div className={styles.optionRow}>
+            <button
+              className={styles.downloadButton}
+              onClick={handleDownloadTotalRankings}
+              disabled={isLoading || totalRankings.length === 0}
+            >
+              <Download size={16} />
+              Excel 다운로드
+            </button>
           </div>
         </div>
       )}

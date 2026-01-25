@@ -6,6 +6,7 @@ import { Search, Eye, MessageSquare, ThumbsUp, PenLine, ChevronDown, Trash2, Che
 import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import { InlineError } from '@/components/common/InlineError'
 import { useAuthContext } from '@/lib/context'
 import { getPosts, deleteMultiplePosts } from '@/lib/actions/posts'
 import { formatShortDate } from '@/lib/utils/format'
@@ -48,6 +49,7 @@ export default function FreeBoardPage() {
 
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [searchType, setSearchType] = useState<'all' | 'title' | 'author'>('all')
@@ -76,6 +78,7 @@ export default function FreeBoardPage() {
 
   const fetchPosts = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
 
     const result = await getPosts({
       boardType: 'free',
@@ -84,6 +87,12 @@ export default function FreeBoardPage() {
       searchQuery: debouncedSearch,
       searchType
     })
+
+    if (result.error) {
+      setError('게시글을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.')
+      setIsLoading(false)
+      return
+    }
 
     if (result.data) {
       setPosts(
@@ -304,7 +313,9 @@ export default function FreeBoardPage() {
           </div>
         </div>
 
-        {isLoading ? (
+        {error ? (
+          <InlineError message={error} onRetry={fetchPosts} />
+        ) : isLoading ? (
           <div className={styles.loading}>
             <div className={styles.spinner} />
             <span>게시글을 불러오는 중...</span>

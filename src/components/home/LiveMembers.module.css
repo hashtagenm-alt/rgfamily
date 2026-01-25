@@ -78,8 +78,8 @@
 /* Grid Layout - 가로 우선 (라이브 멤버가 왼쪽부터 채워짐) */
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(90px, 1fr));
-  gap: 1.25rem 2.75rem;
+  grid-template-columns: repeat(5, minmax(80px, 1fr));
+  gap: 1.25rem 2rem;
   padding: 0.5rem 0 1rem 0;
   flex: 1;
   align-content: start;
@@ -87,8 +87,8 @@
 }
 
 .grid.singleRow {
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  max-width: 480px;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  max-width: 550px;
 }
 
 /* Member Card */
@@ -248,6 +248,85 @@
   padding: 2rem;
   color: var(--text-muted);
   font-size: 0.875rem;
+}
+
+/* Skeleton Loading */
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(80px, 1fr));
+  gap: 1.25rem 2rem;
+  padding: 0.5rem 0 1rem 0;
+  flex: 1;
+  align-content: start;
+}
+
+.skeletonMember {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+}
+
+.skeletonAvatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--card-border) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeletonName {
+  width: 60px;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--card-border) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (max-width: 768px) {
+  .skeletonGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem 0.75rem;
+  }
+
+  .skeletonAvatar {
+    width: 64px;
+    height: 64px;
+  }
+
+  .skeletonName {
+    width: 50px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .skeletonGrid {
+    gap: 0.75rem 0.5rem;
+  }
+
+  .skeletonMember {
+    gap: 5px;
+    padding-top: 6px;
+  }
+
+  .skeletonAvatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  .skeletonName {
+    width: 40px;
+    height: 12px;
+  }
 }
 
 /* Responsive */

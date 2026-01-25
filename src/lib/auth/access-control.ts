@@ -9,6 +9,7 @@ import {
   hasHonorPageQualification,
   getHallOfFameByUserId,
 } from '@/lib/mock/hall-of-fame'
+import { VIP_ROLES } from '@/lib/constants/roles'
 import type { Profile } from '@/types/database'
 
 export type AccessDeniedReason =
@@ -96,11 +97,6 @@ export function checkTributePageAccess(
     isAdmin: false,
   }
 }
-
-/**
- * VIP 역할 목록
- */
-const VIP_ROLES = ['vip', 'moderator', 'admin', 'superadmin'] as const
 
 /**
  * VIP 라운지 접근 권한 확인 (Top 50)

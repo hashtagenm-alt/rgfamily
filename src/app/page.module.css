@@ -31,12 +31,12 @@
 .content {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: var(--space-8) var(--space-6);
+  padding: var(--space-6) var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
+  gap: var(--space-6);
 }
 
 /* =======================================
@@ -50,7 +50,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .sectionBadge {
@@ -117,7 +117,7 @@
 .liveNoticeGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-6);
+  gap: var(--space-4);
   align-items: stretch;
 }
 
@@ -132,13 +132,13 @@
 
 @media (max-width: 1024px) {
   .content {
-    padding: var(--space-6) var(--space-4);
-    gap: var(--space-10);
+    padding: var(--space-4) var(--space-3);
+    gap: var(--space-5);
   }
 
   .threeColumnLayout {
     grid-template-columns: 1fr;
-    gap: var(--space-8);
+    gap: var(--space-5);
   }
 
   .leftSidebar,
@@ -158,14 +158,14 @@
 
   .liveNoticeGrid {
     grid-template-columns: 1fr;
-    gap: var(--space-8);
+    gap: var(--space-5);
   }
 }
 
 @media (max-width: 768px) {
   .content {
-    padding: var(--space-4);
-    gap: var(--space-8);
+    padding: var(--space-3);
+    gap: var(--space-4);
   }
 
   .sectionHeader {

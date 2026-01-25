@@ -19,7 +19,7 @@ interface ExportOptions {
 /**
  * Export data to Excel file
  */
-export function exportToExcel<T extends Record<string, unknown>>(
+export function exportToExcel<T extends object>(
   data: T[],
   columns: ExportColumn<T>[],
   options: ExportOptions = {}

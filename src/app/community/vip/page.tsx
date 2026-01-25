@@ -6,6 +6,7 @@ import { MessageSquare, Eye, Crown, Lock, Search, ChevronDown, Trash2, CheckSqua
 import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import { InlineError } from '@/components/common/InlineError'
 import { useAuthContext } from '@/lib/context'
 import { useVipStatus } from '@/lib/hooks'
 import { getPosts, deleteMultiplePosts } from '@/lib/actions/posts'
@@ -33,6 +34,7 @@ export default function VipBoardPage() {
   const { isVip, isLoading: vipStatusLoading } = useVipStatus()
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [searchType, setSearchType] = useState<'all' | 'title' | 'author'>('all')
@@ -69,6 +71,7 @@ export default function VipBoardPage() {
     }
 
     setIsLoading(true)
+    setError(null)
 
     const result = await getPosts({
       boardType: 'vip',
@@ -77,6 +80,12 @@ export default function VipBoardPage() {
       searchQuery: debouncedSearch,
       searchType
     })
+
+    if (result.error) {
+      setError('게시글을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.')
+      setIsLoading(false)
+      return
+    }
 
     if (result.data) {
       setPosts(
@@ -292,6 +301,8 @@ export default function VipBoardPage() {
             <p>후원 랭킹 <strong>Top 50</strong>만 VIP 라운지 이용이 가능합니다.</p>
             <Link href="/ranking" className={styles.loginBtn}>후원 랭킹 보기</Link>
           </div>
+        ) : error ? (
+          <InlineError message={error} onRetry={fetchPosts} />
         ) : isLoading ? (
           <div className={styles.loading}>
             <div className={styles.spinner} />
