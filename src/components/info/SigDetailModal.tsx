@@ -76,6 +76,20 @@ function isDirectVideoUrl(url: string): boolean {
     url.includes('supabase.co/storage')
 }
 
+// Supabase Storage URL을 프록시 URL로 변환 (Chrome URL 안전 검사 우회)
+function getProxiedVideoUrl(url: string): string {
+  if (!url) return ''
+  // Supabase Storage URL이면 Next.js rewrites 프록시 사용
+  if (url.includes('supabase.co/storage/v1/object/public/videos/')) {
+    // https://xxx.supabase.co/storage/v1/object/public/videos/path -> /video/path
+    const match = url.match(/supabase\.co\/storage\/v1\/object\/public\/videos\/(.+)$/)
+    if (match) {
+      return `/video/${match[1]}`
+    }
+  }
+  return url
+}
+
 // YouTube 썸네일 URL 추출
 function getYoutubeThumbnail(url: string): string | null {
   const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/
@@ -315,11 +329,12 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                         >
                           {isDirectVideoUrl(currentVideo.videoUrl) ? (
                             <video
-                              src={currentVideo.videoUrl}
+                              src={getProxiedVideoUrl(currentVideo.videoUrl)}
                               className={styles.video}
                               controls
                               autoPlay
                               playsInline
+                              preload="auto"
                             />
                           ) : (
                             <iframe
