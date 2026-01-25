@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { X, Play, ChevronLeft, ChevronRight, Calendar, User, Film } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Play, ChevronLeft, ChevronRight, Calendar, User, Film, Volume2, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 import type { SignatureData } from './SigGallery'
 import { formatShortDate } from '@/lib/utils/format'
@@ -67,6 +67,29 @@ function getEmbedUrlWithParams(url: string): string {
   return embedUrl
 }
 
+// 직접 비디오 URL인지 확인 (MP4, WebM 등)
+function isDirectVideoUrl(url: string): boolean {
+  if (!url) return false
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov']
+  const lowerUrl = url.toLowerCase()
+  return videoExtensions.some(ext => lowerUrl.includes(ext)) ||
+    url.includes('supabase.co/storage')
+}
+
+// YouTube 썸네일 URL 추출
+function getYoutubeThumbnail(url: string): string | null {
+  const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/
+  const match = url.match(youtubeRegex)
+  if (match) {
+    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
+  }
+  const vParam = url.match(/[?&]v=([a-zA-Z0-9_-]+)/)
+  if (vParam) {
+    return `https://img.youtube.com/vi/${vParam[1]}/hqdefault.jpg`
+  }
+  return null
+}
+
 export default function SigDetailModal({ signature, onClose }: SigDetailModalProps) {
   const [selectedVideoIdx, setSelectedVideoIdx] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -74,20 +97,53 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
 
   const hasVideos = signature.videos && signature.videos.length > 0
   const currentVideo = hasVideos ? signature.videos[selectedVideoIdx] : null
+  const totalVideos = signature.videos?.length || 0
 
-  // Handle escape key
+  // Keyboard navigation (Escape, Arrow keys)
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      } else if (e.key === 'ArrowLeft' && hasVideos && selectedVideoIdx > 0) {
+        setSelectedVideoIdx(prev => prev - 1)
+      } else if (e.key === 'ArrowRight' && hasVideos && selectedVideoIdx < totalVideos - 1) {
+        setSelectedVideoIdx(prev => prev + 1)
+      } else if (e.key === ' ' && hasVideos && !isPlaying) {
+        e.preventDefault()
+        setIsPlaying(true)
+      }
     }
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [onClose])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose, hasVideos, selectedVideoIdx, totalVideos, isPlaying])
 
   // Reset playing state when video changes
   useEffect(() => {
     setIsPlaying(false)
   }, [selectedVideoIdx])
+
+  // Scroll tabs to show active tab
+  useEffect(() => {
+    if (tabsRef.current && hasVideos) {
+      const activeTab = tabsRef.current.children[selectedVideoIdx] as HTMLElement
+      if (activeTab) {
+        activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+      }
+    }
+  }, [selectedVideoIdx, hasVideos])
+
+  // Navigate to previous/next video
+  const goToPrevVideo = useCallback(() => {
+    if (selectedVideoIdx > 0) {
+      setSelectedVideoIdx(prev => prev - 1)
+    }
+  }, [selectedVideoIdx])
+
+  const goToNextVideo = useCallback(() => {
+    if (selectedVideoIdx < totalVideos - 1) {
+      setSelectedVideoIdx(prev => prev + 1)
+    }
+  }, [selectedVideoIdx, totalVideos])
 
   // Scroll tabs
   const scrollTabs = (direction: 'left' | 'right') => {
@@ -98,6 +154,13 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
         behavior: 'smooth'
       })
     }
+  }
+
+  // Get video thumbnail (YouTube or signature thumbnail)
+  const getVideoThumbnail = (videoUrl: string): string | null => {
+    const ytThumb = getYoutubeThumbnail(videoUrl)
+    if (ytThumb) return ytThumb
+    return signature.thumbnailUrl || null
   }
 
   return (
@@ -118,12 +181,30 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
       >
         {/* Header */}
         <div className={styles.header}>
-          <h2 className={styles.title}>
-            시그니처 {signature.sigNumber}
-          </h2>
-          <button className={styles.closeBtn} onClick={onClose}>
-            <X size={20} />
-          </button>
+          <div className={styles.headerInfo}>
+            <h2 className={styles.title}>
+              시그니처 {signature.sigNumber}
+            </h2>
+            {signature.title && (
+              <span className={styles.subtitle}>{signature.title}</span>
+            )}
+          </div>
+          <div className={styles.headerActions}>
+            {currentVideo && (
+              <a
+                href={currentVideo.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.externalLink}
+                title="새 탭에서 열기"
+              >
+                <ExternalLink size={18} />
+              </a>
+            )}
+            <button className={styles.closeBtn} onClick={onClose}>
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -144,6 +225,13 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                 </div>
               )}
             </div>
+            {/* Signature Title below image */}
+            {signature.title && (
+              <div className={styles.sigTitle}>
+                <span className={styles.sigNumber}>#{signature.sigNumber}</span>
+                <span className={styles.sigName}>{signature.title}</span>
+              </div>
+            )}
           </div>
 
           {/* Video Section */}
@@ -201,35 +289,132 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                   )}
                 </div>
 
-                {/* Video Player */}
-                <div className={styles.playerWrapper}>
-                  {isPlaying && currentVideo ? (
-                    <iframe
-                      src={getEmbedUrlWithParams(currentVideo.videoUrl)}
-                      className={styles.video}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <div className={styles.videoThumbnail} onClick={() => setIsPlaying(true)}>
-                      <div className={styles.videoInfo}>
-                        <User size={16} />
-                        <span>{currentVideo?.memberName}</span>
-                        {currentVideo && (
-                          <span className={styles.videoDate}>
-                            <Calendar size={12} />
-                            {formatShortDate(currentVideo.createdAt)}
-                          </span>
-                        )}
-                      </div>
-                      <div className={styles.playOverlay}>
-                        <div className={styles.playButton}>
-                          <Play size={32} fill="white" />
-                        </div>
-                        <span className={styles.playText}>영상 재생</span>
-                      </div>
-                    </div>
+                {/* Video Player with Navigation */}
+                <div className={styles.playerContainer}>
+                  {/* Left Navigation Arrow */}
+                  {totalVideos > 1 && (
+                    <button
+                      className={`${styles.navArrow} ${styles.navLeft} ${selectedVideoIdx === 0 ? styles.disabled : ''}`}
+                      onClick={goToPrevVideo}
+                      disabled={selectedVideoIdx === 0}
+                      title="이전 영상 (←)"
+                    >
+                      <ChevronLeft size={24} />
+                    </button>
                   )}
+
+                  <div className={styles.playerWrapper}>
+                    <AnimatePresence mode="wait">
+                      {isPlaying && currentVideo ? (
+                        <motion.div
+                          key={`playing-${selectedVideoIdx}`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className={styles.videoWrapper}
+                        >
+                          {isDirectVideoUrl(currentVideo.videoUrl) ? (
+                            <video
+                              src={currentVideo.videoUrl}
+                              className={styles.video}
+                              controls
+                              autoPlay
+                              playsInline
+                            />
+                          ) : (
+                            <iframe
+                              src={getEmbedUrlWithParams(currentVideo.videoUrl)}
+                              className={styles.video}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          )}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key={`thumbnail-${selectedVideoIdx}`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className={styles.videoThumbnail}
+                          onClick={() => setIsPlaying(true)}
+                        >
+                          {/* YouTube thumbnail background */}
+                          {currentVideo && getVideoThumbnail(currentVideo.videoUrl) && (
+                            <div className={styles.thumbnailBg}>
+                              <Image
+                                src={getVideoThumbnail(currentVideo.videoUrl)!}
+                                alt="Video thumbnail"
+                                fill
+                                className={styles.thumbnailImage}
+                              />
+                              <div className={styles.thumbnailOverlay} />
+                            </div>
+                          )}
+
+                          {/* Member info */}
+                          <div className={styles.videoInfo}>
+                            {currentVideo?.memberImage && (
+                              <div className={styles.videoInfoAvatar}>
+                                <Image
+                                  src={currentVideo.memberImage}
+                                  alt={currentVideo.memberName}
+                                  width={32}
+                                  height={32}
+                                />
+                              </div>
+                            )}
+                            <div className={styles.videoInfoText}>
+                              <span className={styles.videoInfoName}>{currentVideo?.memberName}</span>
+                              {currentVideo && (
+                                <span className={styles.videoDate}>
+                                  <Calendar size={12} />
+                                  {formatShortDate(currentVideo.createdAt)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Play button */}
+                          <div className={styles.playOverlay}>
+                            <div className={styles.playButton}>
+                              <Play size={40} fill="white" />
+                            </div>
+                            <span className={styles.playText}>
+                              <Volume2 size={14} />
+                              재생하려면 클릭하세요
+                            </span>
+                          </div>
+
+                          {/* Video index indicator */}
+                          {totalVideos > 1 && (
+                            <div className={styles.videoIndex}>
+                              {selectedVideoIdx + 1} / {totalVideos}
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Right Navigation Arrow */}
+                  {totalVideos > 1 && (
+                    <button
+                      className={`${styles.navArrow} ${styles.navRight} ${selectedVideoIdx === totalVideos - 1 ? styles.disabled : ''}`}
+                      onClick={goToNextVideo}
+                      disabled={selectedVideoIdx === totalVideos - 1}
+                      title="다음 영상 (→)"
+                    >
+                      <ChevronRight size={24} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Keyboard hint */}
+                <div className={styles.keyboardHint}>
+                  <span>← → 키로 영상 전환</span>
+                  <span>스페이스바로 재생</span>
+                  <span>ESC로 닫기</span>
                 </div>
               </>
             ) : (
