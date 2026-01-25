@@ -21,6 +21,7 @@ import { User, Session, AuthError, AuthResponse } from '@supabase/supabase-js'
 import { useSupabaseContext } from './SupabaseContext'
 import { USE_MOCK_DATA } from '@/lib/config'
 import { mockAdminProfile } from '@/lib/mock'
+import { VIP_ROLES, ADMIN_ROLES, MODERATOR_ROLES } from '@/lib/constants/roles'
 import type { Profile, Role } from '@/types/database'
 
 // Mock Admin 계정 정보
@@ -288,15 +289,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [state.profile])
 
   const isAdmin = useCallback(() => {
-    return hasRole(['admin', 'superadmin'])
+    return hasRole([...ADMIN_ROLES])
   }, [hasRole])
 
   const isModerator = useCallback(() => {
-    return hasRole(['moderator', 'admin', 'superadmin'])
+    return hasRole([...MODERATOR_ROLES])
   }, [hasRole])
 
   const isVip = useCallback(() => {
-    return hasRole(['vip', 'moderator', 'admin', 'superadmin'])
+    return hasRole([...VIP_ROLES])
   }, [hasRole])
 
   const value: AuthContextType = {

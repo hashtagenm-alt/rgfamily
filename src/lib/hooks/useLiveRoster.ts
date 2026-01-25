@@ -26,6 +26,7 @@ interface UseLiveRosterReturn {
   members: OrganizationRecord[]
   liveStatusByMemberId: Record<number, LiveStatusEntry[]>
   isLoading: boolean
+  error: string | null
   refetch: () => Promise<void>
 }
 
@@ -43,9 +44,11 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
   const [members, setMembers] = useState<OrganizationRecord[]>([])
   const [liveStatusByMemberId, setLiveStatusByMemberId] = useState<Record<number, LiveStatusEntry[]>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchRoster = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
 
     if (USE_MOCK_DATA) {
       const mockStatusEntries: LiveStatusEntry[] = mockLiveStatus.map((status) => ({
@@ -104,6 +107,7 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
 
     if (orgError) {
       console.error('조직도 데이터 로드 실패:', orgError)
+      setError('라이브 멤버 데이터를 불러오는데 실패했습니다.')
       setIsLoading(false)
       return
     }
@@ -241,5 +245,5 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
     }
   }, [supabase, fetchRoster, realtime])
 
-  return { members, liveStatusByMemberId, isLoading, refetch: fetchRoster }
+  return { members, liveStatusByMemberId, isLoading, error, refetch: fetchRoster }
 }

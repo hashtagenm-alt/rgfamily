@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react'
 import { useLiveRoster } from '@/lib/hooks'
 import styles from './LiveMembers.module.css'
 
-const MAX_DISPLAY_COUNT = 8
+const MAX_DISPLAY_COUNT = 10
 
 interface LiveMember {
   id: number
@@ -27,7 +27,14 @@ export default function LiveMembers() {
           <h3>현재 방송중</h3>
           <div className={styles.line} />
         </div>
-        <div className={styles.loading}>로딩 중...</div>
+        <div className={styles.skeletonGrid}>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className={styles.skeletonMember}>
+              <div className={styles.skeletonAvatar} />
+              <div className={styles.skeletonName} />
+            </div>
+          ))}
+        </div>
       </section>
     )
   }

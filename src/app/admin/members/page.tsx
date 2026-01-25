@@ -34,6 +34,7 @@ export default function MembersPage() {
     openEditModal,
     closeModal,
     handleSave,
+    handleDelete,
   } = useAdminCRUD<Member>({
     tableName: 'profiles',
     defaultItem: {},
@@ -130,6 +131,7 @@ export default function MembersPage() {
         data={members}
         columns={columns}
         onEdit={openEditModal}
+        onDelete={handleDelete}
         searchPlaceholder="닉네임 또는 이메일로 검색..."
         isLoading={isLoading}
       />
