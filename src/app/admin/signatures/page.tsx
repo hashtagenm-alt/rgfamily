@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Image as ImageIcon, Plus, X, Save, Hash, Video, Upload, Loader2 } from 'lucide-react'
+import { Image as ImageIcon, Plus, X, Save, Hash, Video, Upload, Loader2, Zap } from 'lucide-react'
 import Image from 'next/image'
 import { DataTable, Column, ImageUpload } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
@@ -31,6 +31,11 @@ export default function SignaturesPage() {
   const [uploadingId, setUploadingId] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [targetSigId, setTargetSigId] = useState<number | null>(null)
+
+  // 빠른 추가 모드
+  const [quickAddMode, setQuickAddMode] = useState(false)
+  const [quickAddData, setQuickAddData] = useState({ sigNumber: 1, title: '' })
+  const [isQuickAdding, setIsQuickAdding] = useState(false)
 
   const {
     items: allSignatures,
@@ -181,6 +186,126 @@ export default function SignaturesPage() {
     router.push(`/admin/signatures/${sig.id}`)
   }
 
+  // 인라인 편집 핸들러
+  const handleInlineEdit = useCallback(async (id: string | number, field: string, value: unknown) => {
+    // sigNumber 변경 시 중복 검사
+    if (field === 'sigNumber') {
+      const numValue = typeof value === 'number' ? value : parseInt(String(value), 10)
+      const targetItem = allSignatures.find(s => s.id === id)
+      if (targetItem) {
+        const duplicate = allSignatures.find(
+          s => s.unit === targetItem.unit && s.sigNumber === numValue && s.id !== id
+        )
+        if (duplicate) {
+          alertHandler.showWarning(
+            `${targetItem.unit === 'excel' ? '엑셀부' : '크루부'}에 이미 ${numValue}번 시그가 있습니다.`,
+            '중복 오류'
+          )
+          return
+        }
+      }
+    }
+
+    // DB 필드명 매핑 (sigNumber → sig_number)
+    const dbFieldMap: Record<string, string> = {
+      sigNumber: 'sig_number',
+      title: 'title',
+      thumbnailUrl: 'thumbnail_url',
+    }
+    const dbField = dbFieldMap[field] || field
+
+    // Supabase update 실행
+    const { error } = await supabase
+      .from('signatures')
+      .update({ [dbField]: value })
+      .eq('id', id)
+
+    if (error) {
+      console.error('인라인 수정 실패:', error)
+      alertHandler.showError('수정에 실패했습니다.', '오류')
+      return
+    }
+
+    alertHandler.showSuccess('수정되었습니다.')
+    refetch()
+  }, [supabase, allSignatures, alertHandler, refetch])
+
+  // 빠른 추가 모드 토글
+  const toggleQuickAddMode = useCallback(() => {
+    if (!quickAddMode) {
+      // 다음 사용 가능한 번호 계산
+      const existingNumbers = allSignatures
+        .filter((s) => s.unit === activeUnit)
+        .map((s) => s.sigNumber)
+      let nextNumber = 1
+      while (existingNumbers.includes(nextNumber)) {
+        nextNumber++
+      }
+      setQuickAddData({ sigNumber: nextNumber, title: '' })
+    }
+    setQuickAddMode(!quickAddMode)
+  }, [quickAddMode, allSignatures, activeUnit])
+
+  // 빠른 추가 핸들러
+  const handleQuickAdd = useCallback(async () => {
+    if (!quickAddData.title.trim()) {
+      alertHandler.showWarning('제목을 입력해주세요.', '입력 오류')
+      return
+    }
+
+    // 중복 번호 검사
+    const duplicate = allSignatures.find(
+      s => s.unit === activeUnit && s.sigNumber === quickAddData.sigNumber
+    )
+    if (duplicate) {
+      alertHandler.showWarning(
+        `${activeUnit === 'excel' ? '엑셀부' : '크루부'}에 이미 ${quickAddData.sigNumber}번 시그가 있습니다.`,
+        '중복 오류'
+      )
+      return
+    }
+
+    setIsQuickAdding(true)
+    try {
+      const { error } = await supabase.from('signatures').insert({
+        sig_number: quickAddData.sigNumber,
+        title: quickAddData.title.trim(),
+        description: '',
+        thumbnail_url: '',
+        unit: activeUnit,
+      })
+
+      if (error) {
+        console.error('빠른 추가 실패:', error)
+        alertHandler.showError('추가에 실패했습니다.', '오류')
+        return
+      }
+
+      alertHandler.showSuccess(`#${quickAddData.sigNumber} ${quickAddData.title} 추가됨`)
+      refetch()
+
+      // 다음 번호로 폼 초기화 (연속 추가 가능)
+      const existingNumbers = [...allSignatures.map(s => s.unit === activeUnit ? s.sigNumber : 0), quickAddData.sigNumber]
+      let nextNumber = 1
+      while (existingNumbers.includes(nextNumber)) {
+        nextNumber++
+      }
+      setQuickAddData({ sigNumber: nextNumber, title: '' })
+    } finally {
+      setIsQuickAdding(false)
+    }
+  }, [supabase, quickAddData, activeUnit, allSignatures, alertHandler, refetch])
+
+  // 빠른 추가 키보드 핸들러
+  const handleQuickAddKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+      e.preventDefault()
+      handleQuickAdd()
+    } else if (e.key === 'Escape') {
+      setQuickAddMode(false)
+    }
+  }
+
   // 인라인 썸네일 업로드 핸들러
   const handleInlineThumbnailClick = (sigId: number, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -238,6 +363,8 @@ export default function SignaturesPage() {
       key: 'sigNumber',
       header: '번호',
       width: '80px',
+      editable: true,
+      editType: 'number',
       render: (item) => (
         <span style={{ fontWeight: 600, color: 'var(--primary)' }}>
           #{item.sigNumber}
@@ -311,6 +438,8 @@ export default function SignaturesPage() {
     {
       key: 'title',
       header: '제목',
+      editable: true,
+      editType: 'text',
       render: (item) => (
         <span>{item.title}</span>
       ),
@@ -357,10 +486,24 @@ export default function SignaturesPage() {
             <p className={styles.subtitle}>시그별 리액션 영상 관리</p>
           </div>
         </div>
-        <button onClick={openAddModal} className={styles.addButton}>
-          <Plus size={18} />
-          시그 추가
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={toggleQuickAddMode}
+            className={styles.addButton}
+            style={{
+              background: quickAddMode ? 'var(--primary)' : 'transparent',
+              border: '1px solid var(--primary)',
+              color: quickAddMode ? 'white' : 'var(--primary)',
+            }}
+          >
+            <Zap size={18} />
+            빠른 추가
+          </button>
+          <button onClick={openAddModal} className={styles.addButton}>
+            <Plus size={18} />
+            시그 추가
+          </button>
+        </div>
       </header>
 
       {/* Unit Tabs */}
@@ -379,12 +522,108 @@ export default function SignaturesPage() {
         </button>
       </div>
 
+      {/* 빠른 추가 폼 */}
+      <AnimatePresence>
+        {quickAddMode && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{
+              background: 'var(--card-bg)',
+              border: '2px dashed var(--primary)',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Hash size={16} style={{ color: 'var(--primary)' }} />
+                <input
+                  type="number"
+                  value={quickAddData.sigNumber}
+                  onChange={(e) => setQuickAddData(prev => ({ ...prev, sigNumber: parseInt(e.target.value) || 1 }))}
+                  onKeyDown={handleQuickAddKeyDown}
+                  min={1}
+                  style={{
+                    width: '60px',
+                    padding: '8px 12px',
+                    border: '1px solid var(--card-border)',
+                    borderRadius: '4px',
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                  }}
+                />
+              </div>
+              <input
+                type="text"
+                value={quickAddData.title}
+                onChange={(e) => setQuickAddData(prev => ({ ...prev, title: e.target.value }))}
+                onKeyDown={handleQuickAddKeyDown}
+                placeholder="시그 제목 입력 후 Enter..."
+                autoFocus
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  border: '1px solid var(--card-border)',
+                  borderRadius: '4px',
+                  background: 'var(--surface)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.875rem',
+                }}
+              />
+              <button
+                onClick={handleQuickAdd}
+                disabled={isQuickAdding || !quickAddData.title.trim()}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  background: 'var(--primary)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  opacity: isQuickAdding || !quickAddData.title.trim() ? 0.6 : 1,
+                }}
+              >
+                {isQuickAdding ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={16} />}
+                추가
+              </button>
+              <button
+                onClick={() => setQuickAddMode(false)}
+                style={{
+                  padding: '8px',
+                  background: 'transparent',
+                  border: '1px solid var(--card-border)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+              Enter: 추가 · Escape: 닫기 · 연속 추가 가능
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <DataTable
         data={filteredSignatures}
         columns={columns}
         onView={handleView}
         onEdit={openEditModal}
         onDelete={handleDelete}
+        onInlineEdit={handleInlineEdit}
         searchPlaceholder="시그 제목으로 검색..."
         isLoading={isLoading}
       />
