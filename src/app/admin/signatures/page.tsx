@@ -3,9 +3,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Image as ImageIcon, Plus, X, Save, Hash, Video, Upload, Loader2, Zap } from 'lucide-react'
+import { Image as ImageIcon, Plus, X, Save, Hash, Video, Upload, Loader2, Zap, ChevronDown, ChevronUp, User, Play, Trash2, Link2, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
-import { DataTable, Column, ImageUpload } from '@/components/admin'
+import { DataTable, Column, ImageUpload, VideoUpload } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
@@ -22,6 +22,23 @@ interface Signature {
   createdAt: string
 }
 
+interface SignatureVideo {
+  id: number
+  signatureId: number
+  memberId: number
+  memberName: string
+  memberImageUrl: string | null
+  videoUrl: string
+  createdAt: string
+}
+
+interface OrgMember {
+  id: number
+  name: string
+  imageUrl: string | null
+  unit: 'excel' | 'crew'
+}
+
 export default function SignaturesPage() {
   const router = useRouter()
   const supabase = useSupabaseContext()
@@ -36,6 +53,16 @@ export default function SignaturesPage() {
   const [quickAddMode, setQuickAddMode] = useState(false)
   const [quickAddData, setQuickAddData] = useState({ sigNumber: 1, title: '' })
   const [isQuickAdding, setIsQuickAdding] = useState(false)
+
+  // 인라인 영상 관리 상태
+  const [expandedSigId, setExpandedSigId] = useState<number | null>(null)
+  const [sigVideos, setSigVideos] = useState<SignatureVideo[]>([])
+  const [sigMembers, setSigMembers] = useState<OrgMember[]>([])
+  const [isLoadingVideos, setIsLoadingVideos] = useState(false)
+  const [addingVideoMemberId, setAddingVideoMemberId] = useState<number | null>(null)
+  const [newVideoUrl, setNewVideoUrl] = useState('')
+  const [videoUploadMode, setVideoUploadMode] = useState<'url' | 'upload'>('url')
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null)
 
   const {
     items: allSignatures,
@@ -109,6 +136,140 @@ export default function SignaturesPage() {
 
     fetchVideoCounts()
   }, [allSignatures, supabase])
+
+  // 인라인 영상 관리: 시그니처 확장 시 영상 및 멤버 로드
+  const fetchSignatureVideos = useCallback(async (sigId: number, unit: 'excel' | 'crew') => {
+    setIsLoadingVideos(true)
+
+    // 해당 시그니처의 영상 로드
+    const { data: videoData, error: videoError } = await supabase
+      .from('signature_videos')
+      .select('*, organization!member_id(name, image_url)')
+      .eq('signature_id', sigId)
+      .order('created_at', { ascending: true })
+
+    if (!videoError && videoData) {
+      setSigVideos(
+        videoData.map((v) => {
+          const member = v.organization as { name: string; image_url: string | null } | null
+          return {
+            id: v.id,
+            signatureId: v.signature_id,
+            memberId: v.member_id,
+            memberName: member?.name || '알 수 없음',
+            memberImageUrl: member?.image_url || null,
+            videoUrl: v.video_url,
+            createdAt: v.created_at,
+          }
+        })
+      )
+    }
+
+    // 해당 부서 멤버 로드
+    const { data: memberData, error: memberError } = await supabase
+      .from('organization')
+      .select('id, name, image_url, unit')
+      .eq('unit', unit)
+      .eq('is_active', true)
+      .order('name')
+
+    if (!memberError && memberData) {
+      setSigMembers(
+        memberData.map((m) => ({
+          id: m.id,
+          name: m.name,
+          imageUrl: m.image_url,
+          unit: m.unit,
+        }))
+      )
+    }
+
+    setIsLoadingVideos(false)
+  }, [supabase])
+
+  // 시그니처 행 확장/축소 토글
+  const toggleExpand = useCallback((sig: Signature) => {
+    if (expandedSigId === sig.id) {
+      setExpandedSigId(null)
+      setSigVideos([])
+      setSigMembers([])
+    } else {
+      setExpandedSigId(sig.id)
+      fetchSignatureVideos(sig.id, sig.unit)
+    }
+    setAddingVideoMemberId(null)
+    setNewVideoUrl('')
+  }, [expandedSigId, fetchSignatureVideos])
+
+  // 인라인 영상 추가
+  const handleAddVideo = useCallback(async (sigId: number, memberId: number, videoUrl: string) => {
+    if (!videoUrl.trim()) {
+      alertHandler.showWarning('영상 URL을 입력해주세요.', '입력 오류')
+      return
+    }
+
+    // 중복 체크
+    const existingVideo = sigVideos.find(v => v.memberId === memberId)
+    if (existingVideo) {
+      alertHandler.showWarning('해당 멤버의 영상이 이미 등록되어 있습니다.', '중복 오류')
+      return
+    }
+
+    const { error } = await supabase.from('signature_videos').insert({
+      signature_id: sigId,
+      member_id: memberId,
+      video_url: videoUrl.trim(),
+    })
+
+    if (error) {
+      console.error('영상 등록 실패:', error)
+      alertHandler.showError('등록에 실패했습니다.', '오류')
+      return
+    }
+
+    alertHandler.showSuccess('영상이 등록되었습니다.')
+    setAddingVideoMemberId(null)
+    setNewVideoUrl('')
+
+    // 영상 목록 새로고침
+    const sig = allSignatures.find(s => s.id === sigId)
+    if (sig) {
+      fetchSignatureVideos(sigId, sig.unit)
+    }
+    refetch() // 영상 카운트 업데이트
+  }, [supabase, sigVideos, allSignatures, fetchSignatureVideos, alertHandler, refetch])
+
+  // 인라인 영상 삭제
+  const handleDeleteVideo = useCallback(async (video: SignatureVideo) => {
+    const confirmed = await alertHandler.showConfirm(
+      `${video.memberName}님의 영상을 삭제하시겠습니까?`,
+      { title: '영상 삭제', variant: 'danger', confirmText: '삭제', cancelText: '취소' }
+    )
+    if (!confirmed) return
+
+    const { error } = await supabase.from('signature_videos').delete().eq('id', video.id)
+
+    if (error) {
+      console.error('영상 삭제 실패:', error)
+      alertHandler.showError('삭제에 실패했습니다.', '오류')
+      return
+    }
+
+    alertHandler.showSuccess('영상이 삭제되었습니다.')
+
+    // 영상 목록에서 제거
+    setSigVideos(prev => prev.filter(v => v.id !== video.id))
+    refetch() // 영상 카운트 업데이트
+  }, [supabase, alertHandler, refetch])
+
+  // YouTube URL을 embed URL로 변환
+  const getEmbedUrl = (url: string) => {
+    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
+    if (youtubeMatch) {
+      return `https://www.youtube.com/embed/${youtubeMatch[1]}`
+    }
+    return url
+  }
 
   const filteredSignatures = allSignatures
     .filter((s) => s.unit === activeUnit)
@@ -360,6 +521,35 @@ export default function SignaturesPage() {
 
   const columns: Column<Signature>[] = [
     {
+      key: 'expand',
+      header: '',
+      width: '50px',
+      render: (item) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            toggleExpand(item)
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px',
+            background: expandedSigId === item.id ? 'var(--primary)' : 'var(--surface)',
+            border: `1px solid ${expandedSigId === item.id ? 'var(--primary)' : 'var(--card-border)'}`,
+            borderRadius: '6px',
+            cursor: 'pointer',
+            color: expandedSigId === item.id ? 'white' : 'var(--text-secondary)',
+            transition: 'all 0.2s',
+          }}
+          title={expandedSigId === item.id ? '영상 관리 닫기' : '영상 관리 열기'}
+        >
+          {expandedSigId === item.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+      ),
+    },
+    {
       key: 'sigNumber',
       header: '번호',
       width: '80px',
@@ -449,32 +639,343 @@ export default function SignaturesPage() {
       header: '영상',
       width: '100px',
       render: (item) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            router.push(`/admin/signatures/${item.id}`)
-          }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '4px 10px',
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <Video size={12} />
-          {item.videoCount}개
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Video size={14} style={{ color: item.videoCount > 0 ? 'var(--primary)' : 'var(--text-muted)' }} />
+          <span style={{ fontWeight: 600, color: item.videoCount > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            {item.videoCount}개
+          </span>
+        </div>
       ),
     },
   ]
+
+  // 확장된 행에서 표시할 인라인 영상 관리 UI
+  const renderExpandedContent = (sig: Signature) => {
+    if (expandedSigId !== sig.id) return null
+
+    // 멤버별 영상 상태 맵 생성
+    const videoByMemberId = sigVideos.reduce<Record<number, SignatureVideo>>((acc, v) => {
+      acc[v.memberId] = v
+      return acc
+    }, {})
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: 'auto' }}
+        exit={{ opacity: 0, height: 0 }}
+        style={{
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--card-border)',
+          padding: '16px 20px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            멤버별 시그니처 영상 ({sigVideos.length}/{sigMembers.length})
+          </span>
+          <button
+            onClick={() => router.push(`/admin/signatures/${sig.id}`)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 12px',
+              background: 'transparent',
+              border: '1px solid var(--card-border)',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+            }}
+          >
+            <ExternalLink size={12} />
+            상세 페이지
+          </button>
+        </div>
+
+        {isLoadingVideos ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '24px' }}>
+            <Loader2 size={24} style={{ color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+            {sigMembers.map((member) => {
+              const video = videoByMemberId[member.id]
+              const hasVideo = Boolean(video)
+              const isAdding = addingVideoMemberId === member.id
+
+              return (
+                <div
+                  key={member.id}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px',
+                    background: hasVideo ? 'rgba(253, 104, 186, 0.08)' : 'var(--card-bg)',
+                    border: `1px solid ${hasVideo ? 'rgba(253, 104, 186, 0.3)' : 'var(--card-border)'}`,
+                    borderRadius: '12px',
+                    minWidth: isAdding ? '280px' : '100px',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {/* 멤버 아바타 */}
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      background: 'var(--surface)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: `2px solid ${hasVideo ? 'var(--primary)' : 'var(--card-border)'}`,
+                      position: 'relative',
+                    }}
+                  >
+                    {member.imageUrl ? (
+                      <Image
+                        src={member.imageUrl}
+                        alt={member.name}
+                        width={48}
+                        height={48}
+                        style={{ objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <User size={20} style={{ color: 'var(--text-tertiary)' }} />
+                    )}
+                    {hasVideo && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '-2px',
+                          right: '-2px',
+                          width: '18px',
+                          height: '18px',
+                          background: 'var(--primary)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Play size={10} fill="white" style={{ color: 'white' }} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 멤버 이름 */}
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center' }}>
+                    {member.name}
+                  </span>
+
+                  {/* 영상 액션 버튼 */}
+                  {hasVideo ? (
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        onClick={() => setPreviewVideoUrl(video.videoUrl)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '28px',
+                          height: '28px',
+                          background: 'var(--primary)',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          color: 'white',
+                        }}
+                        title="영상 보기"
+                      >
+                        <Play size={12} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteVideo(video)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '28px',
+                          height: '28px',
+                          background: 'var(--color-error)',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          color: 'white',
+                        }}
+                        title="영상 삭제"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ) : isAdding ? (
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {/* URL/업로드 토글 */}
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={() => setVideoUploadMode('url')}
+                          style={{
+                            flex: 1,
+                            padding: '4px 8px',
+                            background: videoUploadMode === 'url' ? 'var(--primary)' : 'var(--surface)',
+                            border: '1px solid var(--card-border)',
+                            borderRadius: '4px',
+                            fontSize: '0.6875rem',
+                            color: videoUploadMode === 'url' ? 'white' : 'var(--text-secondary)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Link2 size={10} style={{ marginRight: '2px' }} />
+                          URL
+                        </button>
+                        <button
+                          onClick={() => setVideoUploadMode('upload')}
+                          style={{
+                            flex: 1,
+                            padding: '4px 8px',
+                            background: videoUploadMode === 'upload' ? 'var(--primary)' : 'var(--surface)',
+                            border: '1px solid var(--card-border)',
+                            borderRadius: '4px',
+                            fontSize: '0.6875rem',
+                            color: videoUploadMode === 'upload' ? 'white' : 'var(--text-secondary)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Upload size={10} style={{ marginRight: '2px' }} />
+                          업로드
+                        </button>
+                      </div>
+
+                      {videoUploadMode === 'url' ? (
+                        <>
+                          <input
+                            type="text"
+                            value={newVideoUrl}
+                            onChange={(e) => setNewVideoUrl(e.target.value)}
+                            placeholder="YouTube URL..."
+                            style={{
+                              width: '100%',
+                              padding: '8px 10px',
+                              border: '1px solid var(--card-border)',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              background: 'var(--surface)',
+                              color: 'var(--text-primary)',
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                                e.preventDefault()
+                                handleAddVideo(sig.id, member.id, newVideoUrl)
+                              } else if (e.key === 'Escape') {
+                                setAddingVideoMemberId(null)
+                                setNewVideoUrl('')
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button
+                              onClick={() => handleAddVideo(sig.id, member.id, newVideoUrl)}
+                              disabled={!newVideoUrl.trim()}
+                              style={{
+                                flex: 1,
+                                padding: '6px',
+                                background: 'var(--primary)',
+                                border: 'none',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                color: 'white',
+                                cursor: 'pointer',
+                                opacity: newVideoUrl.trim() ? 1 : 0.5,
+                              }}
+                            >
+                              등록
+                            </button>
+                            <button
+                              onClick={() => {
+                                setAddingVideoMemberId(null)
+                                setNewVideoUrl('')
+                              }}
+                              style={{
+                                padding: '6px 10px',
+                                background: 'var(--surface)',
+                                border: '1px solid var(--card-border)',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                color: 'var(--text-secondary)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              취소
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <VideoUpload
+                            onUploadComplete={(url) => handleAddVideo(sig.id, member.id, url)}
+                            onError={(error) => alertHandler.showError(error)}
+                            bucketName="videos"
+                            folderPath="signature-videos"
+                            maxSize={100}
+                          />
+                          <button
+                            onClick={() => {
+                              setAddingVideoMemberId(null)
+                              setNewVideoUrl('')
+                            }}
+                            style={{
+                              padding: '6px 10px',
+                              background: 'var(--surface)',
+                              border: '1px solid var(--card-border)',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              color: 'var(--text-secondary)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            취소
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setAddingVideoMemberId(member.id)
+                        setNewVideoUrl('')
+                        setVideoUploadMode('url')
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '6px 10px',
+                        background: 'transparent',
+                        border: '1px dashed var(--card-border)',
+                        borderRadius: '6px',
+                        fontSize: '0.6875rem',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Plus size={12} />
+                      추가
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </motion.div>
+    )
+  }
 
   return (
     <div className={styles.page}>
@@ -627,6 +1128,110 @@ export default function SignaturesPage() {
         searchPlaceholder="시그 제목으로 검색..."
         isLoading={isLoading}
       />
+
+      {/* 확장된 시그니처 영상 관리 패널 */}
+      <AnimatePresence>
+        {expandedSigId && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            style={{
+              marginTop: '-1px',
+              background: 'var(--card-bg)',
+              border: '1px solid var(--card-border)',
+              borderRadius: '0 0 12px 12px',
+              overflow: 'hidden',
+            }}
+          >
+            {filteredSignatures.map((sig) => (
+              <div key={sig.id}>
+                {renderExpandedContent(sig)}
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 영상 미리보기 모달 */}
+      <AnimatePresence>
+        {previewVideoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewVideoUrl(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: '1rem',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: '900px',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--card-border)',
+                borderRadius: '16px',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1rem 1.25rem',
+                borderBottom: '1px solid var(--card-border)',
+              }}>
+                <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>영상 미리보기</h2>
+                <button
+                  onClick={() => setPreviewVideoUrl(null)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '36px',
+                    height: '36px',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--card-border)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#000' }}>
+                <iframe
+                  src={getEmbedUrl(previewVideoUrl)}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                  }}
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 인라인 썸네일 업로드용 숨김 input */}
       <input

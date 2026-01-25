@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    video { max-width: 800px; width: 100%; }
+    .log { background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Video Loading Test</h1>
+
+  <h2>Test 1: Direct Supabase URL (blocked by Chrome)</h2>
+  <video id="video1" controls playsinline>
+    <source src="https://cdiptfmagemjfmsuphaj.supabase.co/storage/v1/object/public/videos/signature-videos/member-60/1000_1769339216923.mp4" type="video/mp4">
+  </video>
+  <div id="log1" class="log"></div>
+
+  <h2>Test 2: Proxied via Next.js Rewrites (should work)</h2>
+  <video id="video2" controls autoplay playsinline>
+    <source src="/video/signature-videos/member-60/1000_1769339216923.mp4" type="video/mp4">
+  </video>
+  <div id="log2" class="log"></div>
+
+  <script>
+    function setupVideoLogging(videoId, logId) {
+      const video = document.getElementById(videoId);
+      const log = document.getElementById(logId);
+
+      const events = ['loadstart', 'progress', 'loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough', 'play', 'playing', 'error', 'stalled', 'waiting', 'suspend'];
+
+      events.forEach(event => {
+        video.addEventListener(event, (e) => {
+          const time = new Date().toLocaleTimeString();
+          let msg = `[${time}] ${event}`;
+          if (event === 'loadedmetadata') {
+            msg += ` (duration: ${video.duration.toFixed(1)}s)`;
+          }
+          if (event === 'error') {
+            msg += ` (code: ${video.error?.code}, message: ${video.error?.message})`;
+          }
+          if (event === 'canplay' || event === 'playing') {
+            msg = '<span class="success">' + msg + '</span>';
+          }
+          if (event === 'error') {
+            msg = '<span class="error">' + msg + '</span>';
+          }
+          log.innerHTML += msg + '\n';
+          log.scrollTop = log.scrollHeight;
+        });
+      });
+    }
+
+    setupVideoLogging('video1', 'log1');
+    setupVideoLogging('video2', 'log2');
+  </script>
+</body>
+</html>

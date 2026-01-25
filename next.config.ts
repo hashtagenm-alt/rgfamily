@@ -44,6 +44,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.dicebear.com https://*.sentry.io https://*.ingest.sentry.io",
+              "media-src 'self' https://*.supabase.co blob: data:",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -109,6 +110,15 @@ const nextConfig: NextConfig = {
         source: '/community/vip/write',
         destination: '/community/write?board=vip',
         permanent: false,
+      },
+    ]
+  },
+  // Video proxy rewrites for Chrome URL safety check bypass
+  async rewrites() {
+    return [
+      {
+        source: '/video/:path*',
+        destination: 'https://cdiptfmagemjfmsuphaj.supabase.co/storage/v1/object/public/videos/:path*',
       },
     ]
   },
