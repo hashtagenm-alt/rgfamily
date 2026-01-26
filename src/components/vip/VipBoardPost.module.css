@@ -1,13 +1,13 @@
 .post {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: 18px;
+  padding: 24px;
   transition: all 0.2s ease;
 }
 
 .post:hover {
-  border-color: rgba(253, 104, 186, 0.25);
+  border-color: rgba(212, 175, 55, 0.25);
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -16,7 +16,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .profile {
@@ -26,22 +26,22 @@
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(253, 104, 186, 0.4);
+  border: 2px solid rgba(212, 175, 55, 0.4);
 }
 
 .avatarPlaceholder {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #fd68ba 0%, #ff8acc 100%);
+  background: linear-gradient(135deg, #d4af37 0%, #e5c04b 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
   color: white;
 }
@@ -88,8 +88,8 @@
   gap: 4px;
   padding: 5px 12px;
   border-radius: 12px;
-  background: rgba(253, 104, 186, 0.12);
-  color: #fd68ba;
+  background: rgba(212, 175, 55, 0.12);
+  color: #d4af37;
   font-size: 12px;
   font-weight: 500;
 }
@@ -159,12 +159,12 @@
 .mediaContainer {
   position: relative;
   width: 100%;
-  max-height: 400px;
+  max-height: 440px;
   aspect-ratio: 16/9;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.2);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .mediaImage {
@@ -184,7 +184,7 @@
 }
 
 .videoOverlay:hover {
-  background: rgba(253, 104, 186, 0.3);
+  background: rgba(212, 175, 55, 0.3);
 }
 
 .videoPlaceholder {
@@ -202,9 +202,9 @@
 /* 텍스트 콘텐츠 */
 .contentText {
   font-size: 15px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: rgba(255, 255, 255, 0.9);
-  margin: 0 0 16px;
+  margin: 0 0 18px;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -226,7 +226,7 @@
 }
 
 .commentToggle:hover {
-  color: #fd68ba;
+  color: #d4af37;
 }
 
 /* 잠금 콘텐츠 */
@@ -270,7 +270,7 @@
 }
 
 :global([data-theme="light"]) .post:hover {
-  border-color: rgba(224, 80, 144, 0.3);
+  border-color: rgba(184, 134, 11, 0.3);
   background: rgba(0, 0, 0, 0.04);
 }
 
@@ -283,12 +283,12 @@
 }
 
 :global([data-theme="light"]) .avatar {
-  border-color: rgba(224, 80, 144, 0.4);
+  border-color: rgba(184, 134, 11, 0.4);
 }
 
 :global([data-theme="light"]) .typeBadge {
-  background: rgba(224, 80, 144, 0.12);
-  color: #e05090;
+  background: rgba(184, 134, 11, 0.12);
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .contentText {
@@ -301,7 +301,7 @@
 }
 
 :global([data-theme="light"]) .commentToggle:hover {
-  color: #e05090;
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .menuBtn {
@@ -339,20 +339,24 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
+:global([data-theme="light"]) .videoPlaceholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
 /* 반응형 */
 @media (max-width: 640px) {
   .post {
-    padding: 16px;
+    padding: 18px;
   }
 
   .mediaContainer {
-    max-height: 280px;
+    max-height: 300px;
   }
 
   .avatar,
   .avatarPlaceholder {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
   }
 
   .name {

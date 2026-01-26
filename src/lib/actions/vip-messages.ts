@@ -41,8 +41,9 @@ export async function getVipMessagesByVipId(
   vipProfileId: string
 ): Promise<ActionResult<VipMessageWithAuthor[]>> {
   return authAction(async (supabase, userId) => {
-    // 사용자 권한 조회
-    const { data: profile } = await supabase
+    // 사용자 권한 조회 (Service Role로 RLS 우회하여 정확한 role 확인)
+    const serviceClient = createServiceRoleClient()
+    const { data: profile } = await serviceClient
       .from('profiles')
       .select('role')
       .eq('id', userId)
@@ -127,8 +128,9 @@ export async function getVipMessagesPaginated(
   return authAction(async (supabase, userId) => {
     const { limit = 10, offset = 0, includeCommentCount = true } = options
 
-    // 사용자 권한 조회
-    const { data: profile } = await supabase
+    // 사용자 권한 조회 (Service Role로 RLS 우회하여 정확한 role 확인)
+    const serviceClient = createServiceRoleClient()
+    const { data: profile } = await serviceClient
       .from('profiles')
       .select('role')
       .eq('id', userId)

@@ -11,7 +11,7 @@
 }
 
 .headerIcon {
-  color: #fd68ba;
+  color: #d4af37;
   opacity: 0.85;
 }
 
@@ -26,8 +26,8 @@
 .messageCount {
   padding: 3px 8px;
   border-radius: 6px;
-  background: rgba(253, 104, 186, 0.12);
-  color: #fd68ba;
+  background: rgba(212, 175, 55, 0.12);
+  color: #d4af37;
   font-size: 11px;
   font-weight: 600;
 }
@@ -35,7 +35,7 @@
 .sectionDivider {
   flex: 1;
   height: 1px;
-  background: rgba(253, 104, 186, 0.15);
+  background: rgba(212, 175, 55, 0.15);
   margin-left: 6px;
 }
 
@@ -45,10 +45,10 @@
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
-  background: rgba(253, 104, 186, 0.1);
-  border: 1px solid rgba(253, 104, 186, 0.25);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: 8px;
-  color: #fd68ba;
+  color: #d4af37;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -56,8 +56,8 @@
 }
 
 .writeBtn:hover {
-  background: rgba(253, 104, 186, 0.15);
-  border-color: rgba(253, 104, 186, 0.35);
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.35);
 }
 
 /* 메시지 가로 스크롤 */
@@ -80,12 +80,12 @@
 }
 
 .messagesRow::-webkit-scrollbar-thumb {
-  background: rgba(253, 104, 186, 0.25);
+  background: rgba(212, 175, 55, 0.25);
   border-radius: 2px;
 }
 
 .messagesRow::-webkit-scrollbar-thumb:hover {
-  background: rgba(253, 104, 186, 0.4);
+  background: rgba(212, 175, 55, 0.4);
 }
 
 /* 카드 크기 조정 (가로 스크롤용) */
@@ -150,7 +150,7 @@
 }
 
 .emptyIcon {
-  color: rgba(253, 104, 186, 0.35);
+  color: rgba(212, 175, 55, 0.35);
 }
 
 .emptyText {
@@ -164,7 +164,7 @@
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: #fd68ba;
+  background: #d4af37;
   border: none;
   border-radius: 10px;
   color: #fff;
@@ -175,7 +175,7 @@
 }
 
 .writeFirstBtn:hover {
-  background: #ff8a9c;
+  background: #e5c04b;
 }
 
 /* 플레이스홀더 카드 */
@@ -191,8 +191,8 @@
   min-width: 140px;
   max-width: 180px;
   padding: 14px;
-  background: rgba(253, 104, 186, 0.02);
-  border: 1px dashed rgba(253, 104, 186, 0.15);
+  background: rgba(212, 175, 55, 0.02);
+  border: 1px dashed rgba(212, 175, 55, 0.15);
   border-radius: 10px;
 }
 
@@ -202,9 +202,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(253, 104, 186, 0.08);
+  background: rgba(212, 175, 55, 0.08);
   border-radius: 50%;
-  color: rgba(253, 104, 186, 0.35);
+  color: rgba(212, 175, 55, 0.35);
   margin-bottom: 10px;
 }
 
@@ -216,7 +216,7 @@
 
 .placeholderLine {
   height: 6px;
-  background: rgba(253, 104, 186, 0.06);
+  background: rgba(212, 175, 55, 0.06);
   border-radius: 3px;
 }
 
@@ -236,10 +236,10 @@
   gap: 6px;
   padding: 10px 16px;
   margin-top: 16px;
-  background: rgba(253, 104, 186, 0.08);
-  border: 1px solid rgba(253, 104, 186, 0.2);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 8px;
-  color: #fd68ba;
+  color: #d4af37;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
@@ -247,8 +247,8 @@
 
 .showMoreBtn:hover,
 .showLessBtn:hover {
-  background: rgba(253, 104, 186, 0.15);
-  border-color: rgba(253, 104, 186, 0.4);
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.4);
 }
 
 .rotated {
@@ -261,27 +261,27 @@
 }
 
 :global([data-theme="light"]) .headerIcon {
-  color: #e05090;
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .messageCount {
-  background: rgba(224, 80, 144, 0.15);
-  color: #e05090;
+  background: rgba(184, 134, 11, 0.15);
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .sectionDivider {
-  background: linear-gradient(to right, rgba(224, 80, 144, 0.3), transparent);
+  background: linear-gradient(to right, rgba(184, 134, 11, 0.3), transparent);
 }
 
 :global([data-theme="light"]) .writeBtn {
-  background: rgba(224, 80, 144, 0.1);
-  border-color: rgba(224, 80, 144, 0.3);
-  color: #e05090;
+  background: rgba(184, 134, 11, 0.1);
+  border-color: rgba(184, 134, 11, 0.3);
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .writeBtn:hover {
-  background: rgba(224, 80, 144, 0.2);
-  border-color: rgba(224, 80, 144, 0.5);
+  background: rgba(184, 134, 11, 0.2);
+  border-color: rgba(184, 134, 11, 0.5);
 }
 
 :global([data-theme="light"]) .messagesRow::-webkit-scrollbar-track {
@@ -289,11 +289,11 @@
 }
 
 :global([data-theme="light"]) .messagesRow::-webkit-scrollbar-thumb {
-  background: rgba(224, 80, 144, 0.3);
+  background: rgba(184, 134, 11, 0.3);
 }
 
 :global([data-theme="light"]) .messagesRow::-webkit-scrollbar-thumb:hover {
-  background: rgba(224, 80, 144, 0.5);
+  background: rgba(184, 134, 11, 0.5);
 }
 
 :global([data-theme="light"]) .loading {
@@ -306,7 +306,7 @@
 }
 
 :global([data-theme="light"]) .emptyIcon {
-  color: rgba(224, 80, 144, 0.5);
+  color: rgba(184, 134, 11, 0.5);
 }
 
 :global([data-theme="light"]) .emptyText {
@@ -315,15 +315,15 @@
 
 :global([data-theme="light"]) .showMoreBtn,
 :global([data-theme="light"]) .showLessBtn {
-  background: rgba(224, 80, 144, 0.08);
-  border-color: rgba(224, 80, 144, 0.2);
-  color: #e05090;
+  background: rgba(184, 134, 11, 0.08);
+  border-color: rgba(184, 134, 11, 0.2);
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .showMoreBtn:hover,
 :global([data-theme="light"]) .showLessBtn:hover {
-  background: rgba(224, 80, 144, 0.15);
-  border-color: rgba(224, 80, 144, 0.4);
+  background: rgba(184, 134, 11, 0.15);
+  border-color: rgba(184, 134, 11, 0.4);
 }
 
 /* 반응형 */
