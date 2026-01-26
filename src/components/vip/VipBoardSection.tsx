@@ -20,7 +20,8 @@ export default function VipBoardSection({
   vipNickname,
   vipAvatarUrl,
 }: VipBoardSectionProps) {
-  const { profile } = useAuthContext()
+  const { profile, isAdmin } = useAuthContext()
+  const isAdminUser = isAdmin()
   const {
     messages,
     isLoading,
@@ -80,7 +81,7 @@ export default function VipBoardSection({
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <Heart size={20} className={styles.headerIcon} />
-          <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
+          <h2 className={styles.sectionTitle}>VIP 전용 게시판</h2>
           <div className={styles.sectionDivider} />
         </div>
         <div className={styles.loading}>
@@ -97,7 +98,7 @@ export default function VipBoardSection({
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <Heart size={20} className={styles.headerIcon} />
-          <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
+          <h2 className={styles.sectionTitle}>VIP 전용 게시판</h2>
           <div className={styles.sectionDivider} />
           {canWrite && (
             <button className={styles.writeBtn} onClick={() => setShowForm(true)}>
@@ -148,7 +149,7 @@ export default function VipBoardSection({
       {/* 섹션 헤더 */}
       <div className={styles.sectionHeader}>
         <Heart size={20} className={styles.headerIcon} />
-        <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
+        <h2 className={styles.sectionTitle}>VIP 전용 게시판</h2>
         <span className={styles.messageCount}>{total}개</span>
         <div className={styles.sectionDivider} />
 
@@ -173,6 +174,8 @@ export default function VipBoardSection({
             <VipBoardPost
               message={message}
               isOwner={isOwner}
+              isAdmin={isAdminUser}
+              currentUserId={profile?.id}
               vipNickname={vipNickname}
               onToggleVisibility={toggleVisibility}
               onDelete={deleteMessage}

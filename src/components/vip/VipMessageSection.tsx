@@ -71,7 +71,7 @@ export default function VipMessageSection({
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <Heart size={20} className={styles.headerIcon} />
-          <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
+          <h2 className={styles.sectionTitle}>VIP 전용 게시판</h2>
           <div className={styles.sectionDivider} />
         </div>
         <div className={styles.loading}>
@@ -88,7 +88,7 @@ export default function VipMessageSection({
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <Heart size={20} className={styles.headerIcon} />
-          <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
+          <h2 className={styles.sectionTitle}>VIP 전용 게시판</h2>
           <div className={styles.sectionDivider} />
           {canWrite && (
             <button className={styles.writeBtn} onClick={() => setShowForm(true)}>
@@ -143,7 +143,7 @@ export default function VipMessageSection({
       {/* 섹션 헤더 */}
       <div className={styles.sectionHeader}>
         <Heart size={20} className={styles.headerIcon} />
-        <h2 className={styles.sectionTitle}>FROM RG FAMILY</h2>
+        <h2 className={styles.sectionTitle}>VIP 전용 게시판</h2>
         <span className={styles.messageCount}>{messages.length}개</span>
         <div className={styles.sectionDivider} />
 

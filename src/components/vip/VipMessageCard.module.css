@@ -9,7 +9,7 @@
 }
 
 .card:hover {
-  border-color: rgba(253, 104, 186, 0.3);
+  border-color: rgba(212, 175, 55, 0.3);
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -213,52 +213,52 @@
 }
 
 /* 라이트 테마 */
-:global(.light) .card {
+:global([data-theme="light"]) .card {
   background: rgba(0, 0, 0, 0.02);
   border-color: rgba(0, 0, 0, 0.08);
 }
 
-:global(.light) .card:hover {
+:global([data-theme="light"]) .card:hover {
   border-color: rgba(212, 175, 55, 0.4);
   background: rgba(0, 0, 0, 0.04);
 }
 
-:global(.light) .name {
+:global([data-theme="light"]) .name {
   color: #1a1a1a;
 }
 
-:global(.light) .date {
+:global([data-theme="light"]) .date {
   color: rgba(0, 0, 0, 0.5);
 }
 
-:global(.light) .messageText {
+:global([data-theme="light"]) .messageText {
   color: rgba(0, 0, 0, 0.8);
 }
 
-:global(.light) .videoPlaceholder {
+:global([data-theme="light"]) .videoPlaceholder {
   color: rgba(0, 0, 0, 0.6);
 }
 
-:global(.light) .menuBtn {
+:global([data-theme="light"]) .menuBtn {
   color: rgba(0, 0, 0, 0.5);
 }
 
-:global(.light) .menuBtn:hover {
+:global([data-theme="light"]) .menuBtn:hover {
   background: rgba(0, 0, 0, 0.05);
   color: #1a1a1a;
 }
 
-:global(.light) .menu {
+:global([data-theme="light"]) .menu {
   background: #fff;
   border-color: rgba(0, 0, 0, 0.1);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-:global(.light) .menu button {
+:global([data-theme="light"]) .menu button {
   color: rgba(0, 0, 0, 0.8);
 }
 
-:global(.light) .menu button:hover {
+:global([data-theme="light"]) .menu button:hover {
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -304,7 +304,7 @@
   background: linear-gradient(
     135deg,
     rgba(212, 175, 55, 0.08) 0%,
-    rgba(253, 104, 186, 0.08) 50%,
+    rgba(212, 175, 55, 0.08) 50%,
     rgba(212, 175, 55, 0.08) 100%
   );
   backdrop-filter: blur(8px);
@@ -350,31 +350,31 @@
 }
 
 /* 라이트 테마 - 잠금 콘텐츠 */
-:global(.light) .lockedBadge {
+:global([data-theme="light"]) .lockedBadge {
   background: rgba(239, 68, 68, 0.1);
 }
 
-:global(.light) .lockedMediaBlur {
+:global([data-theme="light"]) .lockedMediaBlur {
   background: linear-gradient(
     135deg,
     rgba(212, 175, 55, 0.1) 0%,
-    rgba(253, 104, 186, 0.1) 50%,
+    rgba(212, 175, 55, 0.1) 50%,
     rgba(212, 175, 55, 0.1) 100%
   );
 }
 
-:global(.light) .lockedText {
+:global([data-theme="light"]) .lockedText {
   color: rgba(0, 0, 0, 0.45);
 }
 
-:global(.light) .lockOverlay {
+:global([data-theme="light"]) .lockOverlay {
   background: rgba(255, 255, 255, 0.8);
 }
 
-:global(.light) .lockIcon {
+:global([data-theme="light"]) .lockIcon {
   color: rgba(0, 0, 0, 0.5);
 }
 
-:global(.light) .lockText {
+:global([data-theme="light"]) .lockText {
   color: rgba(0, 0, 0, 0.6);
 }

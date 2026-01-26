@@ -127,7 +127,7 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   const renderContent = () => {
     return (
       <>
-        {/* 1. VIP 개인 게시판 - FROM RG FAMILY (VIP 본인의 글 + 팬 댓글) */}
+        {/* 1. VIP 전용 게시판 (VIP 본인의 글 + 팬 댓글) */}
         <VipBoardSection
           vipProfileId={profileId}
           vipNickname={vipData.nickname}
