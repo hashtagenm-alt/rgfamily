@@ -50,7 +50,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-export type EditableType = 'text' | 'number' | 'select' | 'checkbox'
+export type EditableType = 'text' | 'number' | 'select' | 'checkbox' | 'date'
 
 export interface SelectOption {
   value: string
@@ -634,6 +634,25 @@ export default function DataTable<T extends { id: string | number }>({
                       fontSize: '0.875rem',
                       width: '100%',
                       minWidth: '60px',
+                    }}
+                  />
+                ) : col.editType === 'date' ? (
+                  <input
+                    type="date"
+                    value={String(editingValue ?? '').split('T')[0]}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onBlur={saveEditing}
+                    onKeyDown={handleEditKeyDown}
+                    autoFocus
+                    disabled={isSavingInline}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      border: '1px solid var(--primary)',
+                      borderRadius: '4px',
+                      background: 'var(--card-bg)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      minWidth: '140px',
                     }}
                   />
                 ) : (

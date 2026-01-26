@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, Plus, X, Save, Calendar, Image as ImageIcon, Sparkles, Tag } from 'lucide-react'
+import { Clock, Plus, X, Save, Calendar, Image as ImageIcon, Sparkles, Tag, Zap, Loader2 } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
-import { useSeasons } from '@/lib/context'
+import { useSeasons, useSupabaseContext } from '@/lib/context'
 import type { Season } from '@/types/database'
 import styles from '../shared.module.css'
 
@@ -40,7 +40,13 @@ const categoryColors: Record<TimelineCategory, string> = {
 export default function TimelinePage() {
   const seasonsRepo = useSeasons()
   const alertHandler = useAlert()
+  const supabase = useSupabaseContext()
   const [seasons, setSeasons] = useState<Season[]>([])
+
+  // 빠른 추가 모드
+  const [quickAddMode, setQuickAddMode] = useState(false)
+  const [quickAddData, setQuickAddData] = useState({ title: '', eventDate: new Date().toISOString().split('T')[0] })
+  const [isQuickAdding, setIsQuickAdding] = useState(false)
 
   // 시즌 목록 로드
   useEffect(() => {
@@ -63,6 +69,7 @@ export default function TimelinePage() {
     closeModal,
     handleSave,
     handleDelete,
+    refetch,
   } = useAdminCRUD<TimelineEvent>({
     tableName: 'timeline_events',
     defaultItem: {
@@ -122,11 +129,112 @@ export default function TimelinePage() {
     return season?.name || '-'
   }
 
+  // 인라인 편집 핸들러
+  const handleInlineEdit = useCallback(async (id: string | number, field: string, value: unknown) => {
+    // DB 필드명 매핑
+    const dbFieldMap: Record<string, string> = {
+      title: 'title',
+      eventDate: 'event_date',
+      category: 'category',
+      seasonId: 'season_id',
+    }
+    const dbField = dbFieldMap[field] || field
+
+    // 값 변환
+    let dbValue = value
+    if (field === 'seasonId') {
+      dbValue = value === '' || value === null ? null : parseInt(String(value), 10)
+    }
+    if (field === 'category' && value === '') {
+      dbValue = null
+    }
+
+    const { error } = await supabase
+      .from('timeline_events')
+      .update({ [dbField]: dbValue })
+      .eq('id', id)
+
+    if (error) {
+      console.error('인라인 수정 실패:', error)
+      alertHandler.showError('수정에 실패했습니다.', '오류')
+      return
+    }
+
+    alertHandler.showSuccess('수정되었습니다.')
+    refetch()
+  }, [supabase, alertHandler, refetch])
+
+  // 빠른 추가 토글
+  const toggleQuickAddMode = useCallback(() => {
+    if (!quickAddMode) {
+      setQuickAddData({ title: '', eventDate: new Date().toISOString().split('T')[0] })
+    }
+    setQuickAddMode(!quickAddMode)
+  }, [quickAddMode])
+
+  // 빠른 추가 핸들러
+  const handleQuickAdd = useCallback(async () => {
+    if (!quickAddData.title.trim()) {
+      alertHandler.showWarning('제목을 입력해주세요.', '입력 오류')
+      return
+    }
+
+    setIsQuickAdding(true)
+    try {
+      const { error } = await supabase.from('timeline_events').insert({
+        event_date: quickAddData.eventDate,
+        title: quickAddData.title.trim(),
+        description: null,
+        image_url: null,
+        category: 'event',
+        season_id: null,
+      })
+
+      if (error) {
+        console.error('빠른 추가 실패:', error)
+        alertHandler.showError('추가에 실패했습니다.', '오류')
+        return
+      }
+
+      alertHandler.showSuccess(`"${quickAddData.title}" 추가됨`)
+      refetch()
+
+      // 폼 초기화 (연속 추가 가능)
+      setQuickAddData({ title: '', eventDate: quickAddData.eventDate })
+    } finally {
+      setIsQuickAdding(false)
+    }
+  }, [supabase, quickAddData, alertHandler, refetch])
+
+  // 빠른 추가 키보드 핸들러
+  const handleQuickAddKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+      e.preventDefault()
+      handleQuickAdd()
+    } else if (e.key === 'Escape') {
+      setQuickAddMode(false)
+    }
+  }
+
+  // 시즌 옵션 (인라인 select용)
+  const seasonOptions = [
+    { value: '', label: '-' },
+    ...seasons.map(s => ({ value: String(s.id), label: s.name }))
+  ]
+
+  // 카테고리 옵션 (인라인 select용)
+  const categoryOptions = [
+    { value: '', label: '-' },
+    ...Object.entries(categoryLabels).map(([key, label]) => ({ value: key, label }))
+  ]
+
   const columns: Column<TimelineEvent>[] = [
     {
       key: 'eventDate',
       header: '날짜',
       width: '180px',
+      editable: true,
+      editType: 'date',
       render: (item) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
           <span>{formatDate(item.eventDate)}</span>
@@ -136,11 +244,19 @@ export default function TimelinePage() {
         </div>
       ),
     },
-    { key: 'title', header: '제목' },
+    {
+      key: 'title',
+      header: '제목',
+      editable: true,
+      editType: 'text',
+    },
     {
       key: 'category',
       header: '카테고리',
-      width: '100px',
+      width: '120px',
+      editable: true,
+      editType: 'select',
+      selectOptions: categoryOptions,
       render: (item) => item.category ? (
         <span
           className={styles.badge}
@@ -156,7 +272,10 @@ export default function TimelinePage() {
     {
       key: 'seasonId',
       header: '시즌',
-      width: '160px',
+      width: '180px',
+      editable: true,
+      editType: 'select',
+      selectOptions: seasonOptions,
       render: (item) => <span style={{ whiteSpace: 'nowrap' }}>{getSeasonName(item.seasonId)}</span>,
     },
     {
@@ -181,17 +300,124 @@ export default function TimelinePage() {
             <p className={styles.subtitle}>시즌별 주요 사건 및 이벤트 기록</p>
           </div>
         </div>
-        <button onClick={openAddModal} className={styles.addButton}>
-          <Plus size={18} />
-          이벤트 추가
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={toggleQuickAddMode}
+            className={styles.addButton}
+            style={{
+              background: quickAddMode ? 'var(--primary)' : 'transparent',
+              border: '1px solid var(--primary)',
+              color: quickAddMode ? 'white' : 'var(--primary)',
+            }}
+          >
+            <Zap size={18} />
+            빠른 추가
+          </button>
+          <button onClick={openAddModal} className={styles.addButton}>
+            <Plus size={18} />
+            이벤트 추가
+          </button>
+        </div>
       </header>
+
+      {/* 빠른 추가 폼 */}
+      <AnimatePresence>
+        {quickAddMode && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{
+              background: 'var(--card-bg)',
+              border: '2px dashed var(--primary)',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Calendar size={16} style={{ color: 'var(--primary)' }} />
+                <input
+                  type="date"
+                  value={quickAddData.eventDate}
+                  onChange={(e) => setQuickAddData(prev => ({ ...prev, eventDate: e.target.value }))}
+                  onKeyDown={handleQuickAddKeyDown}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid var(--card-border)',
+                    borderRadius: '4px',
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.875rem',
+                  }}
+                />
+              </div>
+              <input
+                type="text"
+                value={quickAddData.title}
+                onChange={(e) => setQuickAddData(prev => ({ ...prev, title: e.target.value }))}
+                onKeyDown={handleQuickAddKeyDown}
+                placeholder="이벤트 제목 입력 후 Enter..."
+                autoFocus
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  border: '1px solid var(--card-border)',
+                  borderRadius: '4px',
+                  background: 'var(--surface)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.875rem',
+                }}
+              />
+              <button
+                onClick={handleQuickAdd}
+                disabled={isQuickAdding || !quickAddData.title.trim()}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  background: 'var(--primary)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  opacity: isQuickAdding || !quickAddData.title.trim() ? 0.6 : 1,
+                }}
+              >
+                {isQuickAdding ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={16} />}
+                추가
+              </button>
+              <button
+                onClick={() => setQuickAddMode(false)}
+                style={{
+                  padding: '8px',
+                  background: 'transparent',
+                  border: '1px solid var(--card-border)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+              Enter: 추가 · Escape: 닫기 · 연속 추가 가능
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <DataTable
         data={events}
         columns={columns}
         onEdit={openEditModal}
         onDelete={handleDelete}
+        onInlineEdit={handleInlineEdit}
         searchPlaceholder="이벤트 제목으로 검색..."
         isLoading={isLoading}
       />
