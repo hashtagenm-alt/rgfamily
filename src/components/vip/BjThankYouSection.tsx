@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Crown, ChevronDown, ChevronRight, Plus, Loader2, Play } from 'lucide-react'
 import { useBjMessages, useBjMemberStatus } from '@/lib/hooks'
+import { useAuthContext } from '@/lib/context/AuthContext'
 import BjMessageCard from './BjMessageCard'
 import BjMessageModal from './BjMessageModal'
 import BjMessageForm from './BjMessageForm'
+import BjMessageEditModal from './BjMessageEditModal'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
 import styles from './BjThankYouSection.module.css'
 
@@ -21,12 +23,14 @@ const INITIAL_DISPLAY_COUNT = 4
 export default function BjThankYouSection({
   vipProfileId,
   vipNickname,
-  hasFullAccess = false,
+  hasFullAccess: _hasFullAccess = false,
 }: BjThankYouSectionProps) {
-  const { messages, isLoading, submitMessage } = useBjMessages(vipProfileId)
+  const { messages, isLoading, submitMessage, updateMessage, deleteMessage } = useBjMessages(vipProfileId)
   const { isBjMember, bjMemberId, bjMemberInfo, isLoading: bjLoading } = useBjMemberStatus()
+  const { isAdmin } = useAuthContext()
 
   const [selectedMessage, setSelectedMessage] = useState<BjMessageWithMember | null>(null)
+  const [editingMessage, setEditingMessage] = useState<BjMessageWithMember | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
@@ -40,11 +44,51 @@ export default function BjThankYouSection({
   const displayedPhotoMessages = showAll ? photoMessages : photoMessages.slice(0, INITIAL_DISPLAY_COUNT)
   const hasMorePhotos = photoMessages.length > INITIAL_DISPLAY_COUNT
 
+  // 메시지 수정 권한 체크 (본인 또는 관리자)
+  const canEditMessage = useCallback((message: BjMessageWithMember) => {
+    if (isAdmin()) return true
+    if (bjMemberId && message.bj_member_id === bjMemberId) return true
+    return false
+  }, [isAdmin, bjMemberId])
+
   const handleCardClick = (message: BjMessageWithMember) => {
     // 잠금된 메시지(canViewContent가 false)는 모달을 열지 않음
     if (!message.canViewContent) return
     setSelectedMessage(message)
   }
+
+  // 메시지 수정 시작
+  const handleEditMessage = useCallback((message: BjMessageWithMember) => {
+    setEditingMessage(message)
+  }, [])
+
+  // 메시지 수정 완료
+  const handleUpdateMessage = useCallback(async (data: {
+    contentText?: string
+    contentUrl?: string
+    isPublic?: boolean
+  }) => {
+    if (!editingMessage) return false
+
+    const success = await updateMessage({
+      messageId: editingMessage.id,
+      contentText: data.contentText,
+      contentUrl: data.contentUrl,
+      isPublic: data.isPublic,
+    })
+
+    if (success) {
+      setEditingMessage(null)
+    }
+    return success
+  }, [editingMessage, updateMessage])
+
+  // 메시지 삭제
+  const handleDeleteMessage = useCallback(async (messageId: number) => {
+    if (!confirm('정말 삭제하시겠습니까?')) return
+
+    await deleteMessage(messageId)
+  }, [deleteMessage])
 
   const handleSubmitMessage = async (data: {
     messageType: 'text' | 'image' | 'video'
@@ -184,6 +228,9 @@ export default function BjThankYouSection({
                   key={message.id}
                   message={message}
                   onClick={() => handleCardClick(message)}
+                  canEdit={canEditMessage(message)}
+                  onEdit={handleEditMessage}
+                  onDelete={handleDeleteMessage}
                 />
               ))}
             </div>
@@ -250,6 +297,16 @@ export default function BjThankYouSection({
             imageUrl: bjMemberInfo.imageUrl,
           }}
           vipNickname={vipNickname}
+        />
+      )}
+
+      {/* 메시지 수정 모달 */}
+      {editingMessage && (
+        <BjMessageEditModal
+          isOpen={!!editingMessage}
+          message={editingMessage}
+          onClose={() => setEditingMessage(null)}
+          onSubmit={handleUpdateMessage}
         />
       )}
     </motion.section>

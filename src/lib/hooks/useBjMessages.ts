@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   getBjMessagesByVipId,
   createBjMessage,
+  updateBjMessage,
   deleteBjMessage,
   type BjMessageWithMember,
 } from '@/lib/actions/bj-messages'
@@ -17,12 +18,20 @@ interface SubmitMessageParams {
   isPublic?: boolean
 }
 
+interface UpdateMessageParams {
+  messageId: number
+  contentText?: string
+  contentUrl?: string
+  isPublic?: boolean
+}
+
 interface UseBjMessagesResult {
   messages: BjMessageWithMember[]
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
   submitMessage: (params: SubmitMessageParams) => Promise<boolean>
+  updateMessage: (params: UpdateMessageParams) => Promise<boolean>
   deleteMessage: (messageId: number) => Promise<boolean>
 }
 
@@ -87,6 +96,29 @@ export function useBjMessages(vipProfileId: string): UseBjMessagesResult {
     [fetchMessages]
   )
 
+  // 메시지 수정
+  const updateMessageHandler = useCallback(
+    async (params: UpdateMessageParams): Promise<boolean> => {
+      setError(null)
+
+      const result = await updateBjMessage(params.messageId, {
+        contentText: params.contentText,
+        contentUrl: params.contentUrl,
+        isPublic: params.isPublic,
+      })
+
+      if (result.error) {
+        setError(result.error)
+        return false
+      }
+
+      // 성공 시 목록 새로고침
+      await fetchMessages()
+      return true
+    },
+    [fetchMessages]
+  )
+
   // 메시지 삭제 (soft delete)
   const deleteMessageHandler = useCallback(
     async (messageId: number): Promise<boolean> => {
@@ -116,6 +148,7 @@ export function useBjMessages(vipProfileId: string): UseBjMessagesResult {
     error,
     refetch: fetchMessages,
     submitMessage,
+    updateMessage: updateMessageHandler,
     deleteMessage: deleteMessageHandler,
   }
 }

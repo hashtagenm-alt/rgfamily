@@ -1,5 +1,5 @@
 .commentsSection {
-  padding-top: 16px;
+  padding-top: 18px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -55,15 +55,15 @@
 .commentsList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 16px;
+  gap: 18px;
+  margin-top: 18px;
 }
 
 /* 개별 댓글 */
 .comment {
-  padding: 12px;
+  padding: 14px 16px;
   background: rgba(255, 255, 255, 0.02);
-  border-radius: 10px;
+  border-radius: 12px;
   transition: background 0.2s;
 }
 
@@ -74,8 +74,8 @@
 .reply {
   margin-left: 24px;
   padding: 10px;
-  background: rgba(253, 104, 186, 0.03);
-  border-left: 2px solid rgba(253, 104, 186, 0.2);
+  background: rgba(212, 175, 55, 0.03);
+  border-left: 2px solid rgba(212, 175, 55, 0.2);
 }
 
 /* 댓글 헤더 */
@@ -87,29 +87,29 @@
 }
 
 .commentAvatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .commentAvatarPlaceholder {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(253, 104, 186, 0.4) 0%, rgba(255, 138, 204, 0.4) 100%);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.4) 0%, rgba(229, 192, 75, 0.4) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: white;
 }
 
 .smallAvatar {
-  width: 28px;
-  height: 28px;
-  font-size: 11px;
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
 }
 
 .commentInfo {
@@ -189,8 +189,8 @@
 }
 
 .replyBtn:hover {
-  background: rgba(253, 104, 186, 0.1);
-  color: #fd68ba;
+  background: rgba(212, 175, 55, 0.1);
+  color: #d4af37;
 }
 
 .deleteCommentBtn {
@@ -293,8 +293,8 @@
 }
 
 :global([data-theme="light"]) .reply {
-  background: rgba(224, 80, 144, 0.03);
-  border-left-color: rgba(224, 80, 144, 0.25);
+  background: rgba(184, 134, 11, 0.03);
+  border-left-color: rgba(184, 134, 11, 0.25);
 }
 
 :global([data-theme="light"]) .commentName {
@@ -314,8 +314,8 @@
 }
 
 :global([data-theme="light"]) .replyBtn:hover {
-  background: rgba(224, 80, 144, 0.1);
-  color: #e05090;
+  background: rgba(184, 134, 11, 0.1);
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .deleteCommentBtn {
@@ -336,21 +336,21 @@
 /* 반응형 */
 @media (max-width: 640px) {
   .reply {
-    margin-left: 16px;
+    margin-left: 18px;
   }
 
   .replyFormWrapper {
-    padding-left: 32px;
+    padding-left: 36px;
   }
 
   .commentAvatar,
   .commentAvatarPlaceholder {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 
   .smallAvatar {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
   }
 }

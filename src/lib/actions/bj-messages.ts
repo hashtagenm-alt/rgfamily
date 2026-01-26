@@ -106,15 +106,16 @@ export async function getBjMessagesByVipId(
     let userBjMemberId: number | null = null
 
     if (userId) {
-      // 사용자 정보 조회 (role 및 organization 체크)
-      const { data: profile } = await supabase
+      // 사용자 권한 조회 (Service Role로 RLS 우회하여 정확한 role 확인)
+      const serviceClient = createServiceRoleClient()
+      const { data: profile } = await serviceClient
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single()
 
       // 현재 사용자의 organization ID 조회 (BJ 멤버인지 확인)
-      const { data: orgData } = await supabase
+      const { data: orgData } = await serviceClient
         .from('organization')
         .select('id')
         .eq('profile_id', userId)
