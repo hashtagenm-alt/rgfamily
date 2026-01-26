@@ -24,6 +24,8 @@ import styles from './VipBoardPost.module.css'
 interface VipBoardPostProps {
   message: VipMessageWithAuthor
   isOwner?: boolean
+  isAdmin?: boolean
+  currentUserId?: string | null
   vipNickname: string
   onToggleVisibility?: (messageId: number) => void
   onDelete?: (messageId: number) => void
@@ -33,6 +35,8 @@ interface VipBoardPostProps {
 export default function VipBoardPost({
   message,
   isOwner = false,
+  isAdmin = false,
+  currentUserId,
   vipNickname,
   onToggleVisibility,
   onDelete,
@@ -44,6 +48,12 @@ export default function VipBoardPost({
 
   // 비공개 콘텐츠 열람 불가 여부
   const isLocked = !message.canViewContent
+
+  // 메시지 작성자인지 체크
+  const isAuthor = currentUserId === message.author_id
+
+  // 삭제/수정 권한: 작성자 본인, VIP 소유자, 또는 Admin
+  const canModify = isAuthor || isOwner || isAdmin
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -183,8 +193,8 @@ export default function VipBoardPost({
             <span>{getTypeLabel()}</span>
           </span>
 
-          {/* 소유자 메뉴 */}
-          {isOwner && (
+          {/* 작성자/소유자/Admin 메뉴 */}
+          {canModify && (
             <div className={styles.menuContainer}>
               <button
                 className={styles.menuBtn}
@@ -195,19 +205,22 @@ export default function VipBoardPost({
               </button>
               {showMenu && (
                 <div className={styles.menu}>
-                  <button onClick={handleToggleVisibility}>
-                    {message.is_public ? (
-                      <>
-                        <EyeOff size={14} />
-                        <span>비공개로 전환</span>
-                      </>
-                    ) : (
-                      <>
-                        <Eye size={14} />
-                        <span>공개로 전환</span>
-                      </>
-                    )}
-                  </button>
+                  {/* 공개/비공개 전환은 작성자만 가능 */}
+                  {isAuthor && (
+                    <button onClick={handleToggleVisibility}>
+                      {message.is_public ? (
+                        <>
+                          <EyeOff size={14} />
+                          <span>비공개로 전환</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye size={14} />
+                          <span>공개로 전환</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                   <button onClick={handleDelete} className={styles.deleteBtn}>
                     <Trash2 size={14} />
                     <span>삭제</span>

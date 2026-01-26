@@ -91,6 +91,13 @@ export default function SeasonRankingPage() {
   const top50 = rankings.slice(0, 50)
   const top3 = top50.slice(0, 3)
 
+  // 포디움 달성자 profile_id 목록 (VIP 페이지 링크용)
+  const podiumProfileIds = useMemo(() => {
+    return top3
+      .filter(item => item.donorId)
+      .map(item => item.donorId as string)
+  }, [top3])
+
   // 시즌 통계
   const seasonStats = useMemo(() => {
     if (rankings.length === 0) return null
@@ -228,7 +235,7 @@ export default function SeasonRankingPage() {
           <>
             {/* Podium */}
             <section className={styles.podiumSection}>
-              <RankingPodium items={top3} onRefetch={refetch} />
+              <RankingPodium items={top3} podiumProfileIds={podiumProfileIds} onRefetch={refetch} />
             </section>
 
             {/* Full List */}
@@ -241,7 +248,8 @@ export default function SeasonRankingPage() {
                 rankings={top50}
                 maxAmount={maxAmount}
                 limit={50}
-                              />
+                podiumProfileIds={podiumProfileIds}
+              />
             </section>
           </>
         )}

@@ -221,10 +221,10 @@
   justify-content: center;
   gap: 10px;
   margin-bottom: 28px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #d4af37;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   text-transform: uppercase;
 }
 
@@ -236,13 +236,13 @@
 .heroContent {
   display: flex;
   align-items: center;
-  gap: 32px;
-  max-width: 800px;
+  gap: 40px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 28px 32px;
+  padding: 36px 40px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(212, 175, 55, 0.12);
-  border-radius: 20px;
+  border-radius: 24px;
   position: relative;
   z-index: 1;
 }
@@ -253,19 +253,19 @@
 }
 
 .heroProfileImage {
-  width: 110px;
-  height: 110px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   border: 3px solid #d4af37;
   object-fit: cover;
   box-shadow:
-    0 0 0 6px rgba(212, 175, 55, 0.1),
-    0 8px 32px rgba(212, 175, 55, 0.2);
+    0 0 0 8px rgba(212, 175, 55, 0.1),
+    0 12px 40px rgba(212, 175, 55, 0.2);
 }
 
 .heroProfilePlaceholder {
-  width: 110px;
-  height: 110px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   border: 3px solid #d4af37;
   background: rgba(212, 175, 55, 0.06);
@@ -274,8 +274,8 @@
   justify-content: center;
   color: #d4af37;
   box-shadow:
-    0 0 0 6px rgba(212, 175, 55, 0.1),
-    0 8px 32px rgba(212, 175, 55, 0.15);
+    0 0 0 8px rgba(212, 175, 55, 0.1),
+    0 12px 40px rgba(212, 175, 55, 0.15);
 }
 
 .heroInfo {
@@ -286,13 +286,13 @@
 .heroTitleRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .heroTitle {
   font-family: 'Pretendard', -apple-system, sans-serif;
-  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-size: clamp(1.625rem, 4vw, 2.25rem);
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.5px;
@@ -304,11 +304,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   background: rgba(212, 175, 55, 0.1);
   border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 6px;
+  border-radius: 8px;
   color: #d4af37;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -323,21 +323,22 @@
 .heroMeta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .rankBadge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  font-size: 11px;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  border-radius: 6px;
+  border-radius: 8px;
   background: rgba(212, 175, 55, 0.1);
   border: 1px solid rgba(212, 175, 55, 0.15);
+  color: #d4af37;
 }
 
 .metaDivider {
@@ -346,28 +347,28 @@
 }
 
 .seasonTag {
-  padding: 4px 10px;
-  font-size: 11px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.5px;
   color: rgba(255, 255, 255, 0.7);
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .seasonRankBadge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  font-size: 11px;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  border-radius: 6px;
-  background: rgba(253, 104, 186, 0.1);
-  border: 1px solid rgba(253, 104, 186, 0.2);
-  color: #fd68ba;
+  border-radius: 8px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: #d4af37;
 }
 
 .seasonRankBadge svg {
@@ -376,21 +377,22 @@
 
 /* VIP 소개글 */
 .heroBio {
-  margin-top: 12px;
-  max-width: 450px;
+  margin-top: 14px;
+  max-width: 500px;
 }
 
 .bioContent {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
 }
 
 .bioText {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.5;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.75;
   margin: 0;
+  letter-spacing: 0.2px;
 }
 
 .bioEditBtn {
@@ -398,11 +400,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   background: transparent;
   border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 5px;
+  border-radius: 6px;
   color: rgba(212, 175, 55, 0.5);
   cursor: pointer;
   transition: all 0.2s;
@@ -417,13 +419,13 @@
 .bioPlaceholderBtn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 8px;
+  padding: 10px 16px;
   background: rgba(212, 175, 55, 0.04);
   border: 1px dashed rgba(212, 175, 55, 0.25);
-  border-radius: 8px;
+  border-radius: 10px;
   color: rgba(212, 175, 55, 0.6);
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -435,7 +437,7 @@
 }
 
 .bioEmpty {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.35);
   font-style: italic;
   margin: 0;
@@ -444,20 +446,20 @@
 .bioEditForm {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .bioTextarea {
   width: 100%;
-  min-height: 70px;
-  padding: 10px 12px;
+  min-height: 80px;
+  padding: 12px 14px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 8px;
+  border-radius: 10px;
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-family: inherit;
-  line-height: 1.5;
+  line-height: 1.6;
   resize: vertical;
   transition: all 0.2s;
 }
@@ -476,22 +478,22 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
 .bioCharCount {
-  font-size: 10px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.35);
   margin-right: auto;
 }
 
 .bioCancelBtn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  border-radius: 8px;
   color: rgba(255, 255, 255, 0.6);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -503,12 +505,12 @@
 }
 
 .bioSaveBtn {
-  padding: 6px 14px;
+  padding: 8px 16px;
   background: #d4af37;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #1a1a1a;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -522,9 +524,9 @@
    CONTAINER
    ═══════════════════════════════════════════════ */
 .container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 48px 32px 64px;
+  padding: 56px 40px 72px;
 }
 
 /* ═══════════════════════════════════════════════
@@ -533,19 +535,19 @@
 .messageSection,
 .videoSection,
 .gallerySection {
-  margin-bottom: 40px;
-  padding: 28px;
+  margin-bottom: 48px;
+  padding: 32px;
   background: rgba(255, 255, 255, 0.015);
   border: 1px solid rgba(212, 175, 55, 0.08);
-  border-radius: 16px;
+  border-radius: 20px;
 }
 
 .sectionHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  gap: 14px;
+  margin-bottom: 28px;
+  padding-bottom: 18px;
   border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
@@ -557,10 +559,10 @@
 
 .sectionHeader h2 {
   font-family: 'Pretendard', -apple-system, sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: #ffffff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   margin: 0;
 }
 
@@ -608,12 +610,13 @@
 
 .messageCard p {
   font-family: 'Noto Serif KR', serif;
-  font-size: var(--text-lg);
-  line-height: 2;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  line-height: 2.1;
+  color: rgba(255, 255, 255, 0.88);
   margin: 0;
   text-align: center;
-  font-weight: 300;
+  font-weight: 400;
+  letter-spacing: 0.3px;
 }
 
 /* ═══════════════════════════════════════════════
@@ -662,7 +665,7 @@
 .galleryGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
 .galleryItem {
@@ -671,29 +674,29 @@
   overflow: hidden;
   cursor: pointer;
   background: rgba(212, 175, 55, 0.03);
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid rgba(212, 175, 55, 0.12);
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .galleryItem:hover {
-  border-color: rgba(212, 175, 55, 0.4);
-  transform: translateY(-6px);
+  border-color: rgba(212, 175, 55, 0.45);
+  transform: translateY(-8px);
   box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.3),
-    0 0 40px rgba(212, 175, 55, 0.1);
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    0 0 50px rgba(212, 175, 55, 0.12);
 }
 
 .galleryItem::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.6) 100%);
+  background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.65) 100%);
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.4s ease;
   z-index: 2;
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 .galleryItem:hover::after {
@@ -702,7 +705,7 @@
 
 .galleryImage {
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: 16px;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -986,7 +989,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8);
+  padding: 32px;
   cursor: pointer;
 }
 
@@ -1004,16 +1007,16 @@
 
 .modalClose {
   position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
-  width: 44px;
-  height: 44px;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 8px;
+  border-radius: 12px;
   color: #d4af37;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1023,6 +1026,7 @@
 .modalClose:hover {
   background: rgba(0, 0, 0, 0.8);
   border-color: rgba(212, 175, 55, 0.5);
+  transform: scale(1.05);
 }
 
 .modalNav {
@@ -1032,11 +1036,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 8px;
+  border-radius: 12px;
   color: #d4af37;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1046,6 +1050,7 @@
 .modalNav:hover {
   background: rgba(0, 0, 0, 0.8);
   border-color: rgba(212, 175, 55, 0.5);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .modalNavPrev {
@@ -1161,8 +1166,8 @@
 
   .heroProfileImage,
   .heroProfilePlaceholder {
-    width: 80px;
-    height: 80px;
+    width: 90px;
+    height: 90px;
   }
 
   .heroProfilePlaceholder svg {
@@ -1180,7 +1185,7 @@
   }
 
   .container {
-    padding: var(--space-10) var(--space-4);
+    padding: 40px 20px 56px;
   }
 
   .messageSection,
@@ -1228,17 +1233,17 @@
   }
 
   .rankBadge {
-    padding: var(--space-2) var(--space-4);
+    padding: 8px 16px;
     letter-spacing: 2px;
   }
 
   .galleryGrid {
-    gap: var(--space-1);
+    gap: 6px;
   }
 
   .modalNav {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -1283,13 +1288,18 @@
   color: #b8860b;
 }
 
+:global([data-theme="light"]) .heroContent {
+  background: rgba(184, 134, 11, 0.03);
+  border-color: rgba(184, 134, 11, 0.15);
+}
+
 :global([data-theme="light"]) .heroProfileImage {
   border-color: #b8860b;
 }
 
 :global([data-theme="light"]) .heroProfilePlaceholder {
   border-color: #b8860b;
-  background: rgba(184, 134, 11, 0.1);
+  background: rgba(139, 105, 20, 0.12);
   color: #b8860b;
 }
 
@@ -1298,7 +1308,9 @@
 }
 
 :global([data-theme="light"]) .rankBadge {
-  background: rgba(184, 134, 11, 0.15);
+  background: rgba(139, 105, 20, 0.12);
+  border-color: rgba(139, 105, 20, 0.35);
+  color: #8b6914;
 }
 
 :global([data-theme="light"]) .seasonTag {
@@ -1306,15 +1318,21 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
+:global([data-theme="light"]) .seasonRankBadge {
+  background: rgba(139, 105, 20, 0.12);
+  border-color: rgba(139, 105, 20, 0.35);
+  color: #8b6914;
+}
+
 :global([data-theme="light"]) .infoBtn {
-  background: rgba(184, 134, 11, 0.1);
-  border-color: rgba(184, 134, 11, 0.2);
+  background: rgba(139, 105, 20, 0.12);
+  border-color: rgba(139, 105, 20, 0.25);
   color: #b8860b;
 }
 
 :global([data-theme="light"]) .infoBtn:hover {
-  background: rgba(184, 134, 11, 0.2);
-  border-color: rgba(184, 134, 11, 0.4);
+  background: rgba(139, 105, 20, 0.2);
+  border-color: rgba(139, 105, 20, 0.4);
 }
 
 :global([data-theme="light"]) .metaDivider {
@@ -1326,25 +1344,25 @@
 }
 
 :global([data-theme="light"]) .bioEditBtn {
-  border-color: rgba(184, 134, 11, 0.2);
-  color: rgba(184, 134, 11, 0.6);
+  border-color: rgba(139, 105, 20, 0.3);
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .bioEditBtn:hover {
-  background: rgba(184, 134, 11, 0.1);
-  border-color: rgba(184, 134, 11, 0.4);
+  background: rgba(139, 105, 20, 0.12);
+  border-color: rgba(139, 105, 20, 0.5);
   color: #b8860b;
 }
 
 :global([data-theme="light"]) .bioPlaceholderBtn {
-  background: rgba(184, 134, 11, 0.05);
-  border-color: rgba(184, 134, 11, 0.3);
-  color: rgba(184, 134, 11, 0.7);
+  background: rgba(139, 105, 20, 0.08);
+  border-color: rgba(139, 105, 20, 0.35);
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .bioPlaceholderBtn:hover {
-  background: rgba(184, 134, 11, 0.1);
-  border-color: rgba(184, 134, 11, 0.5);
+  background: rgba(139, 105, 20, 0.15);
+  border-color: rgba(139, 105, 20, 0.5);
   color: #b8860b;
 }
 
@@ -1382,14 +1400,34 @@
 
 :global([data-theme="light"]) .bioSaveBtn {
   background: #b8860b;
+  color: #fff;
 }
 
 :global([data-theme="light"]) .bioSaveBtn:hover {
-  background: #d4af37;
+  background: #b8860b;
+}
+
+:global([data-theme="light"]) .messageSection,
+:global([data-theme="light"]) .videoSection,
+:global([data-theme="light"]) .gallerySection {
+  background: rgba(184, 134, 11, 0.02);
+  border-color: rgba(184, 134, 11, 0.12);
+}
+
+:global([data-theme="light"]) .sectionHeader {
+  border-bottom-color: rgba(184, 134, 11, 0.15);
 }
 
 :global([data-theme="light"]) .sectionHeader h2 {
   color: #1a1a1a;
+}
+
+:global([data-theme="light"]) .sectionHeader svg {
+  color: #b8860b;
+}
+
+:global([data-theme="light"]) .sectionDivider {
+  background: linear-gradient(90deg, rgba(184, 134, 11, 0.25), transparent);
 }
 
 :global([data-theme="light"]) .messageCard {
@@ -1408,8 +1446,8 @@
 }
 
 :global([data-theme="light"]) .videoLink:hover {
-  background: rgba(184, 134, 11, 0.05);
-  border-color: rgba(184, 134, 11, 0.35);
+  background: rgba(139, 105, 20, 0.08);
+  border-color: rgba(139, 105, 20, 0.4);
   color: #b8860b;
 }
 
@@ -1447,12 +1485,12 @@
 }
 
 :global([data-theme="light"]) .restrictedButton {
-  border-color: rgba(184, 134, 11, 0.5);
+  border-color: rgba(139, 105, 20, 0.5);
   color: #b8860b;
 }
 
 :global([data-theme="light"]) .restrictedButton:hover {
-  background: rgba(184, 134, 11, 0.1);
+  background: rgba(139, 105, 20, 0.12);
   border-color: #b8860b;
 }
 
@@ -1492,9 +1530,9 @@
 }
 
 :global([data-theme="light"]) .lockedGalleryMessage {
-  background: rgba(184, 134, 11, 0.1);
-  border-color: rgba(184, 134, 11, 0.2);
-  color: rgba(184, 134, 11, 0.9);
+  background: rgba(139, 105, 20, 0.12);
+  border-color: rgba(139, 105, 20, 0.25);
+  color: #b8860b;
 }
 
 :global([data-theme="light"]) .uploadHint {
@@ -1502,5 +1540,5 @@
 }
 
 :global([data-theme="light"]) .uploadPlaceholder:hover .uploadHint {
-  color: rgba(253, 104, 186, 0.7) !important;
+  color: rgba(184, 134, 11, 0.7) !important;
 }

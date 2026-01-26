@@ -62,8 +62,18 @@ export class SupabaseRankingRepository implements IRankingRepository {
         totalRankingsMap[item.donor_name.trim()] = item.rank
       })
 
-      // DB에서 가져온 rank 값 그대로 사용
-      return (data || []).map((item) => ({
+      // DB에서 가져온 rank 값 그대로 사용 (중복 제거: 같은 donor_name이 여러 번 나오면 첫 번째만 유지)
+      const seenDonors = new Set<string>()
+      const uniqueData = (data || []).filter((item) => {
+        const name = item.donor_name.trim()
+        if (seenDonors.has(name)) {
+          return false
+        }
+        seenDonors.add(name)
+        return true
+      })
+
+      return uniqueData.map((item) => ({
         donorId: nicknameToProfile[item.donor_name]?.id || null,
         donorName: item.donor_name,
         avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
@@ -100,7 +110,18 @@ export class SupabaseRankingRepository implements IRankingRepository {
       }
     })
 
-    return (data || []).map((item) => ({
+    // 중복 제거: 같은 donor_name이 여러 번 나오면 첫 번째만 유지
+    const seenDonors = new Set<string>()
+    const uniqueData = (data || []).filter((item) => {
+      const name = item.donor_name.trim()
+      if (seenDonors.has(name)) {
+        return false
+      }
+      seenDonors.add(name)
+      return true
+    })
+
+    return uniqueData.map((item) => ({
       donorId: nicknameToProfile[item.donor_name]?.id || null,
       donorName: item.donor_name,
       avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
