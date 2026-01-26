@@ -79,13 +79,9 @@ function isDirectVideoUrl(url: string): boolean {
 // Supabase Storage URL을 프록시 URL로 변환 (Chrome URL 안전 검사 우회)
 function getProxiedVideoUrl(url: string): string {
   if (!url) return ''
-  // Supabase Storage URL이면 Next.js rewrites 프록시 사용
-  if (url.includes('supabase.co/storage/v1/object/public/videos/')) {
-    // https://xxx.supabase.co/storage/v1/object/public/videos/path -> /video/path
-    const match = url.match(/supabase\.co\/storage\/v1\/object\/public\/videos\/(.+)$/)
-    if (match) {
-      return `/video/${match[1]}`
-    }
+  // Supabase Storage URL이면 API Route 프록시 사용 (프로덕션 호환)
+  if (url.includes('supabase.co/storage')) {
+    return `/api/video-proxy?url=${encodeURIComponent(url)}`
   }
   return url
 }
