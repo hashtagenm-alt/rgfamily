@@ -51,7 +51,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    label: "후원 랭킹",
+    label: "시청자 랭킹",
     subItems: [
       { label: "전체 랭킹", href: "/ranking", description: "누적 후원 순위", icon: Trophy },
       { label: "시즌별 랭킹", href: "/ranking/season", description: "시즌 선택 및 랭킹", icon: CalendarIcon },
