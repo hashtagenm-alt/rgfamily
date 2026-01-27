@@ -4,6 +4,6 @@
     {
       "path": "/api/live-status/sync",
       "schedule": "0 0 * * *"
-    }
+    } 
   ]
 }
