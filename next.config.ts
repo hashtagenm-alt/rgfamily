@@ -43,7 +43,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.dicebear.com https://*.sentry.io https://*.ingest.sentry.io https://upload.videodelivery.net",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.dicebear.com https://*.sentry.io https://*.ingest.sentry.io https://upload.videodelivery.net https://upload.cloudflarestream.com",
               "media-src 'self' https://*.supabase.co https://*.cloudflarestream.com https://videodelivery.net blob: data:",
               "frame-src 'self' https://iframe.videodelivery.net https://*.cloudflarestream.com https://www.youtube.com",
               "frame-ancestors 'none'",
