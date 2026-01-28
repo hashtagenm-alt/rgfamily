@@ -1,6 +1,7 @@
 'use server'
 
 import { adminAction, publicAction, type ActionResult } from './index'
+import { deleteVideo } from '@/lib/cloudflare'
 import type { InsertTables, UpdateTables, MediaContent } from '@/types/database'
 
 type MediaInsert = InsertTables<'media_content'>
@@ -46,11 +47,28 @@ export async function updateMediaContent(
 
 /**
  * 미디어 콘텐츠 삭제
+ * Cloudflare Stream 영상이 있으면 함께 삭제
  */
 export async function deleteMediaContent(
   id: number
 ): Promise<ActionResult<null>> {
   return adminAction(async (supabase) => {
+    // 먼저 cloudflare_uid 확인
+    const { data: existing } = await supabase
+      .from('media_content')
+      .select('cloudflare_uid')
+      .eq('id', id)
+      .single()
+
+    // Cloudflare Stream 영상 삭제 (실패해도 DB 삭제는 진행)
+    if (existing?.cloudflare_uid) {
+      try {
+        await deleteVideo(existing.cloudflare_uid)
+      } catch (e) {
+        console.error('Cloudflare Stream 영상 삭제 실패:', e)
+      }
+    }
+
     const { error } = await supabase
       .from('media_content')
       .delete()
