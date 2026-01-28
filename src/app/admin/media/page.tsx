@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon, Cloud } from 'lucide-react'
-import { DataTable, Column, VideoUpload } from '@/components/admin'
+import { DataTable, Column } from '@/components/admin'
 import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
@@ -31,7 +31,7 @@ export default function MediaPage() {
   const [activeType, setActiveType] = useState<ContentType>('shorts')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewCloudflareUid, setPreviewCloudflareUid] = useState<string | null>(null)
-  const [uploadMode, setUploadMode] = useState<'url' | 'cloudflare' | 'upload'>('cloudflare')
+  const [uploadMode, setUploadMode] = useState<'url' | 'cloudflare'>('cloudflare')
 
   const {
     items: allMediaList,
@@ -438,13 +438,6 @@ export default function MediaPage() {
                     >
                       URL 입력
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setUploadMode('upload')}
-                      className={`${styles.typeButton} ${uploadMode === 'upload' ? styles.active : ''}`}
-                    >
-                      Storage 업로드
-                    </button>
                   </div>
 
                   {uploadMode === 'cloudflare' && (
@@ -473,17 +466,6 @@ export default function MediaPage() {
                     />
                   )}
 
-                  {uploadMode === 'upload' && (
-                    <VideoUpload
-                      onUploadComplete={(url) => {
-                        setEditingMedia({ ...editingMedia, videoUrl: url, cloudflareUid: null })
-                      }}
-                      onError={(error) => alertHandler.showError(error)}
-                      bucketName="videos"
-                      folderPath={editingMedia.contentType === 'shorts' ? 'shorts' : 'vod'}
-                    />
-                  )}
-
                   {editingMedia.cloudflareUid && (
                     <div style={{ marginTop: '8px', fontSize: '13px', color: '#f6821f', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Cloud size={14} />
@@ -491,11 +473,6 @@ export default function MediaPage() {
                     </div>
                   )}
 
-                  {editingMedia.videoUrl && !editingMedia.cloudflareUid && uploadMode !== 'url' && (
-                    <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                      업로드 완료: {editingMedia.videoUrl.split('/').pop()}
-                    </div>
-                  )}
                 </div>
 
                 <div className={styles.formGroup}>
