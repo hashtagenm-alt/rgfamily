@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon } from 'lucide-react'
-import { DataTable, Column, AdminModal, VideoUpload } from '@/components/admin'
+import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon, Cloud } from 'lucide-react'
+import { DataTable, Column, VideoUpload } from '@/components/admin'
+import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
@@ -18,6 +19,7 @@ interface Media {
   contentType: ContentType
   videoUrl: string
   thumbnailUrl: string
+  cloudflareUid: string | null
   unit: 'excel' | 'crew' | null
   isFeatured: boolean
   createdAt: string
@@ -28,7 +30,8 @@ export default function MediaPage() {
   const alertHandler = useAlert()
   const [activeType, setActiveType] = useState<ContentType>('shorts')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [uploadMode, setUploadMode] = useState<'url' | 'upload'>('url')
+  const [previewCloudflareUid, setPreviewCloudflareUid] = useState<string | null>(null)
+  const [uploadMode, setUploadMode] = useState<'url' | 'cloudflare' | 'upload'>('cloudflare')
 
   const {
     items: allMediaList,
@@ -41,7 +44,7 @@ export default function MediaPage() {
     openEditModal,
     closeModal,
     handleSave,
-    handleDelete,
+    handleDelete: baseHandleDelete,
     refetch,
   } = useAdminCRUD<Media>({
     tableName: 'media_content',
@@ -51,6 +54,7 @@ export default function MediaPage() {
       contentType: activeType,
       videoUrl: '',
       thumbnailUrl: '',
+      cloudflareUid: null,
       unit: null,
       isFeatured: false,
     },
@@ -62,6 +66,7 @@ export default function MediaPage() {
       contentType: row.content_type as ContentType,
       videoUrl: row.video_url as string,
       thumbnailUrl: (row.thumbnail_url as string) || '',
+      cloudflareUid: (row.cloudflare_uid as string) || null,
       unit: row.unit as 'excel' | 'crew' | null,
       isFeatured: row.is_featured as boolean,
       createdAt: row.created_at as string,
@@ -72,15 +77,29 @@ export default function MediaPage() {
       content_type: item.contentType,
       video_url: item.videoUrl,
       thumbnail_url: item.thumbnailUrl,
+      cloudflare_uid: item.cloudflareUid,
       unit: item.unit,
       is_featured: item.isFeatured,
     }),
     validate: (item) => {
-      if (!item.title || !item.videoUrl) return '제목과 영상 URL을 입력해주세요.'
+      if (!item.title) return '제목을 입력해주세요.'
+      if (!item.videoUrl && !item.cloudflareUid) return '영상을 업로드하거나 URL을 입력해주세요.'
       return null
     },
     alertHandler,
   })
+
+  // 삭제 시 Cloudflare 영상도 함께 삭제
+  const handleDelete = async (media: Media) => {
+    if (media.cloudflareUid) {
+      try {
+        await fetch(`/api/cloudflare-stream/${media.cloudflareUid}`, { method: 'DELETE' })
+      } catch (e) {
+        console.error('Cloudflare 영상 삭제 실패:', e)
+      }
+    }
+    baseHandleDelete(media)
+  }
 
   // Toggle featured status
   const handleToggleFeatured = async (media: Media) => {
@@ -99,8 +118,11 @@ export default function MediaPage() {
     }
   }
 
-  // Convert YouTube URL to embed URL
-  const getEmbedUrl = (url: string) => {
+  // Convert URL to embed URL (YouTube or Cloudflare)
+  const getEmbedUrl = (url: string, cloudflareUid?: string | null) => {
+    if (cloudflareUid) {
+      return `https://iframe.videodelivery.net/${cloudflareUid}`
+    }
     const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
     if (youtubeMatch) {
       return `https://www.youtube.com/embed/${youtubeMatch[1]}`
@@ -121,8 +143,14 @@ export default function MediaPage() {
     setEditingMedia((prev) => prev ? { ...prev, contentType: activeType } : null)
   }
 
-  const handleView = (media: Media) => {
-    window.open(media.videoUrl, '_blank')
+  const handlePreview = (media: Media) => {
+    setPreviewCloudflareUid(media.cloudflareUid)
+    setPreviewUrl(media.videoUrl)
+  }
+
+  const closePreview = () => {
+    setPreviewUrl(null)
+    setPreviewCloudflareUid(null)
   }
 
   const formatDate = (dateStr: string) => {
@@ -172,6 +200,9 @@ export default function MediaPage() {
       render: (item) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span>{item.title}</span>
+          {item.cloudflareUid && (
+            <span title="Cloudflare Stream"><Cloud size={14} style={{ color: '#f6821f' }} /></span>
+          )}
           {item.isFeatured && (
             <Star size={14} style={{ color: 'var(--color-warning)', fill: 'var(--color-warning)' }} />
           )}
@@ -182,11 +213,11 @@ export default function MediaPage() {
       key: 'unit',
       header: '부서',
       width: '100px',
-      render: (item) => (
+      render: (item) => item.unit ? (
         <span className={`${styles.badge} ${item.unit === 'excel' ? styles.badgeExcel : styles.badgeCrew}`}>
           {item.unit === 'excel' ? '엑셀부' : '크루부'}
         </span>
-      ),
+      ) : <span style={{ color: 'var(--text-tertiary)' }}>-</span>,
     },
     {
       key: 'isFeatured',
@@ -230,7 +261,7 @@ export default function MediaPage() {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              setPreviewUrl(item.videoUrl)
+              handlePreview(item)
             }}
             style={{
               display: 'inline-flex',
@@ -249,15 +280,17 @@ export default function MediaPage() {
             <Play size={12} />
             재생
           </button>
-          <a
-            href={item.videoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'var(--text-tertiary)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink size={14} />
-          </a>
+          {!item.cloudflareUid && item.videoUrl && (
+            <a
+              href={item.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'var(--text-tertiary)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink size={14} />
+            </a>
+          )}
         </div>
       ),
     },
@@ -304,7 +337,6 @@ export default function MediaPage() {
       <DataTable
         data={mediaList}
         columns={columns}
-        onView={handleView}
         onEdit={openEditModal}
         onDelete={handleDelete}
         searchPlaceholder="제목으로 검색..."
@@ -394,6 +426,13 @@ export default function MediaPage() {
                   <div className={styles.typeSelector} style={{ marginBottom: '12px' }}>
                     <button
                       type="button"
+                      onClick={() => setUploadMode('cloudflare')}
+                      className={`${styles.typeButton} ${uploadMode === 'cloudflare' ? styles.active : ''}`}
+                    >
+                      Cloudflare 업로드
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setUploadMode('url')}
                       className={`${styles.typeButton} ${uploadMode === 'url' ? styles.active : ''}`}
                     >
@@ -404,24 +443,40 @@ export default function MediaPage() {
                       onClick={() => setUploadMode('upload')}
                       className={`${styles.typeButton} ${uploadMode === 'upload' ? styles.active : ''}`}
                     >
-                      직접 업로드
+                      Storage 업로드
                     </button>
                   </div>
 
-                  {uploadMode === 'url' ? (
+                  {uploadMode === 'cloudflare' && (
+                    <CloudflareVideoUpload
+                      onUploadComplete={({ uid, thumbnailUrl, duration }) => {
+                        setEditingMedia({
+                          ...editingMedia,
+                          cloudflareUid: uid,
+                          videoUrl: `https://iframe.videodelivery.net/${uid}`,
+                          thumbnailUrl: thumbnailUrl || editingMedia.thumbnailUrl,
+                        })
+                      }}
+                      onError={(error) => alertHandler.showError(error)}
+                    />
+                  )}
+
+                  {uploadMode === 'url' && (
                     <input
                       type="text"
                       value={editingMedia.videoUrl || ''}
                       onChange={(e) =>
-                        setEditingMedia({ ...editingMedia, videoUrl: e.target.value })
+                        setEditingMedia({ ...editingMedia, videoUrl: e.target.value, cloudflareUid: null })
                       }
                       className={styles.input}
                       placeholder="https://youtube.com/..."
                     />
-                  ) : (
+                  )}
+
+                  {uploadMode === 'upload' && (
                     <VideoUpload
                       onUploadComplete={(url) => {
-                        setEditingMedia({ ...editingMedia, videoUrl: url })
+                        setEditingMedia({ ...editingMedia, videoUrl: url, cloudflareUid: null })
                       }}
                       onError={(error) => alertHandler.showError(error)}
                       bucketName="videos"
@@ -429,7 +484,14 @@ export default function MediaPage() {
                     />
                   )}
 
-                  {editingMedia.videoUrl && uploadMode === 'upload' && (
+                  {editingMedia.cloudflareUid && (
+                    <div style={{ marginTop: '8px', fontSize: '13px', color: '#f6821f', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Cloud size={14} />
+                      Cloudflare Stream: {editingMedia.cloudflareUid.slice(0, 12)}...
+                    </div>
+                  )}
+
+                  {editingMedia.videoUrl && !editingMedia.cloudflareUid && uploadMode !== 'url' && (
                     <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
                       업로드 완료: {editingMedia.videoUrl.split('/').pop()}
                     </div>
@@ -445,7 +507,7 @@ export default function MediaPage() {
                       setEditingMedia({ ...editingMedia, thumbnailUrl: e.target.value })
                     }
                     className={styles.input}
-                    placeholder="https://..."
+                    placeholder="https://... (Cloudflare 업로드 시 자동 생성)"
                   />
                 </div>
 
@@ -499,7 +561,7 @@ export default function MediaPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setPreviewUrl(null)}
+            onClick={closePreview}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -517,13 +579,13 @@ export default function MediaPage() {
             >
               <div className={styles.modalHeader}>
                 <h2>영상 미리보기</h2>
-                <button onClick={() => setPreviewUrl(null)} className={styles.closeButton}>
+                <button onClick={closePreview} className={styles.closeButton}>
                   <X size={20} />
                 </button>
               </div>
               <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
                 <iframe
-                  src={getEmbedUrl(previewUrl)}
+                  src={getEmbedUrl(previewUrl, previewCloudflareUid)}
                   style={{
                     position: 'absolute',
                     top: 0,
