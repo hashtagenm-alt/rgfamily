@@ -738,6 +738,7 @@ export type Database = {
           description: string | null
           thumbnail_url: string | null
           video_url: string
+          cloudflare_uid: string | null
           unit: 'excel' | 'crew' | null
           duration: number | null
           view_count: number
@@ -751,6 +752,7 @@ export type Database = {
           description?: string | null
           thumbnail_url?: string | null
           video_url: string
+          cloudflare_uid?: string | null
           unit?: 'excel' | 'crew' | null
           duration?: number | null
           view_count?: number
@@ -764,6 +766,7 @@ export type Database = {
           description?: string | null
           thumbnail_url?: string | null
           video_url?: string
+          cloudflare_uid?: string | null
           unit?: 'excel' | 'crew' | null
           duration?: number | null
           view_count?: number

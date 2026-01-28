@@ -818,6 +818,7 @@ class MockMediaRepository implements IMediaRepository {
       description: data.description || null,
       video_url: data.video_url,
       thumbnail_url: data.thumbnail_url || null,
+      cloudflare_uid: data.cloudflare_uid || null,
       unit: data.unit || null,
       duration: data.duration || null,
       view_count: data.view_count || 0,
