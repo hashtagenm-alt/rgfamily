@@ -65,7 +65,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (values: typeof form.values) => {
     try {
-      const { error } = await signUp(
+      const { data, error } = await signUp(
         values.email,
         values.password,
         values.nickname,
@@ -76,7 +76,11 @@ export default function SignupPage() {
         } else {
           form.setFieldError("email", error.message);
         }
+      } else if (data?.session) {
+        // 이메일 인증 없이 바로 세션 생성됨 → 메인으로 이동
+        router.push("/");
       } else {
+        // 세션이 없으면 가입 완료 메시지 표시 (이메일 인증 필요한 경우)
         setSuccess(true);
       }
     } catch {
@@ -130,9 +134,9 @@ export default function SignupPage() {
               가입 완료!
             </Title>
             <Text c="dimmed" size="sm" ta="center" style={{ lineHeight: 1.6 }}>
-              이메일 인증 링크를 발송했습니다.
+              회원가입이 완료되었습니다.
               <br />
-              이메일을 확인해주세요.
+              로그인해주세요.
             </Text>
             <Button
               component={Link}
