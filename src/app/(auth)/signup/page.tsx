@@ -65,17 +65,21 @@ export default function SignupPage() {
 
   const handleSubmit = async (values: typeof form.values) => {
     try {
-      const { error } = await signUp(
-        values.email,
-        values.password,
-        values.nickname,
-      );
-      if (error) {
-        if (error.message.includes("already registered")) {
-          form.setFieldError("email", "이미 등록된 이메일입니다");
-        } else {
-          form.setFieldError("email", error.message);
-        }
+      // 서버 API로 회원가입 (이메일 인증 우회)
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          nickname: values.nickname,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        form.setFieldError("email", data.error || "회원가입 중 오류가 발생했습니다");
       } else {
         setSuccess(true);
       }
@@ -130,9 +134,9 @@ export default function SignupPage() {
               가입 완료!
             </Title>
             <Text c="dimmed" size="sm" ta="center" style={{ lineHeight: 1.6 }}>
-              이메일 인증 링크를 발송했습니다.
+              회원가입이 완료되었습니다.
               <br />
-              이메일을 확인해주세요.
+              지금 바로 로그인하세요!
             </Text>
             <Button
               component={Link}
