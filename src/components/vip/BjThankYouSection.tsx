@@ -1,16 +1,22 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Crown, ChevronDown, ChevronRight, Plus, Loader2, Play } from 'lucide-react'
 import { useBjMessages, useBjMemberStatus } from '@/lib/hooks'
-import { useAuthContext } from '@/lib/context/AuthContext'
+import { useAuthContext, useSupabaseContext } from '@/lib/context'
 import BjMessageCard from './BjMessageCard'
 import BjMessageModal from './BjMessageModal'
 import BjMessageForm from './BjMessageForm'
 import BjMessageEditModal from './BjMessageEditModal'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
 import styles from './BjThankYouSection.module.css'
+
+interface BjMember {
+  id: number
+  name: string
+  imageUrl: string | null
+}
 
 interface BjThankYouSectionProps {
   vipProfileId: string
@@ -25,6 +31,7 @@ export default function BjThankYouSection({
   vipNickname,
   hasFullAccess: _hasFullAccess = false,
 }: BjThankYouSectionProps) {
+  const supabase = useSupabaseContext()
   const { messages, isLoading, submitMessage, updateMessage, deleteMessage } = useBjMessages(vipProfileId)
   const { isBjMember, bjMemberId, bjMemberInfo, isLoading: bjLoading } = useBjMemberStatus()
   const { isAdmin } = useAuthContext()
@@ -33,6 +40,35 @@ export default function BjThankYouSection({
   const [editingMessage, setEditingMessage] = useState<BjMessageWithMember | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [showForm, setShowForm] = useState(false)
+
+  // 어드민용: 모든 BJ 멤버 목록
+  const [bjMembers, setBjMembers] = useState<BjMember[]>([])
+  const [selectedBjMemberId, setSelectedBjMemberId] = useState<number | null>(null)
+
+  // 어드민이면서 BJ 멤버가 아닌 경우 멤버 목록 fetch
+  const isAdminUser = isAdmin()
+  const canWrite = isBjMember || isAdminUser
+
+  useEffect(() => {
+    if (isAdminUser && !isBjMember) {
+      const fetchBjMembers = async () => {
+        const { data } = await supabase
+          .from('organization')
+          .select('id, name, image_url')
+          .eq('is_active', true)
+          .order('position_order', { ascending: true })
+
+        if (data) {
+          setBjMembers(data.map(m => ({
+            id: m.id,
+            name: m.name,
+            imageUrl: m.image_url,
+          })))
+        }
+      }
+      fetchBjMembers()
+    }
+  }, [isAdminUser, isBjMember, supabase])
 
   // 이미지/텍스트와 영상 분리
   const { photoMessages, videoMessages } = useMemo(() => {
@@ -95,12 +131,15 @@ export default function BjThankYouSection({
     contentText?: string
     contentUrl?: string
     isPublic?: boolean
+    selectedMemberId?: number  // 어드민용 선택된 멤버 ID
   }) => {
-    if (!bjMemberId) return false
+    // BJ 멤버인 경우 본인 ID, 어드민인 경우 선택된 멤버 ID
+    const memberId = bjMemberId || data.selectedMemberId
+    if (!memberId) return false
 
     return await submitMessage({
       vipProfileId,
-      bjMemberId,
+      bjMemberId: memberId,
       messageType: data.messageType,
       contentText: data.contentText,
       contentUrl: data.contentUrl,
@@ -142,7 +181,7 @@ export default function BjThankYouSection({
             </div>
             <h2 className={styles.sectionTitle}>BJ 감사 콘텐츠</h2>
             <div className={styles.sectionDivider} />
-            {isBjMember && (
+            {canWrite && (
               <button className={styles.writeBtn} onClick={() => setShowForm(true)}>
                 <Plus size={16} />
                 <span>등록</span>
@@ -161,21 +200,23 @@ export default function BjThankYouSection({
             ))}
           </div>
           <p className={styles.placeholderText}>
-            {isBjMember ? 'VIP님께 감사 콘텐츠를 남겨보세요' : 'BJ 멤버들의 감사 콘텐츠가 여기에 표시됩니다'}
+            {canWrite ? 'VIP님께 감사 콘텐츠를 남겨보세요' : 'BJ 멤버들의 감사 콘텐츠가 여기에 표시됩니다'}
           </p>
         </div>
 
-        {/* BJ용 작성 폼 모달 */}
-        {isBjMember && bjMemberInfo && (
+        {/* BJ/어드민용 작성 폼 모달 */}
+        {canWrite && (
           <BjMessageForm
             isOpen={showForm}
             onClose={() => setShowForm(false)}
             onSubmit={handleSubmitMessage}
-            bjMemberInfo={{
+            bjMemberInfo={bjMemberInfo ? {
               name: bjMemberInfo.name,
               imageUrl: bjMemberInfo.imageUrl,
-            }}
+            } : undefined}
             vipNickname={vipNickname}
+            isAdminMode={isAdminUser && !isBjMember}
+            bjMembers={bjMembers}
           />
         )}
       </section>
@@ -286,17 +327,19 @@ export default function BjThankYouSection({
         onClose={() => setSelectedMessage(null)}
       />
 
-      {/* BJ용 작성 폼 모달 */}
-      {isBjMember && bjMemberInfo && (
+      {/* BJ/어드민용 작성 폼 모달 */}
+      {canWrite && (
         <BjMessageForm
           isOpen={showForm}
           onClose={() => setShowForm(false)}
           onSubmit={handleSubmitMessage}
-          bjMemberInfo={{
+          bjMemberInfo={bjMemberInfo ? {
             name: bjMemberInfo.name,
             imageUrl: bjMemberInfo.imageUrl,
-          }}
+          } : undefined}
           vipNickname={vipNickname}
+          isAdminMode={isAdminUser && !isBjMember}
+          bjMembers={bjMembers}
         />
       )}
 
