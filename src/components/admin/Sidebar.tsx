@@ -18,6 +18,7 @@ import {
   Home,
   Medal,
   BarChart3,
+  Calendar,
 } from 'lucide-react'
 import { useAuthContext } from '@/lib/context'
 import styles from './Sidebar.module.css'
@@ -28,6 +29,7 @@ const menuItems = [
   { href: '/admin/donation-rankings', icon: Medal, label: '후원 랭킹 관리' },
   { href: '/admin/analytics', icon: BarChart3, label: '후원 분석' },
   { href: '/admin/organization', icon: Building, label: '조직도 관리' },
+  { href: '/admin/schedules', icon: Calendar, label: '일정 관리' },
   { href: '/admin/posts', icon: MessageSquare, label: '게시글 관리' },
   { href: '/admin/media', icon: Film, label: '미디어 관리' },
   { href: '/admin/signatures', icon: Image, label: '시그니처 관리' },
