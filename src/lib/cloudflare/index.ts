@@ -80,7 +80,7 @@ export async function createDirectUpload(options?: {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({
-      maxDurationSeconds: options?.maxDurationSeconds || 3600,
+      maxDurationSeconds: options?.maxDurationSeconds || 21600, // 6시간 (Cloudflare 최대)
       meta: options?.meta || {},
     }),
   })
