@@ -22,7 +22,7 @@ import { IconMail, IconLock, IconUser, IconCheck } from "@tabler/icons-react";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signUp, isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const [success, setSuccess] = useState(false);
 
   const form = useForm({
