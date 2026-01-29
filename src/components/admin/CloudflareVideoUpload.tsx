@@ -24,7 +24,7 @@ type UploadStatus = 'idle' | 'uploading' | 'processing' | 'success' | 'error'
 export default function CloudflareVideoUpload({
   onUploadComplete,
   onError,
-  maxSize = 500,
+  maxSize = 30000, // 30GB (Cloudflare 최대)
   disabled = false,
 }: CloudflareVideoUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
