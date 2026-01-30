@@ -9,8 +9,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { RichEditor } from '@/components/ui'
 import { useAuthContext } from '@/lib/context/AuthContext'
-import { useSupabaseContext } from '@/lib/context'
-import { useVipStatus } from '@/lib/hooks/useVipStatus'
+import { useVipStatus, useImageUpload } from '@/lib/hooks'
 import { createPost } from '@/lib/actions/posts'
 import styles from './page.module.css'
 
@@ -29,7 +28,6 @@ function WritePostContent() {
   const isVipByRole = profile?.role && VIP_ROLES.includes(profile.role)
   const canAccessVip = isVipByRole || isVipByRank
 
-  const supabase = useSupabaseContext()
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -38,32 +36,11 @@ function WritePostContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // 리치에디터용 이미지 업로드 핸들러
-  const handleImageUpload = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-      const filePath = `posts/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file)
-
-      if (uploadError) {
-        console.error('이미지 업로드 실패:', uploadError)
-        return null
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath)
-
-      return publicUrl
-    } catch (err) {
-      console.error('이미지 업로드 오류:', err)
-      return null
-    }
-  }
+  // 이미지 업로드 훅
+  const { uploadImage, error: uploadError } = useImageUpload({
+    folder: 'posts',
+    onError: (msg) => setError(msg),
+  })
 
   // VIP 게시판 접근 권한 없으면 자유게시판으로 리다이렉트
   // VIP 상태 로딩 완료 후에만 체크
@@ -224,7 +201,7 @@ function WritePostContent() {
                   placeholder="내용을 입력하세요..."
                   disabled={isSubmitting}
                   minHeight="300px"
-                  onImageUpload={handleImageUpload}
+                  onImageUpload={uploadImage}
                 />
               </div>
             </div>

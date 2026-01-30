@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Megaphone, Plus, X, Save, Pin } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
 import { RichEditor } from '@/components/ui'
-import { useAdminCRUD, useAlert } from '@/lib/hooks'
-import { useSupabaseContext } from '@/lib/context'
+import { useAdminCRUD, useAlert, useImageUpload } from '@/lib/hooks'
 import styles from '../shared.module.css'
 
 interface Notice {
@@ -18,35 +17,13 @@ interface Notice {
 }
 
 export default function NoticesPage() {
-  const supabase = useSupabaseContext()
   const alertHandler = useAlert()
 
-  // 이미지 업로드 핸들러
-  const handleImageUpload = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-      const filePath = `notices/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file)
-
-      if (uploadError) {
-        console.error('이미지 업로드 실패:', uploadError)
-        return null
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath)
-
-      return publicUrl
-    } catch (err) {
-      console.error('이미지 업로드 오류:', err)
-      return null
-    }
-  }
+  // 이미지 업로드 훅
+  const { uploadImage } = useImageUpload({
+    folder: 'notices',
+    onError: (msg) => alertHandler.showError(msg),
+  })
 
   const {
     items: notices,
@@ -188,7 +165,7 @@ export default function NoticesPage() {
                     }
                     placeholder="공지사항 내용을 입력하세요..."
                     minHeight="250px"
-                    onImageUpload={handleImageUpload}
+                    onImageUpload={uploadImage}
                   />
                 </div>
 

@@ -6,7 +6,7 @@ import { MessageSquare, Eye, Plus, X, Save, ChevronDown, ChevronUp, Trash2 } fro
 import { DataTable, Column, AdminModal } from '@/components/admin'
 import { RichEditor } from '@/components/ui'
 import { useSupabaseContext } from '@/lib/context'
-import { useAlert } from '@/lib/hooks'
+import { useAlert, useImageUpload } from '@/lib/hooks'
 import type { JoinedProfile } from '@/types/common'
 import styles from '../shared.module.css'
 
@@ -37,32 +37,11 @@ export default function PostsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<'all' | 'free' | 'vip'>('all')
 
-  // 이미지 업로드 핸들러
-  const handleImageUpload = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-      const filePath = `posts/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file)
-
-      if (uploadError) {
-        console.error('이미지 업로드 실패:', uploadError)
-        return null
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath)
-
-      return publicUrl
-    } catch (err) {
-      console.error('이미지 업로드 오류:', err)
-      return null
-    }
-  }
+  // 이미지 업로드 훅
+  const { uploadImage } = useImageUpload({
+    folder: 'posts',
+    onError: showError,
+  })
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -589,7 +568,7 @@ export default function PostsPage() {
             }
             placeholder="게시글 내용을 입력하세요..."
             minHeight="250px"
-            onImageUpload={handleImageUpload}
+            onImageUpload={uploadImage}
           />
         </div>
 

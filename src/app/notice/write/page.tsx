@@ -7,8 +7,10 @@ import { ArrowLeft, Send, AlertCircle, Bell, ShieldAlert } from 'lucide-react'
 import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import { RichEditor } from '@/components/ui'
 import { useAuthContext } from '@/lib/context/AuthContext'
 import { useSupabaseContext } from '@/lib/context'
+import { useImageUpload } from '@/lib/hooks'
 import { createNotice, updateNotice } from '@/lib/actions/notices'
 import { FileUpload, type UploadedFile } from '@/components/notice'
 import styles from './page.module.css'
@@ -48,6 +50,12 @@ function WriteNoticeContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingNotice, setIsLoadingNotice] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 이미지 업로드 훅
+  const { uploadImage } = useImageUpload({
+    folder: 'notices',
+    onError: (msg) => setError(msg),
+  })
 
   // 수정 모드일 경우 기존 데이터 로드
   const fetchNotice = useCallback(async () => {
@@ -300,16 +308,17 @@ function WriteNoticeContent() {
 
             {/* 내용 입력 */}
             <div className={styles.formRow}>
-              <label htmlFor="content" className={styles.rowLabel}>
+              <label className={styles.rowLabel}>
                 내용
               </label>
               <div className={styles.rowInput}>
-                <textarea
-                  id="content"
-                  className={styles.contentTextarea}
-                  placeholder="공지사항 내용을 입력하세요"
-                  value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                <RichEditor
+                  content={formData.content}
+                  onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                  placeholder="공지사항 내용을 입력하세요..."
+                  minHeight="300px"
+                  disabled={isSubmitting}
+                  onImageUpload={uploadImage}
                 />
               </div>
             </div>
