@@ -47,8 +47,9 @@ export async function POST(request: NextRequest) {
     const subfolder = (formData.get('folder') as string) || 'general'
     const folder = `rg-family/${subfolder}`
 
-    // 배너용인지 확인 (배너는 큰 크기 유지)
+    // 폴더별 특수 처리
     const isBanner = subfolder === 'banners'
+    const isAvatar = subfolder === 'avatars'
 
     if (!file) {
       return NextResponse.json(
@@ -89,6 +90,14 @@ export async function POST(request: NextRequest) {
         { quality: 'auto:good', fetch_format: 'auto' }
       ]
 
+      // 아바타용 transformation (800x800 고해상도)
+      const avatarTransformation = isGif
+        ? [{ width: 800, height: 800, crop: 'fill' }]
+        : [
+            { width: 800, height: 800, crop: 'fill', gravity: 'face' },
+            { quality: 'auto:best', fetch_format: 'auto' }
+          ]
+
       // 일반 이미지 transformation (400x400 정사각형)
       const defaultTransformation = isGif
         ? [{ width: 400, height: 400, crop: 'fill' }]
@@ -97,11 +106,18 @@ export async function POST(request: NextRequest) {
             { quality: 'auto', fetch_format: 'auto' }
           ]
 
+      // 폴더별 transformation 선택
+      const transformation = isBanner
+        ? bannerTransformation
+        : isAvatar
+          ? avatarTransformation
+          : defaultTransformation
+
       cloudinary.uploader.upload_stream(
         {
           folder,
           resource_type: 'image',
-          transformation: isBanner ? bannerTransformation : defaultTransformation,
+          transformation,
         },
         (error, result) => {
           if (error) reject(error)

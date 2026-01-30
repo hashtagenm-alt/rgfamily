@@ -1178,6 +1178,7 @@ export type Database = {
         Row: {
           id: number
           rank: number
+          donor_id: string | null // FK → profiles (연결된 프로필)
           donor_name: string
           total_amount: number // ⚠️ 외부 노출 금지!
           is_permanent_vip: boolean
@@ -1187,6 +1188,7 @@ export type Database = {
         Insert: {
           id?: number
           rank: number
+          donor_id?: string | null
           donor_name: string
           total_amount: number
           is_permanent_vip?: boolean
@@ -1196,13 +1198,21 @@ export type Database = {
         Update: {
           id?: number
           rank?: number
+          donor_id?: string | null
           donor_name?: string
           total_amount?: number
           is_permanent_vip?: boolean
           updated_at?: string
           created_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'total_donation_rankings_donor_id_fkey'
+            columns: ['donor_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
       }
       /**
        * 시즌별 후원 랭킹 - Top 50
@@ -1213,6 +1223,7 @@ export type Database = {
           id: number
           season_id: number
           rank: number
+          donor_id: string | null // FK → profiles (연결된 프로필)
           donor_name: string
           total_amount: number // ⚠️ 외부 노출 금지!
           donation_count: number
@@ -1224,6 +1235,7 @@ export type Database = {
           id?: number
           season_id: number
           rank: number
+          donor_id?: string | null
           donor_name: string
           total_amount: number
           donation_count?: number
@@ -1235,6 +1247,7 @@ export type Database = {
           id?: number
           season_id?: number
           rank?: number
+          donor_id?: string | null
           donor_name?: string
           total_amount?: number
           donation_count?: number
@@ -1242,7 +1255,14 @@ export type Database = {
           updated_at?: string
           created_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'season_donation_rankings_donor_id_fkey'
+            columns: ['donor_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
       }
       /**
        * BJ 직급 마스터 테이블
