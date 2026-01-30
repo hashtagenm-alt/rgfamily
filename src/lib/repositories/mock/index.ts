@@ -824,6 +824,9 @@ class MockMediaRepository implements IMediaRepository {
       view_count: data.view_count || 0,
       is_featured: data.is_featured ?? false,
       created_at: getCurrentTimestamp(),
+      parent_id: data.parent_id || null,
+      part_number: data.part_number || 1,
+      total_parts: data.total_parts || 1,
     }
     store.media.push(newMedia)
     return newMedia

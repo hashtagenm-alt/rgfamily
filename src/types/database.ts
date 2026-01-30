@@ -747,6 +747,10 @@ export type Database = {
           view_count: number
           is_featured: boolean
           created_at: string
+          // VOD 파트 분할용 필드
+          parent_id: number | null
+          part_number: number
+          total_parts: number
         }
         Insert: {
           id?: number
@@ -761,6 +765,9 @@ export type Database = {
           view_count?: number
           is_featured?: boolean
           created_at?: string
+          parent_id?: number | null
+          part_number?: number
+          total_parts?: number
         }
         Update: {
           id?: number
@@ -775,6 +782,9 @@ export type Database = {
           view_count?: number
           is_featured?: boolean
           created_at?: string
+          parent_id?: number | null
+          part_number?: number
+          total_parts?: number
         }
         Relationships: []
       }
