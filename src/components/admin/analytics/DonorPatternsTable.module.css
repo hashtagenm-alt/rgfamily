@@ -28,14 +28,15 @@
   border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 14px; /* 버튼 텍스트 14px */
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .refreshBtn:hover {
   background: var(--bg-tertiary);
-  color: var(--text-primary);
+  color: var(--color-primary, #fd68ba); /* CLAUDE.md: 호버 시 핑크 */
+  border-color: var(--color-primary, #fd68ba);
 }
 
 .spinning {
@@ -105,7 +106,7 @@
 }
 
 .statDesc {
-  font-size: 10px;
+  font-size: 12px; /* 최소 읽을 수 있는 크기로 증가 */
   color: var(--text-secondary);
   text-align: center;
 }
@@ -125,7 +126,13 @@
   border-radius: 6px;
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 16px; /* CLAUDE.md: 최소 16px */
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  border-color: var(--color-primary, #fd68ba);
+  outline: none;
 }
 
 .searchInput::placeholder {
@@ -171,19 +178,23 @@
 
 .table th {
   background: var(--bg-tertiary);
-  font-size: 12px;
+  font-size: 14px; /* 헤더 14px */
   font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
 .table td {
-  font-size: 13px;
+  font-size: 16px; /* CLAUDE.md: 본문 최소 16px */
   color: var(--text-primary);
 }
 
+.table tbody tr {
+  transition: background 0.2s;
+}
+
 .table tbody tr:hover {
-  background: var(--bg-tertiary);
+  background: rgba(253, 104, 186, 0.08); /* 핑크 틴트 */
 }
 
 .donorName {

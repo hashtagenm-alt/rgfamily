@@ -100,23 +100,13 @@ export async function getBjStats(
   episodeId?: number
 ): Promise<ActionResult<BjStats[]>> {
   return adminAction(async (supabase) => {
-    let query = supabase
-      .from('donations')
-      .select('target_bj, amount, donor_name')
+    // 페이지네이션으로 전체 데이터 가져오기
+    const data = await fetchAllDonations(supabase, seasonId, episodeId)
 
-    if (episodeId) {
-      query = query.eq('episode_id', episodeId)
-    } else if (seasonId) {
-      query = query.eq('season_id', seasonId)
-    }
+    // target_bj가 있는 데이터만
+    const filteredData = data.filter(d => d.target_bj !== null)
 
-    // target_bj가 있는 데이터만 (상세 데이터)
-    query = query.not('target_bj', 'is', null)
-
-    const { data, error } = await query
-
-    if (error) throw new Error(error.message)
-    if (!data || data.length === 0) return []
+    if (filteredData.length === 0) return []
 
     // BJ별로 집계
     const bjMap = new Map<string, {
@@ -125,7 +115,7 @@ export async function getBjStats(
       donors: Set<string>
     }>()
 
-    for (const donation of data) {
+    for (const donation of filteredData) {
       const bjName = donation.target_bj?.trim()
       if (!bjName) continue
 
@@ -216,21 +206,13 @@ export async function getDonorBjRelations(
   limit: number = 100
 ): Promise<ActionResult<DonorBjRelation[]>> {
   return adminAction(async (supabase) => {
-    let query = supabase
-      .from('donations')
-      .select('donor_name, target_bj, amount')
-      .not('target_bj', 'is', null)
+    // 페이지네이션으로 전체 데이터 가져오기
+    const allData = await fetchAllDonations(supabase, seasonId, episodeId)
 
-    if (episodeId) {
-      query = query.eq('episode_id', episodeId)
-    } else if (seasonId) {
-      query = query.eq('season_id', seasonId)
-    }
+    // target_bj가 있는 데이터만 필터링
+    const data = allData.filter(d => d.target_bj !== null)
 
-    const { data, error } = await query
-
-    if (error) throw new Error(error.message)
-    if (!data || data.length === 0) return []
+    if (data.length === 0) return []
 
     // 후원자-BJ 쌍별 집계
     const relationMap = new Map<string, { total_hearts: number; donation_count: number }>()
@@ -267,21 +249,13 @@ export async function getDonorPatterns(
   episodeId?: number
 ): Promise<ActionResult<DonorPattern[]>> {
   return adminAction(async (supabase) => {
-    let query = supabase
-      .from('donations')
-      .select('donor_name, target_bj, amount')
-      .not('target_bj', 'is', null)
+    // 페이지네이션으로 전체 데이터 가져오기
+    const allData = await fetchAllDonations(supabase, seasonId, episodeId)
 
-    if (episodeId) {
-      query = query.eq('episode_id', episodeId)
-    } else if (seasonId) {
-      query = query.eq('season_id', seasonId)
-    }
+    // target_bj가 있는 데이터만 필터링
+    const data = allData.filter(d => d.target_bj !== null)
 
-    const { data, error } = await query
-
-    if (error) throw new Error(error.message)
-    if (!data || data.length === 0) return []
+    if (data.length === 0) return []
 
     // 후원자별 데이터 집계
     const donorMap = new Map<string, {
@@ -557,17 +531,24 @@ export async function searchDonor(
   })
 }
 
-// ==================== 요약 통계 ====================
+// ==================== 헬퍼: 페이지네이션으로 전체 데이터 가져오기 ====================
 
-export async function getAnalyticsSummary(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchAllDonations(
+  supabase: any,
   seasonId?: number,
-  episodeId?: number
-): Promise<ActionResult<AnalyticsSummary>> {
-  return adminAction(async (supabase) => {
+  episodeId?: number,
+  _selectFields: string = 'donor_name, target_bj, amount'
+): Promise<{ donor_name: string; target_bj: string | null; amount: number }[]> {
+  const allData: { donor_name: string; target_bj: string | null; amount: number }[] = []
+  let page = 0
+  const pageSize = 1000
+
+  while (true) {
     let query = supabase
       .from('donations')
       .select('donor_name, target_bj, amount')
-      .not('target_bj', 'is', null)
+      .range(page * pageSize, (page + 1) * pageSize - 1)
 
     if (episodeId) {
       query = query.eq('episode_id', episodeId)
@@ -578,7 +559,30 @@ export async function getAnalyticsSummary(
     const { data, error } = await query
 
     if (error) throw new Error(error.message)
-    if (!data || data.length === 0) {
+    if (!data || data.length === 0) break
+
+    allData.push(...(data as { donor_name: string; target_bj: string | null; amount: number }[]))
+    if (data.length < pageSize) break
+    page++
+  }
+
+  return allData
+}
+
+// ==================== 요약 통계 ====================
+
+export async function getAnalyticsSummary(
+  seasonId?: number,
+  episodeId?: number
+): Promise<ActionResult<AnalyticsSummary>> {
+  return adminAction(async (supabase) => {
+    // 페이지네이션으로 전체 데이터 가져오기
+    const data = await fetchAllDonations(supabase, seasonId, episodeId)
+
+    // target_bj가 있는 데이터만 필터링 (BJ별 분석용)
+    const dataWithBj = data.filter(d => d.target_bj !== null)
+
+    if (data.length === 0) {
       return {
         total_hearts: 0,
         total_donations: 0,
@@ -590,12 +594,15 @@ export async function getAnalyticsSummary(
       }
     }
 
+    // 전체 데이터 기준 통계
     const total_hearts = data.reduce((sum, d) => sum + (d.amount || 0), 0)
     const total_donations = data.length
     const donors = new Set(data.map(d => d.donor_name))
-    const bjs = new Set(data.map(d => d.target_bj).filter(Boolean))
 
-    // 상위 후원자
+    // BJ 관련은 target_bj 있는 데이터만
+    const bjs = new Set(dataWithBj.map(d => d.target_bj).filter(Boolean))
+
+    // 상위 후원자 (전체 기준)
     const donorHearts = new Map<string, number>()
     for (const d of data) {
       if (d.donor_name) {
@@ -604,9 +611,9 @@ export async function getAnalyticsSummary(
     }
     const topDonorEntry = [...donorHearts.entries()].sort((a, b) => b[1] - a[1])[0]
 
-    // 상위 BJ
+    // 상위 BJ (target_bj 있는 데이터만)
     const bjHearts = new Map<string, number>()
-    for (const d of data) {
+    for (const d of dataWithBj) {
       if (d.target_bj) {
         bjHearts.set(d.target_bj, (bjHearts.get(d.target_bj) || 0) + (d.amount || 0))
       }

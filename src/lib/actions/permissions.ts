@@ -14,7 +14,8 @@ import type { Database } from '@/types/database'
 export const ADMIN_ROLES = ['admin', 'superadmin'] as const
 export const MODERATOR_ROLES = ['admin', 'superadmin', 'moderator'] as const
 export const BJ_ROLES = ['bj'] as const
-export const VIP_ROLES = ['vip'] as const
+// VIP+ 권한: vip 이상의 모든 역할 (moderator, admin, superadmin도 VIP 페이지 접근 가능)
+export const VIP_ROLES = ['vip', 'moderator', 'admin', 'superadmin'] as const
 
 export interface PermissionCheckResult {
   hasPermission: boolean
@@ -60,10 +61,18 @@ export function isBj(role: string | null): boolean {
 }
 
 /**
- * VIP 권한 확인 (role = 'vip')
+ * VIP+ 권한 확인 (vip, moderator, admin, superadmin)
+ * - VIP 페이지 접근에 사용
  */
 export function isVip(role: string | null): boolean {
-  return role === 'vip'
+  return role !== null && VIP_ROLES.includes(role as (typeof VIP_ROLES)[number])
+}
+
+/**
+ * Superadmin 권한 확인 (superadmin만)
+ */
+export function isSuperadmin(role: string | null): boolean {
+  return role === 'superadmin'
 }
 
 /**

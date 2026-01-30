@@ -43,6 +43,12 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.card:hover {
+  border-color: var(--color-primary, #fd68ba);
+  transform: translateY(-2px);
 }
 
 .cardIcon {
@@ -62,7 +68,7 @@
 }
 
 .cardLabel {
-  font-size: 13px;
+  font-size: 14px; /* 라벨은 14px 허용 (보조 텍스트) */
   color: var(--text-secondary);
 }
 
@@ -87,7 +93,7 @@
 }
 
 .highlightTitle {
-  font-size: 13px;
+  font-size: 14px; /* 라벨은 14px 허용 */
   color: var(--text-secondary);
   margin-bottom: 8px;
 }
@@ -122,6 +128,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.barItem:hover {
+  background: var(--bg-tertiary);
 }
 
 .barLabel {
@@ -146,7 +159,7 @@
 }
 
 .barName {
-  font-size: 14px;
+  font-size: 16px; /* CLAUDE.md: 최소 16px */
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -171,7 +184,7 @@
 .barValue {
   width: 80px;
   text-align: right;
-  font-size: 14px;
+  font-size: 16px; /* CLAUDE.md: 최소 16px */
   font-weight: 600;
   color: var(--text-primary);
 }

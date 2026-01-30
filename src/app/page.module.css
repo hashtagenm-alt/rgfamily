@@ -61,7 +61,7 @@
   border: 1px solid var(--color-pink-border);
   border-radius: var(--radius-full);
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 11px; /* 10px → 11px - 배지는 작은 글씨 허용하되 10px 초과 */
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;

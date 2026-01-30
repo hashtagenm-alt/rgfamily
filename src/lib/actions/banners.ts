@@ -1,6 +1,6 @@
 'use server'
 
-import { adminAction, publicAction, type ActionResult } from './index'
+import { moderatorAction, publicAction, type ActionResult } from './index'
 import type { InsertTables, UpdateTables, Banner } from '@/types/database'
 
 type BannerInsert = InsertTables<'banners'>
@@ -12,7 +12,7 @@ type BannerUpdate = UpdateTables<'banners'>
 export async function createBanner(
   data: BannerInsert
 ): Promise<ActionResult<Banner>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: banner, error } = await supabase
       .from('banners')
       .insert(data)
@@ -31,7 +31,7 @@ export async function updateBanner(
   id: number,
   data: BannerUpdate
 ): Promise<ActionResult<Banner>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: banner, error } = await supabase
       .from('banners')
       .update(data)
@@ -50,7 +50,7 @@ export async function updateBanner(
 export async function deleteBanner(
   id: number
 ): Promise<ActionResult<null>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { error } = await supabase
       .from('banners')
       .delete()
@@ -68,7 +68,7 @@ export async function toggleBannerActive(
   id: number,
   isActive: boolean
 ): Promise<ActionResult<Banner>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: banner, error } = await supabase
       .from('banners')
       .update({ is_active: isActive })
@@ -87,7 +87,7 @@ export async function toggleBannerActive(
 export async function updateBannerOrder(
   updates: { id: number; display_order: number }[]
 ): Promise<ActionResult<null>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     for (const update of updates) {
       const { error } = await supabase
         .from('banners')
@@ -120,7 +120,7 @@ export async function getActiveBanners(): Promise<ActionResult<Banner[]>> {
  * 모든 배너 목록 조회 (Admin)
  */
 export async function getAllBanners(): Promise<ActionResult<Banner[]>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data, error } = await supabase
       .from('banners')
       .select('*')

@@ -20,6 +20,7 @@ export interface SignatureVideo {
   memberName: string
   memberImage: string | null
   videoUrl: string
+  cloudflareUid: string | null
   createdAt: string
 }
 
@@ -112,6 +113,7 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
             signature_id,
             member_id,
             video_url,
+            cloudflare_uid,
             created_at,
             organization!member_id(id, name, image_url)
           `)
@@ -133,6 +135,7 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
           memberName: member?.name || '알 수 없음',
           memberImage: member?.image_url || null,
           videoUrl: v.video_url,
+          cloudflareUid: v.cloudflare_uid || null,
           createdAt: v.created_at,
         })
       })

@@ -1,6 +1,6 @@
 'use server'
 
-import { adminAction, publicAction, type ActionResult } from './index'
+import { moderatorAction, publicAction, type ActionResult } from './index'
 import type { InsertTables, UpdateTables, Notice, NoticeWithAttachments, NoticeAttachment } from '@/types/database'
 
 type NoticeInsert = InsertTables<'notices'>
@@ -22,7 +22,7 @@ export async function createNotice(
   data: NoticeInsert,
   attachments?: AttachmentInput[]
 ): Promise<ActionResult<Notice>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: { user } } = await supabase.auth.getUser()
 
     const { data: notice, error } = await supabase
@@ -69,7 +69,7 @@ export async function updateNotice(
   data: NoticeUpdate,
   attachments?: AttachmentInput[]
 ): Promise<ActionResult<Notice>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: notice, error } = await supabase
       .from('notices')
       .update(data)
@@ -118,7 +118,7 @@ export async function updateNotice(
 export async function deleteNotice(
   id: number
 ): Promise<ActionResult<null>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { error } = await supabase
       .from('notices')
       .delete()
@@ -136,7 +136,7 @@ export async function toggleNoticePinned(
   id: number,
   isPinned: boolean
 ): Promise<ActionResult<Notice>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: notice, error } = await supabase
       .from('notices')
       .update({ is_pinned: isPinned })

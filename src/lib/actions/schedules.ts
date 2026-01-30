@@ -1,6 +1,6 @@
 'use server'
 
-import { adminAction, publicAction, type ActionResult } from './index'
+import { moderatorAction, publicAction, type ActionResult } from './index'
 import type { InsertTables, UpdateTables, Schedule } from '@/types/database'
 
 type ScheduleInsert = InsertTables<'schedules'>
@@ -12,7 +12,7 @@ type ScheduleUpdate = UpdateTables<'schedules'>
 export async function createSchedule(
   data: ScheduleInsert
 ): Promise<ActionResult<Schedule>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: { user } } = await supabase.auth.getUser()
 
     const { data: schedule, error } = await supabase
@@ -36,7 +36,7 @@ export async function updateSchedule(
   id: number,
   data: ScheduleUpdate
 ): Promise<ActionResult<Schedule>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: schedule, error } = await supabase
       .from('schedules')
       .update(data)
@@ -55,7 +55,7 @@ export async function updateSchedule(
 export async function deleteSchedule(
   id: number
 ): Promise<ActionResult<null>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { error } = await supabase
       .from('schedules')
       .delete()

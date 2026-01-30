@@ -410,6 +410,7 @@ export type Database = {
           signature_id: number
           member_id: number
           video_url: string
+          cloudflare_uid: string | null
           created_at: string
         }
         Insert: {
@@ -417,6 +418,7 @@ export type Database = {
           signature_id: number
           member_id: number
           video_url: string
+          cloudflare_uid?: string | null
           created_at?: string
         }
         Update: {
@@ -424,6 +426,7 @@ export type Database = {
           signature_id?: number
           member_id?: number
           video_url?: string
+          cloudflare_uid?: string | null
           created_at?: string
         }
         Relationships: [

@@ -14,10 +14,8 @@ import {
   User,
   Play,
   Image as ImageIcon,
-  Cloud,
 } from 'lucide-react'
-import { DataTable, Column, AdminModal } from '@/components/admin'
-import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
+import { DataTable, Column, AdminModal, VideoUpload, CloudflareVideoUpload } from '@/components/admin'
 import { useSupabaseContext } from '@/lib/context'
 import { useAlert } from '@/lib/hooks'
 import styles from '../../shared.module.css'
@@ -68,10 +66,9 @@ export default function SignatureDetailPage() {
 
   // Video preview modal
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [previewCloudflareUid, setPreviewCloudflareUid] = useState<string | null>(null)
 
-  // Upload mode: 'url' or 'cloudflare'
-  const [uploadMode, setUploadMode] = useState<'url' | 'cloudflare'>('cloudflare')
+  // Upload mode: 'url', 'upload', or 'cloudflare'
+  const [uploadMode, setUploadMode] = useState<'url' | 'upload' | 'cloudflare'>('url')
 
   // Fetch signature details
   const fetchSignature = useCallback(async () => {
@@ -197,8 +194,8 @@ export default function SignatureDetailPage() {
 
   // Save video
   const handleSave = async () => {
-    if (!editingVideo?.memberId || (!editingVideo?.videoUrl && !editingVideo?.cloudflareUid)) {
-      showError('멤버와 영상을 입력해주세요.')
+    if (!editingVideo?.memberId || !editingVideo?.videoUrl) {
+      showError('멤버와 영상 URL을 입력해주세요.')
       return
     }
 
@@ -215,8 +212,8 @@ export default function SignatureDetailPage() {
       const { error } = await supabase.from('signature_videos').insert({
         signature_id: signatureId,
         member_id: editingVideo.memberId,
-        video_url: editingVideo.videoUrl || '',
-        cloudflare_uid: editingVideo.cloudflareUid,
+        video_url: editingVideo.videoUrl,
+        cloudflare_uid: editingVideo.cloudflareUid || null,
       })
 
       if (error) {
@@ -230,8 +227,8 @@ export default function SignatureDetailPage() {
         .from('signature_videos')
         .update({
           member_id: editingVideo.memberId,
-          video_url: editingVideo.videoUrl || '',
-          cloudflare_uid: editingVideo.cloudflareUid,
+          video_url: editingVideo.videoUrl,
+          cloudflare_uid: editingVideo.cloudflareUid || null,
         })
         .eq('id', editingVideo.id)
 
@@ -257,15 +254,6 @@ export default function SignatureDetailPage() {
     })
     if (!confirmed) return
 
-    // Cloudflare 영상도 삭제
-    if (video.cloudflareUid) {
-      try {
-        await fetch(`/api/cloudflare-stream/${video.cloudflareUid}`, { method: 'DELETE' })
-      } catch (e) {
-        console.error('Cloudflare 영상 삭제 실패:', e)
-      }
-    }
-
     const { error } = await supabase.from('signature_videos').delete().eq('id', video.id)
 
     if (error) {
@@ -280,12 +268,6 @@ export default function SignatureDetailPage() {
   // Handle video preview
   const handleView = (video: SignatureVideo) => {
     setPreviewUrl(video.videoUrl)
-    setPreviewCloudflareUid(video.cloudflareUid)
-  }
-
-  const closePreview = () => {
-    setPreviewUrl(null)
-    setPreviewCloudflareUid(null)
   }
 
   const formatDate = (dateStr: string) => {
@@ -296,16 +278,25 @@ export default function SignatureDetailPage() {
     })
   }
 
-  // Convert URL to embed URL (Cloudflare or YouTube)
+  // Convert URL to embed URL (supports YouTube and Cloudflare)
   const getEmbedUrl = (url: string, cloudflareUid?: string | null) => {
+    // Cloudflare Stream
     if (cloudflareUid) {
       return `https://iframe.videodelivery.net/${cloudflareUid}`
     }
+    // YouTube
     const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
     if (youtubeMatch) {
       return `https://www.youtube.com/embed/${youtubeMatch[1]}`
     }
     return url
+  }
+
+  // Get cloudflare uid for preview
+  const getPreviewCloudflareUid = (): string | null => {
+    if (!previewUrl) return null
+    const video = videos.find((v) => v.videoUrl === previewUrl)
+    return video?.cloudflareUid || null
   }
 
   const columns: Column<SignatureVideo>[] = [
@@ -346,12 +337,7 @@ export default function SignatureDetailPage() {
       header: '멤버',
       width: '150px',
       render: (item) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontWeight: 600 }}>{item.memberName}</span>
-          {item.cloudflareUid && (
-            <span title="Cloudflare Stream"><Cloud size={14} style={{ color: '#f6821f' }} /></span>
-          )}
-        </div>
+        <span style={{ fontWeight: 600 }}>{item.memberName}</span>
       ),
     },
     {
@@ -359,9 +345,24 @@ export default function SignatureDetailPage() {
       header: '영상 URL',
       render: (item) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {item.cloudflareUid && (
+            <span
+              style={{
+                padding: '2px 6px',
+                background: '#f38020',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '0.625rem',
+                fontWeight: 600,
+                flexShrink: 0,
+              }}
+            >
+              CF
+            </span>
+          )}
           <span
             style={{
-              maxWidth: '300px',
+              maxWidth: item.cloudflareUid ? '260px' : '300px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -369,10 +370,10 @@ export default function SignatureDetailPage() {
               fontSize: '0.8125rem',
             }}
           >
-            {item.videoUrl}
+            {item.cloudflareUid ? `stream:${item.cloudflareUid.slice(0, 8)}...` : item.videoUrl}
           </span>
           <a
-            href={item.videoUrl}
+            href={item.cloudflareUid ? `https://iframe.videodelivery.net/${item.cloudflareUid}` : item.videoUrl}
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: 'var(--primary)', flexShrink: 0 }}
@@ -586,38 +587,29 @@ export default function SignatureDetailPage() {
           <div className={styles.typeSelector} style={{ marginBottom: '12px' }}>
             <button
               type="button"
-              onClick={() => setUploadMode('cloudflare')}
-              className={`${styles.typeButton} ${uploadMode === 'cloudflare' ? styles.active : ''}`}
-            >
-              Cloudflare 업로드
-            </button>
-            <button
-              type="button"
               onClick={() => setUploadMode('url')}
               className={`${styles.typeButton} ${uploadMode === 'url' ? styles.active : ''}`}
             >
               URL 입력
             </button>
+            <button
+              type="button"
+              onClick={() => setUploadMode('upload')}
+              className={`${styles.typeButton} ${uploadMode === 'upload' ? styles.active : ''}`}
+            >
+              Supabase 업로드
+            </button>
+            <button
+              type="button"
+              onClick={() => setUploadMode('cloudflare')}
+              className={`${styles.typeButton} ${uploadMode === 'cloudflare' ? styles.active : ''}`}
+              style={{ background: uploadMode === 'cloudflare' ? '#f38020' : undefined }}
+            >
+              Cloudflare 업로드
+            </button>
           </div>
 
-          {uploadMode === 'cloudflare' && (
-            <CloudflareVideoUpload
-              onUploadComplete={({ uid, thumbnailUrl }) => {
-                setEditingVideo((prev) =>
-                  prev
-                    ? {
-                        ...prev,
-                        cloudflareUid: uid,
-                        videoUrl: `https://iframe.videodelivery.net/${uid}`,
-                      }
-                    : null
-                )
-              }}
-              onError={(error) => showError(error)}
-            />
-          )}
-
-          {uploadMode === 'url' && (
+          {uploadMode === 'url' ? (
             <>
               <input
                 type="text"
@@ -632,12 +624,42 @@ export default function SignatureDetailPage() {
                 YouTube, 트위치 클립 등 영상 URL을 입력하세요
               </span>
             </>
+          ) : uploadMode === 'upload' ? (
+            <VideoUpload
+              onUploadComplete={(url) => {
+                setEditingVideo((prev) => (prev ? { ...prev, videoUrl: url, cloudflareUid: null } : null))
+              }}
+              onError={(error) => showError(error)}
+              bucketName="videos"
+              folderPath="signature-videos"
+            />
+          ) : (
+            <CloudflareVideoUpload
+              onUploadComplete={(result) => {
+                // Cloudflare 업로드 완료: UID와 player URL 설정
+                setEditingVideo((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        videoUrl: `https://customer-${process.env.NEXT_PUBLIC_CLOUDFLARE_CUSTOMER_SUBDOMAIN || 'stream'}.cloudflarestream.com/${result.uid}/manifest/video.m3u8`,
+                        cloudflareUid: result.uid,
+                      }
+                    : null
+                )
+              }}
+              onError={(error) => showError(error)}
+            />
           )}
 
-          {editingVideo?.cloudflareUid && (
-            <div style={{ marginTop: '8px', fontSize: '13px', color: '#f6821f', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Cloud size={14} />
-              Cloudflare Stream: {editingVideo.cloudflareUid.slice(0, 12)}...
+          {editingVideo?.videoUrl && uploadMode === 'upload' && (
+            <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+              업로드 완료: {editingVideo.videoUrl.split('/').pop()}
+            </div>
+          )}
+
+          {editingVideo?.cloudflareUid && uploadMode === 'cloudflare' && (
+            <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--success)' }}>
+              Cloudflare UID: {editingVideo.cloudflareUid}
             </div>
           )}
         </div>
@@ -651,7 +673,7 @@ export default function SignatureDetailPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={closePreview}
+            onClick={() => setPreviewUrl(null)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -669,13 +691,13 @@ export default function SignatureDetailPage() {
             >
               <div className={styles.modalHeader}>
                 <h2>영상 미리보기</h2>
-                <button onClick={closePreview} className={styles.closeButton}>
+                <button onClick={() => setPreviewUrl(null)} className={styles.closeButton}>
                   <X size={20} />
                 </button>
               </div>
               <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
                 <iframe
-                  src={getEmbedUrl(previewUrl, previewCloudflareUid)}
+                  src={getEmbedUrl(previewUrl, getPreviewCloudflareUid())}
                   style={{
                     position: 'absolute',
                     top: 0,
