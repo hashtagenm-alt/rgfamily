@@ -65,11 +65,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 파일 크기 검증 (10MB - Cloudinary 무료 플랜 제한)
-    const maxSize = 10 * 1024 * 1024
+    // 파일 크기 검증 (20MB - VIP 시그니처 이미지 고화질 지원)
+    const maxSize = 20 * 1024 * 1024
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: `파일 크기는 10MB 이하여야 합니다 (현재: ${(file.size / 1024 / 1024).toFixed(1)}MB)` },
+        { error: `파일 크기는 20MB 이하여야 합니다 (현재: ${(file.size / 1024 / 1024).toFixed(1)}MB)` },
         { status: 400 }
       )
     }
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     // Cloudinary 에러 메시지 처리
     if (err.message?.includes('File size too large')) {
       return NextResponse.json(
-        { error: '파일 크기가 너무 큽니다. 10MB 이하의 이미지를 선택해주세요.' },
+        { error: '파일 크기가 너무 큽니다. 20MB 이하의 이미지를 선택해주세요.' },
         { status: 400 }
       )
     }
