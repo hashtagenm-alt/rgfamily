@@ -318,6 +318,37 @@
   color: var(--color-text-secondary);
 }
 
+.commentDeleteBtn {
+  margin-left: auto;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.commentDeleteBtn:hover:not(:disabled) {
+  color: #ef4444;
+}
+
+.commentDeleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.commentDeleteSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
 .commentContent {
   font-size: 0.875rem;
   color: var(--color-text);

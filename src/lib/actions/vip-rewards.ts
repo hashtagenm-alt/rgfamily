@@ -1,6 +1,6 @@
 'use server'
 
-import { adminAction, publicAction, type ActionResult } from './index'
+import { adminAction, authAction, publicAction, type ActionResult } from './index'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { InsertTables, UpdateTables, VipReward, VipImage } from '@/types/database'
 
@@ -141,6 +141,38 @@ export async function getTopVipRewards(
     if (error) throw new Error(error.message)
     return data || []
   })
+}
+
+/**
+ * VIP 본인 소개글 수정 (본인만)
+ * 왜? VIP 본인이 자신의 소개글을 수정할 수 있어야 함
+ */
+export async function updateVipPersonalMessage(
+  rewardId: number,
+  personalMessage: string
+): Promise<ActionResult<VipReward>> {
+  return authAction(async (supabase, userId) => {
+    // 해당 VIP 보상이 본인 것인지 확인
+    const { data: reward, error: fetchError } = await supabase
+      .from('vip_rewards')
+      .select('profile_id')
+      .eq('id', rewardId)
+      .single()
+
+    if (fetchError) throw new Error('VIP 정보를 찾을 수 없습니다.')
+    if (reward.profile_id !== userId) throw new Error('본인의 소개글만 수정할 수 있습니다.')
+
+    // 소개글 업데이트
+    const { data: updated, error } = await supabase
+      .from('vip_rewards')
+      .update({ personal_message: personalMessage.trim() || null })
+      .eq('id', rewardId)
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+    return updated
+  }, ['/ranking/vip'])
 }
 
 // ==================== VIP Images ====================

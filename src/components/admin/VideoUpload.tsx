@@ -49,7 +49,7 @@ export default function VideoUpload({
     return null
   }
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     setIsUploading(true)
     setUploadStatus('uploading')
     setUploadProgress(0)
@@ -100,7 +100,7 @@ export default function VideoUpload({
     } finally {
       setIsUploading(false)
     }
-  }
+  }, [supabase, bucketName, folderPath, onUploadComplete, onError])
 
   const handleFile = useCallback((file: File) => {
     const error = validateFile(file)
@@ -114,7 +114,7 @@ export default function VideoUpload({
     setSelectedFile(file)
     setErrorMessage(null)
     uploadFile(file)
-  }, [maxSize, onError])
+  }, [maxSize, onError, uploadFile])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()

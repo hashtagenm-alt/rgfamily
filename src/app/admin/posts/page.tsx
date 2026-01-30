@@ -54,6 +54,7 @@ export default function PostsPage() {
       .select('*, profiles!author_id(nickname), comments(id)')
       .eq('is_deleted', false)
       .order('created_at', { ascending: false })
+      .limit(500) // 성능을 위해 최대 500개만 로드
 
     if (activeCategory !== 'all') {
       query = query.eq('board_type', activeCategory)
@@ -390,6 +391,7 @@ export default function PostsPage() {
         onDelete={handleDelete}
         searchPlaceholder="제목 또는 작성자로 검색..."
         isLoading={isLoading}
+        itemsPerPage={20}
       />
 
       {/* Comments Accordion */}

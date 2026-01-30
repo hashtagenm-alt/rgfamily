@@ -61,6 +61,7 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
     setIsLoading(true)
     const currentId = parseInt(id)
 
+    // 현재 공지사항 조회
     const { data, error } = await supabase
       .from('notices')
       .select('id, title, content, category, thumbnail_url, is_pinned, view_count, created_at')
@@ -88,6 +89,35 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
         createdAt: data.created_at,
         attachments: (attachmentsData as Attachment[]) || [],
       })
+
+      // 이전 글 조회 (현재 id보다 작은 것 중 가장 큰 id)
+      const { data: prevData } = await supabase
+        .from('notices')
+        .select('id, title')
+        .lt('id', currentId)
+        .order('id', { ascending: false })
+        .limit(1)
+        .single()
+
+      setPrevNotice(prevData ? { id: prevData.id, title: prevData.title } : null)
+
+      // 다음 글 조회 (현재 id보다 큰 것 중 가장 작은 id)
+      const { data: nextData } = await supabase
+        .from('notices')
+        .select('id, title')
+        .gt('id', currentId)
+        .order('id', { ascending: true })
+        .limit(1)
+        .single()
+
+      setNextNotice(nextData ? { id: nextData.id, title: nextData.title } : null)
+
+      // 조회수 증가 (백그라운드 처리)
+      supabase
+        .from('notices')
+        .update({ view_count: (data.view_count || 0) + 1 })
+        .eq('id', currentId)
+        .then(() => {})
     }
 
     setIsLoading(false)

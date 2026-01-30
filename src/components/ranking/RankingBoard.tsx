@@ -19,7 +19,9 @@ export default function RankingBoard() {
     rankings,
     currentSeason,
     isLoading,
+    error,
     setSelectedSeasonId,
+    refetch,
   } = useRanking();
 
   // 탭 변경 시 시즌 ID 설정
@@ -74,6 +76,11 @@ export default function RankingBoard() {
       <div className={styles.list}>
         {isLoading ? (
           <div className={styles.loading}>로딩 중...</div>
+        ) : error ? (
+          <div className={styles.error}>
+            <span>{error}</span>
+            <button onClick={refetch} className={styles.retryBtn}>다시 시도</button>
+          </div>
         ) : rankingData.length === 0 ? (
           <div className={styles.empty}>랭킹 데이터가 없습니다</div>
         ) : rankingData.map((item, index) => (

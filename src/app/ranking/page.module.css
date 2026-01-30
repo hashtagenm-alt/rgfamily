@@ -432,6 +432,40 @@
   color: var(--text-muted);
 }
 
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 400px;
+  padding: var(--space-10);
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-2xl);
+  color: #ef4444;
+}
+
+.error p {
+  color: var(--text-secondary);
+}
+
+.retryBtn {
+  padding: 0.625rem 1.5rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retryBtn:hover {
+  background: #dc2626;
+}
+
 .spinner {
   width: 40px;
   height: 40px;

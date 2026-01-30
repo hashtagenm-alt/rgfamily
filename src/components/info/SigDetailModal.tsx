@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Play, ChevronLeft, ChevronRight, Calendar, User, Film, Volume2, ExternalLink } from 'lucide-react'
+import { X, Play, ChevronLeft, ChevronRight, Calendar, User, Film, Volume2, ExternalLink, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import type { SignatureData } from './SigGallery'
 import { formatShortDate } from '@/lib/utils/format'
@@ -118,6 +118,7 @@ function getYoutubeThumbnail(url: string): string | null {
 export default function SigDetailModal({ signature, onClose }: SigDetailModalProps) {
   const [selectedVideoIdx, setSelectedVideoIdx] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [videoError, setVideoError] = useState(false)
   const tabsRef = useRef<HTMLDivElement>(null)
 
   const hasVideos = signature.videos && signature.videos.length > 0
@@ -142,9 +143,10 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose, hasVideos, selectedVideoIdx, totalVideos, isPlaying])
 
-  // Reset playing state when video changes
+  // Reset playing state and error when video changes
   useEffect(() => {
     setIsPlaying(false)
+    setVideoError(false)
   }, [selectedVideoIdx])
 
   // Scroll tabs to show active tab
@@ -330,7 +332,27 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
 
                   <div className={styles.playerWrapper}>
                     <AnimatePresence mode="wait">
-                      {isPlaying && currentVideo ? (
+                      {videoError && currentVideo ? (
+                        <motion.div
+                          key={`error-${selectedVideoIdx}`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className={styles.videoError}
+                        >
+                          <AlertCircle size={48} />
+                          <p>영상을 불러올 수 없습니다</p>
+                          <a
+                            href={currentVideo.videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.videoErrorLink}
+                          >
+                            <ExternalLink size={16} />
+                            원본 링크로 이동
+                          </a>
+                        </motion.div>
+                      ) : isPlaying && currentVideo ? (
                         <motion.div
                           key={`playing-${selectedVideoIdx}`}
                           initial={{ opacity: 0 }}
@@ -346,6 +368,7 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                               autoPlay
                               playsInline
                               preload="auto"
+                              onError={() => setVideoError(true)}
                             />
                           ) : (
                             <iframe
@@ -353,6 +376,7 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                               className={styles.video}
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
+                              onError={() => setVideoError(true)}
                             />
                           )}
                         </motion.div>
