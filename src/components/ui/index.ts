@@ -18,3 +18,4 @@ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tool
 export { default as SectionHeader } from './SectionHeader'
 export { default as SectionSkeleton } from './SectionSkeleton'
 export { default as ThemeToggle } from './ThemeToggle'
+export { default as RichEditor } from './RichEditor'

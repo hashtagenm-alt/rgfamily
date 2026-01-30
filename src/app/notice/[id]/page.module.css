@@ -168,12 +168,104 @@
   line-height: 1.9;
 }
 
+/* HTML 콘텐츠 스타일 (리치에디터로 작성된 콘텐츠) */
 .content p {
-  margin-bottom: var(--space-4);
+  margin: 0 0 var(--space-4);
 }
 
 .content p:last-child {
   margin-bottom: 0;
+}
+
+.content h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  color: var(--text-primary);
+}
+
+.content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--text-primary);
+}
+
+.content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--text-primary);
+}
+
+.content ul,
+.content ol {
+  margin: 0 0 var(--space-4);
+  padding-left: 1.5rem;
+}
+
+.content li {
+  margin-bottom: 0.25rem;
+}
+
+.content blockquote {
+  margin: 0 0 var(--space-4);
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--primary);
+  background: var(--surface);
+  border-radius: 0 6px 6px 0;
+  font-style: italic;
+}
+
+.content pre {
+  margin: 0 0 var(--space-4);
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  overflow-x: auto;
+  font-family: 'SF Mono', Monaco, 'Andale Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.content code {
+  padding: 0.1rem 0.3rem;
+  background: var(--surface);
+  border-radius: 3px;
+  font-family: 'SF Mono', Monaco, 'Andale Mono', monospace;
+  font-size: 0.875em;
+}
+
+.content pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.content a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.content a:hover {
+  text-decoration: none;
+}
+
+.content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+}
+
+.content strong {
+  font-weight: 600;
+}
+
+.content hr {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 2px solid var(--card-border);
 }
 
 /* Actions */

@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, Suspense, useEffect, useRef } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Send, AlertCircle, FileText, Crown } from 'lucide-react'
 import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { PostImageUpload } from '@/components/community/PostImageUpload'
+import { RichEditor } from '@/components/ui'
 import { useAuthContext } from '@/lib/context/AuthContext'
+import { useSupabaseContext } from '@/lib/context'
 import { useVipStatus } from '@/lib/hooks/useVipStatus'
 import { createPost } from '@/lib/actions/posts'
 import styles from './page.module.css'
@@ -28,6 +29,7 @@ function WritePostContent() {
   const isVipByRole = profile?.role && VIP_ROLES.includes(profile.role)
   const canAccessVip = isVipByRole || isVipByRank
 
+  const supabase = useSupabaseContext()
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -35,33 +37,32 @@ function WritePostContent() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // 이미지 삽입 핸들러 (커서 위치에 마크다운 이미지 삽입)
-  const handleImageInsert = (markdownImg: string) => {
-    const textarea = textareaRef.current
-    if (!textarea) {
-      // textarea가 없으면 끝에 추가
-      setFormData(prev => ({
-        ...prev,
-        content: prev.content + '\n' + markdownImg + '\n'
-      }))
-      return
+  // 리치에디터용 이미지 업로드 핸들러
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `posts/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('이미지 업로드 실패:', uploadError)
+        return null
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath)
+
+      return publicUrl
+    } catch (err) {
+      console.error('이미지 업로드 오류:', err)
+      return null
     }
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const text = formData.content
-    const newContent = text.slice(0, start) + '\n' + markdownImg + '\n' + text.slice(end)
-
-    setFormData(prev => ({ ...prev, content: newContent }))
-
-    // 커서 위치 조정
-    setTimeout(() => {
-      textarea.focus()
-      const newPos = start + markdownImg.length + 2
-      textarea.setSelectionRange(newPos, newPos)
-    }, 0)
   }
 
   // VIP 게시판 접근 권한 없으면 자유게시판으로 리다이렉트
@@ -211,36 +212,20 @@ function WritePostContent() {
               </div>
             </div>
 
-            {/* 내용 입력 */}
+            {/* 내용 입력 (리치에디터) */}
             <div className={styles.formRow}>
-              <label htmlFor="content" className={styles.rowLabel}>
+              <label className={styles.rowLabel}>
                 내용
               </label>
               <div className={styles.rowInput}>
-                <textarea
-                  id="content"
-                  ref={textareaRef}
-                  className={styles.contentTextarea}
-                  placeholder="내용을 입력하세요"
-                  value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            {/* 이미지 업로드 */}
-            <div className={styles.formRow}>
-              <label className={styles.rowLabel}>
-                이미지
-              </label>
-              <div className={styles.rowInput}>
-                <PostImageUpload
-                  onImageInsert={handleImageInsert}
+                <RichEditor
+                  content={formData.content}
+                  onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                  placeholder="내용을 입력하세요..."
                   disabled={isSubmitting}
+                  minHeight="300px"
+                  onImageUpload={handleImageUpload}
                 />
-                <p className={styles.imageHint}>
-                  업로드한 이미지는 본문에 자동으로 삽입됩니다
-                </p>
               </div>
             </div>
 

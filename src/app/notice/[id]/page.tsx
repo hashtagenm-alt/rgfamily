@@ -255,11 +255,11 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className={styles.content}>
-            {notice.content.split('\n').map((paragraph, index) => (
-              <p key={index}>{paragraph || '\u00A0'}</p>
-            ))}
-          </div>
+          {/* HTML 콘텐츠 렌더링 */}
+          <div
+            className={styles.content}
+            dangerouslySetInnerHTML={{ __html: notice.content }}
+          />
 
           {/* 첨부파일 */}
           {notice.attachments && notice.attachments.length > 0 && (

@@ -3,7 +3,9 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Megaphone, Plus, X, Save, Pin } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
+import { RichEditor } from '@/components/ui'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
+import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
 
 interface Notice {
@@ -16,7 +18,35 @@ interface Notice {
 }
 
 export default function NoticesPage() {
+  const supabase = useSupabaseContext()
   const alertHandler = useAlert()
+
+  // 이미지 업로드 핸들러
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `notices/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('이미지 업로드 실패:', uploadError)
+        return null
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath)
+
+      return publicUrl
+    } catch (err) {
+      console.error('이미지 업로드 오류:', err)
+      return null
+    }
+  }
 
   const {
     items: notices,
@@ -126,7 +156,7 @@ export default function NoticesPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              style={{ maxWidth: '640px' }}
+              style={{ maxWidth: '800px' }}
             >
               <div className={styles.modalHeader}>
                 <h2>{isNew ? '공지 작성' : '공지 수정'}</h2>
@@ -151,14 +181,14 @@ export default function NoticesPage() {
 
                 <div className={styles.formGroup}>
                   <label>내용</label>
-                  <textarea
-                    value={editingNotice.content || ''}
-                    onChange={(e) =>
-                      setEditingNotice({ ...editingNotice, content: e.target.value })
+                  <RichEditor
+                    content={editingNotice.content || ''}
+                    onChange={(content) =>
+                      setEditingNotice({ ...editingNotice, content })
                     }
-                    className={styles.textarea}
                     placeholder="공지사항 내용을 입력하세요..."
-                    rows={10}
+                    minHeight="250px"
+                    onImageUpload={handleImageUpload}
                   />
                 </div>
 
