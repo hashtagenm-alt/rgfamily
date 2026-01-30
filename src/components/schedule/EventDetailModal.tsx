@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { X, Clock, MapPin, Calendar, Radio, Users, Megaphone, Sparkles, Pencil } from 'lucide-react'
 import type { ScheduleEvent } from '@/types/common'
@@ -36,6 +37,18 @@ export default function EventDetailModal({
   isAdmin = false,
   onEditEvent,
 }: EventDetailModalProps) {
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   const formattedDate = date.toLocaleDateString('ko-KR', {
     month: 'long',
     day: 'numeric',

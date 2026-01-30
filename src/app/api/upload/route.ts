@@ -4,14 +4,29 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 // Cloudinary 설정
-cloudinary.config({
+const cloudinaryConfig = {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-})
+}
+
+cloudinary.config(cloudinaryConfig)
 
 export async function POST(request: NextRequest) {
   try {
+    // Cloudinary 설정 확인
+    if (!cloudinaryConfig.cloud_name || !cloudinaryConfig.api_key || !cloudinaryConfig.api_secret) {
+      console.error('Cloudinary configuration missing:', {
+        cloud_name: !!cloudinaryConfig.cloud_name,
+        api_key: !!cloudinaryConfig.api_key,
+        api_secret: !!cloudinaryConfig.api_secret,
+      })
+      return NextResponse.json(
+        { error: '서버 설정 오류: 이미지 업로드 서비스가 구성되지 않았습니다.' },
+        { status: 500 }
+      )
+    }
+
     // 인증 확인
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -50,6 +65,8 @@ export async function POST(request: NextRequest) {
     // 폴더별 특수 처리
     const isBanner = subfolder === 'banners'
     const isAvatar = subfolder === 'avatars'
+    // 인라인 에디터용 이미지 (notices, posts 등)
+    const isInlineContent = ['notices', 'posts', 'community'].includes(subfolder)
 
     if (!file) {
       return NextResponse.json(
@@ -99,6 +116,14 @@ export async function POST(request: NextRequest) {
             { quality: 'auto:best', fetch_format: 'auto' }
           ]
 
+      // 인라인 에디터용 이미지 transformation (크기 제한만, 크롭 없음)
+      const inlineTransformation = isGif
+        ? [{ width: 1200, crop: 'limit', flags: 'animated' }]
+        : [
+            { width: 1200, crop: 'limit' },
+            { quality: 'auto:good', fetch_format: 'auto' }
+          ]
+
       // 일반 이미지 transformation (400x400 정사각형)
       const defaultTransformation = isGif
         ? [{ width: 400, height: 400, crop: 'fill', flags: 'animated' }]
@@ -112,7 +137,9 @@ export async function POST(request: NextRequest) {
         ? bannerTransformation
         : isAvatar
           ? avatarTransformation
-          : defaultTransformation
+          : isInlineContent
+            ? inlineTransformation
+            : defaultTransformation
 
       cloudinary.uploader.upload_stream(
         {
@@ -135,7 +162,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Upload error:', error)
-    const err = error as { message?: string; http_code?: number }
+    const err = error as { message?: string; http_code?: number; error?: { message?: string } }
 
     // Cloudinary 에러 메시지 처리
     if (err.message?.includes('File size too large')) {
@@ -145,8 +172,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Cloudinary API 에러
+    if (err.error?.message) {
+      console.error('Cloudinary error details:', err.error.message)
+      return NextResponse.json(
+        { error: `업로드 실패: ${err.error.message}` },
+        { status: 500 }
+      )
+    }
+
+    // 일반 에러 메시지
+    const errorMessage = err.message || '업로드에 실패했습니다'
     return NextResponse.json(
-      { error: '업로드에 실패했습니다' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

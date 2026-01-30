@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ExternalLink, MessageSquare, ImageIcon, Video, Heart } from 'lucide-react'
@@ -16,6 +16,20 @@ interface BjMessageModalProps {
 
 export default function BjMessageModal({ message, isOpen, onClose }: BjMessageModalProps) {
   const [imageError, setImageError] = useState(false)
+
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!message) return null
 

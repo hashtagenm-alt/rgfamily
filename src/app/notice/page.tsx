@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Pin, Search, Eye, ChevronDown, Bell, PenSquare } from 'lucide-react'
+import Image from 'next/image'
+import { Pin, Search, Eye, ChevronDown, Bell, PenSquare, ImageIcon } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import AdminNoticeActions from '@/components/notice/AdminNoticeActions'
@@ -10,6 +11,7 @@ import { InlineError } from '@/components/common/InlineError'
 import { useNotices } from '@/lib/context'
 import { useAuthContext } from '@/lib/context/AuthContext'
 import { formatShortDate } from '@/lib/utils/format'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import styles from './page.module.css'
 
 interface NoticeItem {
@@ -21,6 +23,7 @@ interface NoticeItem {
   author: string
   viewCount: number
   category: string
+  thumbnailUrl: string | null
 }
 
 function isNew(dateStr: string): boolean {
@@ -58,6 +61,24 @@ export default function NoticePage() {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       })
 
+      // 공지사항별 첫 번째 이미지 첨부파일 조회
+      const noticeIds = sortedData.map(n => n.id)
+      const supabase = getSupabaseClient()
+      const { data: attachments } = await supabase
+        .from('notice_attachments')
+        .select('notice_id, file_url, file_type')
+        .in('notice_id', noticeIds)
+        .eq('file_type', 'image')
+        .order('display_order', { ascending: true })
+
+      // notice_id별 첫 번째 이미지만 맵으로 저장
+      const thumbnailMap = new Map<number, string>()
+      attachments?.forEach(att => {
+        if (!thumbnailMap.has(att.notice_id)) {
+          thumbnailMap.set(att.notice_id, att.file_url)
+        }
+      })
+
       setNotices(
         sortedData.map((n, index) => ({
           id: n.id,
@@ -68,6 +89,7 @@ export default function NoticePage() {
           author: '운영자',
           viewCount: n.view_count || 0,
           category: n.category || '공지',
+          thumbnailUrl: thumbnailMap.get(n.id) || null,
         }))
       )
     } catch (err) {
@@ -223,6 +245,7 @@ export default function NoticePage() {
               {/* Table Header */}
               <div className={styles.tableHeader}>
                 <span className={styles.colNumber}>번호</span>
+                <span className={styles.colThumbnail}></span>
                 <span className={styles.colCategory}>분류</span>
                 <span className={styles.colTitle}>제목</span>
                 <span className={styles.colAuthor}>작성자</span>
@@ -245,6 +268,25 @@ export default function NoticePage() {
                           <Pin size={12} />
                           공지
                         </span>
+                      </div>
+
+                      {/* Thumbnail */}
+                      <div className={styles.cellThumbnail}>
+                        {notice.thumbnailUrl ? (
+                          <div className={styles.thumbnailWrapper}>
+                            <Image
+                              src={notice.thumbnailUrl}
+                              alt=""
+                              fill
+                              sizes="40px"
+                              className={styles.thumbnail}
+                            />
+                          </div>
+                        ) : (
+                          <div className={styles.thumbnailPlaceholder}>
+                            <ImageIcon size={14} />
+                          </div>
+                        )}
                       </div>
 
                       {/* Category */}
@@ -301,6 +343,25 @@ export default function NoticePage() {
                       {normalNotices.length - index}
                     </div>
 
+                    {/* Thumbnail */}
+                    <div className={styles.cellThumbnail}>
+                      {notice.thumbnailUrl ? (
+                        <div className={styles.thumbnailWrapper}>
+                          <Image
+                            src={notice.thumbnailUrl}
+                            alt=""
+                            fill
+                            sizes="40px"
+                            className={styles.thumbnail}
+                          />
+                        </div>
+                      ) : (
+                        <div className={styles.thumbnailPlaceholder}>
+                          <ImageIcon size={14} />
+                        </div>
+                      )}
+                    </div>
+
                     {/* Category */}
                     <div className={styles.cellCategory}>
                       <span className={styles.categoryBadge}>{notice.category}</span>
@@ -346,23 +407,38 @@ export default function NoticePage() {
                   href={`/notice/${notice.id}`}
                   className={`${styles.mobileCard} ${styles.mobilePinned}`}
                 >
-                  <div className={styles.mobileHeader}>
-                    <span className={styles.mobilePinnedBadge}>
-                      <Pin size={10} /> 공지
-                    </span>
-                    <span className={styles.mobileCategoryBadge}>{notice.category}</span>
-                    {isNew(notice.createdAt) && <span className={styles.newBadge}>N</span>}
-                    {notice.isImportant && <span className={styles.importantBadge}>중요</span>}
-                  </div>
-                  <h3 className={styles.mobileTitle}>{notice.title}</h3>
-                  <div className={styles.mobileMeta}>
-                    <span>{notice.author}</span>
-                    <span className={styles.mobileDivider}>·</span>
-                    <span>{formatShortDate(notice.createdAt)}</span>
-                    <span className={styles.mobileDivider}>·</span>
-                    <span className={styles.mobileViews}>
-                      <Eye size={12} /> {notice.viewCount}
-                    </span>
+                  <div className={styles.mobileCardContent}>
+                    {notice.thumbnailUrl && (
+                      <div className={styles.mobileThumbnail}>
+                        <Image
+                          src={notice.thumbnailUrl}
+                          alt=""
+                          fill
+                          sizes="60px"
+                          className={styles.thumbnail}
+                        />
+                      </div>
+                    )}
+                    <div className={styles.mobileCardInfo}>
+                      <div className={styles.mobileHeader}>
+                        <span className={styles.mobilePinnedBadge}>
+                          <Pin size={10} /> 공지
+                        </span>
+                        <span className={styles.mobileCategoryBadge}>{notice.category}</span>
+                        {isNew(notice.createdAt) && <span className={styles.newBadge}>N</span>}
+                        {notice.isImportant && <span className={styles.importantBadge}>중요</span>}
+                      </div>
+                      <h3 className={styles.mobileTitle}>{notice.title}</h3>
+                      <div className={styles.mobileMeta}>
+                        <span>{notice.author}</span>
+                        <span className={styles.mobileDivider}>·</span>
+                        <span>{formatShortDate(notice.createdAt)}</span>
+                        <span className={styles.mobileDivider}>·</span>
+                        <span className={styles.mobileViews}>
+                          <Eye size={12} /> {notice.viewCount}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -373,19 +449,34 @@ export default function NoticePage() {
                   href={`/notice/${notice.id}`}
                   className={styles.mobileCard}
                 >
-                  <div className={styles.mobileHeader}>
-                    <span className={styles.mobileCategoryBadge}>{notice.category}</span>
-                    {isNew(notice.createdAt) && <span className={styles.newBadge}>N</span>}
-                  </div>
-                  <h3 className={styles.mobileTitle}>{notice.title}</h3>
-                  <div className={styles.mobileMeta}>
-                    <span>{notice.author}</span>
-                    <span className={styles.mobileDivider}>·</span>
-                    <span>{formatShortDate(notice.createdAt)}</span>
-                    <span className={styles.mobileDivider}>·</span>
-                    <span className={styles.mobileViews}>
-                      <Eye size={12} /> {notice.viewCount}
-                    </span>
+                  <div className={styles.mobileCardContent}>
+                    {notice.thumbnailUrl && (
+                      <div className={styles.mobileThumbnail}>
+                        <Image
+                          src={notice.thumbnailUrl}
+                          alt=""
+                          fill
+                          sizes="60px"
+                          className={styles.thumbnail}
+                        />
+                      </div>
+                    )}
+                    <div className={styles.mobileCardInfo}>
+                      <div className={styles.mobileHeader}>
+                        <span className={styles.mobileCategoryBadge}>{notice.category}</span>
+                        {isNew(notice.createdAt) && <span className={styles.newBadge}>N</span>}
+                      </div>
+                      <h3 className={styles.mobileTitle}>{notice.title}</h3>
+                      <div className={styles.mobileMeta}>
+                        <span>{notice.author}</span>
+                        <span className={styles.mobileDivider}>·</span>
+                        <span>{formatShortDate(notice.createdAt)}</span>
+                        <span className={styles.mobileDivider}>·</span>
+                        <span className={styles.mobileViews}>
+                          <Eye size={12} /> {notice.viewCount}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </Link>
               ))}

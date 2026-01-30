@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, X } from 'lucide-react'
 import Image from 'next/image'
@@ -14,6 +15,20 @@ interface TimelineModalProps {
 }
 
 export default function TimelineModal({ event, onClose }: TimelineModalProps) {
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    if (!event) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [event, onClose])
+
   return (
     <AnimatePresence>
       {event && (

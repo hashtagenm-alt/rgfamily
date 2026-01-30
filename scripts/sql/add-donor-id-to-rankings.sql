@@ -4,12 +4,28 @@
 -- ================================================
 
 -- 1. season_donation_rankings 테이블에 donor_id 추가
-ALTER TABLE season_donation_rankings
-ADD COLUMN IF NOT EXISTS donor_id uuid REFERENCES profiles(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'season_donation_rankings' AND column_name = 'donor_id'
+  ) THEN
+    ALTER TABLE season_donation_rankings
+    ADD COLUMN donor_id uuid REFERENCES profiles(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- 2. total_donation_rankings 테이블에 donor_id 추가
-ALTER TABLE total_donation_rankings
-ADD COLUMN IF NOT EXISTS donor_id uuid REFERENCES profiles(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'total_donation_rankings' AND column_name = 'donor_id'
+  ) THEN
+    ALTER TABLE total_donation_rankings
+    ADD COLUMN donor_id uuid REFERENCES profiles(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- 3. 인덱스 추가 (검색 성능 향상)
 CREATE INDEX IF NOT EXISTS idx_season_donation_rankings_donor_id
