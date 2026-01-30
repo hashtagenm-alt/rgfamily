@@ -30,9 +30,11 @@ export default function TotalRankingPage() {
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
   const [podiumProfileIds, setPodiumProfileIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchRankings = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
 
     // Mock 데이터 모드
     if (USE_MOCK_DATA) {
@@ -97,7 +99,10 @@ export default function TotalRankingPage() {
     // 랭킹 데이터 처리
     if (totalRankingsResult.error) {
       console.error("총 후원 랭킹 로드 실패:", totalRankingsResult.error);
+      setError("랭킹 데이터를 불러오는데 실패했습니다.");
       setRankings([]);
+      setIsLoading(false);
+      return;
     } else {
       // 닉네임 → profile_id 매핑 생성 + 포디움 달성자 추출
       const nicknameToProfileId: Record<string, string> = {};
@@ -277,6 +282,14 @@ export default function TotalRankingPage() {
             <div className={styles.loading}>
               <div className={styles.spinner} />
               <span>랭킹을 불러오는 중...</span>
+            </div>
+          ) : error ? (
+            <div className={styles.error}>
+              <Trophy size={48} />
+              <p>{error}</p>
+              <button onClick={fetchRankings} className={styles.retryBtn}>
+                다시 시도
+              </button>
             </div>
           ) : rankings.length === 0 ? (
             <div className={styles.empty}>

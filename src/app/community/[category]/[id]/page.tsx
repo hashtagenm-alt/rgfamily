@@ -5,7 +5,7 @@ import { useRouter, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Eye, Calendar, User, MessageSquare, Send, Trash2, Edit } from 'lucide-react'
-import { deletePost } from '@/lib/actions/posts'
+import { deletePost, deleteComment } from '@/lib/actions/posts'
 import { useSupabaseContext, useAuthContext } from '@/lib/context'
 import { formatDate } from '@/lib/utils/format'
 import type { JoinedProfile } from '@/types/common'
@@ -60,6 +60,7 @@ export default function PostDetailPage({
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
 
   // 삭제 권한 확인 (작성자 또는 관리자)
   const canDelete = user && post && (user.id === post.authorId || isAdmin)
@@ -154,6 +155,30 @@ export default function PostDetailPage({
     setIsSubmitting(false)
   }
 
+
+  // 댓글 삭제 권한 확인 함수
+  const canDeleteComment = (commentAuthorId: string) => {
+    return user && (user.id === commentAuthorId || isAdmin)
+  }
+
+  // 댓글 삭제 핸들러
+  const handleDeleteComment = async (commentId: number, commentAuthorId: string) => {
+    const confirmMessage = isAdmin && user?.id !== commentAuthorId
+      ? '관리자 권한으로 이 댓글을 삭제하시겠습니까?'
+      : '이 댓글을 삭제하시겠습니까?'
+
+    if (!confirm(confirmMessage)) return
+
+    setDeletingCommentId(commentId)
+    const result = await deleteComment(commentId)
+
+    if (result.error) {
+      alert(result.error)
+    } else {
+      fetchPost() // 댓글 목록 새로고침
+    }
+    setDeletingCommentId(null)
+  }
 
   const getCategoryLabel = () => {
     return category === 'vip' ? 'VIP 라운지' : '자유게시판'
@@ -344,6 +369,20 @@ export default function PostDetailPage({
                     <span className={styles.commentDate}>
                       {formatDate(comment.createdAt)}
                     </span>
+                    {canDeleteComment(comment.authorId) && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.id, comment.authorId)}
+                        disabled={deletingCommentId === comment.id}
+                        className={styles.commentDeleteBtn}
+                        title="댓글 삭제"
+                      >
+                        {deletingCommentId === comment.id ? (
+                          <span className={styles.commentDeleteSpinner} />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                      </button>
+                    )}
                   </div>
                   <p className={styles.commentContent}>{comment.content}</p>
                 </div>

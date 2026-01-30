@@ -13,6 +13,7 @@ import Footer from '@/components/Footer'
 import { BjThankYouSection, VipBoardSection, VipImageUploadModal } from '@/components/vip'
 import { useAuthContext } from '@/lib/context'
 import { useVipStatus, useVipProfileData } from '@/lib/hooks'
+import { updateVipPersonalMessage } from '@/lib/actions/vip-rewards'
 import styles from './page.module.css'
 
 export default function VipProfilePage({ params }: { params: Promise<{ profileId: string }> }) {
@@ -26,6 +27,7 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
   const [isEditingBio, setIsEditingBio] = useState(false)
   const [bioText, setBioText] = useState('')
   const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false)
+  const [isSavingBio, setIsSavingBio] = useState(false)
 
   // 접근 권한 체크
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
@@ -76,6 +78,36 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedImageIndex, vipData])
+
+  // 데이터 로드 시 bioText 초기화
+  useEffect(() => {
+    if (vipData?.personalMessage) {
+      setBioText(vipData.personalMessage)
+    }
+  }, [vipData?.personalMessage])
+
+  // 소개글 저장 핸들러
+  const handleSaveBio = async () => {
+    if (!vipData || vipData.id === 0) {
+      alert('VIP 정보가 없어 소개글을 저장할 수 없습니다.')
+      return
+    }
+
+    setIsSavingBio(true)
+    try {
+      const result = await updateVipPersonalMessage(vipData.id, bioText)
+      if (result.error) {
+        alert(result.error)
+      } else {
+        setIsEditingBio(false)
+        refetch()
+      }
+    } catch (err) {
+      alert('소개글 저장에 실패했습니다.')
+    } finally {
+      setIsSavingBio(false)
+    }
+  }
 
   // 로딩 중
   if (isLoading) {
@@ -402,7 +434,13 @@ export default function VipProfilePage({ params }: { params: Promise<{ profileId
                     >
                       취소
                     </button>
-                    <button className={styles.bioSaveBtn}>저장</button>
+                    <button
+                      className={styles.bioSaveBtn}
+                      onClick={handleSaveBio}
+                      disabled={isSavingBio}
+                    >
+                      {isSavingBio ? '저장 중...' : '저장'}
+                    </button>
                   </div>
                 </div>
               ) : bioText ? (
