@@ -13,8 +13,18 @@ interface SigDetailModalProps {
   onClose: () => void
 }
 
+// Cloudflare Stream UID를 embed URL로 변환
+function getCloudflareEmbedUrl(cloudflareUid: string): string {
+  return `https://iframe.videodelivery.net/${cloudflareUid}`
+}
+
 // YouTube URL을 embed URL로 변환
-function getEmbedUrl(url: string): string {
+function getEmbedUrl(url: string, cloudflareUid?: string | null): string {
+  // Cloudflare Stream UID가 있으면 우선 사용
+  if (cloudflareUid) {
+    return getCloudflareEmbedUrl(cloudflareUid)
+  }
+
   if (!url) return ''
 
   // YouTube URL 패턴들
@@ -49,8 +59,13 @@ function getEmbedUrl(url: string): string {
   return url
 }
 
-function getEmbedUrlWithParams(url: string): string {
-  const embedUrl = getEmbedUrl(url)
+function getEmbedUrlWithParams(url: string, cloudflareUid?: string | null): string {
+  const embedUrl = getEmbedUrl(url, cloudflareUid)
+
+  // Cloudflare Stream
+  if (embedUrl.includes('videodelivery.net/')) {
+    return `${embedUrl}?autoplay=true&muted=false`
+  }
 
   if (embedUrl.includes('youtube.com/embed/')) {
     return `${embedUrl}?autoplay=1&modestbranding=1&rel=0`
@@ -334,7 +349,7 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                             />
                           ) : (
                             <iframe
-                              src={getEmbedUrlWithParams(currentVideo.videoUrl)}
+                              src={getEmbedUrlWithParams(currentVideo.videoUrl, currentVideo.cloudflareUid)}
                               className={styles.video}
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen

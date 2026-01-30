@@ -1,6 +1,6 @@
 'use server'
 
-import { adminAction, authAction, publicAction, type ActionResult } from './index'
+import { adminAction, moderatorAction, authAction, publicAction, type ActionResult } from './index'
 import { checkOwnerOrModeratorPermission, throwPermissionError } from './permissions'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { InsertTables, UpdateTables, Post, Comment } from '@/types/database'
@@ -396,12 +396,13 @@ export async function deleteMultiplePosts(
 }
 
 /**
- * 게시글 강제 삭제 (Admin - Hard Delete)
+ * 게시글 강제 삭제 (Moderator+ - Hard Delete)
+ * CLAUDE.md §17: /admin/posts - moderator+
  */
 export async function hardDeletePost(
   id: number
 ): Promise<ActionResult<null>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { error } = await supabase
       .from('posts')
       .delete()
@@ -413,12 +414,13 @@ export async function hardDeletePost(
 }
 
 /**
- * 게시글 복구 (Admin)
+ * 게시글 복구 (Moderator+)
+ * CLAUDE.md §17: /admin/posts - moderator+
  */
 export async function restorePost(
   id: number
 ): Promise<ActionResult<Post>> {
-  return adminAction(async (supabase) => {
+  return moderatorAction(async (supabase) => {
     const { data: post, error } = await supabase
       .from('posts')
       .update({ is_deleted: false })

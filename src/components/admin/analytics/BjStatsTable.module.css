@@ -28,14 +28,15 @@
   border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 14px; /* 버튼 텍스트 14px */
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .refreshBtn:hover {
   background: var(--bg-tertiary);
-  color: var(--text-primary);
+  color: var(--color-primary, #fd68ba); /* CLAUDE.md: 호버 시 핑크 */
+  border-color: var(--color-primary, #fd68ba);
 }
 
 .refreshBtn:disabled {
@@ -85,19 +86,27 @@
 
 .table th {
   background: var(--bg-tertiary);
-  font-size: 13px;
+  font-size: 14px; /* 헤더는 14px 허용 */
   font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
 .table td {
-  font-size: 14px;
+  font-size: 16px; /* CLAUDE.md: 본문 최소 16px */
   color: var(--text-primary);
 }
 
+.table tbody tr {
+  transition: background 0.2s, border-color 0.2s;
+}
+
 .table tbody tr:hover {
-  background: var(--bg-tertiary);
+  background: rgba(253, 104, 186, 0.08); /* 핑크 틴트 */
+}
+
+.table tbody tr:hover td {
+  color: var(--text-primary);
 }
 
 .sortable {
@@ -159,6 +168,6 @@
   .table th,
   .table td {
     padding: 10px 12px;
-    font-size: 13px;
+    font-size: 14px; /* 모바일에서도 14px 이상 유지 */
   }
 }

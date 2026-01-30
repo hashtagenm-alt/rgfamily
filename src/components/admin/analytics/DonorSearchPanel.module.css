@@ -144,7 +144,7 @@
 }
 
 .statLabel {
-  font-size: 13px;
+  font-size: 14px; /* 보조 텍스트 14px */
   color: var(--text-secondary);
 }
 
@@ -156,7 +156,7 @@
 }
 
 .sectionTitle {
-  font-size: 14px;
+  font-size: 16px; /* CLAUDE.md: 최소 16px */
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 12px;
@@ -175,15 +175,20 @@
   padding: 10px 12px;
   background: var(--bg-secondary);
   border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.episodeItem:hover {
+  background: rgba(253, 104, 186, 0.08); /* 핑크 틴트 */
 }
 
 .episodeTitle {
-  font-size: 14px;
+  font-size: 16px; /* CLAUDE.md: 최소 16px */
   color: var(--text-primary);
 }
 
 .episodeStats {
-  font-size: 13px;
+  font-size: 14px; /* 보조 텍스트 14px */
   color: var(--text-secondary);
 }
 
@@ -221,7 +226,7 @@
 }
 
 .bjName {
-  font-size: 13px;
+  font-size: 14px; /* 제한된 공간 14px */
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
