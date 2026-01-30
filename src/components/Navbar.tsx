@@ -20,6 +20,8 @@ import {
   Sparkles,
   Shield,
   Settings,
+  Video,
+  Film,
   type LucideIcon,
 } from "lucide-react";
 import { useAuthContext } from "@/lib/context";
@@ -77,6 +79,14 @@ const navItems: NavItem[] = [
     href: "/schedule",
     subItems: [
       { label: "달력", href: "/schedule", description: "월별 일정 캘린더", icon: CalendarIcon },
+    ],
+  },
+  {
+    label: "다시보기",
+    subItems: [
+      { label: "전체보기", href: "/replay", description: "VOD & 숏폼 영상", icon: Film },
+      { label: "VOD", href: "/replay?tab=vod", description: "풀영상 다시보기", icon: Video },
+      { label: "SHORTS", href: "/replay?tab=shorts", description: "숏폼 하이라이트", icon: Film },
     ],
   },
 ];

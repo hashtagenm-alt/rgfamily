@@ -133,6 +133,7 @@ export async function getShorts(options?: {
 
 /**
  * VOD 목록 조회 (공개)
+ * parent_id가 없는 항목만 반환 (대표 항목 또는 단일 영상)
  */
 export async function getVODs(options?: {
   unit?: 'excel' | 'crew'
@@ -144,6 +145,7 @@ export async function getVODs(options?: {
       .from('media_content')
       .select('*')
       .eq('content_type', 'vod')
+      .is('parent_id', null)  // 대표 항목만 (파트 1 또는 단일 영상)
       .order('created_at', { ascending: false })
 
     if (options?.unit) {
@@ -160,6 +162,41 @@ export async function getVODs(options?: {
 
     if (error) throw new Error(error.message)
     return data || []
+  })
+}
+
+/**
+ * VOD 파트 목록 조회 (연속 재생용)
+ * parent_id로 연결된 모든 파트를 part_number 순서대로 반환
+ */
+export async function getVODParts(parentId: number): Promise<ActionResult<MediaContent[]>> {
+  return publicAction(async (supabase) => {
+    // 대표 항목 (Part 1) 조회
+    const { data: parent, error: parentError } = await supabase
+      .from('media_content')
+      .select('*')
+      .eq('id', parentId)
+      .single()
+
+    if (parentError) throw new Error(parentError.message)
+    if (!parent) throw new Error('영상을 찾을 수 없습니다')
+
+    // 단일 영상인 경우
+    if (parent.total_parts <= 1) {
+      return [parent]
+    }
+
+    // 자식 파트들 조회
+    const { data: children, error: childrenError } = await supabase
+      .from('media_content')
+      .select('*')
+      .eq('parent_id', parentId)
+      .order('part_number', { ascending: true })
+
+    if (childrenError) throw new Error(childrenError.message)
+
+    // Part 1 + 나머지 파트 합치기
+    return [parent, ...(children || [])]
   })
 }
 
