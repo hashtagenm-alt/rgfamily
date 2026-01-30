@@ -91,8 +91,9 @@ export async function POST(request: NextRequest) {
       ]
 
       // 아바타용 transformation (800x800 고해상도)
+      // GIF는 애니메이션 보존을 위해 fl_animated 플래그 사용
       const avatarTransformation = isGif
-        ? [{ width: 800, height: 800, crop: 'fill' }]
+        ? [{ width: 800, height: 800, crop: 'fill', flags: 'animated' }]
         : [
             { width: 800, height: 800, crop: 'fill', gravity: 'face' },
             { quality: 'auto:best', fetch_format: 'auto' }
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
 
       // 일반 이미지 transformation (400x400 정사각형)
       const defaultTransformation = isGif
-        ? [{ width: 400, height: 400, crop: 'fill' }]
+        ? [{ width: 400, height: 400, crop: 'fill', flags: 'animated' }]
         : [
             { width: 400, height: 400, crop: 'fill', gravity: 'face' },
             { quality: 'auto', fetch_format: 'auto' }
@@ -118,6 +119,8 @@ export async function POST(request: NextRequest) {
           folder,
           resource_type: 'image',
           transformation,
+          // GIF 애니메이션 보존 설정
+          ...(isGif && { format: 'gif' }),
         },
         (error, result) => {
           if (error) reject(error)
