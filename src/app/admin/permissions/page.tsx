@@ -34,6 +34,7 @@ const ROLE_LABELS: Record<string, string> = {
   superadmin: '최고 관리자',
   admin: '관리자',
   moderator: '운영진',
+  bj: 'BJ',
   vip: 'VIP',
   member: '일반 회원',
 }
@@ -42,6 +43,7 @@ const ROLE_COLORS: Record<string, string> = {
   superadmin: 'var(--color-error)',
   admin: 'var(--color-primary)',
   moderator: 'var(--color-info)',
+  bj: 'var(--live-color)',
   vip: 'var(--metallic-gold)',
   member: 'var(--text-muted)',
 }
@@ -232,6 +234,7 @@ export default function AdminPermissionsPage() {
   const superadmins = users.filter((u) => u.role === 'superadmin').length
   const admins = users.filter((u) => u.role === 'admin').length
   const moderators = users.filter((u) => u.role === 'moderator').length
+  const bjs = users.filter((u) => u.role === 'bj').length
   const vips = users.filter((u) => u.role === 'vip').length
   const regularUsers = users.filter((u) => u.role === 'member').length
   const secretPageUsers = users.filter((u) => u.is_secret_page_allowed).length
@@ -300,6 +303,12 @@ export default function AdminPermissionsPage() {
             onClick={() => setFilterRole('moderator')}
           >
             운영진 ({moderators})
+          </button>
+          <button
+            className={`${styles.filterButton} ${filterRole === 'bj' ? styles.active : ''}`}
+            onClick={() => setFilterRole('bj')}
+          >
+            BJ ({bjs})
           </button>
           <button
             className={`${styles.filterButton} ${filterRole === 'vip' ? styles.active : ''}`}

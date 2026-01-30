@@ -11,7 +11,7 @@ interface Member {
   id: string
   nickname: string
   email: string
-  role: 'member' | 'vip' | 'moderator' | 'admin' | 'superadmin'
+  role: 'member' | 'vip' | 'bj' | 'moderator' | 'admin' | 'superadmin'
   unit: 'excel' | 'crew' | null
   totalDonation: number
   createdAt: string
@@ -61,12 +61,16 @@ export default function MembersPage() {
       superadmin: styles.badgeSuperadmin,
       admin: styles.badgeAdmin,
       moderator: styles.badgeModerator,
+      vip: styles.badgeVip,
+      bj: styles.badgeBj,
       member: styles.badgeMember,
     }
     const roleNames: Record<string, string> = {
       superadmin: '최고관리자',
       admin: '관리자',
       moderator: '운영자',
+      vip: 'VIP',
+      bj: 'BJ',
       member: '회원',
     }
     return (
@@ -184,6 +188,7 @@ export default function MembersPage() {
                   >
                     <option value="member">회원</option>
                     <option value="vip">VIP</option>
+                    <option value="bj">BJ</option>
                     <option value="moderator">운영자</option>
                     <option value="admin">관리자</option>
                     <option value="superadmin">최고관리자</option>
