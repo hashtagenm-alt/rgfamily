@@ -8,6 +8,7 @@ import { ArrowLeft, Eye, Calendar, User, MessageSquare, Send, Trash2, Edit } fro
 import { deletePost, deleteComment } from '@/lib/actions/posts'
 import { useSupabaseContext, useAuthContext } from '@/lib/context'
 import { formatDate } from '@/lib/utils/format'
+import { renderContent } from '@/lib/utils/htmlContent'
 import type { JoinedProfile } from '@/types/common'
 import styles from './page.module.css'
 
@@ -304,10 +305,10 @@ export default function PostDetailPage({
             </div>
           </div>
 
-          {/* Content - HTML 콘텐츠 렌더링 */}
+          {/* Content - HTML 콘텐츠 렌더링 (XSS 방지 + Plain text 호환) */}
           <div
             className={styles.content}
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
           />
         </article>
 

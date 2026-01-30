@@ -10,6 +10,7 @@ import { useSupabaseContext } from '@/lib/context'
 import { useAuthContext } from '@/lib/context/AuthContext'
 import { deleteNotice } from '@/lib/actions/notices'
 import { formatDate } from '@/lib/utils/format'
+import { renderContent } from '@/lib/utils/htmlContent'
 import styles from './page.module.css'
 
 interface Attachment {
@@ -255,10 +256,10 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          {/* HTML 콘텐츠 렌더링 */}
+          {/* HTML 콘텐츠 렌더링 (XSS 방지 + Plain text 호환) */}
           <div
             className={styles.content}
-            dangerouslySetInnerHTML={{ __html: notice.content }}
+            dangerouslySetInnerHTML={{ __html: renderContent(notice.content) }}
           />
 
           {/* 첨부파일 */}
