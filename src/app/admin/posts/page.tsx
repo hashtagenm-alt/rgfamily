@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Eye, Plus, X, Save, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { DataTable, Column, AdminModal } from '@/components/admin'
+import { RichEditor } from '@/components/ui'
 import { useSupabaseContext } from '@/lib/context'
 import { useAlert } from '@/lib/hooks'
 import type { JoinedProfile } from '@/types/common'
@@ -35,6 +36,33 @@ export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<'all' | 'free' | 'vip'>('all')
+
+  // 이미지 업로드 핸들러
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `posts/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('이미지 업로드 실패:', uploadError)
+        return null
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath)
+
+      return publicUrl
+    } catch (err) {
+      console.error('이미지 업로드 오류:', err)
+      return null
+    }
+  }
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -517,7 +545,7 @@ export default function PostsPage() {
         onClose={closeModal}
         onSave={handleSave}
         saveLabel={isNew ? '작성' : '저장'}
-        maxWidth="600px"
+        maxWidth="800px"
       >
         <div className={styles.formGroup}>
           <label>카테고리</label>
@@ -554,14 +582,14 @@ export default function PostsPage() {
 
         <div className={styles.formGroup}>
           <label>내용</label>
-          <textarea
-            value={editingPost?.content || ''}
-            onChange={(e) =>
-              setEditingPost(prev => prev ? { ...prev, content: e.target.value } : null)
+          <RichEditor
+            content={editingPost?.content || ''}
+            onChange={(content) =>
+              setEditingPost(prev => prev ? { ...prev, content } : null)
             }
-            className={styles.textarea}
-            placeholder="게시글 내용을 입력하세요"
-            rows={8}
+            placeholder="게시글 내용을 입력하세요..."
+            minHeight="250px"
+            onImageUpload={handleImageUpload}
           />
         </div>
 

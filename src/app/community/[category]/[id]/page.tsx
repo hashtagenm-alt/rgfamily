@@ -304,12 +304,11 @@ export default function PostDetailPage({
             </div>
           </div>
 
-          {/* Content */}
-          <div className={styles.content}>
-            {post.content.split('\n').map((paragraph, index) => (
-              <p key={index}>{paragraph || '\u00A0'}</p>
-            ))}
-          </div>
+          {/* Content - HTML 콘텐츠 렌더링 */}
+          <div
+            className={styles.content}
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
         </article>
 
         {/* Comments */}
