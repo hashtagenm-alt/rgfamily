@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import {
@@ -71,6 +71,18 @@ const getRankIcon = (rank: string) => {
 
 export function MemberDetailModal({ member, onClose }: MemberDetailModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
+
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   const hasPledge = !!member.profile_info?.position_pledge
   const hasSocial = member.social_links && Object.keys(member.social_links).length > 0

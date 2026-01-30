@@ -65,6 +65,20 @@ export default function ScheduleEditModal({
   const [isAllDay, setIsAllDay] = useState(false)
   const [description, setDescription] = useState('')
 
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   // 초기화
   useEffect(() => {
     if (!isOpen) return

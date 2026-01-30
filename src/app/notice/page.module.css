@@ -247,7 +247,7 @@
 /* Table Header */
 .tableHeader {
   display: grid;
-  grid-template-columns: 80px 80px 1fr 100px 100px 70px;
+  grid-template-columns: 80px 50px 80px 1fr 100px 100px 70px;
   padding: var(--space-3) var(--space-4);
   background: var(--surface);
   border-bottom: 2px solid var(--card-border);
@@ -255,6 +255,13 @@
   font-weight: var(--font-bold);
   color: var(--text-tertiary);
   text-align: center;
+}
+
+/* Thumbnail Column */
+.colThumbnail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .tableHeader span {
@@ -283,7 +290,7 @@
 /* Row */
 .row {
   display: grid;
-  grid-template-columns: 80px 80px 1fr 100px 100px 70px;
+  grid-template-columns: 80px 50px 80px 1fr 100px 100px 70px;
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--card-border);
   color: var(--text-secondary);
@@ -316,6 +323,37 @@
   color: var(--text-muted);
   text-align: center;
   font-weight: var(--font-medium);
+}
+
+/* Cell Thumbnail */
+.cellThumbnail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.thumbnailWrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.thumbnail {
+  object-fit: cover;
+}
+
+.thumbnailPlaceholder {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-overlay-05);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
 }
 
 .pinnedBadge {
@@ -503,11 +541,17 @@
 /* Responsive - Tablet */
 @media (max-width: 900px) {
   .tableHeader {
-    grid-template-columns: 70px 70px 1fr 80px 80px 60px;
+    grid-template-columns: 70px 44px 70px 1fr 80px 80px 60px;
   }
 
   .row {
-    grid-template-columns: 70px 70px 1fr 80px 80px 60px;
+    grid-template-columns: 70px 44px 70px 1fr 80px 80px 60px;
+  }
+
+  .thumbnailWrapper,
+  .thumbnailPlaceholder {
+    width: 36px;
+    height: 36px;
   }
 
   .searchInput {
@@ -619,6 +663,29 @@
 
   .mobilePinned {
     background: var(--live-overlay-03);
+  }
+
+  .mobileCardContent {
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  .mobileThumbnail {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .mobileCardInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
   }
 
   .mobileHeader {
