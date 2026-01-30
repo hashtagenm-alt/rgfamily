@@ -56,10 +56,22 @@ export default function VipRewardsPage() {
   const fetchRelatedData = useCallback(async () => {
     const [seasonsRes, profilesRes] = await Promise.all([
       supabase.from('seasons').select('id, name').order('start_date', { ascending: false }),
-      supabase.from('profiles').select('id, nickname').order('total_donation', { ascending: false }).limit(50),
+      // VIP 역할 또는 총 후원 상위 100명 조회
+      supabase
+        .from('profiles')
+        .select('id, nickname, role, total_donation')
+        .or('role.eq.vip,total_donation.gt.0')
+        .order('total_donation', { ascending: false })
+        .limit(100),
     ])
     setSeasons(seasonsRes.data || [])
-    setProfiles(profilesRes.data || [])
+    // VIP 우선 정렬, 그 외는 총 후원 순
+    const sortedProfiles = (profilesRes.data || []).sort((a, b) => {
+      if (a.role === 'vip' && b.role !== 'vip') return -1
+      if (a.role !== 'vip' && b.role === 'vip') return 1
+      return (b.total_donation || 0) - (a.total_donation || 0)
+    })
+    setProfiles(sortedProfiles.map(p => ({ id: p.id, nickname: p.nickname })))
   }, [supabase])
 
   useEffect(() => {

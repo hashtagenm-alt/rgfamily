@@ -217,6 +217,16 @@
   color: var(--text-tertiary);
 }
 
+.badgeVip {
+  background: rgba(255, 215, 0, 0.15);
+  color: var(--metallic-gold);
+}
+
+.badgeBj {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--live-color);
+}
+
 .badgeExcel {
   background: var(--color-pink-overlay-10);
   color: var(--primary);

@@ -27,6 +27,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (nickname.length < 2) {
+      return NextResponse.json(
+        { error: '닉네임은 2자 이상이어야 합니다' },
+        { status: 400 }
+      )
+    }
+
+    // 닉네임 중복 체크
+    const { data: existingNickname } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('nickname', nickname)
+      .limit(1)
+
+    if (existingNickname && existingNickname.length > 0) {
+      return NextResponse.json(
+        { error: '이미 사용 중인 닉네임입니다' },
+        { status: 400 }
+      )
+    }
+
     // Admin API로 사용자 생성 (이메일 인증 우회)
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
