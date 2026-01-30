@@ -102,6 +102,41 @@
   font-weight: 500;
 }
 
+/* 어드민용 멤버 선택 */
+.memberSelect {
+  padding: 0 28px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.select {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: #fff;
+  font-size: 15px;
+  transition: all 0.2s;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3e%3c/path%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  padding-right: 48px;
+}
+
+.select:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.5);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.select option {
+  background: #1a1a1a;
+  color: #fff;
+}
+
 .typeBadgeSmall {
   display: inline-flex;
   align-items: center;
@@ -595,15 +630,26 @@
 
 :global([data-theme="light"]) .input,
 :global([data-theme="light"]) .textarea,
-:global([data-theme="light"]) .textareaSmall {
+:global([data-theme="light"]) .textareaSmall,
+:global([data-theme="light"]) .select {
   background: rgba(0, 0, 0, 0.03);
   border-color: rgba(0, 0, 0, 0.1);
   color: #1a1a1a;
 }
 
+:global([data-theme="light"]) .select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%231a1a1a'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3e%3c/path%3e%3c/svg%3e");
+}
+
+:global([data-theme="light"]) .select option {
+  background: #fff;
+  color: #1a1a1a;
+}
+
 :global([data-theme="light"]) .input:focus,
 :global([data-theme="light"]) .textarea:focus,
-:global([data-theme="light"]) .textareaSmall:focus {
+:global([data-theme="light"]) .textareaSmall:focus,
+:global([data-theme="light"]) .select:focus {
   background: rgba(0, 0, 0, 0.05);
 }
 

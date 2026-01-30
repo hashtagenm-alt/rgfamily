@@ -58,3 +58,6 @@ __pycache__/
 # sensitive data (accounts, passwords)
 /data/*.csv
 /data/*.xlsx
+
+# Bulk upload generated CSVs
+scripts/bulk-upload-signature-videos/*.csv

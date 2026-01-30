@@ -6,6 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, MessageSquare, ImageIcon, Video, Send, Loader2, Globe, Lock, Upload, Trash2 } from 'lucide-react'
 import styles from './BjMessageForm.module.css'
 
+interface BjMember {
+  id: number
+  name: string
+  imageUrl: string | null
+}
+
 interface BjMessageFormProps {
   isOpen: boolean
   onClose: () => void
@@ -14,12 +20,15 @@ interface BjMessageFormProps {
     contentText?: string
     contentUrl?: string
     isPublic?: boolean
+    selectedMemberId?: number
   }) => Promise<boolean>
   bjMemberInfo?: {
     name: string
     imageUrl: string | null
   }
   vipNickname: string
+  isAdminMode?: boolean  // 어드민 모드 (멤버 선택 필요)
+  bjMembers?: BjMember[]  // 어드민용 멤버 목록
 }
 
 type MessageType = 'text' | 'image' | 'video'
@@ -30,6 +39,8 @@ export default function BjMessageForm({
   onSubmit,
   bjMemberInfo,
   vipNickname,
+  isAdminMode = false,
+  bjMembers = [],
 }: BjMessageFormProps) {
   const [messageType, setMessageType] = useState<MessageType>('text')
   const [contentText, setContentText] = useState('')
@@ -44,6 +55,10 @@ export default function BjMessageForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // 어드민용 멤버 선택 상태
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null)
+  const selectedMember = bjMembers.find(m => m.id === selectedMemberId)
+
   const resetForm = useCallback(() => {
     setMessageType('text')
     setContentText('')
@@ -53,6 +68,7 @@ export default function BjMessageForm({
     setIsUploading(false)
     setUploadProgress(0)
     setPreviewUrl(null)
+    setSelectedMemberId(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -132,6 +148,12 @@ export default function BjMessageForm({
   const validateForm = (): boolean => {
     setError(null)
 
+    // 어드민 모드일 때 멤버 선택 확인
+    if (isAdminMode && !selectedMemberId) {
+      setError('등록할 멤버를 선택해주세요.')
+      return false
+    }
+
     if (messageType === 'text') {
       if (!contentText.trim()) {
         setError('메시지를 입력해주세요.')
@@ -185,6 +207,7 @@ export default function BjMessageForm({
         contentText: contentText.trim() || undefined,
         contentUrl: contentUrl.trim() || undefined,
         isPublic,
+        selectedMemberId: selectedMemberId || undefined,
       })
 
       if (success) {
@@ -230,7 +253,22 @@ export default function BjMessageForm({
             {/* 헤더 */}
             <div className={styles.header}>
               <div className={styles.bjProfile}>
-                {bjMemberInfo?.imageUrl ? (
+                {isAdminMode ? (
+                  // 어드민 모드: 멤버 선택
+                  selectedMember?.imageUrl ? (
+                    <Image
+                      src={selectedMember.imageUrl}
+                      alt={selectedMember.name}
+                      width={48}
+                      height={48}
+                      className={styles.bjAvatar}
+                    />
+                  ) : (
+                    <div className={styles.bjAvatarPlaceholder}>
+                      {selectedMember?.name?.charAt(0) || '?'}
+                    </div>
+                  )
+                ) : bjMemberInfo?.imageUrl ? (
                   <Image
                     src={bjMemberInfo.imageUrl}
                     alt={bjMemberInfo.name}
@@ -251,6 +289,26 @@ export default function BjMessageForm({
                 </div>
               </div>
             </div>
+
+            {/* 어드민 모드: 멤버 선택 드롭다운 */}
+            {isAdminMode && (
+              <div className={styles.memberSelect}>
+                <label className={styles.label}>등록할 멤버 선택</label>
+                <select
+                  value={selectedMemberId || ''}
+                  onChange={(e) => setSelectedMemberId(e.target.value ? Number(e.target.value) : null)}
+                  className={styles.select}
+                  disabled={isSubmitting || isUploading}
+                >
+                  <option value="">멤버를 선택하세요</option>
+                  {bjMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* 타입 탭 */}
             <div className={styles.tabs}>
