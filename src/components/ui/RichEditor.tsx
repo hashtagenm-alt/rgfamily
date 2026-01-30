@@ -27,7 +27,7 @@ import {
   Undo,
   Redo,
 } from 'lucide-react'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import styles from './RichEditor.module.css'
 
 interface RichEditorProps {
@@ -320,6 +320,13 @@ export default function RichEditor({
   minHeight = '240px',
   onImageUpload,
 }: RichEditorProps) {
+  // 사용자 입력 중인지 추적 (IME 조합 중 content prop 변경 방지)
+  const isUserInputRef = useRef(false)
+  // 초기 content 값 저장 (최초 마운트 시점의 값)
+  const initialContentRef = useRef(content)
+  // 에디터가 초기화되었는지 추적
+  const isInitializedRef = useRef(false)
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -349,16 +356,37 @@ export default function RichEditor({
     content,
     editable: !disabled,
     onUpdate: ({ editor }) => {
+      isUserInputRef.current = true
       onChange?.(editor.getHTML())
+      // 다음 틱에서 플래그 리셋 (React 상태 업데이트 후)
+      setTimeout(() => {
+        isUserInputRef.current = false
+      }, 0)
     },
     // SSR 호환성을 위해 즉시 렌더링 설정
     immediatelyRender: false,
   })
 
   // content prop이 변경되면 에디터 내용 업데이트
+  // 단, 사용자 입력 중이거나 IME 조합 중일 때는 업데이트하지 않음
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content)
+    if (!editor) return
+
+    // 최초 마운트 후 초기화 완료 표시
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true
+      return
+    }
+
+    // 사용자 입력 중이면 무시 (한글 IME 조합 방해 방지)
+    if (isUserInputRef.current) return
+
+    // 외부에서 content가 변경된 경우에만 업데이트
+    // (예: 수정 모드에서 기존 데이터 로드, 프로그래매틱 변경)
+    const currentHtml = editor.getHTML()
+    if (content !== currentHtml && content !== initialContentRef.current) {
+      editor.commands.setContent(content, { emitUpdate: false })
+      initialContentRef.current = content
     }
   }, [content, editor])
 
