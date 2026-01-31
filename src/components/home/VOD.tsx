@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { Video, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { getVODs } from "@/lib/actions/media";
+import { Video, Play, X, ChevronLeft, ChevronRight, SkipBack, SkipForward } from "lucide-react";
+import { getVODs, getVODParts } from "@/lib/actions/media";
 import { getStreamThumbnailUrl } from "@/lib/cloudflare";
 import type { MediaContent } from "@/types/database";
 import styles from "./VOD.module.css";
@@ -14,6 +14,11 @@ export default function VOD() {
   const [selectedVod, setSelectedVod] = useState<MediaContent | null>(null);
   const [activeUnit, setActiveUnit] = useState<"all" | "excel" | "crew">("all");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Multi-part playback state
+  const [videoParts, setVideoParts] = useState<MediaContent[]>([]);
+  const [currentPartIndex, setCurrentPartIndex] = useState(0);
+  const [loadingParts, setLoadingParts] = useState(false);
 
   useEffect(() => {
     async function fetchVods() {
@@ -34,6 +39,44 @@ export default function VOD() {
       const amount = direction === "left" ? -560 : 560;
       scrollRef.current.scrollBy({ left: amount, behavior: "smooth" });
     }
+  };
+
+  // Handle VOD selection with multi-part support
+  const handleSelectVod = useCallback(async (item: MediaContent) => {
+    setSelectedVod(item);
+    setCurrentPartIndex(0);
+
+    if (item.total_parts > 1) {
+      setLoadingParts(true);
+      const result = await getVODParts(item.id);
+      if (result.data) {
+        setVideoParts(result.data);
+      }
+      setLoadingParts(false);
+    } else {
+      setVideoParts([item]);
+    }
+  }, []);
+
+  const handleCloseModal = () => {
+    setSelectedVod(null);
+    setVideoParts([]);
+    setCurrentPartIndex(0);
+  };
+
+  const goToPart = (index: number) => {
+    if (index >= 0 && index < videoParts.length) {
+      setCurrentPartIndex(index);
+    }
+  };
+
+  const currentPart = videoParts[currentPartIndex] || selectedVod;
+
+  const formatDuration = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}시간 ${m}분`;
+    return `${m}분`;
   };
 
   const getEmbedUrl = (item: MediaContent) => {
@@ -139,7 +182,7 @@ export default function VOD() {
             <div
               key={item.id}
               className={styles.card}
-              onClick={() => setSelectedVod(item)}
+              onClick={() => handleSelectVod(item)}
             >
               <div className={styles.thumbnail}>
                 {thumb ? (
@@ -173,32 +216,84 @@ export default function VOD() {
         })}
       </div>
 
-      {/* 재생 모달 */}
+      {/* 재생 모달 with Multi-part Support */}
       {selectedVod && (
-        <div className={styles.modal} onClick={() => setSelectedVod(null)}>
+        <div className={styles.modal} onClick={handleCloseModal}>
           <div
             className={styles.modalContent}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               className={styles.closeBtn}
-              onClick={() => setSelectedVod(null)}
+              onClick={handleCloseModal}
             >
               <X size={20} />
             </button>
             <div className={styles.videoWrapper}>
-              <iframe
-                src={getEmbedUrl(selectedVod)}
-                className={styles.videoFrame}
-                allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              />
+              {loadingParts ? (
+                <div className={styles.videoLoading}>파트 로딩 중...</div>
+              ) : (
+                <iframe
+                  key={currentPart?.cloudflare_uid || currentPart?.id}
+                  src={getEmbedUrl(currentPart)}
+                  className={styles.videoFrame}
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                />
+              )}
             </div>
+
+            {/* Part Navigation */}
+            {videoParts.length > 1 && (
+              <div className={styles.partNav}>
+                <button
+                  className={styles.partNavBtn}
+                  onClick={() => goToPart(currentPartIndex - 1)}
+                  disabled={currentPartIndex === 0}
+                >
+                  <SkipBack size={18} />
+                  이전
+                </button>
+
+                <div className={styles.partIndicator}>
+                  {videoParts.map((_, idx) => (
+                    <button
+                      key={idx}
+                      className={`${styles.partDot} ${idx === currentPartIndex ? styles.active : ""}`}
+                      onClick={() => goToPart(idx)}
+                      title={`Part ${idx + 1}`}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  className={styles.partNavBtn}
+                  onClick={() => goToPart(currentPartIndex + 1)}
+                  disabled={currentPartIndex === videoParts.length - 1}
+                >
+                  다음
+                  <SkipForward size={18} />
+                </button>
+              </div>
+            )}
+
             <div className={styles.videoInfo}>
               <div className={styles.videoMeta}>
-                <h4>{selectedVod.title}</h4>
+                <h4>
+                  {selectedVod.title}
+                  {videoParts.length > 1 && (
+                    <span className={styles.partLabel}>
+                      Part {currentPartIndex + 1}/{videoParts.length}
+                    </span>
+                  )}
+                </h4>
                 <span className={styles.videoDate}>
                   {formatDate(selectedVod.created_at)}
+                  {currentPart?.duration && (
+                    <> · {formatDuration(currentPart.duration)}</>
+                  )}
                 </span>
               </div>
               {selectedVod.unit && (
