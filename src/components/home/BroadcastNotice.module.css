@@ -135,7 +135,20 @@
 .tagRow {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+}
+
+.category {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-pink-overlay-10);
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .date {
@@ -143,30 +156,34 @@
   font-size: var(--text-label);
 }
 
-.content {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  line-height: 1.6;
+.title {
   margin: 0;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  white-space: pre-line;
 }
 
-.more {
-  margin-top: 0.5rem;
-  font-size: var(--text-label);
-  color: var(--text-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.item:hover .title {
+  color: var(--color-primary);
 }
-.item:hover .more {
-  color: var(--text-primary);
+
+.content {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 400;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Responsive Banner */
@@ -224,9 +241,8 @@
     font-size: 0.6875rem;
   }
 
-  .more {
-    margin-top: 0.25rem;
-    font-size: 0.6875rem;
+  .title {
+    font-size: 0.875rem;
   }
 }
 
@@ -281,8 +297,13 @@
     font-size: 0.625rem;
   }
 
-  .more {
-    font-size: 0.625rem;
+  .title {
+    font-size: 0.8125rem;
+  }
+
+  .category {
+    font-size: 0.5625rem;
+    padding: 0.0625rem 0.375rem;
   }
 }
 
@@ -310,8 +331,19 @@
     padding: 0.5rem;
   }
 
-  .content {
+  .title {
     font-size: 0.75rem;
+  }
+
+  .content {
+    font-size: 0.6875rem;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .category {
+    font-size: 0.5rem;
+    padding: 0.0625rem 0.25rem;
   }
 }
 
