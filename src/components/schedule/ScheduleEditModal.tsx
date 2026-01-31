@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, Loader2 } from 'lucide-react'
+import { X, Trash2, Loader2, Save, Calendar, Clock } from 'lucide-react'
 import { createSchedule, updateSchedule, deleteSchedule } from '@/lib/actions/schedules'
 import { useScheduleEventTypes } from '@/lib/hooks'
 import type { Schedule } from '@/types/database'
@@ -44,6 +44,15 @@ function formatDatetimeLocal(date: Date | string, defaultTime?: string): string 
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
+// date input용 포맷 (종일 모드)
+function formatDateOnly(date: Date | string): string {
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export default function ScheduleEditModal({
   isOpen,
   event,
@@ -62,6 +71,7 @@ export default function ScheduleEditModal({
   const [eventType, setEventType] = useState<string>('broadcast')
   const [unit, setUnit] = useState<Unit>(null)
   const [startDatetime, setStartDatetime] = useState('')
+  const [endDatetime, setEndDatetime] = useState('')
   const [isAllDay, setIsAllDay] = useState(false)
   const [description, setDescription] = useState('')
 
@@ -87,7 +97,14 @@ export default function ScheduleEditModal({
       setTitle(event.title)
       setEventType(event.event_type)
       setUnit(event.unit)
-      setStartDatetime(formatDatetimeLocal(event.start_datetime))
+      setStartDatetime(event.is_all_day
+        ? formatDateOnly(event.start_datetime)
+        : formatDatetimeLocal(event.start_datetime))
+      setEndDatetime(event.end_datetime
+        ? (event.is_all_day
+            ? formatDateOnly(event.end_datetime)
+            : formatDatetimeLocal(event.end_datetime))
+        : '')
       setIsAllDay(event.is_all_day)
       setDescription(event.description || '')
     } else {
@@ -100,10 +117,36 @@ export default function ScheduleEditModal({
       const dateWithTime = new Date(baseDate)
       dateWithTime.setHours(20, 0, 0, 0)
       setStartDatetime(formatDatetimeLocal(dateWithTime))
+      // 기본 종료 시간: 시작 + 2시간
+      const endWithTime = new Date(dateWithTime)
+      endWithTime.setHours(22, 0, 0, 0)
+      setEndDatetime(formatDatetimeLocal(endWithTime))
       setIsAllDay(false)
       setDescription('')
     }
   }, [event, defaultDate, isOpen])
+
+  // 종일 토글 시 datetime 포맷 변환
+  const handleAllDayChange = (checked: boolean) => {
+    setIsAllDay(checked)
+    if (checked) {
+      // datetime → date 변환
+      if (startDatetime) setStartDatetime(formatDateOnly(startDatetime))
+      if (endDatetime) setEndDatetime(formatDateOnly(endDatetime))
+    } else {
+      // date → datetime 변환 (기본 시간 추가)
+      if (startDatetime) {
+        const d = new Date(startDatetime)
+        d.setHours(20, 0, 0, 0)
+        setStartDatetime(formatDatetimeLocal(d))
+      }
+      if (endDatetime) {
+        const d = new Date(endDatetime)
+        d.setHours(22, 0, 0, 0)
+        setEndDatetime(formatDatetimeLocal(d))
+      }
+    }
+  }
 
   // 저장
   const handleSave = async () => {
@@ -117,14 +160,42 @@ export default function ScheduleEditModal({
       return
     }
 
+    // 종료 시간이 시작 시간보다 이전인지 체크
+    if (endDatetime && new Date(endDatetime) < new Date(startDatetime)) {
+      alert('종료 일시가 시작 일시보다 이전입니다.')
+      return
+    }
+
     setIsLoading(true)
 
     const selectedType = getByCode(eventType)
+
+    // 종일 모드일 때 시간 설정
+    let startIso: string
+    let endIso: string | null = null
+
+    if (isAllDay) {
+      // 종일: 해당 날짜의 00:00:00으로 설정
+      const startDate = new Date(startDatetime)
+      startDate.setHours(0, 0, 0, 0)
+      startIso = startDate.toISOString()
+
+      if (endDatetime) {
+        const endDate = new Date(endDatetime)
+        endDate.setHours(23, 59, 59, 999)
+        endIso = endDate.toISOString()
+      }
+    } else {
+      startIso = new Date(startDatetime).toISOString()
+      endIso = endDatetime ? new Date(endDatetime).toISOString() : null
+    }
+
     const data = {
       title: title.trim(),
       event_type: eventType as 'broadcast' | 'collab' | 'event' | 'notice' | '休',
       unit,
-      start_datetime: new Date(startDatetime).toISOString(),
+      start_datetime: startIso,
+      end_datetime: endIso,
       is_all_day: isAllDay,
       description: description.trim() || null,
       color: selectedType?.color || null,
@@ -191,9 +262,7 @@ export default function ScheduleEditModal({
           <div className={styles.content}>
             {/* 제목 */}
             <div className={styles.field}>
-              <label className={styles.label}>
-                제목 <span className={styles.required}>*</span>
-              </label>
+              <label className={styles.label}>제목</label>
               <input
                 type="text"
                 className={styles.input}
@@ -204,78 +273,101 @@ export default function ScheduleEditModal({
               />
             </div>
 
-            {/* 유형 */}
-            <div className={styles.field}>
-              <label className={styles.label}>
-                유형 <span className={styles.required}>*</span>
-              </label>
-              <div className={styles.typeButtons}>
-                {activeTypes.map((type) => (
-                  <button
-                    key={type.code}
-                    type="button"
-                    className={`${styles.typeButton} ${eventType === type.code ? styles.typeButtonActive : ''}`}
-                    style={{
-                      '--type-color': type.color || '#888888',
-                    } as React.CSSProperties}
-                    onClick={() => setEventType(type.code)}
-                  >
-                    {type.label}
-                  </button>
-                ))}
+            {/* 유형 & 대상 */}
+            <div className={styles.fieldRow}>
+              <div className={styles.field}>
+                <label className={styles.label}>유형</label>
+                <div className={styles.typeButtons}>
+                  {activeTypes.map((type) => (
+                    <button
+                      key={type.code}
+                      type="button"
+                      className={`${styles.typeButton} ${eventType === type.code ? styles.typeButtonActive : ''}`}
+                      style={{
+                        '--type-color': type.color || '#888888',
+                      } as React.CSSProperties}
+                      onClick={() => setEventType(type.code)}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.fieldSmall}>
+                <label className={styles.label}>대상</label>
+                <select
+                  className={styles.select}
+                  value={unit || ''}
+                  onChange={(e) => setUnit(e.target.value as Unit || null)}
+                >
+                  {UNIT_OPTIONS.map((option) => (
+                    <option key={option.value || 'all'} value={option.value || ''}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* 대상 */}
-            <div className={styles.field}>
-              <label className={styles.label}>대상</label>
-              <select
-                className={styles.select}
-                value={unit || ''}
-                onChange={(e) => setUnit(e.target.value as Unit || null)}
-              >
-                {UNIT_OPTIONS.map((option) => (
-                  <option key={option.value || 'all'} value={option.value || ''}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* 날짜/시간 섹션 */}
+            <div className={styles.datetimeSection}>
+              <div className={styles.datetimeHeader}>
+                <div className={styles.datetimeLabel}>
+                  <Calendar size={16} />
+                  <span>일시</span>
+                </div>
+                <label className={styles.allDayToggle}>
+                  <input
+                    type="checkbox"
+                    checked={isAllDay}
+                    onChange={(e) => handleAllDayChange(e.target.checked)}
+                  />
+                  <span className={styles.toggleSwitch} />
+                  <span className={styles.toggleText}>종일</span>
+                </label>
+              </div>
 
-            {/* 시작 일시 */}
-            <div className={styles.field}>
-              <label className={styles.label}>
-                시작 일시 <span className={styles.required}>*</span>
-              </label>
-              <input
-                type="datetime-local"
-                className={styles.input}
-                value={startDatetime}
-                onChange={(e) => setStartDatetime(e.target.value)}
-              />
-            </div>
+              <div className={styles.datetimeInputs}>
+                <div className={styles.datetimeField}>
+                  <label className={styles.datetimeFieldLabel}>시작</label>
+                  <div className={styles.inputWrapper}>
+                    <Clock size={14} className={styles.inputIcon} />
+                    <input
+                      type={isAllDay ? 'date' : 'datetime-local'}
+                      className={styles.datetimeInput}
+                      value={startDatetime}
+                      onChange={(e) => setStartDatetime(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-            {/* 종일 */}
-            <div className={styles.checkboxField}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={isAllDay}
-                  onChange={(e) => setIsAllDay(e.target.checked)}
-                  className={styles.checkbox}
-                />
-                <span>종일</span>
-              </label>
+                <div className={styles.datetimeArrow}>→</div>
+
+                <div className={styles.datetimeField}>
+                  <label className={styles.datetimeFieldLabel}>종료</label>
+                  <div className={styles.inputWrapper}>
+                    <Clock size={14} className={styles.inputIcon} />
+                    <input
+                      type={isAllDay ? 'date' : 'datetime-local'}
+                      className={styles.datetimeInput}
+                      value={endDatetime}
+                      onChange={(e) => setEndDatetime(e.target.value)}
+                      min={startDatetime}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* 설명 */}
             <div className={styles.field}>
-              <label className={styles.label}>설명</label>
+              <label className={styles.label}>설명 (선택)</label>
               <textarea
                 className={styles.textarea}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="일정에 대한 설명을 입력하세요 (선택)"
+                placeholder="일정에 대한 추가 설명..."
                 rows={3}
               />
             </div>
@@ -316,7 +408,10 @@ export default function ScheduleEditModal({
                 {isLoading ? (
                   <Loader2 size={16} className={styles.spinner} />
                 ) : (
-                  '저장'
+                  <>
+                    <Save size={16} />
+                    <span>{isNew ? '추가' : '저장'}</span>
+                  </>
                 )}
               </button>
             </div>
