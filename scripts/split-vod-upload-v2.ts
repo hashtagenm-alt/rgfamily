@@ -242,7 +242,7 @@ async function uploadToCloudflare(filePath: string, title: string): Promise<stri
         Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
         'Tus-Resumable': '1.0.0',
         'Upload-Length': String(fileSize),
-        'Upload-Metadata': `name ${Buffer.from(title).toString('base64')}`,
+        'Upload-Metadata': `name ${Buffer.from(title).toString('base64')}, maxDurationSeconds ${Buffer.from('21600').toString('base64')}`,
       },
     }
   )
