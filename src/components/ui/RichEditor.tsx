@@ -16,7 +16,6 @@ import {
   ListOrdered,
   Link as LinkIcon,
   Image as ImageIcon,
-  Video,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -74,8 +73,6 @@ interface MenuBarProps {
 function MenuBar({ editor, onImageUpload }: MenuBarProps) {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
-  const [videoUrl, setVideoUrl] = useState('')
 
   const addLink = useCallback(() => {
     if (!editor || !linkUrl) return
@@ -119,55 +116,6 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
     }
     input.click()
   }, [editor, onImageUpload])
-
-  // YouTube, Cloudflare Stream URL 파싱
-  const parseVideoUrl = useCallback((url: string): { type: 'youtube' | 'cloudflare' | null; id: string | null } => {
-    // YouTube
-    const youtubePatterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
-    ]
-    for (const pattern of youtubePatterns) {
-      const match = url.match(pattern)
-      if (match) return { type: 'youtube', id: match[1] }
-    }
-
-    // Cloudflare Stream (videodelivery.net 또는 cloudflarestream.com)
-    const cloudflarePatterns = [
-      /(?:videodelivery\.net|cloudflarestream\.com)\/([a-zA-Z0-9]+)/,
-      /watch\.cloudflarestream\.com\/([a-zA-Z0-9]+)/,
-    ]
-    for (const pattern of cloudflarePatterns) {
-      const match = url.match(pattern)
-      if (match) return { type: 'cloudflare', id: match[1] }
-    }
-
-    return { type: null, id: null }
-  }, [])
-
-  const addVideo = useCallback(() => {
-    if (!editor || !videoUrl) return
-
-    const url = videoUrl.trim()
-    const { type, id } = parseVideoUrl(url)
-
-    if (!type || !id) {
-      alert('지원하지 않는 동영상 URL입니다.\nYouTube 또는 Cloudflare Stream URL을 입력해주세요.')
-      return
-    }
-
-    let embedHtml = ''
-    if (type === 'youtube') {
-      embedHtml = `<div class="video-wrapper"><iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
-    } else if (type === 'cloudflare') {
-      embedHtml = `<div class="video-wrapper"><iframe src="https://customer-cdiptfmagemjfmsuphaj.cloudflarestream.com/${id}/iframe" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
-    }
-
-    editor.chain().focus().insertContent(embedHtml).run()
-
-    setVideoUrl('')
-    setIsVideoModalOpen(false)
-  }, [editor, videoUrl, parseVideoUrl])
 
   if (!editor) {
     return null
@@ -343,44 +291,6 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
         </ToolbarButton>
       )}
 
-      {/* Video */}
-      <div className={styles.linkWrapper}>
-        <ToolbarButton
-          onClick={() => setIsVideoModalOpen(!isVideoModalOpen)}
-          isActive={isVideoModalOpen}
-          title="동영상 삽입"
-        >
-          <Video size={16} />
-        </ToolbarButton>
-        {isVideoModalOpen && (
-          <div className={styles.linkModal}>
-            <input
-              type="url"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="YouTube 또는 Cloudflare URL"
-              className={styles.linkInput}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addVideo()
-                } else if (e.key === 'Escape') {
-                  setIsVideoModalOpen(false)
-                }
-              }}
-              autoFocus
-            />
-            <button
-              type="button"
-              onClick={addVideo}
-              className={styles.linkButton}
-            >
-              삽입
-            </button>
-          </div>
-        )}
-      </div>
-
       <ToolbarDivider />
 
       {/* Undo / Redo */}
@@ -455,6 +365,39 @@ export default function RichEditor({
     },
     // SSR 호환성을 위해 즉시 렌더링 설정
     immediatelyRender: false,
+    // YouTube URL 붙여넣기 시 자동 임베드
+    editorProps: {
+      handlePaste: (view, event) => {
+        const text = event.clipboardData?.getData('text/plain')
+        if (!text) return false
+
+        // YouTube URL 패턴 체크
+        const youtubePatterns = [
+          /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+          /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+          /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+          /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+        ]
+
+        for (const pattern of youtubePatterns) {
+          const match = text.trim().match(pattern)
+          if (match) {
+            const videoId = match[1]
+            const embedHtml = `<div class="video-wrapper"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p></p>`
+
+            // 에디터 커맨드로 삽입
+            const editorInstance = (view as unknown as { editor?: Editor }).editor
+            if (editorInstance) {
+              editorInstance.chain().focus().insertContent(embedHtml).run()
+              return true
+            }
+            return false
+          }
+        }
+
+        return false
+      },
+    },
   })
 
   // content prop이 변경되면 에디터 내용 업데이트
