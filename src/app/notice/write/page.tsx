@@ -12,7 +12,6 @@ import { useAuthContext } from '@/lib/context/AuthContext'
 import { useSupabaseContext } from '@/lib/context'
 import { useImageUpload } from '@/lib/hooks'
 import { createNotice, updateNotice } from '@/lib/actions/notices'
-import { FileUpload, type UploadedFile } from '@/components/notice'
 import styles from './page.module.css'
 
 type NoticeCategory = 'official' | 'excel' | 'crew'
@@ -46,7 +45,6 @@ function WriteNoticeContent() {
     category: 'official',
     is_pinned: false,
   })
-  const [attachments, setAttachments] = useState<UploadedFile[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingNotice, setIsLoadingNotice] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -77,24 +75,6 @@ function WriteNoticeContent() {
         category: (data.category as NoticeCategory) || 'official',
         is_pinned: data.is_pinned,
       })
-
-      // 첨부파일 로드
-      const { data: attachmentsData } = await supabase
-        .from('notice_attachments')
-        .select('*')
-        .eq('notice_id', parseInt(editId))
-        .order('display_order', { ascending: true })
-
-      if (attachmentsData) {
-        setAttachments(attachmentsData.map(att => ({
-          id: att.id,
-          file_url: att.file_url,
-          file_name: att.file_name,
-          file_type: att.file_type as 'image' | 'video',
-          file_size: att.file_size || 0,
-          display_order: att.display_order,
-        })))
-      }
     }
     setIsLoadingNotice(false)
   }, [editId, supabase])
@@ -126,23 +106,6 @@ function WriteNoticeContent() {
 
     setIsSubmitting(true)
 
-    // 업로드 중인 파일이 있는지 확인
-    const uploadingFiles = attachments.filter(f => f.isUploading)
-    if (uploadingFiles.length > 0) {
-      setError('파일 업로드가 완료될 때까지 기다려주세요.')
-      setIsSubmitting(false)
-      return
-    }
-
-    // 첨부파일 데이터 준비 (로컬 상태 제거)
-    const attachmentsData = attachments.map((f, idx) => ({
-      file_url: f.file_url,
-      file_name: f.file_name,
-      file_type: f.file_type,
-      file_size: f.file_size,
-      display_order: idx,
-    }))
-
     try {
       if (isEditMode && editId) {
         // 수정 모드
@@ -151,7 +114,7 @@ function WriteNoticeContent() {
           content: formData.content.trim(),
           category: formData.category,
           is_pinned: formData.is_pinned,
-        }, attachmentsData)
+        })
 
         if (result.error) {
           setError(result.error)
@@ -166,7 +129,7 @@ function WriteNoticeContent() {
           content: formData.content.trim(),
           category: formData.category,
           is_pinned: formData.is_pinned,
-        }, attachmentsData)
+        })
 
         if (result.error) {
           setError(result.error)
@@ -321,17 +284,6 @@ function WriteNoticeContent() {
                   onImageUpload={uploadImage}
                 />
               </div>
-            </div>
-
-            {/* 첨부파일 */}
-            <div className={styles.formRow}>
-              <FileUpload
-                files={attachments}
-                onChange={setAttachments}
-                maxFiles={10}
-                maxSize={50}
-                disabled={isSubmitting}
-              />
             </div>
 
             {/* 옵션 영역 */}
