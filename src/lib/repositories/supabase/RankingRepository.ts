@@ -23,7 +23,7 @@ export class SupabaseRankingRepository implements IRankingRepository {
       const { data, error } = await withRetry(async () => {
         let query = this.supabase
           .from('season_rankings_public')
-          .select('rank, donor_name, gauge_percent, donation_count, unit')
+          .select('rank, donor_name, gauge_percent, donation_count, unit, avatar_url')
           .eq('season_id', seasonId)
 
         // unit 필터 적용 (DB 레벨)
@@ -76,7 +76,8 @@ export class SupabaseRankingRepository implements IRankingRepository {
       return uniqueData.map((item) => ({
         donorId: nicknameToProfile[item.donor_name]?.id || null,
         donorName: item.donor_name,
-        avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
+        // 프로필 아바타 우선, 없으면 랭킹 테이블의 avatar_url 사용
+        avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || item.avatar_url || null,
         totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
         rank: item.rank, // DB에서 가져온 rank 사용 (필터 시에도 원래 순위 유지)
         seasonId,
@@ -89,7 +90,7 @@ export class SupabaseRankingRepository implements IRankingRepository {
     const { data, error } = await withRetry(async () => {
       return this.supabase
         .from('total_rankings_public')
-        .select('rank, donor_name, gauge_percent')
+        .select('rank, donor_name, gauge_percent, avatar_url')
         .order('rank', { ascending: true })
         .limit(50)
     })
@@ -124,7 +125,8 @@ export class SupabaseRankingRepository implements IRankingRepository {
     return uniqueData.map((item) => ({
       donorId: nicknameToProfile[item.donor_name]?.id || null,
       donorName: item.donor_name,
-      avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || null,
+      // 프로필 아바타 우선, 없으면 랭킹 테이블의 avatar_url 사용
+      avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || item.avatar_url || null,
       totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
       rank: item.rank,
       seasonId: undefined,
