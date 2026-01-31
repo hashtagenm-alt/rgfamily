@@ -131,6 +131,21 @@
   min-height: 80px;
 }
 
+/* Field Row - 가로 배치 */
+.fieldRow {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.fieldSmall {
+  flex-shrink: 0;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 /* Type Buttons */
 .typeButtons {
   display: flex;
@@ -139,7 +154,7 @@
 }
 
 .typeButton {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.875rem;
   font-size: 0.8125rem;
   font-weight: 600;
   border: 1px solid var(--card-border);
@@ -165,26 +180,142 @@
   color: white;
 }
 
-/* Checkbox Field */
-.checkboxField {
+/* Datetime Section - 일시 영역 */
+.datetimeSection {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.875rem;
 }
 
-.checkboxLabel {
+.datetimeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.datetimeLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.datetimeLabel svg {
+  color: var(--color-primary);
+}
+
+/* 종일 토글 스위치 */
+.allDayToggle {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-  font-size: 0.9375rem;
+}
+
+.allDayToggle input {
+  display: none;
+}
+
+.toggleSwitch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: var(--surface-secondary);
+  border-radius: 11px;
+  transition: background 0.2s ease;
+}
+
+.toggleSwitch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.allDayToggle input:checked + .toggleSwitch {
+  background: var(--color-primary);
+}
+
+.allDayToggle input:checked + .toggleSwitch::after {
+  transform: translateX(18px);
+}
+
+.toggleText {
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--text-secondary);
 }
 
-.checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--color-primary);
+/* 일시 입력 필드들 */
+.datetimeInputs {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.datetimeField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.datetimeFieldLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.datetimeInput {
+  width: 100%;
+  padding: 0.625rem 0.75rem 0.625rem 2rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.datetimeInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(253, 104, 186, 0.15);
+}
+
+.datetimeArrow {
+  color: var(--text-muted);
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 1.25rem;
 }
 
 /* Footer */
@@ -256,21 +387,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
-  padding: 0.625rem 1.5rem;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 600;
   border: none;
   border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: white;
+  background: var(--text-primary);
+  color: var(--background);
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 80px;
+  min-width: 90px;
 }
 
 .saveBtn:hover:not(:disabled) {
-  filter: brightness(1.1);
+  background: var(--color-primary);
 }
 
 .saveBtn:disabled {
@@ -315,6 +446,16 @@
 
   .content {
     padding: 1rem;
+    gap: 0.875rem;
+  }
+
+  .fieldRow {
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .fieldSmall {
+    width: 100%;
   }
 
   .typeButtons {
@@ -322,8 +463,29 @@
   }
 
   .typeButton {
-    padding: 0.375rem 0.75rem;
+    padding: 0.375rem 0.625rem;
     font-size: 0.75rem;
+  }
+
+  .datetimeSection {
+    padding: 0.875rem;
+  }
+
+  .datetimeInputs {
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .datetimeArrow {
+    display: none;
+  }
+
+  .datetimeField {
+    width: 100%;
+  }
+
+  .datetimeInput {
+    font-size: 0.8125rem;
   }
 
   .footer {
@@ -365,4 +527,16 @@
 
 :global([data-theme="light"]) .cancelBtn {
   background: #ffffff;
+}
+
+:global([data-theme="light"]) .datetimeSection {
+  background: #f9f9f9;
+}
+
+:global([data-theme="light"]) .datetimeInput {
+  background: #ffffff;
+}
+
+:global([data-theme="light"]) .toggleSwitch {
+  background: #e5e5e5;
 }
