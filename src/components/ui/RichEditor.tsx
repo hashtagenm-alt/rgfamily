@@ -462,18 +462,25 @@ export default function RichEditor({
   useEffect(() => {
     if (!editor) return
 
-    // 최초 마운트 후 초기화 완료 표시
-    if (!isInitializedRef.current) {
-      isInitializedRef.current = true
-      return
-    }
-
     // 사용자 입력 중이면 무시 (한글 IME 조합 방해 방지)
     if (isUserInputRef.current) return
 
+    const currentHtml = editor.getHTML()
+
+    // 최초 마운트 시점: 에디터 내용이 prop과 다르면 동기화
+    // (immediatelyRender: false로 인해 비동기 초기화될 수 있음)
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true
+      // 에디터가 빈 상태(<p></p>)인데 content prop이 있으면 설정
+      if (content && content !== '<p></p>' && currentHtml !== content) {
+        editor.commands.setContent(content, { emitUpdate: false })
+        initialContentRef.current = content
+      }
+      return
+    }
+
     // 외부에서 content가 변경된 경우에만 업데이트
     // (예: 수정 모드에서 기존 데이터 로드, 프로그래매틱 변경)
-    const currentHtml = editor.getHTML()
     if (content !== currentHtml && content !== initialContentRef.current) {
       editor.commands.setContent(content, { emitUpdate: false })
       initialContentRef.current = content
