@@ -3,7 +3,8 @@
 import { useState, Suspense, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Send, AlertCircle, Bell, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, Send, AlertCircle, Bell, ShieldAlert, ImagePlus, X } from 'lucide-react'
+import Image from 'next/image'
 import { PageLayout } from '@/components/layout'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -21,6 +22,7 @@ interface FormData {
   content: string
   category: NoticeCategory
   is_pinned: boolean
+  thumbnail_url: string | null
 }
 
 const CATEGORY_OPTIONS: { value: NoticeCategory; label: string }[] = [
@@ -44,9 +46,11 @@ function WriteNoticeContent() {
     content: '',
     category: 'official',
     is_pinned: false,
+    thumbnail_url: null,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingNotice, setIsLoadingNotice] = useState(false)
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // 이미지 업로드 훅
@@ -74,6 +78,7 @@ function WriteNoticeContent() {
         content: data.content || '',
         category: (data.category as NoticeCategory) || 'official',
         is_pinned: data.is_pinned,
+        thumbnail_url: data.thumbnail_url || null,
       })
     }
     setIsLoadingNotice(false)
@@ -84,6 +89,31 @@ function WriteNoticeContent() {
       fetchNotice()
     }
   }, [isEditMode, fetchNotice])
+
+  // 썸네일 업로드 핸들러
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingThumbnail(true)
+    setError(null)
+
+    try {
+      const url = await uploadImage(file)
+      if (url) {
+        setFormData(prev => ({ ...prev, thumbnail_url: url }))
+      }
+    } catch {
+      setError('썸네일 업로드에 실패했습니다.')
+    } finally {
+      setIsUploadingThumbnail(false)
+    }
+  }
+
+  // 썸네일 제거
+  const handleRemoveThumbnail = () => {
+    setFormData(prev => ({ ...prev, thumbnail_url: null }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,6 +144,7 @@ function WriteNoticeContent() {
           content: formData.content.trim(),
           category: formData.category,
           is_pinned: formData.is_pinned,
+          thumbnail_url: formData.thumbnail_url,
         })
 
         if (result.error) {
@@ -129,6 +160,7 @@ function WriteNoticeContent() {
           content: formData.content.trim(),
           category: formData.category,
           is_pinned: formData.is_pinned,
+          thumbnail_url: formData.thumbnail_url,
         })
 
         if (result.error) {
@@ -318,6 +350,52 @@ function WriteNoticeContent() {
                   <span className={styles.checkboxCustom} />
                   <span className={styles.checkboxText}>상단 고정</span>
                 </label>
+              </div>
+            </div>
+
+            {/* 썸네일 업로드 */}
+            <div className={styles.thumbnailRow}>
+              <span className={styles.thumbnailLabel}>썸네일</span>
+              <div className={styles.thumbnailContent}>
+                {formData.thumbnail_url ? (
+                  <div className={styles.thumbnailPreview}>
+                    <Image
+                      src={formData.thumbnail_url}
+                      alt="썸네일 미리보기"
+                      fill
+                      style={{ objectFit: 'cover' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveThumbnail}
+                      className={styles.thumbnailRemove}
+                      title="썸네일 제거"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className={styles.thumbnailUpload}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleThumbnailUpload}
+                      disabled={isUploadingThumbnail}
+                    />
+                    {isUploadingThumbnail ? (
+                      <>
+                        <span className={styles.spinner} />
+                        <span>업로드 중...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ImagePlus size={24} />
+                        <span>썸네일 이미지 선택</span>
+                        <span className={styles.thumbnailHint}>권장: 16:9 비율 (1280x720)</span>
+                      </>
+                    )}
+                  </label>
+                )}
               </div>
             </div>
 

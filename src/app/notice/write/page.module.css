@@ -262,6 +262,98 @@
   color: var(--text-secondary);
 }
 
+/* 썸네일 업로드 */
+.thumbnailRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.thumbnailLabel {
+  flex-shrink: 0;
+  width: 60px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding-top: 0.5rem;
+}
+
+.thumbnailContent {
+  flex: 1;
+}
+
+.thumbnailPreview {
+  position: relative;
+  width: 200px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  background: var(--surface-secondary);
+}
+
+.thumbnailRemove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.thumbnailRemove:hover {
+  background: rgba(239, 68, 68, 0.9);
+  transform: scale(1.1);
+}
+
+.thumbnailUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 200px;
+  aspect-ratio: 16 / 9;
+  border: 2px dashed var(--card-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.thumbnailUpload:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-pink-overlay-05);
+}
+
+.thumbnailUpload input {
+  display: none;
+}
+
+.thumbnailUpload svg {
+  opacity: 0.7;
+}
+
+.thumbnailHint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
 /* 에러 메시지 */
 .errorMessage {
   display: flex;
@@ -529,6 +621,23 @@
 
   .categoryOptions {
     flex-wrap: wrap;
+  }
+
+  .thumbnailRow {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .thumbnailLabel {
+    width: auto;
+    padding-top: 0;
+  }
+
+  .thumbnailPreview,
+  .thumbnailUpload {
+    width: 100%;
+    max-width: 280px;
   }
 
   .formActions {
