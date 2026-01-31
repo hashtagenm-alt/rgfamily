@@ -679,6 +679,123 @@
   color: #1a1a1a;
 }
 
+/* 영상 업로드 모드 토글 */
+.videoModeToggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.modeBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modeBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.modeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.activeModeBtn {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.4);
+  color: #d4af37;
+}
+
+.activeModeBtn:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.2);
+  color: #d4af37;
+}
+
+/* 영상 미리보기 */
+.videoPreviewWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.videoThumbnail {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 16/9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.videoPlayIcon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.videoInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.videoStatus {
+  font-size: 13px;
+  color: #22c55e;
+  font-weight: 500;
+}
+
+:global([data-theme="light"]) .videoModeToggle .modeBtn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="light"]) .videoModeToggle .modeBtn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+:global([data-theme="light"]) .videoModeToggle .activeModeBtn {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.4);
+  color: #d4af37;
+}
+
+:global([data-theme="light"]) .videoPreviewWrapper {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
 /* 반응형 */
 @media (max-width: 640px) {
   .overlay {
@@ -708,5 +825,17 @@
 
   .subtitle {
     font-size: 14px;
+  }
+
+  .videoModeToggle {
+    flex-direction: column;
+  }
+
+  .modeBtn {
+    padding: 12px 14px;
+  }
+
+  .videoThumbnail {
+    max-width: 100%;
   }
 }

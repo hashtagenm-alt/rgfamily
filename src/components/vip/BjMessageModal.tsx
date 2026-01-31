@@ -118,9 +118,11 @@ export default function BjMessageModal({ message, isOpen, onClose }: BjMessageMo
                   <Image
                     src={message.content_url}
                     alt="감사 이미지"
-                    fill
+                    width={800}
+                    height={600}
                     className={styles.image}
                     onError={() => setImageError(true)}
+                    style={{ width: '100%', height: 'auto' }}
                   />
                 </div>
               )}
@@ -128,7 +130,17 @@ export default function BjMessageModal({ message, isOpen, onClose }: BjMessageMo
               {/* 영상 */}
               {message.message_type === 'video' && message.content_url && (
                 <div className={styles.videoContainer}>
-                  {isYouTubeUrl(message.content_url) && getYouTubeEmbedUrl(message.content_url) ? (
+                  {/* Cloudflare Stream 영상 */}
+                  {message.content_url.startsWith('cloudflare:') ? (
+                    <iframe
+                      src={`https://iframe.videodelivery.net/${message.content_url.replace('cloudflare:', '')}`}
+                      title="감사 영상"
+                      className={styles.videoEmbed}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                      allowFullScreen
+                    />
+                  ) : isYouTubeUrl(message.content_url) && getYouTubeEmbedUrl(message.content_url) ? (
                     <iframe
                       src={getYouTubeEmbedUrl(message.content_url)!}
                       title="감사 영상"

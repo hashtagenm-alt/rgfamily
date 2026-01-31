@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, ImageIcon, Video, Play, ExternalLink, Lock, Crown, Sparkles, Pencil, Trash2, MoreVertical } from 'lucide-react'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
 import { getYouTubeThumbnail } from '@/lib/utils/youtube'
+import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import styles from './BjMessageCard.module.css'
 
 interface BjMessageCardProps {
@@ -249,22 +250,42 @@ export default function BjMessageCard({ message, onClick, canEdit, onEdit, onDel
           <Image
             src={message.content_url}
             alt="감사 이미지"
-            fill
+            width={500}
+            height={400}
             className={styles.mediaImage}
             onError={() => setImageError(true)}
+            style={{ width: '100%', height: 'auto' }}
           />
         </div>
       )}
 
       {message.message_type === 'video' && message.content_url && (
         <div className={styles.mediaContainer}>
-          {getYouTubeThumbnail(message.content_url) ? (
+          {/* Cloudflare Stream 영상인 경우 */}
+          {message.content_url.startsWith('cloudflare:') ? (
+            <>
+              <Image
+                src={getStreamThumbnailUrl(message.content_url.replace('cloudflare:', ''), { width: 320, height: 180, fit: 'crop' })}
+                alt="영상 썸네일"
+                width={320}
+                height={180}
+                className={styles.mediaImage}
+                style={{ width: '100%', height: 'auto' }}
+                unoptimized
+              />
+              <div className={styles.videoOverlay}>
+                <Play size={32} />
+              </div>
+            </>
+          ) : getYouTubeThumbnail(message.content_url) ? (
             <>
               <Image
                 src={getYouTubeThumbnail(message.content_url)!}
                 alt="영상 썸네일"
-                fill
+                width={320}
+                height={180}
                 className={styles.mediaImage}
+                style={{ width: '100%', height: 'auto' }}
               />
               <div className={styles.videoOverlay}>
                 <Play size={32} />
