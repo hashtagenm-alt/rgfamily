@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, useEffect } from 'react'
+import { useState, Suspense, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Send, AlertCircle, FileText, Crown } from 'lucide-react'
@@ -9,19 +9,25 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { RichEditor } from '@/components/ui'
 import { useAuthContext } from '@/lib/context/AuthContext'
+import { useSupabaseContext } from '@/lib/context'
 import { useVipStatus, useImageUpload } from '@/lib/hooks'
-import { createPost } from '@/lib/actions/posts'
+import { createPost, updatePost } from '@/lib/actions/posts'
 import styles from './page.module.css'
 
 function WritePostContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const supabase = useSupabaseContext()
   const { isAuthenticated, profile } = useAuthContext()
   const { isVip: isVipByRank, isLoading: vipLoading } = useVipStatus()
 
   // URL에서 게시판 타입 가져오기 (기본: free)
   const boardParam = searchParams.get('board') as 'free' | 'vip' | null
   const boardType = boardParam || 'free'
+
+  // 수정 모드인지 확인 (?edit=123 형태)
+  const editId = searchParams.get('edit')
+  const isEditMode = !!editId
 
   // VIP 게시판 접근 권한 체크 (Role 기반 OR Rank 기반)
   const VIP_ROLES = ['vip', 'moderator', 'admin', 'superadmin']
@@ -34,13 +40,43 @@ function WritePostContent() {
     is_anonymous: false,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoadingPost, setIsLoadingPost] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // 이미지 업로드 훅
-  const { uploadImage, error: uploadError } = useImageUpload({
+  const { uploadImage } = useImageUpload({
     folder: 'posts',
     onError: (msg) => setError(msg),
   })
+
+  // 수정 모드일 경우 기존 데이터 로드
+  const fetchPost = useCallback(async () => {
+    if (!editId) return
+
+    setIsLoadingPost(true)
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', parseInt(editId))
+      .single()
+
+    if (error) {
+      setError('게시글을 찾을 수 없습니다.')
+    } else if (data) {
+      setFormData({
+        title: data.title,
+        content: data.content || '',
+        is_anonymous: data.is_anonymous || false,
+      })
+    }
+    setIsLoadingPost(false)
+  }, [editId, supabase])
+
+  useEffect(() => {
+    if (isEditMode) {
+      fetchPost()
+    }
+  }, [isEditMode, fetchPost])
 
   // VIP 게시판 접근 권한 없으면 자유게시판으로 리다이렉트
   // VIP 상태 로딩 완료 후에만 체크
@@ -95,22 +131,39 @@ function WritePostContent() {
     setIsSubmitting(true)
 
     try {
-      const result = await createPost({
-        board_type: boardType,
-        title: formData.title.trim(),
-        content: formData.content.trim(),
-        is_anonymous: formData.is_anonymous,
-      })
+      if (isEditMode && editId) {
+        // 수정 모드
+        const result = await updatePost(parseInt(editId), {
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          is_anonymous: formData.is_anonymous,
+        })
 
-      if (result.error) {
-        setError(result.error)
-        return
+        if (result.error) {
+          setError(result.error)
+          return
+        }
+
+        router.push(`/community/${boardType}/${editId}`)
+      } else {
+        // 작성 모드
+        const result = await createPost({
+          board_type: boardType,
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          is_anonymous: formData.is_anonymous,
+        })
+
+        if (result.error) {
+          setError(result.error)
+          return
+        }
+
+        // 성공 시 해당 게시판으로 이동
+        router.push(`/community/${boardType}`)
       }
-
-      // 성공 시 해당 게시판으로 이동
-      router.push(`/community/${boardType}`)
     } catch {
-      setError('게시글 작성 중 오류가 발생했습니다.')
+      setError('게시글 저장 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
     }
@@ -143,6 +196,24 @@ function WritePostContent() {
     )
   }
 
+  // 수정 모드에서 데이터 로딩 중
+  if (isLoadingPost) {
+    return (
+      <PageLayout>
+        <div className={styles.main}>
+          <Navbar />
+          <div className={styles.writeContainer}>
+            <div className={styles.loadingState}>
+              <div className={styles.spinner} />
+              <p>게시글을 불러오는 중...</p>
+            </div>
+          </div>
+          <Footer />
+        </div>
+      </PageLayout>
+    )
+  }
+
   return (
     <PageLayout>
       <div className={styles.main}>
@@ -165,7 +236,7 @@ function WritePostContent() {
           <form onSubmit={handleSubmit} className={styles.writeForm}>
             {/* 폼 헤더 */}
             <div className={styles.formHeader}>
-              <h1 className={styles.formTitle}>글쓰기</h1>
+              <h1 className={styles.formTitle}>{isEditMode ? '글 수정' : '글쓰기'}</h1>
               <p className={styles.formDescription}>{currentBoard.description}</p>
             </div>
 
@@ -256,12 +327,12 @@ function WritePostContent() {
                 {isSubmitting ? (
                   <>
                     <span className={styles.spinner} />
-                    등록 중...
+                    {isEditMode ? '수정 중...' : '등록 중...'}
                   </>
                 ) : (
                   <>
                     <Send size={16} />
-                    등록
+                    {isEditMode ? '수정' : '등록'}
                   </>
                 )}
               </button>
