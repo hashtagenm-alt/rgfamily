@@ -230,7 +230,7 @@
 /* Table Header */
 .tableHeader {
   display: grid;
-  grid-template-columns: 60px 80px 1fr 100px 90px 60px 60px;
+  grid-template-columns: 60px 80px 1fr 140px 90px 60px 60px;
   padding: var(--space-3) var(--space-4);
   background: var(--surface);
   border-bottom: 2px solid var(--card-border);
@@ -242,7 +242,7 @@
 
 /* 선택 모드일 때 체크박스 컬럼 추가 */
 .selectMode .tableHeader {
-  grid-template-columns: 40px 60px 80px 1fr 100px 90px 60px 60px;
+  grid-template-columns: 40px 60px 80px 1fr 140px 90px 60px 60px;
 }
 
 .tableHeader span {
@@ -265,7 +265,7 @@
 /* Row */
 .row {
   display: grid;
-  grid-template-columns: 60px 80px 1fr 100px 90px 60px 60px;
+  grid-template-columns: 60px 80px 1fr 140px 90px 60px 60px;
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--card-border);
   color: var(--text-secondary);
@@ -276,7 +276,7 @@
 
 /* 선택 모드일 때 체크박스 컬럼 추가 */
 .selectMode .row {
-  grid-template-columns: 40px 60px 80px 1fr 100px 90px 60px 60px;
+  grid-template-columns: 40px 60px 80px 1fr 140px 90px 60px 60px;
 }
 
 .row:last-child {
@@ -629,11 +629,11 @@
 /* Responsive - Tablet */
 @media (max-width: 900px) {
   .tableHeader {
-    grid-template-columns: 50px 70px 1fr 80px 70px 50px 50px;
+    grid-template-columns: 50px 70px 1fr 110px 70px 50px 50px;
   }
 
   .row {
-    grid-template-columns: 50px 70px 1fr 80px 70px 50px 50px;
+    grid-template-columns: 50px 70px 1fr 110px 70px 50px 50px;
   }
 
   .searchInput {
@@ -905,20 +905,20 @@
 
 /* VIP Board - 5 column grid */
 .board.vipBoard .tableHeader {
-  grid-template-columns: 60px 1fr 100px 90px 60px;
+  grid-template-columns: 60px 1fr 140px 90px 60px;
 }
 
 .board.vipBoard .row {
-  grid-template-columns: 60px 1fr 100px 90px 60px;
+  grid-template-columns: 60px 1fr 140px 90px 60px;
 }
 
 /* VIP 선택 모드일 때 체크박스 컬럼 추가 (6 columns) */
 .selectModeVip.vipBoard .tableHeader {
-  grid-template-columns: 40px 60px 1fr 100px 90px 60px;
+  grid-template-columns: 40px 60px 1fr 140px 90px 60px;
 }
 
 .selectModeVip.vipBoard .row {
-  grid-template-columns: 40px 60px 1fr 100px 90px 60px;
+  grid-template-columns: 40px 60px 1fr 140px 90px 60px;
 }
 
 /* VIP Row special effect */
