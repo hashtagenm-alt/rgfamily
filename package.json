@@ -82,6 +82,7 @@
     "recharts": "^3.6.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "tiptap-extension-resize-image": "^1.3.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
