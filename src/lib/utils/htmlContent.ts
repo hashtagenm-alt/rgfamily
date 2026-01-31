@@ -6,8 +6,8 @@ import DOMPurify from 'dompurify'
  */
 export function isHTMLContent(content: string): boolean {
   if (!content) return false
-  // HTML 태그 패턴 확인
-  return /<(p|h[1-6]|ul|ol|li|blockquote|pre|br|strong|em|u|s|a|img)[^>]*>/i.test(content)
+  // HTML 태그 패턴 확인 (iframe 포함)
+  return /<(p|h[1-6]|ul|ol|li|blockquote|pre|br|strong|em|u|s|a|img|iframe|div)[^>]*>/i.test(content)
 }
 
 /**
@@ -44,14 +44,18 @@ export function sanitizeHTML(html: string): string {
       'blockquote', 'pre', 'code',
       'a', 'img',
       'hr', 'div', 'span',
+      'iframe',  // 동영상 임베드용
     ],
     ALLOWED_ATTR: [
       'href', 'target', 'rel',  // 링크
       'src', 'alt', 'width', 'height',  // 이미지
       'class', 'style',  // 스타일링
+      'frameborder', 'allow', 'allowfullscreen',  // iframe
     ],
     ALLOW_DATA_ATTR: false,  // data-* 속성 차단
-    ADD_ATTR: ['target'],  // 링크에 target 허용
+    ADD_ATTR: ['target', 'allowfullscreen'],  // 링크에 target, iframe에 allowfullscreen 허용
+    // iframe src 화이트리스트 (YouTube, Cloudflare Stream만 허용)
+    ALLOWED_URI_REGEXP: /^(?:(?:https?:)?\/\/(?:www\.)?youtube\.com\/embed\/|(?:https?:)?\/\/(?:customer-[a-z0-9]+\.)?cloudflarestream\.com\/|(?:https?:)?\/\/)/i,
   }
 
   return DOMPurify.sanitize(html, config)
