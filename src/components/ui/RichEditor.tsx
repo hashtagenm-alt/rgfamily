@@ -7,8 +7,6 @@ import ImageResize from 'tiptap-extension-resize-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
-import { Extension } from '@tiptap/core'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
 import {
   Bold,
   Italic,
@@ -314,59 +312,6 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
   )
 }
 
-// YouTube URL에서 비디오 ID 추출
-function extractYoutubeVideoId(text: string): string | null {
-  const youtubePatterns = [
-    /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})(?:&.*)?$/,
-    /^(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})(?:\?.*)?$/,
-    /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})(?:\?.*)?$/,
-    /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})(?:\?.*)?$/,
-  ]
-
-  const trimmedText = text.trim()
-  for (const pattern of youtubePatterns) {
-    const match = trimmedText.match(pattern)
-    if (match) {
-      return match[1]
-    }
-  }
-  return null
-}
-
-// YouTube URL 붙여넣기 시 자동 임베드하는 커스텀 확장
-const YoutubeEmbed = Extension.create({
-  name: 'youtubeEmbed',
-
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: new PluginKey('youtubeEmbed'),
-        props: {
-          handlePaste: (_view, event) => {
-            const text = event.clipboardData?.getData('text/plain')
-            if (!text) return false
-
-            const videoId = extractYoutubeVideoId(text)
-            if (!videoId) return false
-
-            // YouTube URL이면 임베드 삽입
-            const embedHtml = `<div class="video-wrapper"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p></p>`
-
-            // editor 인스턴스 접근
-            const editor = (this as unknown as { editor: Editor }).editor
-            if (editor) {
-              editor.chain().focus().insertContent(embedHtml).run()
-              return true
-            }
-
-            return false
-          },
-        },
-      }),
-    ]
-  },
-})
-
 export default function RichEditor({
   content = '',
   onChange,
@@ -407,7 +352,6 @@ export default function RichEditor({
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-      YoutubeEmbed,
     ],
     content,
     editable: !disabled,
@@ -459,6 +403,44 @@ export default function RichEditor({
       editor.setEditable(!disabled)
     }
   }, [disabled, editor])
+
+  // YouTube URL 붙여넣기 시 자동 임베드
+  useEffect(() => {
+    if (!editor) return
+
+    const handlePaste = (event: ClipboardEvent) => {
+      const text = event.clipboardData?.getData('text/plain')
+      if (!text) return
+
+      // YouTube URL 패턴 체크
+      const youtubePatterns = [
+        /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})(?:&.*)?$/,
+        /^(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})(?:\?.*)?$/,
+        /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})(?:\?.*)?$/,
+        /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})(?:\?.*)?$/,
+      ]
+
+      const trimmedText = text.trim()
+      for (const pattern of youtubePatterns) {
+        const match = trimmedText.match(pattern)
+        if (match) {
+          event.preventDefault()
+          const videoId = match[1]
+          const embedHtml = `<div class="video-wrapper"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p></p>`
+          editor.chain().focus().insertContent(embedHtml).run()
+          return
+        }
+      }
+    }
+
+    // 에디터 DOM 요소에 이벤트 리스너 추가
+    const editorElement = editor.view.dom
+    editorElement.addEventListener('paste', handlePaste)
+
+    return () => {
+      editorElement.removeEventListener('paste', handlePaste)
+    }
+  }, [editor])
 
   return (
     <div className={`${styles.editor} ${disabled ? styles.disabled : ''}`}>
