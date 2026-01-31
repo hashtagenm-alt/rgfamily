@@ -1166,6 +1166,28 @@ li {
 }
 
 /* ============================================
+   Video Embed Wrapper (리치 에디터 동영상 임베드)
+   ============================================ */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  margin: 1em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.video-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ============================================
    Fade In Animation (단순화)
    ============================================ */
 @keyframes fadeIn {
