@@ -217,8 +217,8 @@ export default function MediaPage() {
   const handleCloudflareThumbailTimeChange = async (mediaId: number, cloudflareUid: string, time: string) => {
     const thumbnailUrl = getStreamThumbnailUrl(cloudflareUid, {
       time,
-      width: 640,
-      height: 360,
+      width: 720,
+      height: 1280,
       fit: 'crop',
     })
 
@@ -719,8 +719,8 @@ export default function MediaPage() {
                         {THUMBNAIL_TIME_OPTIONS.map((opt) => {
                           const thumbUrl = getStreamThumbnailUrl(editingMedia.cloudflareUid!, {
                             time: opt.value,
-                            width: 160,
-                            height: 90,
+                            width: 180,
+                            height: 320,
                             fit: 'crop',
                           })
                           const isSelected = editingMedia.thumbnailUrl?.includes(`time=${opt.value}`) ||
@@ -732,8 +732,8 @@ export default function MediaPage() {
                               onClick={() => {
                                 const newThumbUrl = getStreamThumbnailUrl(editingMedia.cloudflareUid!, {
                                   time: opt.value,
-                                  width: 640,
-                                  height: 360,
+                                  width: 720,
+                                  height: 1280,
                                   fit: 'crop',
                                 })
                                 setEditingMedia({ ...editingMedia, thumbnailUrl: newThumbUrl })
@@ -749,7 +749,7 @@ export default function MediaPage() {
                                 transition: 'all 0.2s',
                               }}
                             >
-                              <div style={{ position: 'relative', aspectRatio: '16/9' }}>
+                              <div style={{ position: 'relative', aspectRatio: '9/16', height: '120px' }}>
                                 <Image
                                   src={thumbUrl}
                                   alt={opt.label}
@@ -778,12 +778,12 @@ export default function MediaPage() {
                   {editingMedia.thumbnailUrl && thumbnailMode !== 'time' && (
                     <div style={{ marginTop: '12px' }}>
                       <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>현재 썸네일:</p>
-                      <div style={{ width: '160px', height: '90px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--card-border)' }}>
+                      <div style={{ width: '90px', height: '160px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--card-border)' }}>
                         <Image
                           src={editingMedia.thumbnailUrl}
                           alt="썸네일 미리보기"
-                          width={160}
-                          height={90}
+                          width={90}
+                          height={160}
                           style={{ objectFit: 'cover' }}
                           unoptimized
                         />

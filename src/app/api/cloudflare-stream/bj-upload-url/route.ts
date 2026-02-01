@@ -8,6 +8,7 @@ import { CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN } from '@/lib/cloudflare'
  * - BJ 멤버: 감사 메시지 영상 업로드 용도
  * - 관리자: 대리 업로드 용도
  * - 200MB 이상 파일은 TUS 프로토콜 사용
+ * @version 2.0.1 - profile_id/is_active 사용으로 수정됨
  */
 export async function POST(request: NextRequest) {
   try {
@@ -55,7 +56,18 @@ export async function POST(request: NextRequest) {
     const isBjMember = !!bjMember
 
     if (!isAdmin && !isBjMember) {
-      return NextResponse.json({ error: 'BJ 멤버 또는 관리자 권한이 필요합니다' }, { status: 403 })
+      console.error('BJ upload permission denied:', {
+        userId: user.id,
+        userEmail: user.email,
+        profileRole: profile?.role,
+        bjMemberFound: !!bjMember,
+      })
+      return NextResponse.json({
+        error: 'BJ 멤버 또는 관리자 권한이 필요합니다',
+        // 디버그용: 배포 버전 확인 (임시)
+        _v: '2.0.1',
+        _query: 'profile_id+is_active',
+      }, { status: 403 })
     }
 
     const body = await request.json().catch(() => ({}))
