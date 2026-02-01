@@ -385,7 +385,7 @@ export default function VipMessageForm({
                     <p className={styles.dropzoneHint}>
                       {messageType === 'image'
                         ? 'JPG, PNG, GIF, WEBP'
-                        : 'MP4, WebM, MOV • 최대 500MB • 최대 5분'}
+                        : 'MP4, WebM, MOV'}
                     </p>
                   </div>
                 )}

@@ -101,12 +101,6 @@ export default function BjMessageForm({
       return
     }
 
-    // 파일 크기 검증 (이미지: 10MB, 영상: 500MB)
-    const maxSize = type === 'video' ? 500 * 1024 * 1024 : 10 * 1024 * 1024
-    if (file.size > maxSize) {
-      setError(`파일 크기는 ${type === 'video' ? '500MB' : '10MB'} 이하여야 합니다.`)
-      return
-    }
 
     setIsUploading(true)
     setError(null)
@@ -159,11 +153,6 @@ export default function BjMessageForm({
       return
     }
 
-    // 2GB 제한 (BJ 메시지용)
-    if (file.size > 2 * 1024 * 1024 * 1024) {
-      setError('파일 크기는 2GB 이하여야 합니다.')
-      return
-    }
 
     setIsUploading(true)
     setError(null)
@@ -571,7 +560,7 @@ export default function BjMessageForm({
                           <>
                             <Upload size={32} />
                             <span className={styles.uploadText}>클릭하여 이미지 선택</span>
-                            <span className={styles.uploadHint}>JPG, PNG, GIF, WEBP (최대 10MB)</span>
+                            <span className={styles.uploadHint}>JPG, PNG, GIF, WEBP</span>
                           </>
                         )}
                       </div>
@@ -697,7 +686,7 @@ export default function BjMessageForm({
                             <>
                               <Video size={32} />
                               <span className={styles.uploadText}>클릭하여 영상 선택</span>
-                              <span className={styles.uploadHint}>MP4, WebM, MOV (최대 2GB, 10분)</span>
+                              <span className={styles.uploadHint}>MP4, WebM, MOV</span>
                             </>
                           )}
                         </div>

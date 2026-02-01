@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { v2 as cloudinary } from 'cloudinary'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { randomUUID } from 'crypto'
 
-// Cloudinary 설정
-const cloudinaryConfig = {
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-}
+// App Router용 설정
+export const maxDuration = 60
+export const dynamic = 'force-dynamic'
 
-cloudinary.config(cloudinaryConfig)
+// R2 클라이언트 설정
+const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  },
+})
+
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'rg-family-images'
+const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || ''
 
 export async function POST(request: NextRequest) {
   try {
-    // Cloudinary 설정 확인
-    if (!cloudinaryConfig.cloud_name || !cloudinaryConfig.api_key || !cloudinaryConfig.api_secret) {
-      console.error('Cloudinary configuration missing:', {
-        cloud_name: !!cloudinaryConfig.cloud_name,
-        api_key: !!cloudinaryConfig.api_key,
-        api_secret: !!cloudinaryConfig.api_secret,
-      })
+    // R2 설정 확인
+    if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+      console.error('R2 configuration missing')
       return NextResponse.json(
         { error: '서버 설정 오류: 이미지 업로드 서비스가 구성되지 않았습니다.' },
         { status: 500 }
@@ -58,17 +63,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const file = formData.get('file') as File
-    // 기본 폴더: rg-family 프로젝트 전용
     const subfolder = (formData.get('folder') as string) || 'general'
-    const folder = `rg-family/${subfolder}`
-
-    // 폴더별 특수 처리
-    const isBanner = subfolder === 'banners'
-    const isAvatar = subfolder === 'avatars'
-    // 인라인 에디터용 이미지 (notices, posts 등)
-    const isInlineContent = ['notices', 'posts', 'community'].includes(subfolder)
-    // VIP 메시지 이미지 (원본 크기 유지)
-    const isVipMessage = subfolder === 'vip-messages'
 
     if (!file) {
       return NextResponse.json(
@@ -85,110 +80,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-
     // File을 Buffer로 변환
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // GIF 여부 확인
-    const isGif = file.type === 'image/gif'
+    // 파일명 생성 (UUID + 원본 확장자)
+    const ext = file.name.split('.').pop() || 'jpg'
+    const filename = `${randomUUID()}.${ext}`
+    const key = `${subfolder}/${filename}`
 
-    // Cloudinary에 업로드
-    const result = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
-      // 배너용 transformation (1500x350 크기)
-      const bannerTransformation = [
-        { width: 1500, height: 350, crop: 'fill', gravity: 'center' },
-        { quality: 'auto:good', fetch_format: 'auto' }
-      ]
-
-      // 아바타용 transformation (800x800 고해상도)
-      // GIF는 애니메이션 보존을 위해 fl_animated 플래그 사용
-      const avatarTransformation = isGif
-        ? [{ width: 800, height: 800, crop: 'fill', flags: 'animated' }]
-        : [
-            { width: 800, height: 800, crop: 'fill', gravity: 'face' },
-            { quality: 'auto:best', fetch_format: 'auto' }
-          ]
-
-      // 인라인 에디터용 이미지 transformation (크기 제한만, 크롭 없음)
-      const inlineTransformation = isGif
-        ? [{ width: 1200, crop: 'limit', flags: 'animated' }]
-        : [
-            { width: 1200, crop: 'limit' },
-            { quality: 'auto:good', fetch_format: 'auto' }
-          ]
-
-      // VIP 메시지용 transformation (원본 크기 유지, 최대 2000px)
-      const vipMessageTransformation = isGif
-        ? [{ width: 2000, crop: 'limit', flags: 'animated' }]
-        : [
-            { width: 2000, crop: 'limit' },
-            { quality: 'auto:best', fetch_format: 'auto' }
-          ]
-
-      // 일반 이미지 transformation (400x400 정사각형)
-      const defaultTransformation = isGif
-        ? [{ width: 400, height: 400, crop: 'fill', flags: 'animated' }]
-        : [
-            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
-            { quality: 'auto', fetch_format: 'auto' }
-          ]
-
-      // 폴더별 transformation 선택
-      const transformation = isBanner
-        ? bannerTransformation
-        : isAvatar
-          ? avatarTransformation
-          : isVipMessage
-            ? vipMessageTransformation
-            : isInlineContent
-              ? inlineTransformation
-              : defaultTransformation
-
-      cloudinary.uploader.upload_stream(
-        {
-          folder,
-          resource_type: 'image',
-          transformation,
-          // GIF 애니메이션 보존 설정
-          ...(isGif && { format: 'gif' }),
-        },
-        (error, result) => {
-          if (error) reject(error)
-          else resolve(result as { secure_url: string; public_id: string })
-        }
-      ).end(buffer)
+    // R2에 업로드
+    const command = new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type,
     })
 
+    await r2Client.send(command)
+
+    // 퍼블릭 URL 반환
+    const publicUrl = `${R2_PUBLIC_URL}/${key}`
+
     return NextResponse.json({
-      url: result.secure_url,
-      publicId: result.public_id,
+      url: publicUrl,
+      key: key,
     })
   } catch (error) {
     console.error('Upload error:', error)
-    const err = error as { message?: string; http_code?: number; error?: { message?: string } }
+    const err = error as { message?: string; code?: string }
 
-    // Cloudinary 에러 메시지 처리
-    if (err.message?.includes('File size too large')) {
-      return NextResponse.json(
-        { error: '파일 크기가 Cloudinary 제한을 초과했습니다.' },
-        { status: 400 }
-      )
-    }
-
-    // Cloudinary API 에러
-    if (err.error?.message) {
-      console.error('Cloudinary error details:', err.error.message)
-      return NextResponse.json(
-        { error: `업로드 실패: ${err.error.message}` },
-        { status: 500 }
-      )
-    }
-
-    // 일반 에러 메시지
-    const errorMessage = err.message || '업로드에 실패했습니다'
     return NextResponse.json(
-      { error: errorMessage },
+      { error: err.message || '업로드에 실패했습니다' },
       { status: 500 }
     )
   }

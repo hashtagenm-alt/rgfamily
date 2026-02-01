@@ -53,11 +53,6 @@ export default function BjMessageEditModal({
       return
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError('파일 크기는 10MB 이하여야 합니다.')
-      return
-    }
-
     setIsUploading(true)
     setError(null)
     setUploadProgress(10)
@@ -318,7 +313,7 @@ export default function BjMessageEditModal({
                           <>
                             <Upload size={32} />
                             <span className={styles.uploadText}>클릭하여 이미지 선택</span>
-                            <span className={styles.uploadHint}>JPG, PNG, GIF, WEBP (최대 10MB)</span>
+                            <span className={styles.uploadHint}>JPG, PNG, GIF, WEBP</span>
                           </>
                         )}
                       </div>

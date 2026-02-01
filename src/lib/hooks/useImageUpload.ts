@@ -24,7 +24,7 @@ const DEFAULT_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/we
 
 /**
  * 이미지 업로드 훅
- * /api/upload API를 통해 Cloudinary에 이미지를 업로드하고 URL을 반환
+ * 서버 API를 통해 Cloudflare R2로 업로드 (용량 제한 없음)
  *
  * @example
  * const { uploadImage, isUploading, error } = useImageUpload({
@@ -62,12 +62,11 @@ export function useImageUpload(options: UseImageUploadOptions): UseImageUploadRe
         return null
       }
 
-      // FormData 생성
+      // 서버 API를 통해 R2에 업로드
       const formData = new FormData()
       formData.append('file', file)
       formData.append('folder', folder)
 
-      // /api/upload로 업로드 (Cloudinary 사용)
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
@@ -77,13 +76,13 @@ export function useImageUpload(options: UseImageUploadOptions): UseImageUploadRe
 
       if (!response.ok) {
         const message = result.error || '이미지 업로드에 실패했습니다.'
-        console.error('이미지 업로드 실패:', result)
+        console.error('R2 업로드 실패:', result)
         setError(message)
         onError?.(message)
         return null
       }
 
-      // Cloudinary URL 반환
+      // R2 URL 반환
       return result.url
     } catch (err) {
       console.error('이미지 업로드 오류:', err)
