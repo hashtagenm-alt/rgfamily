@@ -63,9 +63,6 @@ export default function CloudflareVideoUpload({
     if (!ACCEPTED_VIDEO_TYPES.includes(file.type)) {
       return '지원하지 않는 파일 형식입니다. (MP4, WebM, MOV, AVI만 가능)'
     }
-    if (file.size > maxSize * 1024 * 1024) {
-      return `파일 크기가 ${maxSize}MB를 초과합니다.`
-    }
     return null
   }
 
