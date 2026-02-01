@@ -20,12 +20,6 @@ export function PostImageUpload({ onImageInsert, disabled }: PostImageUploadProp
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 파일 크기 체크 (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('이미지 크기는 10MB 이하여야 합니다.')
-      return
-    }
-
     // 이미지 타입 체크
     if (!file.type.startsWith('image/')) {
       setError('이미지 파일만 업로드 가능합니다.')

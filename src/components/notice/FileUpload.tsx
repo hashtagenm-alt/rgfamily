@@ -100,10 +100,6 @@ export default function FileUpload({
         return
       }
 
-      if (file.size > maxSize * 1024 * 1024) {
-        setUploadError(`파일 크기가 ${maxSize}MB를 초과합니다: ${file.name}`)
-        return
-      }
     }
 
     // 로컬 미리보기 추가 (업로딩 상태)
@@ -213,7 +209,7 @@ export default function FileUpload({
           파일을 드래그하거나 <strong>클릭</strong>하여 업로드
         </p>
         <p className={styles.uploadHint}>
-          이미지(JPG, PNG, GIF, WebP) 또는 동영상(MP4, WebM) • 최대 {maxFiles}개, 각 {maxSize}MB 이하
+          이미지(JPG, PNG, GIF, WebP) 또는 동영상(MP4, WebM) • 최대 {maxFiles}개
         </p>
       </div>
 
