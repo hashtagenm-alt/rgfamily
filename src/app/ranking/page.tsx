@@ -104,7 +104,7 @@ export default function TotalRankingPage() {
       setIsLoading(false);
       return;
     } else {
-      // 닉네임 → profile_id 매핑 생성 + 포디움 달성자 추출
+      // 닉네임 → profile_id 매핑 생성 + VIP 페이지 보유자 추출
       const nicknameToProfileId: Record<string, string> = {};
       const podiumIds: string[] = [];
       (vipResult.data || []).forEach((v) => {
@@ -114,10 +114,8 @@ export default function TotalRankingPage() {
           : (profileData as { nickname: string } | null)?.nickname;
         if (nickname && v.profile_id) {
           nicknameToProfileId[nickname] = v.profile_id;
-          // 포디움 달성자 (rank 1-3)
-          if (v.rank && v.rank <= 3) {
-            podiumIds.push(v.profile_id);
-          }
+          // VIP 리워드가 있는 모든 사용자 (VIP 페이지 접근 가능)
+          podiumIds.push(v.profile_id);
         }
       });
 
