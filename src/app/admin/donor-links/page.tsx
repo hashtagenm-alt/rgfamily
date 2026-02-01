@@ -712,7 +712,7 @@ export default function DonorLinksPage() {
                     ) : (
                       <>
                         <ImageIcon size={24} />
-                        <span>이미지 선택 (최대 20MB)</span>
+                        <span>이미지 선택</span>
                         <span className={pageStyles.uploadHint}>800x800 고해상도로 저장됩니다</span>
                       </>
                     )}

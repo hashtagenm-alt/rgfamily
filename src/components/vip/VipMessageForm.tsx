@@ -40,8 +40,6 @@ type UploadStatus = 'idle' | 'uploading' | 'processing' | 'success' | 'error'
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime']
-const MAX_IMAGE_SIZE = 20 * 1024 * 1024 // 20MB
-const MAX_VIDEO_SIZE = 500 * 1024 * 1024 // 500MB
 
 export default function VipMessageForm({
   isOpen,
@@ -86,15 +84,9 @@ export default function VipMessageForm({
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
         return '지원하지 않는 이미지 형식입니다. (JPG, PNG, GIF, WEBP만 가능)'
       }
-      if (file.size > MAX_IMAGE_SIZE) {
-        return '이미지 크기는 20MB 이하여야 합니다.'
-      }
     } else {
       if (!ACCEPTED_VIDEO_TYPES.includes(file.type)) {
         return '지원하지 않는 영상 형식입니다. (MP4, WebM, MOV만 가능)'
-      }
-      if (file.size > MAX_VIDEO_SIZE) {
-        return '영상 크기는 500MB 이하여야 합니다.'
       }
     }
     return null
@@ -392,7 +384,7 @@ export default function VipMessageForm({
                     </p>
                     <p className={styles.dropzoneHint}>
                       {messageType === 'image'
-                        ? 'JPG, PNG, GIF, WEBP • 최대 20MB'
+                        ? 'JPG, PNG, GIF, WEBP'
                         : 'MP4, WebM, MOV • 최대 500MB • 최대 5분'}
                     </p>
                   </div>
