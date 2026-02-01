@@ -3,8 +3,6 @@ import { useCallback, useState } from 'react'
 interface UseImageUploadOptions {
   /** 저장 폴더 경로 (예: 'posts', 'notices') */
   folder: string
-  /** 최대 파일 크기 (bytes, 기본: 20MB) */
-  maxSize?: number
   /** 허용된 MIME 타입 */
   allowedTypes?: string[]
   /** 에러 콜백 */
@@ -22,7 +20,6 @@ interface UseImageUploadReturn {
   clearError: () => void
 }
 
-const DEFAULT_MAX_SIZE = 20 * 1024 * 1024 // 20MB (Cloudinary 최대)
 const DEFAULT_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
 /**
@@ -40,7 +37,6 @@ const DEFAULT_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/we
 export function useImageUpload(options: UseImageUploadOptions): UseImageUploadReturn {
   const {
     folder,
-    maxSize = DEFAULT_MAX_SIZE,
     allowedTypes = DEFAULT_ALLOWED_TYPES,
     onError,
   } = options
@@ -61,15 +57,6 @@ export function useImageUpload(options: UseImageUploadOptions): UseImageUploadRe
       if (!allowedTypes.includes(file.type)) {
         const typeNames = allowedTypes.map(t => t.replace('image/', '').toUpperCase()).join(', ')
         const message = `지원되지 않는 형식입니다. ${typeNames} 파일만 업로드 가능합니다.`
-        setError(message)
-        onError?.(message)
-        return null
-      }
-
-      // 파일 크기 검증
-      if (file.size > maxSize) {
-        const maxSizeMB = Math.round(maxSize / (1024 * 1024))
-        const message = `파일이 너무 큽니다. ${maxSizeMB}MB 이하의 이미지만 업로드 가능합니다.`
         setError(message)
         onError?.(message)
         return null
@@ -107,7 +94,7 @@ export function useImageUpload(options: UseImageUploadOptions): UseImageUploadRe
     } finally {
       setIsUploading(false)
     }
-  }, [folder, maxSize, allowedTypes, onError])
+  }, [folder, allowedTypes, onError])
 
   return {
     uploadImage,

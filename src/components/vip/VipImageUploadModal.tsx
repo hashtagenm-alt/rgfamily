@@ -37,7 +37,6 @@ export default function VipImageUploadModal({
 
   // 허용되는 이미지 타입
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-  const MAX_FILE_SIZE = 20 * 1024 * 1024 // 고화질 시그니처 이미지를 위해 20MB로 상향
 
   // 파일 선택 핸들러
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,12 +46,6 @@ export default function VipImageUploadModal({
     // 이미지 파일 체크 (GIF 포함)
     if (!ALLOWED_TYPES.includes(file.type)) {
       alert('JPG, PNG, GIF, WEBP 파일만 업로드할 수 있습니다.')
-      return
-    }
-
-    // 파일 크기 체크 (20MB)
-    if (file.size > MAX_FILE_SIZE) {
-      alert('파일 크기는 20MB 이하여야 합니다.')
       return
     }
 
@@ -236,7 +229,7 @@ export default function VipImageUploadModal({
                 >
                   <Upload size={32} />
                   <span>이미지를 선택하세요</span>
-                  <span className={styles.uploadHint}>최대 20MB, JPG/PNG/GIF/WEBP</span>
+                  <span className={styles.uploadHint}>JPG/PNG/GIF/WEBP</span>
                 </div>
               )}
 
