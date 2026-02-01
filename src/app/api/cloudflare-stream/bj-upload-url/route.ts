@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { createDirectUpload } from '@/lib/cloudflare'
+import { CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN } from '@/lib/cloudflare'
 
 /**
  * BJ 멤버 및 관리자용 영상 업로드 URL 발급 API
  * - BJ 멤버: 감사 메시지 영상 업로드 용도
  * - 관리자: 대리 업로드 용도
+ * - 200MB 이상 파일은 TUS 프로토콜 사용
  */
 export async function POST(request: NextRequest) {
   try {
@@ -58,17 +59,54 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const { title } = body as { title?: string }
+    const { title, fileSize } = body as { title?: string; fileSize?: number }
 
-    // BJ 메시지 영상은 최대 10분(600초)으로 제한
-    const result = await createDirectUpload({
-      maxDurationSeconds: 600,
-      meta: title ? { title, source: 'bj-message' } : { source: 'bj-message' },
-    })
+    // 200MB 이상이면 TUS 프로토콜 사용
+    const useTus = fileSize && fileSize > 200 * 1024 * 1024
+
+    if (useTus) {
+      // TUS 업로드용 URL 발급 (Cloudflare Stream TUS endpoint)
+      const tusEndpoint = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream?direct_user=true`
+
+      return NextResponse.json({
+        uploadURL: tusEndpoint,
+        useTus: true,
+        // TUS 요청에 필요한 헤더 정보
+        tusHeaders: {
+          'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
+          'Tus-Resumable': '1.0.0',
+        },
+        maxDurationSeconds: 600,
+        meta: title ? { name: title, source: 'bj-message' } : { source: 'bj-message' },
+      })
+    }
+
+    // 기본 직접 업로드 (200MB 미만)
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/direct_upload`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          maxDurationSeconds: 600, // BJ 메시지 영상은 최대 10분
+          meta: title ? { name: title, source: 'bj-message' } : { source: 'bj-message' },
+        }),
+      }
+    )
+
+    const json = await res.json()
+
+    if (!json.success) {
+      throw new Error(json.errors?.[0]?.message || 'Cloudflare Stream 업로드 URL 발급 실패')
+    }
 
     return NextResponse.json({
-      uploadURL: result.uploadURL,
-      uid: result.uid,
+      uploadURL: json.result.uploadURL,
+      uid: json.result.uid,
+      useTus: false,
     })
   } catch (error) {
     console.error('BJ video upload URL error:', error)
