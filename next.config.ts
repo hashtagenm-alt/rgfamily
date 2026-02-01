@@ -13,7 +13,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // Disable Turbopack for production build due to Korean folder name issue
   experimental: {
-    // Use webpack for build instead of Turbopack
+    serverActions: {
+      bodySizeLimit: '100mb',
+    },
   },
   // 보안 HTTP 헤더 설정
   async headers() {
@@ -188,6 +190,11 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '*.cloudflarestream.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.r2.dev',
         pathname: '/**',
       },
     ],

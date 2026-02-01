@@ -82,12 +82,6 @@ export default function BannerEditModal({
       return
     }
 
-    // 파일 크기 검증 (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('파일 크기는 10MB 이하여야 합니다.')
-      return
-    }
-
     // 미리보기 생성
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -244,7 +238,7 @@ export default function BannerEditModal({
                   <>
                     <ImageIcon size={32} />
                     <span>이미지 선택</span>
-                    <span className={styles.uploadHint}>클릭하여 파일 선택 (최대 10MB)</span>
+                    <span className={styles.uploadHint}>클릭하여 파일 선택</span>
                   </>
                 )}
               </div>

@@ -36,12 +36,6 @@ export default function AvatarEditModal({
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 파일 크기 체크 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('파일 크기는 5MB 이하여야 합니다.')
-      return
-    }
-
     // 이미지 타입 체크
     if (!file.type.startsWith('image/')) {
       setError('이미지 파일만 업로드 가능합니다.')
@@ -217,7 +211,7 @@ export default function AvatarEditModal({
                     </>
                   )}
                 </button>
-                <p className={styles.uploadHint}>최대 5MB, JPG/PNG/GIF</p>
+                <p className={styles.uploadHint}>JPG, PNG, GIF</p>
               </div>
             )}
 
