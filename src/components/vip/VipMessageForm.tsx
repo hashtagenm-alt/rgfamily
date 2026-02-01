@@ -1,16 +1,30 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MessageSquare, ImageIcon, Video, Send, Loader2, Globe, Lock, Crown } from 'lucide-react'
+import {
+  X,
+  ImageIcon,
+  Video,
+  Send,
+  Loader2,
+  Globe,
+  Lock,
+  Crown,
+  Upload,
+  Film,
+  CheckCircle,
+  AlertCircle,
+} from 'lucide-react'
+import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import styles from './VipMessageForm.module.css'
 
 interface VipMessageFormProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: {
-    messageType: 'text' | 'image' | 'video'
+    messageType: 'image' | 'video'
     contentText?: string
     contentUrl?: string
     isPublic?: boolean
@@ -21,7 +35,13 @@ interface VipMessageFormProps {
   }
 }
 
-type MessageType = 'text' | 'image' | 'video'
+type MessageType = 'image' | 'video'
+type UploadStatus = 'idle' | 'uploading' | 'processing' | 'success' | 'error'
+
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime']
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024 // 20MB
+const MAX_VIDEO_SIZE = 500 * 1024 * 1024 // 500MB
 
 export default function VipMessageForm({
   isOpen,
@@ -29,19 +49,31 @@ export default function VipMessageForm({
   onSubmit,
   vipInfo,
 }: VipMessageFormProps) {
-  const [messageType, setMessageType] = useState<MessageType>('text')
+  const [messageType, setMessageType] = useState<MessageType>('image')
   const [contentText, setContentText] = useState('')
   const [contentUrl, setContentUrl] = useState('')
   const [isPublic, setIsPublic] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // 파일 업로드 상태
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>('idle')
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [isDragActive, setIsDragActive] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const resetForm = useCallback(() => {
-    setMessageType('text')
+    setMessageType('image')
     setContentText('')
     setContentUrl('')
     setIsPublic(true)
     setError(null)
+    setUploadStatus('idle')
+    setUploadProgress(0)
+    setSelectedFile(null)
+    setPreviewUrl(null)
   }, [])
 
   const handleClose = useCallback(() => {
@@ -49,62 +81,195 @@ export default function VipMessageForm({
     onClose()
   }, [resetForm, onClose])
 
-  const validateForm = (): boolean => {
+  const validateFile = (file: File, type: MessageType): string | null => {
+    if (type === 'image') {
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        return '지원하지 않는 이미지 형식입니다. (JPG, PNG, GIF, WEBP만 가능)'
+      }
+      if (file.size > MAX_IMAGE_SIZE) {
+        return '이미지 크기는 20MB 이하여야 합니다.'
+      }
+    } else {
+      if (!ACCEPTED_VIDEO_TYPES.includes(file.type)) {
+        return '지원하지 않는 영상 형식입니다. (MP4, WebM, MOV만 가능)'
+      }
+      if (file.size > MAX_VIDEO_SIZE) {
+        return '영상 크기는 500MB 이하여야 합니다.'
+      }
+    }
+    return null
+  }
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folder', 'vip-messages')
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || '이미지 업로드 실패')
+    }
+
+    return result.url
+  }
+
+  const uploadVideo = async (file: File): Promise<string | null> => {
+    // 1. Upload URL 발급
+    const urlRes = await fetch('/api/vip/video-upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: file.name, maxDurationSeconds: 300 }),
+    })
+
+    if (!urlRes.ok) {
+      const err = await urlRes.json()
+      throw new Error(err.error || '업로드 URL 발급 실패')
+    }
+
+    const { uploadURL, uid } = await urlRes.json()
+
+    // 2. Cloudflare에 직접 업로드
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      const formData = new FormData()
+      formData.append('file', file)
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(pct)
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve()
+        } else {
+          reject(new Error(`업로드 실패 (${xhr.status})`))
+        }
+      })
+
+      xhr.addEventListener('error', () => reject(new Error('네트워크 오류')))
+      xhr.open('POST', uploadURL)
+      xhr.send(formData)
+    })
+
+    // 3. 영상 처리 대기 (최대 3분)
+    setUploadStatus('processing')
+    const maxAttempts = 36 // 5초 간격 x 36 = 3분
+    let attempts = 0
+
+    while (attempts < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+      attempts++
+
+      const res = await fetch(`/api/cloudflare-stream/${uid}`)
+      if (!res.ok) continue
+
+      const data = await res.json()
+
+      if (data.status?.state === 'ready') {
+        // 썸네일 URL 생성
+        return getStreamThumbnailUrl(uid, { width: 640, height: 360, fit: 'crop' })
+          ? `cloudflare:${uid}` // 특별한 형식으로 저장
+          : null
+      }
+
+      if (data.status?.state === 'error') {
+        throw new Error(data.status.errorReasonText || '영상 처리 중 오류')
+      }
+    }
+
+    throw new Error('영상 처리 시간 초과')
+  }
+
+  const handleFile = useCallback(async (file: File) => {
+    const validationError = validateFile(file, messageType)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
     setError(null)
+    setSelectedFile(file)
+    setUploadStatus('uploading')
+    setUploadProgress(0)
 
-    if (messageType === 'text') {
-      if (!contentText.trim()) {
-        setError('메시지를 입력해주세요.')
-        return false
-      }
-      if (contentText.length > 1000) {
-        setError('메시지는 1000자 이하로 작성해주세요.')
-        return false
-      }
+    // 이미지 프리뷰 생성
+    if (messageType === 'image') {
+      const reader = new FileReader()
+      reader.onload = (e) => setPreviewUrl(e.target?.result as string)
+      reader.readAsDataURL(file)
     }
 
-    if (messageType === 'image' || messageType === 'video') {
-      if (!contentUrl.trim()) {
-        setError(messageType === 'image' ? '이미지 URL을 입력해주세요.' : '영상 URL을 입력해주세요.')
-        return false
+    try {
+      let url: string | null = null
+
+      if (messageType === 'image') {
+        url = await uploadImage(file)
+      } else {
+        url = await uploadVideo(file)
       }
 
-      try {
-        const parsedUrl = new URL(contentUrl)
-
-        if (messageType === 'image') {
-          const validImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
-          const path = parsedUrl.pathname.toLowerCase()
-          const isImageHost = ['imgur.com', 'i.imgur.com', 'drive.google.com', 'postimg.cc'].some(
-            host => parsedUrl.hostname.includes(host)
-          )
-          const hasImageExtension = validImageExtensions.some(ext => path.endsWith(ext))
-
-          if (!hasImageExtension && !isImageHost) {
-            setError('지원하는 이미지 형식: jpg, png, gif, webp 또는 Imgur/Google Drive 링크')
-            return false
-          }
-        }
-
-        if (messageType === 'video') {
-          const isYouTube = parsedUrl.hostname.includes('youtube.com') || parsedUrl.hostname.includes('youtu.be')
-
-          if (!isYouTube) {
-            setError('영상은 YouTube 링크만 지원합니다.')
-            return false
-          }
-        }
-      } catch {
-        setError('올바른 URL 형식이 아닙니다.')
-        return false
+      if (url) {
+        setContentUrl(url)
+        setUploadStatus('success')
+      } else {
+        throw new Error('업로드 결과를 받지 못했습니다.')
       }
+    } catch (err) {
+      setUploadStatus('error')
+      setError(err instanceof Error ? err.message : '업로드 실패')
     }
+  }, [messageType])
 
-    return true
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragActive(false)
+    if (uploadStatus === 'uploading' || uploadStatus === 'processing') return
+
+    const files = e.dataTransfer.files
+    if (files.length > 0) handleFile(files[0])
+  }, [uploadStatus, handleFile])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    if (uploadStatus !== 'uploading' && uploadStatus !== 'processing') {
+      setIsDragActive(true)
+    }
+  }, [uploadStatus])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragActive(false)
+  }, [])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) handleFile(files[0])
+    e.target.value = ''
+  }
+
+  const handleResetUpload = () => {
+    setUploadStatus('idle')
+    setUploadProgress(0)
+    setSelectedFile(null)
+    setPreviewUrl(null)
+    setContentUrl('')
+    setError(null)
   }
 
   const handleSubmit = async () => {
-    if (!validateForm()) return
+    if (!contentUrl) {
+      setError(messageType === 'image' ? '이미지를 업로드해주세요.' : '영상을 업로드해주세요.')
+      return
+    }
 
     setIsSubmitting(true)
     setError(null)
@@ -113,7 +278,7 @@ export default function VipMessageForm({
       const success = await onSubmit({
         messageType,
         contentText: contentText.trim() || undefined,
-        contentUrl: contentUrl.trim() || undefined,
+        contentUrl,
         isPublic,
       })
 
@@ -129,11 +294,22 @@ export default function VipMessageForm({
     }
   }
 
-  const tabs: { type: MessageType; icon: typeof MessageSquare; label: string }[] = [
-    { type: 'text', icon: MessageSquare, label: '텍스트' },
+  const handleTypeChange = (type: MessageType) => {
+    if (uploadStatus === 'uploading' || uploadStatus === 'processing') return
+    setMessageType(type)
+    handleResetUpload()
+  }
+
+  const tabs: { type: MessageType; icon: typeof ImageIcon; label: string }[] = [
     { type: 'image', icon: ImageIcon, label: '사진' },
     { type: 'video', icon: Video, label: '영상' },
   ]
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   return (
     <AnimatePresence>
@@ -176,7 +352,7 @@ export default function VipMessageForm({
                 <div className={styles.headerText}>
                   <h2 className={styles.title}>VIP 메시지 작성</h2>
                   <p className={styles.subtitle}>
-                    나만의 페이지에 메시지를 남겨보세요
+                    나만의 페이지에 사진 또는 영상을 남겨보세요
                   </p>
                 </div>
               </div>
@@ -188,8 +364,8 @@ export default function VipMessageForm({
                 <button
                   key={tab.type}
                   className={`${styles.tab} ${messageType === tab.type ? styles.activeTab : ''}`}
-                  onClick={() => setMessageType(tab.type)}
-                  disabled={isSubmitting}
+                  onClick={() => handleTypeChange(tab.type)}
+                  disabled={isSubmitting || uploadStatus === 'uploading' || uploadStatus === 'processing'}
                 >
                   <tab.icon size={18} />
                   <span>{tab.label}</span>
@@ -199,118 +375,149 @@ export default function VipMessageForm({
 
             {/* 폼 콘텐츠 */}
             <div className={styles.content}>
-              {/* 텍스트 메시지 */}
-              {messageType === 'text' && (
+              {/* 파일 업로드 영역 */}
+              <div className={styles.uploadSection}>
+                {uploadStatus === 'idle' && (
+                  <div
+                    className={`${styles.dropzone} ${isDragActive ? styles.dropzoneActive : ''}`}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload size={32} className={styles.dropzoneIcon} />
+                    <p className={styles.dropzoneText}>
+                      {messageType === 'image' ? '이미지' : '영상'} 파일을 드래그하거나{' '}
+                      <strong>클릭</strong>하여 업로드
+                    </p>
+                    <p className={styles.dropzoneHint}>
+                      {messageType === 'image'
+                        ? 'JPG, PNG, GIF, WEBP • 최대 20MB'
+                        : 'MP4, WebM, MOV • 최대 500MB • 최대 5분'}
+                    </p>
+                  </div>
+                )}
+
+                {uploadStatus === 'uploading' && selectedFile && (
+                  <div className={styles.uploadingState}>
+                    {messageType === 'image' ? (
+                      <ImageIcon size={32} className={styles.uploadingIcon} />
+                    ) : (
+                      <Film size={32} className={styles.uploadingIcon} />
+                    )}
+                    <p className={styles.fileName}>{selectedFile.name}</p>
+                    <p className={styles.fileSize}>{formatFileSize(selectedFile.size)}</p>
+                    <div className={styles.progressBar}>
+                      <div
+                        className={styles.progressFill}
+                        style={{ width: messageType === 'image' ? '100%' : `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className={styles.progressText}>
+                      {messageType === 'image' ? '업로드 중...' : `${uploadProgress}% 업로드 중...`}
+                    </p>
+                  </div>
+                )}
+
+                {uploadStatus === 'processing' && (
+                  <div className={styles.uploadingState}>
+                    <Loader2 size={32} className={`${styles.uploadingIcon} ${styles.spinning}`} />
+                    <p className={styles.processingText}>영상 처리 중...</p>
+                    <p className={styles.processingHint}>잠시만 기다려주세요</p>
+                  </div>
+                )}
+
+                {uploadStatus === 'success' && (
+                  <div className={styles.successState}>
+                    {messageType === 'image' && previewUrl ? (
+                      <div className={styles.imagePreview}>
+                        <Image
+                          src={previewUrl}
+                          alt="업로드된 이미지"
+                          fill
+                          style={{ objectFit: 'contain' }}
+                        />
+                      </div>
+                    ) : (
+                      <div className={styles.videoSuccess}>
+                        <CheckCircle size={32} className={styles.successIcon} />
+                        <p>영상 업로드 완료!</p>
+                      </div>
+                    )}
+                    <button onClick={handleResetUpload} className={styles.resetBtn}>
+                      다른 파일 선택
+                    </button>
+                  </div>
+                )}
+
+                {uploadStatus === 'error' && (
+                  <div className={styles.errorState}>
+                    <AlertCircle size={32} className={styles.errorIcon} />
+                    <p className={styles.errorText}>{error}</p>
+                    <button onClick={handleResetUpload} className={styles.resetBtn}>
+                      다시 시도
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={messageType === 'image' ? ACCEPTED_IMAGE_TYPES.join(',') : ACCEPTED_VIDEO_TYPES.join(',')}
+                  onChange={handleInputChange}
+                  style={{ display: 'none' }}
+                />
+              </div>
+
+              {/* 함께 전할 메시지 */}
+              {uploadStatus === 'success' && (
                 <div className={styles.inputGroup}>
-                  <label className={styles.label}>메시지</label>
+                  <label className={styles.label}>함께 전할 메시지 (선택)</label>
                   <textarea
-                    className={styles.textarea}
-                    placeholder="VIP 페이지에 남길 메시지를 작성해주세요..."
+                    className={styles.textareaSmall}
+                    placeholder={`${messageType === 'image' ? '사진' : '영상'}과 함께 전할 짧은 메시지...`}
                     value={contentText}
                     onChange={(e) => setContentText(e.target.value)}
-                    maxLength={1000}
+                    maxLength={500}
                     disabled={isSubmitting}
                   />
-                  <span className={styles.charCount}>
-                    {contentText.length} / 1000
+                </div>
+              )}
+
+              {/* 공개/비공개 설정 */}
+              {uploadStatus === 'success' && (
+                <div className={styles.visibilityToggle}>
+                  <label className={styles.label}>공개 설정</label>
+                  <div className={styles.toggleButtons}>
+                    <button
+                      type="button"
+                      className={`${styles.toggleBtn} ${isPublic ? styles.activeToggle : ''}`}
+                      onClick={() => setIsPublic(true)}
+                      disabled={isSubmitting}
+                    >
+                      <Globe size={16} />
+                      <span>공개</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.toggleBtn} ${!isPublic ? styles.activeToggle : ''}`}
+                      onClick={() => setIsPublic(false)}
+                      disabled={isSubmitting}
+                    >
+                      <Lock size={16} />
+                      <span>비공개</span>
+                    </button>
+                  </div>
+                  <span className={styles.visibilityHint}>
+                    {isPublic
+                      ? '모든 VIP 회원이 이 메시지를 볼 수 있습니다'
+                      : '나만 이 메시지를 볼 수 있습니다'}
                   </span>
                 </div>
               )}
 
-              {/* 이미지 */}
-              {messageType === 'image' && (
-                <>
-                  <div className={styles.inputGroup}>
-                    <label className={styles.label}>이미지 URL</label>
-                    <input
-                      type="url"
-                      className={styles.input}
-                      placeholder="https://example.com/image.jpg"
-                      value={contentUrl}
-                      onChange={(e) => setContentUrl(e.target.value)}
-                      disabled={isSubmitting}
-                    />
-                    <span className={styles.hint}>
-                      직접 업로드하거나 외부 이미지 URL을 입력해주세요
-                    </span>
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <label className={styles.label}>함께 전할 메시지 (선택)</label>
-                    <textarea
-                      className={styles.textareaSmall}
-                      placeholder="이미지와 함께 전할 짧은 메시지..."
-                      value={contentText}
-                      onChange={(e) => setContentText(e.target.value)}
-                      maxLength={500}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* 영상 */}
-              {messageType === 'video' && (
-                <>
-                  <div className={styles.inputGroup}>
-                    <label className={styles.label}>영상 URL</label>
-                    <input
-                      type="url"
-                      className={styles.input}
-                      placeholder="https://youtube.com/watch?v=... 또는 https://youtu.be/..."
-                      value={contentUrl}
-                      onChange={(e) => setContentUrl(e.target.value)}
-                      disabled={isSubmitting}
-                    />
-                    <span className={styles.hint}>
-                      YouTube 영상 링크만 지원합니다
-                    </span>
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <label className={styles.label}>함께 전할 메시지 (선택)</label>
-                    <textarea
-                      className={styles.textareaSmall}
-                      placeholder="영상과 함께 전할 짧은 메시지..."
-                      value={contentText}
-                      onChange={(e) => setContentText(e.target.value)}
-                      maxLength={500}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* 공개/비공개 설정 */}
-              <div className={styles.visibilityToggle}>
-                <label className={styles.label}>공개 설정</label>
-                <div className={styles.toggleButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.toggleBtn} ${isPublic ? styles.activeToggle : ''}`}
-                    onClick={() => setIsPublic(true)}
-                    disabled={isSubmitting}
-                  >
-                    <Globe size={16} />
-                    <span>공개</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.toggleBtn} ${!isPublic ? styles.activeToggle : ''}`}
-                    onClick={() => setIsPublic(false)}
-                    disabled={isSubmitting}
-                  >
-                    <Lock size={16} />
-                    <span>비공개</span>
-                  </button>
-                </div>
-                <span className={styles.visibilityHint}>
-                  {isPublic
-                    ? '모든 VIP 회원이 이 메시지를 볼 수 있습니다'
-                    : '나만 이 메시지를 볼 수 있습니다'}
-                </span>
-              </div>
-
               {/* 에러 메시지 */}
-              {error && <p className={styles.error}>{error}</p>}
+              {error && uploadStatus !== 'error' && <p className={styles.error}>{error}</p>}
             </div>
 
             {/* 액션 버튼 */}
@@ -325,7 +532,7 @@ export default function VipMessageForm({
               <button
                 className={styles.submitBtn}
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || uploadStatus !== 'success'}
               >
                 {isSubmitting ? (
                   <>

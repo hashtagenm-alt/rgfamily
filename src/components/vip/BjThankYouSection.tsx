@@ -47,7 +47,15 @@ export default function BjThankYouSection({
 
   // 어드민이면서 BJ 멤버가 아닌 경우 멤버 목록 fetch
   const isAdminUser = isAdmin()
-  const canWrite = isBjMember || isAdminUser
+
+  // BJ 멤버가 이미 이 VIP에게 메시지를 보냈는지 확인
+  const hasAlreadyPosted = useMemo(() => {
+    if (!bjMemberId) return false
+    return messages.some(m => m.bj_member_id === bjMemberId)
+  }, [bjMemberId, messages])
+
+  // BJ 멤버: 아직 안 올렸으면 가능 / 어드민: 항상 가능 (멤버 선택)
+  const canWrite = (isBjMember && !hasAlreadyPosted) || isAdminUser
 
   useEffect(() => {
     if (isAdminUser && !isBjMember) {
@@ -127,7 +135,7 @@ export default function BjThankYouSection({
   }, [deleteMessage])
 
   const handleSubmitMessage = async (data: {
-    messageType: 'text' | 'image' | 'video'
+    messageType: 'image' | 'video'
     contentText?: string
     contentUrl?: string
     isPublic?: boolean
@@ -269,9 +277,6 @@ export default function BjThankYouSection({
                   key={message.id}
                   message={message}
                   onClick={() => handleCardClick(message)}
-                  canEdit={canEditMessage(message)}
-                  onEdit={handleEditMessage}
-                  onDelete={handleDeleteMessage}
                 />
               ))}
             </div>

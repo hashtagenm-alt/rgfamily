@@ -67,6 +67,8 @@ export async function POST(request: NextRequest) {
     const isAvatar = subfolder === 'avatars'
     // 인라인 에디터용 이미지 (notices, posts 등)
     const isInlineContent = ['notices', 'posts', 'community'].includes(subfolder)
+    // VIP 메시지 이미지 (원본 크기 유지)
+    const isVipMessage = subfolder === 'vip-messages'
 
     if (!file) {
       return NextResponse.json(
@@ -124,6 +126,14 @@ export async function POST(request: NextRequest) {
             { quality: 'auto:good', fetch_format: 'auto' }
           ]
 
+      // VIP 메시지용 transformation (원본 크기 유지, 최대 2000px)
+      const vipMessageTransformation = isGif
+        ? [{ width: 2000, crop: 'limit', flags: 'animated' }]
+        : [
+            { width: 2000, crop: 'limit' },
+            { quality: 'auto:best', fetch_format: 'auto' }
+          ]
+
       // 일반 이미지 transformation (400x400 정사각형)
       const defaultTransformation = isGif
         ? [{ width: 400, height: 400, crop: 'fill', flags: 'animated' }]
@@ -137,9 +147,11 @@ export async function POST(request: NextRequest) {
         ? bannerTransformation
         : isAvatar
           ? avatarTransformation
-          : isInlineContent
-            ? inlineTransformation
-            : defaultTransformation
+          : isVipMessage
+            ? vipMessageTransformation
+            : isInlineContent
+              ? inlineTransformation
+              : defaultTransformation
 
       cloudinary.uploader.upload_stream(
         {

@@ -247,27 +247,56 @@ export async function getBjMessagesByBjMember(): Promise<ActionResult<BjMessageW
 
 /**
  * BJ 감사 메시지 작성
- * - BJ 멤버만 작성 가능
+ * - BJ 멤버 또는 관리자만 작성 가능
+ * - 관리자는 bjMemberId를 지정하여 대신 작성 가능
  * - isPublic: true=공개(기본), false=비공개(VIP본인+작성자만)
  */
 export async function createBjMessage(data: {
   vipProfileId: string
+  bjMemberId?: number  // 관리자가 멤버 대신 작성할 때 사용
   messageType: 'text' | 'image' | 'video'
   contentText?: string
   contentUrl?: string
   isPublic?: boolean
 }): Promise<ActionResult<BjThankYouMessage>> {
   return authAction(async (supabase, userId) => {
-    // BJ 멤버 확인
-    const { data: orgData, error: orgError } = await supabase
-      .from('organization')
-      .select('id, name')
-      .eq('profile_id', userId)
-      .eq('is_active', true)
+    // 사용자 권한 확인
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
       .single()
 
-    if (orgError || !orgData) {
-      throw new Error('BJ 멤버만 메시지를 작성할 수 있습니다.')
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
+
+    let bjMemberId: number
+
+    if (isAdmin && data.bjMemberId) {
+      // 관리자가 멤버를 선택한 경우
+      const { data: selectedMember, error: memberError } = await supabase
+        .from('organization')
+        .select('id, name')
+        .eq('id', data.bjMemberId)
+        .eq('is_active', true)
+        .single()
+
+      if (memberError || !selectedMember) {
+        throw new Error('선택한 BJ 멤버를 찾을 수 없습니다.')
+      }
+      bjMemberId = selectedMember.id
+    } else {
+      // BJ 멤버 본인 확인
+      const { data: orgData, error: orgError } = await supabase
+        .from('organization')
+        .select('id, name')
+        .eq('profile_id', userId)
+        .eq('is_active', true)
+        .single()
+
+      if (orgError || !orgData) {
+        throw new Error('BJ 멤버만 메시지를 작성할 수 있습니다.')
+      }
+      bjMemberId = orgData.id
     }
 
     // VIP 프로필 존재 확인
@@ -286,7 +315,7 @@ export async function createBjMessage(data: {
       .from('bj_thank_you_messages')
       .insert({
         vip_profile_id: data.vipProfileId,
-        bj_member_id: orgData.id,
+        bj_member_id: bjMemberId,
         message_type: data.messageType,
         content_text: data.contentText || null,
         content_url: data.contentUrl || null,
