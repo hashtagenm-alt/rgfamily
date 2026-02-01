@@ -154,6 +154,12 @@
 }
 
 /* 비공개 배지 */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .privateBadge {
   display: flex;
   align-items: center;
@@ -163,6 +169,51 @@
   border-radius: 50%;
   background: rgba(255, 193, 7, 0.15);
   color: #ffc107;
+}
+
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card:hover .editActions {
+  opacity: 1;
+}
+
+.editBtn,
+.deleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.editBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.editBtn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  color: #d4af37;
+}
+
+.deleteBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
 /* 타입 배지 */
@@ -288,6 +339,22 @@
 :global([data-theme="light"]) .actionBtn:hover {
   background: rgba(0, 0, 0, 0.06);
   color: #000;
+}
+
+:global([data-theme="light"]) .editBtn,
+:global([data-theme="light"]) .deleteBtn {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="light"]) .editBtn:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: #b8960c;
+}
+
+:global([data-theme="light"]) .deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
 }
 
 /* ==================== 프리미엄 잠금 콘텐츠 스타일 ==================== */

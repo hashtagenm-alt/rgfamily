@@ -263,6 +263,9 @@ export default function BjThankYouSection({
                   key={message.id}
                   message={message}
                   onClick={() => handleCardClick(message)}
+                  canEdit={canEditMessage(message)}
+                  onEdit={() => handleEditMessage(message)}
+                  onDelete={() => handleDeleteMessage(message.id)}
                 />
               ))}
             </div>
