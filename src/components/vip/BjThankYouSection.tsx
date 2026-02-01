@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Crown, ChevronDown, ChevronRight, Plus, Loader2, Play } from 'lucide-react'
+import { Crown, ChevronDown, ChevronRight, Plus, Loader2 } from 'lucide-react'
 import { useBjMessages, useBjMemberStatus } from '@/lib/hooks'
 import { useAuthContext, useSupabaseContext } from '@/lib/context'
 import BjMessageCard from './BjMessageCard'
@@ -70,15 +70,9 @@ export default function BjThankYouSection({
     }
   }, [isAdminUser, isBjMember, supabase])
 
-  // 이미지/텍스트와 영상 분리
-  const { photoMessages, videoMessages } = useMemo(() => {
-    const photos = messages.filter(m => m.message_type !== 'video')
-    const videos = messages.filter(m => m.message_type === 'video')
-    return { photoMessages: photos, videoMessages: videos }
-  }, [messages])
-
-  const displayedPhotoMessages = showAll ? photoMessages : photoMessages.slice(0, INITIAL_DISPLAY_COUNT)
-  const hasMorePhotos = photoMessages.length > INITIAL_DISPLAY_COUNT
+  // 모든 메시지 (사진/영상 통합)
+  const displayedMessages = showAll ? messages : messages.slice(0, INITIAL_DISPLAY_COUNT)
+  const hasMore = messages.length > INITIAL_DISPLAY_COUNT
 
   // 메시지 수정 권한 체크 (본인 또는 관리자)
   const canEditMessage = useCallback((message: BjMessageWithMember) => {
@@ -127,7 +121,7 @@ export default function BjThankYouSection({
   }, [deleteMessage])
 
   const handleSubmitMessage = async (data: {
-    messageType: 'text' | 'image' | 'video'
+    messageType: 'image' | 'video'
     contentText?: string
     contentUrl?: string
     isPublic?: boolean
@@ -230,7 +224,7 @@ export default function BjThankYouSection({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5, duration: 0.6 }}
     >
-      {/* BJ 감사 콘텐츠 (사진/텍스트) - 6열 그리드 */}
+      {/* BJ 감사 콘텐츠 - 그리드 */}
       <div className={styles.vipOnlyWrapper}>
         <div className={styles.sectionHeader}>
           <div className={styles.vipOnlyBadge}>
@@ -238,21 +232,21 @@ export default function BjThankYouSection({
             <span>VIP ONLY</span>
           </div>
           <h2 className={styles.sectionTitle}>BJ 감사 콘텐츠</h2>
-          {photoMessages.length > 0 && (
-            <span className={styles.messageCount}>{photoMessages.length}개</span>
+          {messages.length > 0 && (
+            <span className={styles.messageCount}>{messages.length}개</span>
           )}
           <div className={styles.sectionDivider} />
 
           {/* 전체보기 링크 */}
-          {hasMorePhotos && (
+          {hasMore && (
             <button className={styles.viewAllBtn} onClick={() => setShowAll(!showAll)}>
               <span>전체보기</span>
               <ChevronRight size={16} />
             </button>
           )}
 
-          {/* BJ용 작성 버튼 */}
-          {isBjMember && (
+          {/* BJ/어드민용 작성 버튼 */}
+          {canWrite && (
             <button className={styles.writeBtn} onClick={() => setShowForm(true)}>
               <Plus size={16} />
               <span>등록</span>
@@ -260,24 +254,24 @@ export default function BjThankYouSection({
           )}
         </div>
 
-        {/* 6열 그리드 */}
-        {photoMessages.length > 0 ? (
+        {/* 그리드 */}
+        {messages.length > 0 ? (
           <>
             <div className={styles.contentGrid}>
-              {displayedPhotoMessages.map((message) => (
+              {displayedMessages.map((message) => (
                 <BjMessageCard
                   key={message.id}
                   message={message}
                   onClick={() => handleCardClick(message)}
                   canEdit={canEditMessage(message)}
-                  onEdit={handleEditMessage}
-                  onDelete={handleDeleteMessage}
+                  onEdit={() => handleEditMessage(message)}
+                  onDelete={() => handleDeleteMessage(message.id)}
                 />
               ))}
             </div>
 
             {/* 접기 버튼 */}
-            {showAll && hasMorePhotos && (
+            {showAll && hasMore && (
               <button className={styles.showLessBtn} onClick={() => setShowAll(false)}>
                 <span>접기</span>
                 <ChevronDown size={18} className={styles.rotated} />
@@ -291,34 +285,6 @@ export default function BjThankYouSection({
           </div>
         )}
       </div>
-
-      {/* 멤버 감사 영상 섹션 */}
-      {videoMessages.length > 0 && (
-        <div className={styles.videoSection}>
-          <div className={styles.videoHeader}>
-            <Play size={18} className={styles.videoIcon} />
-            <h3 className={styles.videoTitle}>멤버 감사 영상</h3>
-            <span className={styles.videoCount}>{videoMessages.length}개</span>
-          </div>
-          <div className={styles.videoList}>
-            {videoMessages.map((video) => (
-              <div
-                key={video.id}
-                className={styles.videoItem}
-                onClick={() => handleCardClick(video)}
-              >
-                <div className={styles.videoThumb}>
-                  <Play size={24} />
-                </div>
-                <div className={styles.videoInfo}>
-                  <span className={styles.videoUnit}>VIDEO</span>
-                  <span className={styles.videoBjName}>{video.bj_member?.name}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* 메시지 상세 모달 */}
       <BjMessageModal

@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MessageSquare, ImageIcon, Video, Send, Loader2, Globe, Lock, Upload, Trash2, Link as LinkIcon, Film } from 'lucide-react'
+import { X, ImageIcon, Video, Send, Loader2, Globe, Lock, Upload, Trash2, Link as LinkIcon, Film } from 'lucide-react'
 import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import styles from './BjMessageForm.module.css'
 
@@ -17,7 +17,7 @@ interface BjMessageFormProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: {
-    messageType: 'text' | 'image' | 'video'
+    messageType: 'image' | 'video'
     contentText?: string
     contentUrl?: string
     isPublic?: boolean
@@ -32,7 +32,7 @@ interface BjMessageFormProps {
   bjMembers?: BjMember[]  // 어드민용 멤버 목록
 }
 
-type MessageType = 'text' | 'image' | 'video'
+type MessageType = 'image' | 'video'
 
 export default function BjMessageForm({
   isOpen,
@@ -43,7 +43,7 @@ export default function BjMessageForm({
   isAdminMode = false,
   bjMembers = [],
 }: BjMessageFormProps) {
-  const [messageType, setMessageType] = useState<MessageType>('text')
+  const [messageType, setMessageType] = useState<MessageType>('image')
   const [contentText, setContentText] = useState('')
   const [contentUrl, setContentUrl] = useState('')
   const [isPublic, setIsPublic] = useState(true)
@@ -65,7 +65,7 @@ export default function BjMessageForm({
   const selectedMember = bjMembers.find(m => m.id === selectedMemberId)
 
   const resetForm = useCallback(() => {
-    setMessageType('text')
+    setMessageType('image')
     setContentText('')
     setContentUrl('')
     setIsPublic(true)
@@ -296,17 +296,6 @@ export default function BjMessageForm({
       return false
     }
 
-    if (messageType === 'text') {
-      if (!contentText.trim()) {
-        setError('메시지를 입력해주세요.')
-        return false
-      }
-      if (contentText.length > 1000) {
-        setError('메시지는 1000자 이하로 작성해주세요.')
-        return false
-      }
-    }
-
     if (messageType === 'image') {
       if (!contentUrl.trim()) {
         setError('이미지를 업로드해주세요.')
@@ -367,8 +356,7 @@ export default function BjMessageForm({
     }
   }
 
-  const tabs: { type: MessageType; icon: typeof MessageSquare; label: string }[] = [
-    { type: 'text', icon: MessageSquare, label: '텍스트' },
+  const tabs: { type: MessageType; icon: typeof ImageIcon; label: string }[] = [
     { type: 'image', icon: ImageIcon, label: '사진' },
     { type: 'video', icon: Video, label: '영상' },
   ]
@@ -435,23 +423,36 @@ export default function BjMessageForm({
               </div>
             </div>
 
-            {/* 어드민 모드: 멤버 선택 드롭다운 */}
+            {/* 어드민 모드: 멤버 선택 버튼 그리드 */}
             {isAdminMode && (
               <div className={styles.memberSelect}>
                 <label className={styles.label}>등록할 멤버 선택</label>
-                <select
-                  value={selectedMemberId || ''}
-                  onChange={(e) => setSelectedMemberId(e.target.value ? Number(e.target.value) : null)}
-                  className={styles.select}
-                  disabled={isSubmitting || isUploading}
-                >
-                  <option value="">멤버를 선택하세요</option>
+                <div className={styles.memberGrid}>
                   {bjMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name}
-                    </option>
+                    <button
+                      key={member.id}
+                      type="button"
+                      className={`${styles.memberBtn} ${selectedMemberId === member.id ? styles.memberBtnActive : ''}`}
+                      onClick={() => setSelectedMemberId(member.id)}
+                      disabled={isSubmitting || isUploading}
+                    >
+                      {member.imageUrl ? (
+                        <Image
+                          src={member.imageUrl}
+                          alt={member.name}
+                          width={28}
+                          height={28}
+                          className={styles.memberBtnAvatar}
+                        />
+                      ) : (
+                        <div className={styles.memberBtnAvatarPlaceholder}>
+                          {member.name.charAt(0)}
+                        </div>
+                      )}
+                      <span className={styles.memberBtnName}>{member.name}</span>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             )}
 
@@ -480,24 +481,6 @@ export default function BjMessageForm({
 
             {/* 폼 콘텐츠 */}
             <div className={styles.content}>
-              {/* 텍스트 메시지 */}
-              {messageType === 'text' && (
-                <div className={styles.inputGroup}>
-                  <label className={styles.label}>메시지</label>
-                  <textarea
-                    className={styles.textarea}
-                    placeholder="VIP님에게 전할 감사 메시지를 작성해주세요..."
-                    value={contentText}
-                    onChange={(e) => setContentText(e.target.value)}
-                    maxLength={1000}
-                    disabled={isSubmitting || isUploading}
-                  />
-                  <span className={styles.charCount}>
-                    {contentText.length} / 1000
-                  </span>
-                </div>
-              )}
-
               {/* 이미지 */}
               {messageType === 'image' && (
                 <>

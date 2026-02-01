@@ -31,12 +31,15 @@ export function useBjMemberStatus(): BjMemberStatusResult {
   const [bjMemberInfo, setBjMemberInfo] = useState<BjMemberInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchBjMemberStatus = useCallback(async () => {
-    setIsLoading(true)
+  const userId = user?.id
 
+  const fetchBjMemberStatus = useCallback(async () => {
+    // auth 로딩 중이면 대기 (isLoading 변경 안함)
     if (authLoading) return
 
-    if (!user) {
+    setIsLoading(true)
+
+    if (!userId) {
       setIsBjMember(false)
       setBjMemberId(null)
       setBjMemberInfo(null)
@@ -59,7 +62,7 @@ export function useBjMemberStatus(): BjMemberStatusResult {
     setBjMemberId(result.data.bjMemberId)
     setBjMemberInfo(result.data.bjMemberInfo)
     setIsLoading(false)
-  }, [authLoading, user])
+  }, [authLoading, userId])
 
   useEffect(() => {
     fetchBjMemberStatus()
