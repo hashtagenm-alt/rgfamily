@@ -85,14 +85,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 파일 크기 검증 (20MB - VIP 시그니처 이미지 고화질 지원)
-    const maxSize = 20 * 1024 * 1024
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: `파일 크기는 20MB 이하여야 합니다 (현재: ${(file.size / 1024 / 1024).toFixed(1)}MB)` },
-        { status: 400 }
-      )
-    }
 
     // File을 Buffer로 변환
     const bytes = await file.arrayBuffer()
@@ -179,7 +171,7 @@ export async function POST(request: NextRequest) {
     // Cloudinary 에러 메시지 처리
     if (err.message?.includes('File size too large')) {
       return NextResponse.json(
-        { error: '파일 크기가 너무 큽니다. 20MB 이하의 이미지를 선택해주세요.' },
+        { error: '파일 크기가 Cloudinary 제한을 초과했습니다.' },
         { status: 400 }
       )
     }
