@@ -1,14 +1,32 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
-import { CalendarDays, Plus, X, Save } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { CalendarDays, Plus } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
-import { useAdminCRUD, useAlert } from '@/lib/hooks'
+import ScheduleEditModal from '@/components/schedule/ScheduleEditModal'
+import { getSchedules } from '@/lib/actions/schedules'
+import type { Schedule } from '@/types/database'
 import styles from '../shared.module.css'
 
 type EventType = 'broadcast' | 'collab' | 'event' | 'notice' | '休'
 
-interface Schedule {
+const eventTypeLabels: Record<EventType, string> = {
+  broadcast: '방송',
+  collab: '콜라보',
+  event: '이벤트',
+  notice: '공지',
+  '休': '휴방',
+}
+
+const eventTypeColors: Record<EventType, string> = {
+  broadcast: 'rgba(196, 30, 127, 0.15)',
+  collab: 'rgba(96, 165, 250, 0.15)',
+  event: 'rgba(59, 130, 246, 0.15)',
+  notice: 'rgba(234, 179, 8, 0.15)',
+  '休': 'rgba(148, 163, 184, 0.15)',
+}
+
+interface ScheduleItem {
   id: number
   title: string
   description: string
@@ -20,81 +38,78 @@ interface Schedule {
   createdAt: string
 }
 
-const eventTypeLabels: Record<EventType, string> = {
-  broadcast: '방송',
-  collab: '콜라보',
-  event: '이벤트',
-  notice: '공지',
-  '休': '휴식',
-}
-
-const eventTypeColors: Record<EventType, string> = {
-  broadcast: 'rgba(196, 30, 127, 0.15)',
-  collab: 'rgba(96, 165, 250, 0.15)',
-  event: 'rgba(59, 130, 246, 0.15)',
-  notice: 'rgba(234, 179, 8, 0.15)',
-  '休': 'rgba(148, 163, 184, 0.15)',
-}
-
 export default function SchedulesPage() {
-  const alertHandler = useAlert()
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
 
-  const getDefaultStartDatetime = () => {
-    const now = new Date()
-    now.setHours(20, 0, 0, 0)
-    return now.toISOString()
+  const fetchSchedules = useCallback(async () => {
+    setIsLoading(true)
+    const result = await getSchedules()
+    if (result.data) {
+      setSchedules(
+        result.data.map((s) => ({
+          id: s.id,
+          title: s.title,
+          description: s.description || '',
+          startDatetime: s.start_datetime,
+          endDatetime: s.end_datetime,
+          eventType: s.event_type as EventType,
+          unit: s.unit,
+          isAllDay: s.is_all_day,
+          createdAt: s.created_at,
+        }))
+      )
+    }
+    setIsLoading(false)
+  }, [])
+
+  useEffect(() => {
+    fetchSchedules()
+  }, [fetchSchedules])
+
+  const handleAddClick = () => {
+    setEditingSchedule(null)
+    setIsModalOpen(true)
   }
 
-  const {
-    items: schedules,
-    isLoading,
-    isModalOpen,
-    isNew,
-    editingItem: editingSchedule,
-    setEditingItem: setEditingSchedule,
-    openAddModal,
-    openEditModal,
-    closeModal,
-    handleSave,
-    handleDelete,
-  } = useAdminCRUD<Schedule>({
-    tableName: 'schedules',
-    defaultItem: {
-      title: '',
-      description: '',
-      startDatetime: getDefaultStartDatetime(),
-      endDatetime: null,
-      eventType: 'broadcast',
-      unit: null,
-      isAllDay: false,
-    },
-    orderBy: { column: 'start_datetime', ascending: false },
-    fromDbFormat: (row) => ({
-      id: row.id as number,
-      title: row.title as string,
-      description: (row.description as string) || '',
-      startDatetime: row.start_datetime as string,
-      endDatetime: row.end_datetime as string | null,
-      eventType: row.event_type as EventType,
-      unit: row.unit as 'excel' | 'crew' | null,
-      isAllDay: row.is_all_day as boolean,
-      createdAt: row.created_at as string,
-    }),
-    toDbFormat: (item) => ({
+  const handleEditClick = (item: ScheduleItem) => {
+    // ScheduleEditModal이 기대하는 Schedule 타입으로 변환
+    const schedule: Schedule = {
+      id: item.id,
       title: item.title,
-      description: item.description,
+      description: item.description || null,
       start_datetime: item.startDatetime,
       end_datetime: item.endDatetime,
       event_type: item.eventType,
       unit: item.unit,
       is_all_day: item.isAllDay,
-    }),
-    validate: (item) => {
-      if (!item.title) return '일정 제목을 입력해주세요.'
-      return null
-    },
-    alertHandler,
-  })
+      color: null,
+      location: null,
+      created_by: null,
+      created_at: item.createdAt,
+    }
+    setEditingSchedule(schedule)
+    setIsModalOpen(true)
+  }
+
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+    setEditingSchedule(null)
+  }
+
+  const handleSaved = () => {
+    setIsModalOpen(false)
+    setEditingSchedule(null)
+    fetchSchedules()
+  }
+
+  const handleDeleted = () => {
+    setIsModalOpen(false)
+    setEditingSchedule(null)
+    fetchSchedules()
+  }
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('ko-KR', {
@@ -111,7 +126,7 @@ export default function SchedulesPage() {
     })
   }
 
-  const columns: Column<Schedule>[] = [
+  const columns: Column<ScheduleItem>[] = [
     { key: 'title', header: '제목' },
     {
       key: 'eventType',
@@ -160,7 +175,7 @@ export default function SchedulesPage() {
             <p className={styles.subtitle}>방송/이벤트/공지 일정 관리</p>
           </div>
         </div>
-        <button onClick={openAddModal} className={styles.addButton}>
+        <button onClick={handleAddClick} className={styles.addButton}>
           <Plus size={18} />
           일정 추가
         </button>
@@ -169,142 +184,20 @@ export default function SchedulesPage() {
       <DataTable
         data={schedules}
         columns={columns}
-        onEdit={openEditModal}
-        onDelete={handleDelete}
+        onEdit={handleEditClick}
         searchPlaceholder="일정 제목으로 검색..."
         isLoading={isLoading}
       />
 
-      {/* Modal */}
-      <AnimatePresence>
-        {isModalOpen && editingSchedule && (
-          <motion.div
-            className={styles.modalOverlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeModal}
-          >
-            <motion.div
-              className={styles.modal}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className={styles.modalHeader}>
-                <h2>{isNew ? '일정 추가' : '일정 수정'}</h2>
-                <button onClick={closeModal} className={styles.closeButton}>
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className={styles.modalBody}>
-                <div className={styles.formGroup}>
-                  <label>제목</label>
-                  <input
-                    type="text"
-                    value={editingSchedule.title || ''}
-                    onChange={(e) =>
-                      setEditingSchedule({ ...editingSchedule, title: e.target.value })
-                    }
-                    className={styles.input}
-                    placeholder="일정 제목을 입력하세요"
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>유형</label>
-                  <div className={styles.typeSelector}>
-                    {(['broadcast', 'collab', 'event', 'notice', '休'] as EventType[]).map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setEditingSchedule({ ...editingSchedule, eventType: type })}
-                        className={`${styles.typeButton} ${editingSchedule.eventType === type ? styles.active : ''}`}
-                      >
-                        {eventTypeLabels[type]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>대상</label>
-                  <select
-                    value={editingSchedule.unit || ''}
-                    onChange={(e) =>
-                      setEditingSchedule({
-                        ...editingSchedule,
-                        unit: e.target.value === '' ? null : (e.target.value as 'excel' | 'crew'),
-                      })
-                    }
-                    className={styles.select}
-                  >
-                    <option value="">전체</option>
-                    <option value="excel">엑셀부</option>
-                    <option value="crew">크루부</option>
-                  </select>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>시작 일시</label>
-                    <input
-                      type="datetime-local"
-                      value={editingSchedule.startDatetime?.slice(0, 16) || ''}
-                      onChange={(e) =>
-                        setEditingSchedule({
-                          ...editingSchedule,
-                          startDatetime: new Date(e.target.value).toISOString(),
-                        })
-                      }
-                      className={styles.input}
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={editingSchedule.isAllDay || false}
-                        onChange={(e) =>
-                          setEditingSchedule({ ...editingSchedule, isAllDay: e.target.checked })
-                        }
-                        className={styles.checkbox}
-                      />
-                      <span>종일</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>설명 (선택)</label>
-                  <textarea
-                    value={editingSchedule.description || ''}
-                    onChange={(e) =>
-                      setEditingSchedule({ ...editingSchedule, description: e.target.value })
-                    }
-                    className={styles.textarea}
-                    placeholder="일정에 대한 추가 설명..."
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.modalFooter}>
-                <button onClick={closeModal} className={styles.cancelButton}>
-                  취소
-                </button>
-                <button onClick={handleSave} className={styles.saveButton}>
-                  <Save size={16} />
-                  {isNew ? '추가' : '저장'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ScheduleEditModal 사용 */}
+      <ScheduleEditModal
+        isOpen={isModalOpen}
+        event={editingSchedule}
+        defaultDate={null}
+        onClose={handleModalClose}
+        onSaved={handleSaved}
+        onDeleted={handleDeleted}
+      />
     </div>
   )
 }
