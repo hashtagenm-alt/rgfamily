@@ -35,7 +35,7 @@ function WriteNoticeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = useSupabaseContext()
-  const { isAuthenticated, isAdmin, isLoading: authLoading } = useAuthContext()
+  const { isAuthenticated, isModerator, isLoading: authLoading } = useAuthContext()
 
   // 수정 모드인지 확인
   const editId = searchParams.get('id')
@@ -219,8 +219,8 @@ function WriteNoticeContent() {
     )
   }
 
-  // 관리자가 아닌 경우
-  if (!isAdmin()) {
+  // 관리자/운영자가 아닌 경우
+  if (!isModerator()) {
     return (
       <PageLayout>
         <div className={styles.main}>
@@ -229,7 +229,7 @@ function WriteNoticeContent() {
             <div className={styles.authRequired}>
               <ShieldAlert size={48} />
               <h2>접근 권한이 없습니다</h2>
-              <p>공지사항 작성은 관리자만 가능합니다.</p>
+              <p>공지사항 작성은 운영진만 가능합니다.</p>
               <div className={styles.authButtons}>
                 <Link href="/notice" className={styles.loginBtn}>
                   공지사항 목록으로
