@@ -3,7 +3,13 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getVideoStatus, deleteVideo } from '@/lib/cloudflare'
 
-async function getAuthenticatedAdmin() {
+interface AuthResult {
+  user: { id: string } | null
+  isAdmin: boolean
+  isBjMember: boolean
+}
+
+async function getAuthenticatedUser(): Promise<AuthResult> {
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,28 +30,39 @@ async function getAuthenticatedAdmin() {
   )
 
   const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) return null
+  if (error || !user) return { user: null, isAdmin: false, isBjMember: false }
 
+  // 관리자 여부 확인
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) return null
+  const isAdmin = profile && ['admin', 'superadmin'].includes(profile.role)
 
-  return user
+  // BJ 멤버 여부 확인
+  const { data: orgData } = await supabase
+    .from('organization')
+    .select('id')
+    .eq('profile_id', user.id)
+    .eq('is_active', true)
+    .single()
+
+  const isBjMember = !!orgData
+
+  return { user, isAdmin: !!isAdmin, isBjMember }
 }
 
-/** GET: 영상 처리 상태 조회 */
+/** GET: 영상 처리 상태 조회 (관리자 또는 BJ 멤버) */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const admin = await getAuthenticatedAdmin()
-    if (!admin) {
-      return NextResponse.json({ error: '관리자 권한이 필요합니다' }, { status: 403 })
+    const { user, isAdmin, isBjMember } = await getAuthenticatedUser()
+    if (!user || (!isAdmin && !isBjMember)) {
+      return NextResponse.json({ error: '권한이 없습니다' }, { status: 403 })
     }
 
     const { uid } = await params
@@ -67,15 +84,15 @@ export async function GET(
   }
 }
 
-/** DELETE: 영상 삭제 */
+/** DELETE: 영상 삭제 (관리자 또는 BJ 멤버) */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const admin = await getAuthenticatedAdmin()
-    if (!admin) {
-      return NextResponse.json({ error: '관리자 권한이 필요합니다' }, { status: 403 })
+    const { user, isAdmin, isBjMember } = await getAuthenticatedUser()
+    if (!user || (!isAdmin && !isBjMember)) {
+      return NextResponse.json({ error: '권한이 없습니다' }, { status: 403 })
     }
 
     const { uid } = await params
