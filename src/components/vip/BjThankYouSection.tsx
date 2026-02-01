@@ -47,15 +47,7 @@ export default function BjThankYouSection({
 
   // 어드민이면서 BJ 멤버가 아닌 경우 멤버 목록 fetch
   const isAdminUser = isAdmin()
-
-  // BJ 멤버가 이미 이 VIP에게 메시지를 보냈는지 확인
-  const hasAlreadyPosted = useMemo(() => {
-    if (!bjMemberId) return false
-    return messages.some(m => m.bj_member_id === bjMemberId)
-  }, [bjMemberId, messages])
-
-  // BJ 멤버: 아직 안 올렸으면 가능 / 어드민: 항상 가능 (멤버 선택)
-  const canWrite = (isBjMember && !hasAlreadyPosted) || isAdminUser
+  const canWrite = isBjMember || isAdminUser
 
   useEffect(() => {
     if (isAdminUser && !isBjMember) {
@@ -259,8 +251,8 @@ export default function BjThankYouSection({
             </button>
           )}
 
-          {/* BJ용 작성 버튼 */}
-          {isBjMember && (
+          {/* BJ/어드민용 작성 버튼 */}
+          {canWrite && (
             <button className={styles.writeBtn} onClick={() => setShowForm(true)}>
               <Plus size={16} />
               <span>등록</span>
