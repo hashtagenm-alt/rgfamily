@@ -42,12 +42,12 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // BJ 멤버 확인
+    // BJ 멤버 확인 (organization.profile_id가 auth user.id와 일치하는지)
     const { data: bjMember } = await supabase
       .from('organization')
       .select('id')
-      .eq('user_id', user.id)
-      .eq('is_bj', true)
+      .eq('profile_id', user.id)
+      .eq('is_active', true)
       .single()
 
     const isAdmin = profile && ['admin', 'superadmin'].includes(profile.role)
