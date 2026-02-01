@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon, Cloud } from 'lucide-react'
-import { DataTable, Column } from '@/components/admin'
+import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon, Cloud, Upload, Loader2, Clock } from 'lucide-react'
+import { DataTable, Column, ImageUpload } from '@/components/admin'
+import { Menu, ActionIcon } from '@mantine/core'
 import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
+import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
@@ -25,6 +27,18 @@ interface Media {
   createdAt: string
 }
 
+// Cloudflare 썸네일 시간 옵션 (초 단위)
+const THUMBNAIL_TIME_OPTIONS = [
+  { value: '0s', label: '시작 (0초)' },
+  { value: '5s', label: '5초' },
+  { value: '10s', label: '10초' },
+  { value: '15s', label: '15초' },
+  { value: '30s', label: '30초' },
+  { value: '60s', label: '1분' },
+  { value: '120s', label: '2분' },
+  { value: '300s', label: '5분' },
+]
+
 export default function MediaPage() {
   const supabase = useSupabaseContext()
   const alertHandler = useAlert()
@@ -32,6 +46,11 @@ export default function MediaPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewCloudflareUid, setPreviewCloudflareUid] = useState<string | null>(null)
   const [uploadMode, setUploadMode] = useState<'url' | 'cloudflare'>('cloudflare')
+  const [thumbnailMode, setThumbnailMode] = useState<'auto' | 'upload' | 'time'>('auto')
+  const [selectedThumbnailTime, setSelectedThumbnailTime] = useState('0s')
+  const [thumbnailUploadingId, setThumbnailUploadingId] = useState<number | null>(null)
+  const thumbnailInputRef = useRef<HTMLInputElement>(null)
+  const [thumbnailTargetId, setThumbnailTargetId] = useState<number | null>(null)
 
   const {
     items: allMediaList,
@@ -118,6 +137,106 @@ export default function MediaPage() {
     }
   }
 
+  // 인라인 편집 핸들러
+  const handleInlineEdit = useCallback(async (id: string | number, field: string, value: unknown) => {
+    const dbFieldMap: Record<string, string> = {
+      title: 'title',
+      thumbnailUrl: 'thumbnail_url',
+    }
+    const dbField = dbFieldMap[field] || field
+
+    const { error } = await supabase
+      .from('media_content')
+      .update({ [dbField]: value })
+      .eq('id', id)
+
+    if (error) {
+      console.error('인라인 수정 실패:', error)
+      alertHandler.showError('수정에 실패했습니다.')
+      return
+    }
+
+    alertHandler.showSuccess('수정되었습니다.')
+    refetch()
+  }, [supabase, alertHandler, refetch])
+
+  // 인라인 썸네일 업로드 클릭 핸들러
+  const handleThumbnailClick = (mediaId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setThumbnailTargetId(mediaId)
+    thumbnailInputRef.current?.click()
+  }
+
+  // 인라인 썸네일 파일 업로드 핸들러
+  const handleThumbnailFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !thumbnailTargetId) return
+
+    setThumbnailUploadingId(thumbnailTargetId)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'media-thumbnails')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '업로드 실패')
+      }
+
+      // DB 업데이트
+      const { error } = await supabase
+        .from('media_content')
+        .update({ thumbnail_url: data.url })
+        .eq('id', thumbnailTargetId)
+
+      if (error) {
+        throw new Error('저장 실패')
+      }
+
+      alertHandler.showSuccess('썸네일이 변경되었습니다.')
+      refetch()
+    } catch (err) {
+      alertHandler.showError(err instanceof Error ? err.message : '업로드 실패')
+    } finally {
+      setThumbnailUploadingId(null)
+      setThumbnailTargetId(null)
+      if (thumbnailInputRef.current) {
+        thumbnailInputRef.current.value = ''
+      }
+    }
+  }
+
+  // Cloudflare 썸네일 시간 변경 핸들러
+  const handleCloudflareThumbailTimeChange = async (mediaId: number, cloudflareUid: string, time: string) => {
+    const thumbnailUrl = getStreamThumbnailUrl(cloudflareUid, {
+      time,
+      width: 640,
+      height: 360,
+      fit: 'crop',
+    })
+
+    const { error } = await supabase
+      .from('media_content')
+      .update({ thumbnail_url: thumbnailUrl })
+      .eq('id', mediaId)
+
+    if (error) {
+      console.error('썸네일 시간 변경 실패:', error)
+      alertHandler.showError('변경에 실패했습니다.')
+      return
+    }
+
+    alertHandler.showSuccess(`썸네일이 ${time} 시점으로 변경되었습니다.`)
+    refetch()
+  }
+
   // Convert URL to embed URL (YouTube or Cloudflare)
   const getEmbedUrl = (url: string, cloudflareUid?: string | null) => {
     if (cloudflareUid) {
@@ -165,31 +284,91 @@ export default function MediaPage() {
     {
       key: 'thumbnailUrl',
       header: '썸네일',
-      width: '100px',
+      width: '120px',
       render: (item) => (
-        <div
-          style={{
-            width: '80px',
-            height: '45px',
-            borderRadius: '4px',
-            overflow: 'hidden',
-            background: 'var(--surface)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid var(--card-border)',
-          }}
-        >
-          {item.thumbnailUrl ? (
-            <Image
-              src={item.thumbnailUrl}
-              alt={item.title}
-              width={80}
-              height={45}
-              style={{ objectFit: 'cover' }}
-            />
-          ) : (
-            <ImageIcon size={20} style={{ color: 'var(--text-tertiary)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div
+            onClick={(e) => handleThumbnailClick(item.id, e)}
+            style={{
+              width: '80px',
+              height: '45px',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              background: 'var(--surface)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px dashed transparent',
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--primary)'
+              e.currentTarget.style.opacity = '0.8'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'transparent'
+              e.currentTarget.style.opacity = '1'
+            }}
+            title="클릭하여 썸네일 변경"
+          >
+            {thumbnailUploadingId === item.id ? (
+              <Loader2 size={20} style={{ color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+            ) : item.thumbnailUrl ? (
+              <>
+                <Image
+                  src={item.thumbnailUrl}
+                  alt={item.title}
+                  width={80}
+                  height={45}
+                  style={{ objectFit: 'cover' }}
+                />
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0,
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+                >
+                  <Upload size={16} style={{ color: 'white' }} />
+                </div>
+              </>
+            ) : (
+              <Upload size={20} style={{ color: 'var(--text-tertiary)' }} />
+            )}
+          </div>
+          {/* Cloudflare 영상인 경우 시간 선택 버튼 */}
+          {item.cloudflareUid && (
+            <Menu shadow="md" width={140}>
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  size="sm"
+                  onClick={(e) => e.stopPropagation()}
+                  title="썸네일 시간 선택"
+                >
+                  <Clock size={14} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>썸네일 시점</Menu.Label>
+                {THUMBNAIL_TIME_OPTIONS.map((opt) => (
+                  <Menu.Item
+                    key={opt.value}
+                    onClick={() => handleCloudflareThumbailTimeChange(item.id, item.cloudflareUid!, opt.value)}
+                  >
+                    {opt.label}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
           )}
         </div>
       ),
@@ -197,6 +376,8 @@ export default function MediaPage() {
     {
       key: 'title',
       header: '제목',
+      editable: true,
+      editType: 'text',
       render: (item) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span>{item.title}</span>
@@ -339,8 +520,18 @@ export default function MediaPage() {
         columns={columns}
         onEdit={openEditModal}
         onDelete={handleDelete}
+        onInlineEdit={handleInlineEdit}
         searchPlaceholder="제목으로 검색..."
         isLoading={isLoading}
+      />
+
+      {/* 인라인 썸네일 업로드용 숨김 input */}
+      <input
+        ref={thumbnailInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleThumbnailFileChange}
+        style={{ display: 'none' }}
       />
 
       {/* Modal */}
@@ -476,16 +667,129 @@ export default function MediaPage() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>썸네일 URL (선택)</label>
-                  <input
-                    type="text"
-                    value={editingMedia.thumbnailUrl || ''}
-                    onChange={(e) =>
-                      setEditingMedia({ ...editingMedia, thumbnailUrl: e.target.value })
-                    }
-                    className={styles.input}
-                    placeholder="https://... (Cloudflare 업로드 시 자동 생성)"
-                  />
+                  <label>썸네일</label>
+                  <div className={styles.typeSelector} style={{ marginBottom: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setThumbnailMode('auto')}
+                      className={`${styles.typeButton} ${thumbnailMode === 'auto' ? styles.active : ''}`}
+                    >
+                      자동
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setThumbnailMode('upload')}
+                      className={`${styles.typeButton} ${thumbnailMode === 'upload' ? styles.active : ''}`}
+                    >
+                      이미지 업로드
+                    </button>
+                    {editingMedia.cloudflareUid && (
+                      <button
+                        type="button"
+                        onClick={() => setThumbnailMode('time')}
+                        className={`${styles.typeButton} ${thumbnailMode === 'time' ? styles.active : ''}`}
+                      >
+                        시간 선택
+                      </button>
+                    )}
+                  </div>
+
+                  {thumbnailMode === 'auto' && (
+                    <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>
+                      Cloudflare 업로드 시 자동 생성됩니다.
+                    </p>
+                  )}
+
+                  {thumbnailMode === 'upload' && (
+                    <ImageUpload
+                      value={editingMedia.thumbnailUrl || ''}
+                      onChange={(url) =>
+                        setEditingMedia({ ...editingMedia, thumbnailUrl: url || '' })
+                      }
+                      folder="media-thumbnails"
+                    />
+                  )}
+
+                  {thumbnailMode === 'time' && editingMedia.cloudflareUid && (
+                    <div>
+                      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                        영상에서 썸네일로 사용할 시점을 선택하세요.
+                      </p>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                        {THUMBNAIL_TIME_OPTIONS.map((opt) => {
+                          const thumbUrl = getStreamThumbnailUrl(editingMedia.cloudflareUid!, {
+                            time: opt.value,
+                            width: 160,
+                            height: 90,
+                            fit: 'crop',
+                          })
+                          const isSelected = editingMedia.thumbnailUrl?.includes(`time=${opt.value}`) ||
+                            (opt.value === selectedThumbnailTime && !editingMedia.thumbnailUrl?.includes('time='))
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                const newThumbUrl = getStreamThumbnailUrl(editingMedia.cloudflareUid!, {
+                                  time: opt.value,
+                                  width: 640,
+                                  height: 360,
+                                  fit: 'crop',
+                                })
+                                setEditingMedia({ ...editingMedia, thumbnailUrl: newThumbUrl })
+                                setSelectedThumbnailTime(opt.value)
+                              }}
+                              style={{
+                                padding: 0,
+                                border: isSelected ? '2px solid var(--primary)' : '2px solid var(--card-border)',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                background: 'var(--surface)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              <div style={{ position: 'relative', aspectRatio: '16/9' }}>
+                                <Image
+                                  src={thumbUrl}
+                                  alt={opt.label}
+                                  fill
+                                  style={{ objectFit: 'cover' }}
+                                  unoptimized
+                                />
+                              </div>
+                              <div style={{
+                                padding: '4px',
+                                fontSize: '11px',
+                                fontWeight: isSelected ? 600 : 400,
+                                color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
+                                background: 'var(--card-bg)',
+                              }}>
+                                {opt.label}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 현재 썸네일 미리보기 */}
+                  {editingMedia.thumbnailUrl && thumbnailMode !== 'time' && (
+                    <div style={{ marginTop: '12px' }}>
+                      <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>현재 썸네일:</p>
+                      <div style={{ width: '160px', height: '90px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--card-border)' }}>
+                        <Image
+                          src={editingMedia.thumbnailUrl}
+                          alt="썸네일 미리보기"
+                          width={160}
+                          height={90}
+                          style={{ objectFit: 'cover' }}
+                          unoptimized
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
