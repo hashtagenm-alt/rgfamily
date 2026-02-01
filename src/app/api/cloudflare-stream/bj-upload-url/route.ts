@@ -5,10 +5,10 @@ import { CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN } from '@/lib/cloudflare'
 
 /**
  * BJ 멤버 및 관리자용 영상 업로드 URL 발급 API
- * - BJ 멤버: 감사 메시지 영상 업로드 용도
- * - 관리자: 대리 업로드 용도
+ * - 허용 역할: admin, superadmin, moderator, bj
+ * - 또는 organization 테이블에 연결된 BJ 멤버
  * - 200MB 이상 파일은 TUS 프로토콜 사용
- * @version 2.0.1 - profile_id/is_active 사용으로 수정됨
+ * @version 2.0.2 - moderator/bj 역할 추가
  */
 export async function POST(request: NextRequest) {
   try {
@@ -52,10 +52,12 @@ export async function POST(request: NextRequest) {
       .eq('is_active', true)
       .single()
 
-    const isAdmin = profile && ['admin', 'superadmin'].includes(profile.role)
+    // 업로드 권한 체크: admin, superadmin, moderator, bj 역할 또는 organization 연결된 BJ
+    const allowedRoles = ['admin', 'superadmin', 'moderator', 'bj']
+    const hasRolePermission = profile && allowedRoles.includes(profile.role)
     const isBjMember = !!bjMember
 
-    if (!isAdmin && !isBjMember) {
+    if (!hasRolePermission && !isBjMember) {
       console.error('BJ upload permission denied:', {
         userId: user.id,
         userEmail: user.email,
@@ -64,9 +66,7 @@ export async function POST(request: NextRequest) {
       })
       return NextResponse.json({
         error: 'BJ 멤버 또는 관리자 권한이 필요합니다',
-        // 디버그용: 배포 버전 확인 (임시)
-        _v: '2.0.1',
-        _query: 'profile_id+is_active',
+        _v: '2.0.2',
       }, { status: 403 })
     }
 
