@@ -514,7 +514,7 @@ export default function VipRewardsPage() {
                         )}
                       </label>
                     </div>
-                    <p className={styles.hint}>최대 10MB, JPG/PNG/GIF 지원</p>
+                    <p className={styles.hint}>JPG, PNG, GIF 지원</p>
                   </div>
                 )}
               </div>
