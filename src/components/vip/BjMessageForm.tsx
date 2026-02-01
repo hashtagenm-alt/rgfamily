@@ -423,23 +423,36 @@ export default function BjMessageForm({
               </div>
             </div>
 
-            {/* 어드민 모드: 멤버 선택 드롭다운 */}
+            {/* 어드민 모드: 멤버 선택 버튼 그리드 */}
             {isAdminMode && (
               <div className={styles.memberSelect}>
                 <label className={styles.label}>등록할 멤버 선택</label>
-                <select
-                  value={selectedMemberId || ''}
-                  onChange={(e) => setSelectedMemberId(e.target.value ? Number(e.target.value) : null)}
-                  className={styles.select}
-                  disabled={isSubmitting || isUploading}
-                >
-                  <option value="">멤버를 선택하세요</option>
+                <div className={styles.memberGrid}>
                   {bjMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name}
-                    </option>
+                    <button
+                      key={member.id}
+                      type="button"
+                      className={`${styles.memberBtn} ${selectedMemberId === member.id ? styles.memberBtnActive : ''}`}
+                      onClick={() => setSelectedMemberId(member.id)}
+                      disabled={isSubmitting || isUploading}
+                    >
+                      {member.imageUrl ? (
+                        <Image
+                          src={member.imageUrl}
+                          alt={member.name}
+                          width={28}
+                          height={28}
+                          className={styles.memberBtnAvatar}
+                        />
+                      ) : (
+                        <div className={styles.memberBtnAvatarPlaceholder}>
+                          {member.name.charAt(0)}
+                        </div>
+                      )}
+                      <span className={styles.memberBtnName}>{member.name}</span>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             )}
 
