@@ -96,11 +96,8 @@ export default function VOD() {
   const getThumbnail = (item: MediaContent) => {
     if (item.thumbnail_url) return item.thumbnail_url;
     if (item.cloudflare_uid) {
-      return getStreamThumbnailUrl(item.cloudflare_uid, {
-        width: 560,
-        height: 315,
-        fit: "crop",
-      });
+      // 인코딩 중에도 기본 썸네일이 표시되도록 파라미터 없이 사용
+      return getStreamThumbnailUrl(item.cloudflare_uid);
     }
     const youtubeMatch = item.video_url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/
