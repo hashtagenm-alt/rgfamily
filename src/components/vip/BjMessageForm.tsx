@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ImageIcon, Video, Send, Loader2, Globe, Lock, Upload, Trash2, Link as LinkIcon, Film } from 'lucide-react'
+import * as tus from 'tus-js-client'
 import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import styles from './BjMessageForm.module.css'
 
@@ -170,11 +171,11 @@ export default function BjMessageForm({
     setVideoProcessingStatus('uploading')
 
     try {
-      // 1. Direct Upload URL 발급
+      // 1. Direct Upload URL 발급 (파일 크기 전달)
       const urlRes = await fetch('/api/cloudflare-stream/bj-upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: file.name }),
+        body: JSON.stringify({ title: file.name, fileSize: file.size }),
       })
 
       if (!urlRes.ok) {
@@ -182,59 +183,101 @@ export default function BjMessageForm({
         throw new Error(err.error || '업로드 URL 발급 실패')
       }
 
-      const { uploadURL, uid } = await urlRes.json()
+      const uploadData = await urlRes.json()
+      let videoUid: string
 
-      // 2. Cloudflare에 직접 업로드 (XHR로 진행률 추적)
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        const formData = new FormData()
-        formData.append('file', file)
+      if (uploadData.useTus) {
+        // TUS 프로토콜 업로드 (200MB 이상)
+        videoUid = await new Promise<string>((resolve, reject) => {
+          const upload = new tus.Upload(file, {
+            endpoint: uploadData.uploadURL,
+            headers: uploadData.tusHeaders,
+            chunkSize: 50 * 1024 * 1024, // 50MB 청크
+            retryDelays: [0, 1000, 3000, 5000],
+            metadata: {
+              name: file.name,
+              filetype: file.type,
+              maxDurationSeconds: String(uploadData.maxDurationSeconds),
+              ...uploadData.meta,
+            },
+            onError: (error) => {
+              console.error('TUS upload error:', error)
+              reject(new Error(error.message || '업로드 실패'))
+            },
+            onProgress: (bytesUploaded, bytesTotal) => {
+              const pct = Math.round((bytesUploaded / bytesTotal) * 100)
+              setUploadProgress(pct)
+            },
+            onSuccess: () => {
+              // TUS 업로드 완료 시 URL에서 UID 추출
+              const uploadUrl = upload.url
+              if (uploadUrl) {
+                // URL 형식: https://api.cloudflare.com/.../stream/{uid}
+                const uid = uploadUrl.split('/').pop() || ''
+                resolve(uid)
+              } else {
+                reject(new Error('업로드 UID를 찾을 수 없습니다'))
+              }
+            },
+          })
 
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            const pct = Math.round((e.loaded / e.total) * 100)
-            setUploadProgress(pct)
-          }
+          upload.start()
         })
+      } else {
+        // 기본 업로드 (200MB 미만)
+        videoUid = uploadData.uid
 
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve()
-          } else {
-            reject(new Error(`업로드 실패 (${xhr.status})`))
-          }
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          const formData = new FormData()
+          formData.append('file', file)
+
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 100)
+              setUploadProgress(pct)
+            }
+          })
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve()
+            } else {
+              reject(new Error(`업로드 실패 (${xhr.status})`))
+            }
+          })
+
+          xhr.addEventListener('error', () => reject(new Error('네트워크 오류')))
+          xhr.addEventListener('abort', () => reject(new Error('업로드 취소')))
+
+          xhr.open('POST', uploadData.uploadURL)
+          xhr.send(formData)
         })
+      }
 
-        xhr.addEventListener('error', () => reject(new Error('네트워크 오류')))
-        xhr.addEventListener('abort', () => reject(new Error('업로드 취소')))
-
-        xhr.open('POST', uploadURL)
-        xhr.send(formData)
-      })
-
-      // 3. 처리 상태 폴링
+      // 처리 상태 폴링
       setVideoProcessingStatus('processing')
       setUploadProgress(100)
 
-      const maxAttempts = 60 // 최대 5분 (5초 간격)
+      const maxAttempts = 120 // 최대 10분 (5초 간격) - 큰 파일 대비
       let attempts = 0
 
       while (attempts < maxAttempts) {
         await new Promise((resolve) => setTimeout(resolve, 5000))
         attempts++
 
-        const res = await fetch(`/api/cloudflare-stream/${uid}`)
+        const res = await fetch(`/api/cloudflare-stream/${videoUid}`)
         if (!res.ok) continue
 
         const data = await res.json()
 
         if (data.status?.state === 'ready') {
           // 업로드 완료
-          setCloudflareUid(uid)
-          const thumbnailUrl = getStreamThumbnailUrl(uid, { width: 320, height: 180, fit: 'crop' })
+          setCloudflareUid(videoUid)
+          const thumbnailUrl = getStreamThumbnailUrl(videoUid, { width: 320, height: 180, fit: 'crop' })
           setPreviewUrl(thumbnailUrl)
           // Cloudflare Stream URL 형식으로 저장
-          setContentUrl(`cloudflare:${uid}`)
+          setContentUrl(`cloudflare:${videoUid}`)
           setVideoProcessingStatus('done')
           break
         }
