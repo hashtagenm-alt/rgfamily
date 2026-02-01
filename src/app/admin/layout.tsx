@@ -24,8 +24,8 @@ export default function AdminLayout({
       return
     }
 
-    // 관리자 권한 체크
-    const allowedRoles = ['superadmin', 'admin', 'moderator']
+    // 관리자 권한 체크 (BJ도 미디어 업로드 등 일부 기능 접근 가능)
+    const allowedRoles = ['superadmin', 'admin', 'moderator', 'bj']
     if (!profile || !allowedRoles.includes(profile.role)) {
       router.push('/')
       return
