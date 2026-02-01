@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { MessageSquare, ImageIcon, Video, Play, ExternalLink, Lock, Crown, Sparkles } from 'lucide-react'
+import { MessageSquare, ImageIcon, Video, Play, ExternalLink, Lock, Crown, Sparkles, Pencil, Trash2 } from 'lucide-react'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
 import { getYouTubeThumbnail } from '@/lib/utils/youtube'
 import { getStreamThumbnailUrl } from '@/lib/cloudflare'
@@ -12,9 +12,12 @@ import styles from './BjMessageCard.module.css'
 interface BjMessageCardProps {
   message: BjMessageWithMember
   onClick?: () => void
+  canEdit?: boolean
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
-export default function BjMessageCard({ message, onClick }: BjMessageCardProps) {
+export default function BjMessageCard({ message, onClick, canEdit, onEdit, onDelete }: BjMessageCardProps) {
   const [imageError, setImageError] = useState(false)
 
   // 비공개 콘텐츠 열람 불가 여부
@@ -174,12 +177,43 @@ export default function BjMessageCard({ message, onClick }: BjMessageCardProps) 
             <span className={styles.messageDate}>{formatDate(message.created_at)}</span>
           </div>
         </div>
-        {/* 비공개 배지만 표시 */}
-        {message.is_private_for_viewer && (
-          <span className={styles.privateBadge} title="비공개 메시지">
-            <Lock size={12} />
-          </span>
-        )}
+        <div className={styles.headerActions}>
+          {/* 비공개 배지 */}
+          {message.is_private_for_viewer && (
+            <span className={styles.privateBadge} title="비공개 메시지">
+              <Lock size={12} />
+            </span>
+          )}
+          {/* 수정/삭제 버튼 */}
+          {canEdit && (
+            <div className={styles.editActions}>
+              {onEdit && (
+                <button
+                  className={styles.editBtn}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEdit()
+                  }}
+                  title="수정"
+                >
+                  <Pencil size={14} />
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  className={styles.deleteBtn}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete()
+                  }}
+                  title="삭제"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 미디어 콘텐츠 */}
