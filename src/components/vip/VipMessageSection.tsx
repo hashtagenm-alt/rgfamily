@@ -43,7 +43,7 @@ export default function VipMessageSection({
   const isOwner = profile?.id === vipProfileId
 
   const handleSubmitMessage = async (data: {
-    messageType: 'text' | 'image' | 'video'
+    messageType: 'image' | 'video'
     contentText?: string
     contentUrl?: string
     isPublic?: boolean

@@ -78,6 +78,7 @@ export function useBjMessages(vipProfileId: string): UseBjMessagesResult {
 
       const result = await createBjMessage({
         vipProfileId: params.vipProfileId,
+        bjMemberId: params.bjMemberId,
         messageType: params.messageType,
         contentText: params.contentText,
         contentUrl: params.contentUrl,

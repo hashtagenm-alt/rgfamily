@@ -108,33 +108,75 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.select {
-  width: 100%;
-  padding: 14px 18px;
+.memberGrid {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.memberBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  color: #fff;
-  font-size: 15px;
-  transition: all 0.2s;
+  border: 2px solid transparent;
+  border-radius: 10px;
   cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3e%3c/path%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 16px;
-  padding-right: 48px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  min-width: 60px;
 }
 
-.select:focus {
-  outline: none;
-  border-color: rgba(212, 175, 55, 0.5);
-  background-color: rgba(255, 255, 255, 0.08);
+.memberBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
-.select option {
-  background: #1a1a1a;
-  color: #fff;
+.memberBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.memberBtnActive {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: #d4af37;
+}
+
+.memberBtnAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.memberBtnAvatarPlaceholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37, #f5d77a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.memberBtnName {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.memberBtnActive .memberBtnName {
+  color: #d4af37;
+  font-weight: 500;
 }
 
 .typeBadgeSmall {
@@ -626,6 +668,29 @@
 
 :global([data-theme="light"]) .label {
   color: rgba(0, 0, 0, 0.8);
+}
+
+:global([data-theme="light"]) .memberBtn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: transparent;
+}
+
+:global([data-theme="light"]) .memberBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+:global([data-theme="light"]) .memberBtnActive {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: #d4af37;
+}
+
+:global([data-theme="light"]) .memberBtnName {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+:global([data-theme="light"]) .memberBtnActive .memberBtnName {
+  color: #b8960c;
 }
 
 :global([data-theme="light"]) .input,
