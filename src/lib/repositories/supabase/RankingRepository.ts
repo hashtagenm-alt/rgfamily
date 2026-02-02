@@ -17,13 +17,14 @@ export class SupabaseRankingRepository implements IRankingRepository {
   }): Promise<RankingItem[]> {
     const { seasonId, unitFilter } = options
 
-    // 시즌 ID가 있으면 season_rankings_public View에서 조회 (보안: total_amount 미노출)
+    // 시즌 ID가 있으면 season_rankings_public View에서 조회
+    // View에 profile_id, avatar_url, is_vip_clickable 포함 (추가 쿼리 불필요)
     if (seasonId) {
       // unit 필터가 있으면 DB 레벨에서 필터링
       const { data, error } = await withRetry(async () => {
         let query = this.supabase
           .from('season_rankings_public')
-          .select('rank, donor_name, gauge_percent, donation_count, unit, avatar_url')
+          .select('rank, donor_name, gauge_percent, donation_count, unit, profile_id, avatar_url, is_vip_clickable')
           .eq('season_id', seasonId)
 
         // unit 필터 적용 (DB 레벨)
@@ -35,20 +36,6 @@ export class SupabaseRankingRepository implements IRankingRepository {
       })
 
       if (error) throw error
-
-      // 닉네임으로 프로필 정보 조회 (아바타용)
-      const donorNames = (data || []).map(d => d.donor_name)
-      const { data: profilesData } = await this.supabase
-        .from('profiles')
-        .select('id, nickname, avatar_url')
-        .in('nickname', donorNames)
-
-      const nicknameToProfile: Record<string, { id: string; avatar_url: string | null }> = {}
-      ;(profilesData || []).forEach(p => {
-        if (p.nickname) {
-          nicknameToProfile[p.nickname] = { id: p.id, avatar_url: p.avatar_url }
-        }
-      })
 
       // 종합 랭킹도 가져오기 (듀얼 랭킹 표시용)
       const { data: totalRankingsData } = await this.supabase
@@ -74,42 +61,29 @@ export class SupabaseRankingRepository implements IRankingRepository {
       })
 
       return uniqueData.map((item) => ({
-        donorId: nicknameToProfile[item.donor_name]?.id || null,
+        donorId: item.profile_id || null,
         donorName: item.donor_name,
-        // 프로필 아바타 우선, 없으면 랭킹 테이블의 avatar_url 사용
-        avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || item.avatar_url || null,
+        avatarUrl: item.avatar_url || null,
         totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
         rank: item.rank, // DB에서 가져온 rank 사용 (필터 시에도 원래 순위 유지)
         seasonId,
         seasonRank: item.rank, // 시즌 랭킹 페이지이므로 rank = seasonRank
         totalRank: totalRankingsMap[item.donor_name.trim()] || undefined, // 종합 랭킹
+        hasVipRewards: item.is_vip_clickable || false, // View에서 직접 가져온 VIP 클릭 가능 여부
       }))
     }
 
-    // 시즌 ID가 없으면 total_rankings_public View에서 조회 (보안: total_amount 미노출)
+    // 시즌 ID가 없으면 total_rankings_public View에서 조회
+    // View에 profile_id, avatar_url, is_vip_clickable 포함 (추가 쿼리 불필요)
     const { data, error } = await withRetry(async () => {
       return this.supabase
         .from('total_rankings_public')
-        .select('rank, donor_name, gauge_percent, avatar_url')
+        .select('rank, donor_name, gauge_percent, profile_id, avatar_url, is_vip_clickable')
         .order('rank', { ascending: true })
         .limit(50)
     })
 
     if (error) throw error
-
-    // 닉네임으로 프로필 정보 조회 (아바타용)
-    const donorNames = (data || []).map(d => d.donor_name)
-    const { data: profilesData } = await this.supabase
-      .from('profiles')
-      .select('id, nickname, avatar_url')
-      .in('nickname', donorNames)
-
-    const nicknameToProfile: Record<string, { id: string; avatar_url: string | null }> = {}
-    ;(profilesData || []).forEach(p => {
-      if (p.nickname) {
-        nicknameToProfile[p.nickname] = { id: p.id, avatar_url: p.avatar_url }
-      }
-    })
 
     // 중복 제거: 같은 donor_name이 여러 번 나오면 첫 번째만 유지
     const seenDonors = new Set<string>()
@@ -123,13 +97,13 @@ export class SupabaseRankingRepository implements IRankingRepository {
     })
 
     return uniqueData.map((item) => ({
-      donorId: nicknameToProfile[item.donor_name]?.id || null,
+      donorId: item.profile_id || null,
       donorName: item.donor_name,
-      // 프로필 아바타 우선, 없으면 랭킹 테이블의 avatar_url 사용
-      avatarUrl: nicknameToProfile[item.donor_name]?.avatar_url || item.avatar_url || null,
+      avatarUrl: item.avatar_url || null,
       totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
       rank: item.rank,
       seasonId: undefined,
+      hasVipRewards: item.is_vip_clickable || false, // View에서 직접 가져온 VIP 클릭 가능 여부
     }))
   }
 
