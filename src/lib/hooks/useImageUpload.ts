@@ -22,9 +22,13 @@ interface UseImageUploadReturn {
 
 const DEFAULT_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
+// 4MB 이하는 서버 경유, 그 이상은 presigned URL 직접 업로드
+const DIRECT_UPLOAD_THRESHOLD = 4 * 1024 * 1024
+
 /**
  * 이미지 업로드 훅
- * 서버 API를 통해 Cloudflare R2로 업로드 (용량 제한 없음)
+ * - 4MB 이하: 서버 API를 통해 R2 업로드
+ * - 4MB 초과: Presigned URL로 R2에 직접 업로드 (Vercel 제한 우회)
  *
  * @example
  * const { uploadImage, isUploading, error } = useImageUpload({
@@ -48,6 +52,58 @@ export function useImageUpload(options: UseImageUploadOptions): UseImageUploadRe
     setError(null)
   }, [])
 
+  // 큰 파일: Presigned URL로 직접 업로드
+  const uploadWithPresignedUrl = async (file: File): Promise<string | null> => {
+    // 1. Presigned URL 발급
+    const params = new URLSearchParams({
+      folder,
+      filename: file.name,
+      contentType: file.type,
+    })
+
+    const urlResponse = await fetch(`/api/upload?${params}`)
+    const urlResult = await urlResponse.json()
+
+    if (!urlResponse.ok) {
+      throw new Error(urlResult.error || 'Presigned URL 발급 실패')
+    }
+
+    // 2. R2에 직접 업로드
+    const uploadResponse = await fetch(urlResult.uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    })
+
+    if (!uploadResponse.ok) {
+      throw new Error('R2 직접 업로드 실패')
+    }
+
+    return urlResult.publicUrl
+  }
+
+  // 작은 파일: 서버 경유 업로드
+  const uploadThroughServer = async (file: File): Promise<string | null> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folder', folder)
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || '이미지 업로드에 실패했습니다.')
+    }
+
+    return result.url
+  }
+
   const uploadImage = useCallback(async (file: File): Promise<string | null> => {
     setError(null)
     setIsUploading(true)
@@ -62,31 +118,17 @@ export function useImageUpload(options: UseImageUploadOptions): UseImageUploadRe
         return null
       }
 
-      // 서버 API를 통해 R2에 업로드
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', folder)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        const message = result.error || '이미지 업로드에 실패했습니다.'
-        console.error('R2 업로드 실패:', result)
-        setError(message)
-        onError?.(message)
-        return null
+      // 파일 크기에 따라 업로드 방식 선택
+      if (file.size > DIRECT_UPLOAD_THRESHOLD) {
+        // 4MB 초과: Presigned URL로 직접 업로드
+        return await uploadWithPresignedUrl(file)
+      } else {
+        // 4MB 이하: 서버 경유 업로드
+        return await uploadThroughServer(file)
       }
-
-      // R2 URL 반환
-      return result.url
     } catch (err) {
       console.error('이미지 업로드 오류:', err)
-      const message = '이미지 업로드 중 오류가 발생했습니다.'
+      const message = err instanceof Error ? err.message : '이미지 업로드 중 오류가 발생했습니다.'
       setError(message)
       onError?.(message)
       return null
