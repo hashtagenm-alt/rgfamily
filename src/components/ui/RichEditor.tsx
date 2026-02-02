@@ -3,7 +3,7 @@
 import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
+import ImageResize from 'tiptap-extension-resize-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
@@ -102,6 +102,14 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
   const handleImageUpload = useCallback(async () => {
     if (!onImageUpload || !editor) return
 
+    // 파일 선택 전에 현재 정렬 상태 저장 (포커스 잃기 전)
+    let align = 'left'
+    if (editor.isActive({ textAlign: 'center' })) {
+      align = 'center'
+    } else if (editor.isActive({ textAlign: 'right' })) {
+      align = 'right'
+    }
+
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
@@ -111,23 +119,17 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
 
       const url = await onImageUpload(file)
       if (url) {
-        // 현재 텍스트 정렬 상태 확인
-        let align = 'left'
-        if (editor.isActive({ textAlign: 'center' })) {
-          align = 'center'
-        } else if (editor.isActive({ textAlign: 'right' })) {
-          align = 'right'
+        // 이미지에 직접 스타일 적용
+        if (align === 'center') {
+          const html = `<img src="${url}" style="display: block; margin: 1em auto; max-width: 100%; border-radius: 6px;" /><p></p>`
+          editor.chain().focus().insertContent(html).run()
+        } else if (align === 'right') {
+          const html = `<img src="${url}" style="display: block; margin: 1em 0 1em auto; max-width: 100%; border-radius: 6px;" /><p></p>`
+          editor.chain().focus().insertContent(html).run()
+        } else {
+          // 기본 왼쪽 정렬은 그냥 이미지 삽입 (리사이즈 가능)
+          editor.chain().focus().setImage({ src: url }).run()
         }
-
-        // 정렬이 적용된 figure 태그로 감싸서 삽입
-        const figureStyle = align === 'center'
-          ? 'text-align: center; margin: 1em 0;'
-          : align === 'right'
-            ? 'text-align: right; margin: 1em 0;'
-            : 'margin: 1em 0;'
-
-        const html = `<figure style="${figureStyle}"><img src="${url}" class="${styles.editorImage}" style="display: inline-block; max-width: 100%;" /></figure><p></p>`
-        editor.chain().focus().insertContent(html).run()
       }
     }
     input.click()
@@ -357,11 +359,10 @@ export default function RichEditor({
           class: styles.editorLink,
         },
       }),
-      Image.configure({
+      ImageResize.configure({
         HTMLAttributes: {
           class: styles.editorImage,
         },
-        inline: false,
       }),
       Placeholder.configure({
         placeholder,
