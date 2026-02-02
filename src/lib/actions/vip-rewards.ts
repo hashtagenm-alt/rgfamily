@@ -307,11 +307,29 @@ export interface VipProfileData {
  *
  * 왜? VIP 시그니처 이미지는 누구나 볼 수 있어야 함.
  * BJ 감사 콘텐츠는 별도 API에서 권한 제어함.
+ *
+ * 변경 이력:
+ * - 2026-02-03: vip_clickable_profiles View 체크 추가
+ *   시그니처 자격자(11명)만 VIP 개인페이지 접근 가능
  */
 export async function getVipProfileData(
   profileId: string
 ): Promise<ActionResult<VipProfileData | null>> {
   return publicAction(async (supabase) => {
+    // 1단계: VIP 클릭 자격 확인 (signature_eligibility 기반)
+    // vip_clickable_profiles View에 없으면 VIP 페이지 접근 불가
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: vipEligible, error: eligibleError } = await (supabase as any)
+      .from('vip_clickable_profiles')
+      .select('profile_id')
+      .eq('profile_id', profileId)
+      .maybeSingle()
+
+    // VIP 자격이 없으면 null 반환 (404 처리됨)
+    if (eligibleError || !vipEligible) {
+      return null
+    }
+
     // VIP reward 조회
     const { data: reward, error: rewardError } = await supabase
       .from('vip_rewards')
