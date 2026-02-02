@@ -242,7 +242,7 @@
   text-decoration: none;
 }
 
-/* Images */
+/* Images - Resizable */
 .content :global(.tiptap img),
 .editorImage {
   max-width: 100%;
@@ -250,25 +250,21 @@
   border-radius: 6px;
 }
 
-/* Figure for image alignment */
-.content :global(.tiptap figure) {
-  margin: 1em 0;
-}
-
-.content :global(.tiptap figure img) {
-  display: inline-block;
-  max-width: 100%;
-  height: auto;
-  border-radius: 6px;
-}
-
-/* Figure alignment via text-align */
-.content :global(.tiptap figure[style*="text-align: center"]) {
+/* Image alignment wrapper divs */
+.content :global(.tiptap div[style*="text-align: center"]) {
   text-align: center;
 }
 
-.content :global(.tiptap figure[style*="text-align: right"]) {
+.content :global(.tiptap div[style*="text-align: center"]) img {
+  display: inline-block;
+}
+
+.content :global(.tiptap div[style*="text-align: right"]) {
   text-align: right;
+}
+
+.content :global(.tiptap div[style*="text-align: right"]) img {
+  display: inline-block;
 }
 
 /* Video wrapper - 16:9 responsive */
