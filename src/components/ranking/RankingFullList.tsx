@@ -118,8 +118,8 @@ export default function RankingFullList({
           </motion.div>
         );
 
-        // VIP 페이지가 있는 경우 (포디움 달성자) 클릭 가능
-        const hasVipPage = item.donorId && podiumProfileIds.includes(item.donorId);
+        // VIP 페이지가 있는 경우 (avatar_url이 있는 유저만 클릭 가능)
+        const hasVipPage = item.donorId && item.avatarUrl;
 
         if (hasVipPage) {
           return (
