@@ -255,7 +255,26 @@
   max-width: 100%;
   height: auto;
   border-radius: 6px;
-  margin: 0.5rem 0;
+}
+
+/* Figure for image alignment */
+.content figure {
+  margin: 1rem 0;
+}
+
+.content figure img {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.content figure[style*="text-align: center"] {
+  text-align: center;
+}
+
+.content figure[style*="text-align: right"] {
+  text-align: right;
 }
 
 .content strong {

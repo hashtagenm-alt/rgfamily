@@ -3,7 +3,7 @@
 import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
-import ImageResize from 'tiptap-extension-resize-image'
+import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
@@ -100,7 +100,7 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
   }, [editor])
 
   const handleImageUpload = useCallback(async () => {
-    if (!onImageUpload) return
+    if (!onImageUpload || !editor) return
 
     const input = document.createElement('input')
     input.type = 'file'
@@ -111,7 +111,23 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
 
       const url = await onImageUpload(file)
       if (url) {
-        editor?.chain().focus().setImage({ src: url }).run()
+        // 현재 텍스트 정렬 상태 확인
+        let align = 'left'
+        if (editor.isActive({ textAlign: 'center' })) {
+          align = 'center'
+        } else if (editor.isActive({ textAlign: 'right' })) {
+          align = 'right'
+        }
+
+        // 정렬이 적용된 figure 태그로 감싸서 삽입
+        const figureStyle = align === 'center'
+          ? 'text-align: center; margin: 1em 0;'
+          : align === 'right'
+            ? 'text-align: right; margin: 1em 0;'
+            : 'margin: 1em 0;'
+
+        const html = `<figure style="${figureStyle}"><img src="${url}" class="${styles.editorImage}" style="display: inline-block; max-width: 100%;" /></figure><p></p>`
+        editor.chain().focus().insertContent(html).run()
       }
     }
     input.click()
@@ -341,10 +357,11 @@ export default function RichEditor({
           class: styles.editorLink,
         },
       }),
-      ImageResize.configure({
+      Image.configure({
         HTMLAttributes: {
           class: styles.editorImage,
         },
+        inline: false,
       }),
       Placeholder.configure({
         placeholder,
