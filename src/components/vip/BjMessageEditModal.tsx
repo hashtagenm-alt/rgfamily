@@ -3,8 +3,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MessageSquare, ImageIcon, Video, Save, Loader2, Globe, Lock, Upload, Trash2 } from 'lucide-react'
+import { X, MessageSquare, ImageIcon, Video, Save, Loader2, Globe, Lock, Upload, Trash2, Film } from 'lucide-react'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
+import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import styles from './BjMessageForm.module.css'
 
 interface BjMessageEditModalProps {
@@ -135,12 +136,17 @@ export default function BjMessageEditModal({
         return false
       }
 
+      // Cloudflare Stream URL은 허용
+      if (contentUrl.startsWith('cloudflare:')) {
+        return true
+      }
+
       try {
         const parsedUrl = new URL(contentUrl)
         const isYouTube = parsedUrl.hostname.includes('youtube.com') || parsedUrl.hostname.includes('youtu.be')
 
         if (!isYouTube) {
-          setError('영상은 YouTube 링크만 지원합니다.')
+          setError('영상은 YouTube 링크 또는 Cloudflare 업로드만 지원합니다.')
           return false
         }
       } catch {
@@ -347,18 +353,44 @@ export default function BjMessageEditModal({
               {message.message_type === 'video' && (
                 <>
                   <div className={styles.inputGroup}>
-                    <label className={styles.label}>영상 URL</label>
-                    <input
-                      type="url"
-                      className={styles.input}
-                      placeholder="https://youtube.com/watch?v=... 또는 https://youtu.be/..."
-                      value={contentUrl}
-                      onChange={(e) => setContentUrl(e.target.value)}
-                      disabled={isSubmitting || isUploading}
-                    />
-                    <span className={styles.hint}>
-                      YouTube 영상 링크만 지원합니다
-                    </span>
+                    <label className={styles.label}>영상</label>
+                    {contentUrl.startsWith('cloudflare:') ? (
+                      // Cloudflare Stream 영상 미리보기
+                      <div className={styles.videoPreviewWrapper}>
+                        <div className={styles.videoThumbnail}>
+                          <Image
+                            src={getStreamThumbnailUrl(contentUrl.replace('cloudflare:', ''), { width: 400, height: 225, fit: 'crop' })}
+                            alt="영상 썸네일"
+                            width={400}
+                            height={225}
+                            className={styles.imagePreview}
+                            style={{ objectFit: 'cover' }}
+                          />
+                          <div className={styles.videoOverlay}>
+                            <Film size={32} />
+                            <span>Cloudflare Stream 영상</span>
+                          </div>
+                        </div>
+                        <p className={styles.videoNote}>
+                          영상은 수정할 수 없습니다. 텍스트와 공개 설정만 변경 가능합니다.
+                        </p>
+                      </div>
+                    ) : (
+                      // YouTube URL 입력
+                      <>
+                        <input
+                          type="url"
+                          className={styles.input}
+                          placeholder="https://youtube.com/watch?v=... 또는 https://youtu.be/..."
+                          value={contentUrl}
+                          onChange={(e) => setContentUrl(e.target.value)}
+                          disabled={isSubmitting || isUploading}
+                        />
+                        <span className={styles.hint}>
+                          YouTube 영상 링크만 지원합니다
+                        </span>
+                      </>
+                    )}
                   </div>
                   <div className={styles.inputGroup}>
                     <label className={styles.label}>함께 전할 메시지 (선택)</label>
