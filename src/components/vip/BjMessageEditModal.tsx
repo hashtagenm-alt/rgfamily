@@ -359,12 +359,13 @@ export default function BjMessageEditModal({
                       <div className={styles.videoPreviewWrapper}>
                         <div className={styles.videoThumbnail}>
                           <Image
-                            src={getStreamThumbnailUrl(contentUrl.replace('cloudflare:', ''), { width: 400, height: 225, fit: 'crop' })}
+                            src={getStreamThumbnailUrl(contentUrl.replace('cloudflare:', ''), { time: '0s', width: 400, height: 225, fit: 'crop' })}
                             alt="영상 썸네일"
                             width={400}
                             height={225}
                             className={styles.imagePreview}
                             style={{ objectFit: 'cover' }}
+                            unoptimized
                           />
                           <div className={styles.videoOverlay}>
                             <Film size={32} />
