@@ -29,11 +29,45 @@ export function plainTextToHTML(text: string): string {
 }
 
 /**
+ * ImageResize 확장의 containerstyle을 실제 style로 변환
+ * containerstyle="margin: 0px auto;" → style="margin: 0px auto; display: block;"
+ */
+function convertImageResizeStyles(html: string): string {
+  if (!html) return ''
+
+  // containerstyle 속성을 style로 변환
+  return html.replace(
+    /<img([^>]*?)containerstyle="([^"]*)"([^>]*?)>/gi,
+    (match, before, containerStyle, after) => {
+      // 기존 style 속성이 있는지 확인
+      const existingStyleMatch = (before + after).match(/style="([^"]*)"/i)
+      const existingStyle = existingStyleMatch ? existingStyleMatch[1] : ''
+
+      // containerstyle에서 margin 추출
+      const styles = [
+        'display: block',
+        containerStyle,
+        existingStyle,
+      ].filter(Boolean).join('; ')
+
+      // style 속성 제거하고 새로운 style 추가
+      const cleanedBefore = before.replace(/style="[^"]*"/gi, '')
+      const cleanedAfter = after.replace(/style="[^"]*"/gi, '')
+
+      return `<img${cleanedBefore} style="${styles}"${cleanedAfter}>`
+    }
+  ).replace(/wrapperstyle="[^"]*"/gi, '') // wrapperstyle 제거
+}
+
+/**
  * HTML 콘텐츠 sanitize (XSS 방지)
  * 허용된 태그와 속성만 유지
  */
 export function sanitizeHTML(html: string): string {
   if (!html) return ''
+
+  // ImageResize 확장의 containerstyle을 style로 변환
+  const processedHtml = convertImageResizeStyles(html)
 
   // DOMPurify 설정
   const config = {
@@ -58,7 +92,7 @@ export function sanitizeHTML(html: string): string {
     ALLOWED_URI_REGEXP: /^(?:(?:https?:)?\/\/(?:www\.)?youtube\.com\/embed\/|(?:https?:)?\/\/(?:customer-[a-z0-9]+\.)?cloudflarestream\.com\/|(?:https?:)?\/\/)/i,
   }
 
-  return DOMPurify.sanitize(html, config)
+  return DOMPurify.sanitize(processedHtml, config)
 }
 
 /**
