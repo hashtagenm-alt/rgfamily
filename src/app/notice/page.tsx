@@ -35,7 +35,7 @@ function isNew(dateStr: string): boolean {
 
 export default function NoticePage() {
   const noticesRepo = useNotices()
-  const { isAdmin } = useAuthContext()
+  const { isModerator } = useAuthContext()
   const [notices, setNotices] = useState<NoticeItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -217,8 +217,8 @@ export default function NoticePage() {
               </div>
             </div>
 
-            {/* Admin Write Button */}
-            {isAdmin() && (
+            {/* 운영진 글쓰기 버튼 (moderator 이상) */}
+            {isModerator() && (
               <Link href="/notice/write" className={styles.writeBtn}>
                 <PenSquare size={16} />
                 <span>글쓰기</span>
