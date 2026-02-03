@@ -134,19 +134,32 @@ export async function getShorts(options?: {
 /**
  * VOD 목록 조회 (공개)
  * parent_id가 없는 항목만 반환 (대표 항목 또는 단일 영상)
+ *
+ * 변경 이력:
+ * - 2026-02-03: sortBy 옵션 추가 (title_asc로 회차 오름차순 정렬 지원)
  */
 export async function getVODs(options?: {
   unit?: 'excel' | 'crew'
   featured?: boolean
   limit?: number
+  sortBy?: 'created_at_desc' | 'title_asc'
 }): Promise<ActionResult<MediaContent[]>> {
   return publicAction(async (supabase) => {
+    // 기본 정렬: title_asc (회차 오름차순)
+    const sortBy = options?.sortBy || 'title_asc'
+
     let query = supabase
       .from('media_content')
       .select('*')
       .eq('content_type', 'vod')
       .is('parent_id', null)  // 대표 항목만 (파트 1 또는 단일 영상)
-      .order('created_at', { ascending: false })
+
+    // 정렬 옵션
+    if (sortBy === 'title_asc') {
+      query = query.order('title', { ascending: true })
+    } else {
+      query = query.order('created_at', { ascending: false })
+    }
 
     if (options?.unit) {
       query = query.eq('unit', options.unit)
