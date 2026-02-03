@@ -153,26 +153,19 @@ export async function getBjMessagesByVipId(
       // 권한 체크
       const isAuthor = userBjMemberId === msg.bj_member_id
 
-      // 비공개 메시지 접근 권한 (메시지 자체를 볼 수 있는지)
-      // - 관리자, VIP 본인, 작성자 BJ만 비공개 메시지 접근 가능
+      // 비공개 메시지 접근 권한 (VIP 본인, 작성자 BJ, 관리자)
       const canViewPrivateMessage = isAdmin || isOwner || isAuthor
 
-      // 비공개 메시지인데 권한 없으면 스킵
-      if (!msg.is_public && !canViewPrivateMessage) {
-        continue
-      }
-
-      // 미디어 콘텐츠 전체 접근 권한 (사진/영상을 볼 수 있는지)
-      // - VIP 본인, 작성자 BJ, 관리자만 미디어 전체 접근 가능
-      // - 그 외는 텍스트만, 영상은 썸네일만
-      const canViewMediaContent = isOwner || isAuthor || isAdmin
+      // 콘텐츠 열람 권한 결정
+      // - 공개 메시지: 모두 열람 가능
+      // - 비공개 메시지: 권한자만 열람 가능 (목록에는 모두 보임)
+      const canViewContent = msg.is_public || canViewPrivateMessage
 
       // 콘텐츠 처리
-      // - 텍스트: 공개 메시지면 모두에게 표시
-      // - 사진: VIP 본인/작성자/관리자만 URL 제공
-      // - 영상: 썸네일용 URL은 모두에게, 재생 권한은 canViewMediaContent로 구분
-      const safeContentText = msg.content_text
-      const safeContentUrl = canViewMediaContent
+      // - 열람 권한 있으면 전체 콘텐츠 제공
+      // - 없으면 텍스트는 null, 영상은 썸네일용 URL만 유지
+      const safeContentText = canViewContent ? msg.content_text : null
+      const safeContentUrl = canViewContent
         ? msg.content_url
         : (msg.message_type === 'video' ? msg.content_url : null) // 영상은 썸네일용 URL 유지
 
@@ -195,8 +188,8 @@ export async function getBjMessagesByVipId(
           : undefined,
         // 비공개 메시지임을 UI에서 표시하기 위한 플래그
         is_private_for_viewer: !msg.is_public,
-        // 미디어 콘텐츠(사진/영상) 전체 열람 가능 여부
-        canViewContent: canViewMediaContent,
+        // 콘텐츠 열람 가능 여부
+        canViewContent,
       })
     }
 
