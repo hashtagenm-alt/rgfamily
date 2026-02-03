@@ -25,11 +25,19 @@ export class SupabaseNoticeRepository implements INoticeRepository {
     return data || []
   }
 
-  async findPublished(): Promise<Notice[]> {
+  async findPublished(): Promise<(Notice & { author_nickname?: string })[]> {
     const { data } = await withRetry(async () =>
-      await this.supabase.from('notices').select('*').order('created_at', { ascending: false })
+      await this.supabase
+        .from('notices')
+        .select('*, author:profiles!author_id(nickname)')
+        .order('created_at', { ascending: false })
     )
-    return data || []
+    // author 정보를 평탄화
+    return (data || []).map(notice => ({
+      ...notice,
+      author_nickname: (notice.author as { nickname: string } | null)?.nickname || '운영자',
+      author: undefined, // 원본 객체 제거
+    }))
   }
 
   async findAll(): Promise<Notice[]> {

@@ -86,7 +86,7 @@ export default function NoticePage() {
           isPinned: n.is_pinned,
           isImportant: index < 2,
           createdAt: n.created_at,
-          author: '운영자',
+          author: (n as { author_nickname?: string }).author_nickname || '운영자',
           viewCount: n.view_count || 0,
           category: n.category || '공지',
           thumbnailUrl: thumbnailMap.get(n.id) || null,
