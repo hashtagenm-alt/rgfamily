@@ -55,6 +55,17 @@ export function getStreamIframeUrl(uid: string): string {
   return `https://iframe.videodelivery.net/${uid}`
 }
 
+/** Cloudflare Stream HLS URL (고화질 강제 옵션 포함) */
+export function getStreamHlsUrl(uid: string, options?: {
+  clientBandwidthHint?: number  // Mbps 단위, 10이면 1080p 강제
+}): string {
+  const baseUrl = `https://videodelivery.net/${uid}/manifest/video.m3u8`
+  if (options?.clientBandwidthHint) {
+    return `${baseUrl}?clientBandwidthHint=${options.clientBandwidthHint}`
+  }
+  return baseUrl
+}
+
 /** Cloudflare Stream 썸네일 URL */
 export function getStreamThumbnailUrl(
   uid: string,
