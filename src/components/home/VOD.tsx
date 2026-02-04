@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Video, Play, X, ChevronLeft, ChevronRight, SkipBack, SkipForward } from "lucide-react";
 import { getVODs, getVODParts } from "@/lib/actions/media";
 import { getStreamThumbnailUrl } from "@/lib/cloudflare";
+import HlsPlayer from "@/components/common/HlsPlayer";
 import type { MediaContent } from "@/types/database";
 import styles from "./VOD.module.css";
 
@@ -229,9 +230,18 @@ export default function VOD() {
             <div className={styles.videoWrapper}>
               {loadingParts ? (
                 <div className={styles.videoLoading}>파트 로딩 중...</div>
+              ) : currentPart?.cloudflare_uid ? (
+                <HlsPlayer
+                  key={currentPart.cloudflare_uid}
+                  cloudflareUid={currentPart.cloudflare_uid}
+                  className={styles.videoFrame}
+                  autoPlay
+                  controls
+                  forceHighQuality
+                />
               ) : (
                 <iframe
-                  key={currentPart?.cloudflare_uid || currentPart?.id}
+                  key={currentPart?.id}
                   src={getEmbedUrl(currentPart)}
                   className={styles.videoFrame}
                   allowFullScreen
