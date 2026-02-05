@@ -58,6 +58,80 @@
   background: var(--card-border);
 }
 
+/* Color picker */
+.colorWrapper {
+  position: relative;
+}
+
+.colorButtonContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.colorIndicator {
+  width: 14px;
+  height: 3px;
+  border-radius: 1px;
+}
+
+.colorPicker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  padding: 8px;
+  margin-top: 4px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.colorSwatch {
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.colorSwatchActive {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(253, 104, 186, 0.3);
+}
+
+.colorResetButton {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.colorResetButton:hover {
+  background: var(--card-border);
+  color: var(--text-primary);
+}
+
 /* Link modal */
 .linkWrapper {
   position: relative;
@@ -367,6 +441,26 @@
 
   .linkInput {
     width: 100%;
+  }
+
+  .colorPicker {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 16px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .colorGrid {
+    justify-content: center;
+  }
+
+  .colorSwatch {
+    width: 36px;
+    height: 36px;
   }
 
   .content {
