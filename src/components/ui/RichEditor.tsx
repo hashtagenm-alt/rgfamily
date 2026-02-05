@@ -7,6 +7,7 @@ import ImageResize from 'tiptap-extension-resize-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
+import { Color, TextStyle } from '@tiptap/extension-text-style'
 import {
   Bold,
   Italic,
@@ -26,6 +27,7 @@ import {
   Code,
   Undo,
   Redo,
+  Palette,
 } from 'lucide-react'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import styles from './RichEditor.module.css'
@@ -70,9 +72,50 @@ interface MenuBarProps {
   onImageUpload?: (file: File) => Promise<string | null>
 }
 
+// 프리셋 색상
+const PRESET_COLORS = [
+  { color: '#000000', label: '검정' },
+  { color: '#374151', label: '회색' },
+  { color: '#dc2626', label: '빨강' },
+  { color: '#ea580c', label: '주황' },
+  { color: '#ca8a04', label: '노랑' },
+  { color: '#16a34a', label: '초록' },
+  { color: '#2563eb', label: '파랑' },
+  { color: '#7c3aed', label: '보라' },
+  { color: '#db2777', label: '핑크' },
+  { color: '#fd68ba', label: '시그니처 핑크' },
+]
+
 function MenuBar({ editor, onImageUpload }: MenuBarProps) {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
+  const colorPickerRef = useRef<HTMLDivElement>(null)
+
+  // 색상 선택기 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setIsColorPickerOpen(false)
+      }
+    }
+    if (isColorPickerOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isColorPickerOpen])
+
+  const setColor = useCallback((color: string) => {
+    editor?.chain().focus().setColor(color).run()
+    setIsColorPickerOpen(false)
+  }, [editor])
+
+  const removeColor = useCallback(() => {
+    editor?.chain().focus().unsetColor().run()
+    setIsColorPickerOpen(false)
+  }, [editor])
 
   const addLink = useCallback(() => {
     if (!editor || !linkUrl) return
@@ -170,6 +213,48 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
       >
         <Strikethrough size={16} />
       </ToolbarButton>
+
+      {/* Color Picker */}
+      <div className={styles.colorWrapper} ref={colorPickerRef}>
+        <ToolbarButton
+          onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
+          isActive={isColorPickerOpen}
+          title="글자 색상"
+        >
+          <div className={styles.colorButtonContent}>
+            <Palette size={16} />
+            <span
+              className={styles.colorIndicator}
+              style={{
+                backgroundColor: editor.getAttributes('textStyle').color || '#000000'
+              }}
+            />
+          </div>
+        </ToolbarButton>
+        {isColorPickerOpen && (
+          <div className={styles.colorPicker}>
+            <div className={styles.colorGrid}>
+              {PRESET_COLORS.map(({ color, label }) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`${styles.colorSwatch} ${editor.getAttributes('textStyle').color === color ? styles.colorSwatchActive : ''}`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setColor(color)}
+                  title={label}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              className={styles.colorResetButton}
+              onClick={removeColor}
+            >
+              색상 초기화
+            </button>
+          </div>
+        )}
+      </div>
 
       <ToolbarDivider />
 
@@ -353,6 +438,8 @@ export default function RichEditor({
         },
       }),
       Underline,
+      TextStyle,
+      Color,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
