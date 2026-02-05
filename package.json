@@ -17,6 +17,8 @@
     "url": "https://github.com/your-username/rg-family.git"
   },
   "scripts": {
+    "rg": "tsx scripts/rg-cli.ts",
+    "dashboard": "tsx scripts/rg-dashboard.ts",
     "dev": "next dev",
     "dev:watch": "tsx scripts/dev-server-monitor.ts",
     "dev:fast": "DEV_PREWARM=false tsx scripts/dev-server-monitor.ts",
