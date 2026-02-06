@@ -53,13 +53,8 @@ export default function NoticePage() {
 
     try {
       // Repository 패턴 사용 (withRetry 적용됨)
-      const data = await noticesRepo.findPublished()
-
-      // 고정글 우선, 최신순 정렬
-      const sortedData = [...data].sort((a, b) => {
-        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      })
+      // Repository가 display_order → created_at 순으로 정렬하여 반환
+      const sortedData = await noticesRepo.findPublished()
 
       // 공지사항별 첫 번째 이미지 첨부파일 조회
       const noticeIds = sortedData.map(n => n.id)
