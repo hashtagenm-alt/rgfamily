@@ -257,6 +257,11 @@
   text-align: center;
 }
 
+/* Table Header with drag column */
+.tableHeader:has(.colDrag) {
+  grid-template-columns: 40px 80px 50px 80px 1fr 100px 100px 70px;
+}
+
 /* Thumbnail Column */
 .colThumbnail {
   display: flex;
@@ -287,6 +292,38 @@
   flex-direction: column;
 }
 
+/* Reordering State */
+.reordering {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Drag Handle Column */
+.colDrag {
+  width: 40px;
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  cursor: grab;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.dragHandle:hover {
+  background: var(--color-pink-overlay-10);
+  color: var(--color-primary);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
 /* Row */
 .row {
   display: grid;
@@ -297,6 +334,11 @@
   text-decoration: none;
   transition: var(--transition-fast);
   align-items: center;
+}
+
+/* Row with drag handle */
+.row:has(.dragHandle) {
+  grid-template-columns: 40px 80px 50px 80px 1fr auto 100px 100px 70px;
 }
 
 .row:last-child {
