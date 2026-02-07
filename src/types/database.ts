@@ -736,6 +736,33 @@ export type Database = {
           }
         ]
       }
+      post_likes: {
+        Row: {
+          id: number
+          post_id: number
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          post_id: number
+          user_id: string
+        }
+        Update: {}
+        Relationships: [
+          {
+            foreignKeyName: 'post_likes_post_id_fkey'
+            columns: ['post_id']
+            referencedRelation: 'posts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'post_likes_user_id_fkey'
+            columns: ['user_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       media_content: {
         Row: {
           id: number
@@ -1276,6 +1303,37 @@ export type Database = {
             referencedColumns: ['id']
           }
         ]
+      }
+      /**
+       * 레거시 후원 총액 테이블
+       * 시즌1 이전 누적 후원 데이터를 저장
+       */
+      legacy_donation_totals: {
+        Row: {
+          id: number
+          donor_name: string
+          total_amount: number
+          note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          donor_name: string
+          total_amount: number
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          donor_name?: string
+          total_amount?: number
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       /**
        * BJ 직급 마스터 테이블
@@ -1820,6 +1878,7 @@ export type TimelineEvent = Tables<'timeline_events'>
 export type Notice = Tables<'notices'>
 export type NoticeAttachment = Tables<'notice_attachments'>
 export type Post = Tables<'posts'>
+export type PostLike = Tables<'post_likes'>
 export type Comment = Tables<'comments'>
 export type MediaContent = Tables<'media_content'>
 export type LiveStatus = Tables<'live_status'>
@@ -1832,6 +1891,7 @@ export type RankBattleRecord = Tables<'rank_battle_records'>
 export type TotalDonationRanking = Tables<'total_donation_rankings'>
 export type SeasonDonationRanking = Tables<'season_donation_rankings'>
 export type BjEpisodePerformance = Tables<'bj_episode_performances'>
+export type LegacyDonationTotal = Tables<'legacy_donation_totals'>
 
 // BJ 감사 메시지 with JOIN data
 export interface BjThankYouMessageWithMember extends BjThankYouMessage {
