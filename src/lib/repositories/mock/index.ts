@@ -344,6 +344,7 @@ class MockNoticeRepository implements INoticeRepository {
       is_pinned: data.is_pinned ?? false,
       view_count: data.view_count || 0,
       author_id: data.author_id || null,
+      display_order: data.display_order ?? null,
       created_at: now,
       updated_at: now,
     }

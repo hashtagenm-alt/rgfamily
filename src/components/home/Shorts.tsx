@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Film, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getShorts } from "@/lib/actions/media";
 import { getStreamThumbnailUrl } from "@/lib/cloudflare";
+import HlsPlayer from "@/components/common/HlsPlayer";
 import type { MediaContent } from "@/types/database";
 import styles from "./Shorts.module.css";
 
@@ -179,12 +180,22 @@ export default function Shorts() {
               <X size={20} />
             </button>
             <div className={styles.videoWrapper}>
-              <iframe
-                src={getEmbedUrl(selectedShort)}
-                className={styles.videoFrame}
-                allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              />
+              {selectedShort.cloudflare_uid ? (
+                <HlsPlayer
+                  cloudflareUid={selectedShort.cloudflare_uid}
+                  className={styles.videoFrame}
+                  autoPlay
+                  controls
+                  forceHighQuality
+                />
+              ) : (
+                <iframe
+                  src={getEmbedUrl(selectedShort)}
+                  className={styles.videoFrame}
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                />
+              )}
             </div>
             <div className={styles.videoInfo}>
               <h4>{selectedShort.title}</h4>

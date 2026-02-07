@@ -50,7 +50,7 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
   const { id } = use(params)
   const router = useRouter()
   const supabase = useSupabaseContext()
-  const { isAdmin } = useAuthContext()
+  const { isModerator } = useAuthContext()
   const [notice, setNotice] = useState<NoticeDetail | null>(null)
   const [prevNotice, setPrevNotice] = useState<NavNotice | null>(null)
   const [nextNotice, setNextNotice] = useState<NavNotice | null>(null)
@@ -302,8 +302,8 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
 
           {/* Actions */}
           <div className={styles.actions}>
-            {/* Admin Actions */}
-            {isAdmin() && (
+            {/* 운영진 수정/삭제 (moderator 이상) */}
+            {isModerator() && (
               <div className={styles.adminActions}>
                 <Link href={`/notice/write?id=${id}`} className={styles.editBtn}>
                   <Edit2 size={16} />

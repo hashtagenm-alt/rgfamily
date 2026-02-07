@@ -3,7 +3,24 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Pin, Search, Eye, ChevronDown, Bell, PenSquare, ImageIcon } from 'lucide-react'
+import { Pin, Search, Eye, ChevronDown, Bell, PenSquare, ImageIcon, GripVertical } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import AdminNoticeActions from '@/components/notice/AdminNoticeActions'
@@ -24,6 +41,123 @@ interface NoticeItem {
   viewCount: number
   category: string
   thumbnailUrl: string | null
+  displayOrder: number | null
+}
+
+// 드래그 가능한 행 컴포넌트
+function SortableNoticeRow({
+  notice,
+  index,
+  showDragHandle,
+  fetchNotices,
+}: {
+  notice: NoticeItem
+  index: number
+  showDragHandle: boolean
+  fetchNotices: () => void
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: notice.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`${styles.row} ${notice.isPinned ? styles.pinned : ''}`}
+    >
+      {/* 드래그 핸들 (관리자만) */}
+      {showDragHandle && (
+        <div
+          className={styles.dragHandle}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical size={16} />
+        </div>
+      )}
+
+      {/* Number / Badge */}
+      <div className={styles.cellNumber}>
+        {notice.isPinned ? (
+          <span className={styles.pinnedBadge}>
+            <Pin size={12} />
+            공지
+          </span>
+        ) : (
+          index + 1
+        )}
+      </div>
+
+      {/* Thumbnail */}
+      <Link href={`/notice/${notice.id}`} className={styles.cellThumbnail}>
+        {notice.thumbnailUrl ? (
+          <div className={styles.thumbnailWrapper}>
+            <Image
+              src={notice.thumbnailUrl}
+              alt=""
+              fill
+              sizes="40px"
+              className={styles.thumbnail}
+            />
+          </div>
+        ) : (
+          <div className={styles.thumbnailPlaceholder}>
+            <ImageIcon size={14} />
+          </div>
+        )}
+      </Link>
+
+      {/* Category */}
+      <Link href={`/notice/${notice.id}`} className={styles.cellCategory}>
+        <span className={`${styles.categoryBadge} ${notice.isImportant ? styles.important : ''}`}>
+          {notice.category}
+        </span>
+      </Link>
+
+      {/* Title */}
+      <Link href={`/notice/${notice.id}`} className={styles.cellTitle}>
+        <h3 className={styles.postTitle}>{notice.title}</h3>
+        {isNew(notice.createdAt) && (
+          <span className={styles.newBadge}>N</span>
+        )}
+        {notice.isImportant && (
+          <span className={styles.importantBadge}>중요</span>
+        )}
+      </Link>
+
+      {/* Admin Actions */}
+      <AdminNoticeActions
+        noticeId={notice.id}
+        isPinned={notice.isPinned}
+        onUpdated={fetchNotices}
+      />
+
+      {/* Author */}
+      <span className={styles.cellAuthor}>{notice.author}</span>
+
+      {/* Date */}
+      <span className={styles.cellDate}>
+        {formatShortDate(notice.createdAt)}
+      </span>
+
+      {/* Views */}
+      <span className={styles.cellViews}>
+        {notice.viewCount.toLocaleString()}
+      </span>
+    </div>
+  )
 }
 
 function isNew(dateStr: string): boolean {
@@ -35,9 +169,10 @@ function isNew(dateStr: string): boolean {
 
 export default function NoticePage() {
   const noticesRepo = useNotices()
-  const { isAdmin } = useAuthContext()
+  const { isModerator } = useAuthContext()
   const [notices, setNotices] = useState<NoticeItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isReordering, setIsReordering] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchType, setSearchType] = useState<'all' | 'title'>('all')
@@ -47,19 +182,26 @@ export default function NoticePage() {
 
   const categories = ['전체', '공지', '이벤트', '업데이트', '안내']
 
+  // 드래그앤드롭 센서
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
   const fetchNotices = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
     try {
       // Repository 패턴 사용 (withRetry 적용됨)
-      const data = await noticesRepo.findPublished()
-
-      // 고정글 우선, 최신순 정렬
-      const sortedData = [...data].sort((a, b) => {
-        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      })
+      // Repository가 display_order → created_at 순으로 정렬하여 반환
+      const sortedData = await noticesRepo.findPublished()
 
       // 공지사항별 첫 번째 이미지 첨부파일 조회
       const noticeIds = sortedData.map(n => n.id)
@@ -86,10 +228,11 @@ export default function NoticePage() {
           isPinned: n.is_pinned,
           isImportant: index < 2,
           createdAt: n.created_at,
-          author: '운영자',
+          author: (n as { author_nickname?: string }).author_nickname || '운영자',
           viewCount: n.view_count || 0,
           category: n.category || '공지',
           thumbnailUrl: thumbnailMap.get(n.id) || null,
+          displayOrder: n.display_order,
         }))
       )
     } catch (err) {
@@ -103,6 +246,47 @@ export default function NoticePage() {
   useEffect(() => {
     fetchNotices()
   }, [fetchNotices])
+
+  // 드래그앤드롭 순서 변경 핸들러
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (!over || active.id === over.id) return
+
+    const oldIndex = notices.findIndex((item) => item.id === active.id)
+    const newIndex = notices.findIndex((item) => item.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    // UI 먼저 업데이트
+    const reorderedNotices = arrayMove(notices, oldIndex, newIndex)
+    setNotices(reorderedNotices)
+
+    // DB에 저장
+    setIsReordering(true)
+    try {
+      const supabase = getSupabaseClient()
+      const updates = reorderedNotices.map((item, index) => ({
+        id: item.id,
+        display_order: index + 1,
+      }))
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('notices')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id)
+
+        if (error) throw error
+      }
+    } catch (err) {
+      console.error('순서 저장 실패:', err)
+      // 실패 시 원래 순서로 복원
+      fetchNotices()
+    } finally {
+      setIsReordering(false)
+    }
+  }
 
   // 검색 및 필터링
   const filteredNotices = notices.filter(notice => {
@@ -217,8 +401,8 @@ export default function NoticePage() {
               </div>
             </div>
 
-            {/* Admin Write Button */}
-            {isAdmin() && (
+            {/* 운영진 글쓰기 버튼 (moderator 이상) */}
+            {isModerator() && (
               <Link href="/notice/write" className={styles.writeBtn}>
                 <PenSquare size={16} />
                 <span>글쓰기</span>
@@ -241,162 +425,42 @@ export default function NoticePage() {
         ) : (
           <>
             {/* Board Table */}
-            <div className={styles.board}>
-              {/* Table Header */}
-              <div className={styles.tableHeader}>
-                <span className={styles.colNumber}>번호</span>
-                <span className={styles.colThumbnail}></span>
-                <span className={styles.colCategory}>분류</span>
-                <span className={styles.colTitle}>제목</span>
-                <span className={styles.colAuthor}>작성자</span>
-                <span className={styles.colDate}>작성일</span>
-                <span className={styles.colViews}>조회</span>
-              </div>
-
-              {/* Pinned Notices */}
-              {pinnedNotices.length > 0 && (
-                <div className={styles.pinnedSection}>
-                  {pinnedNotices.map((notice) => (
-                    <Link
-                      key={notice.id}
-                      href={`/notice/${notice.id}`}
-                      className={`${styles.row} ${styles.pinned} noticeRow`}
-                    >
-                      {/* Badge */}
-                      <div className={styles.cellNumber}>
-                        <span className={styles.pinnedBadge}>
-                          <Pin size={12} />
-                          공지
-                        </span>
-                      </div>
-
-                      {/* Thumbnail */}
-                      <div className={styles.cellThumbnail}>
-                        {notice.thumbnailUrl ? (
-                          <div className={styles.thumbnailWrapper}>
-                            <Image
-                              src={notice.thumbnailUrl}
-                              alt=""
-                              fill
-                              sizes="40px"
-                              className={styles.thumbnail}
-                            />
-                          </div>
-                        ) : (
-                          <div className={styles.thumbnailPlaceholder}>
-                            <ImageIcon size={14} />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Category */}
-                      <div className={styles.cellCategory}>
-                        <span className={`${styles.categoryBadge} ${notice.isImportant ? styles.important : ''}`}>
-                          {notice.category}
-                        </span>
-                      </div>
-
-                      {/* Title */}
-                      <div className={styles.cellTitle}>
-                        <h3 className={styles.postTitle}>{notice.title}</h3>
-                        {isNew(notice.createdAt) && (
-                          <span className={styles.newBadge}>N</span>
-                        )}
-                        {notice.isImportant && (
-                          <span className={styles.importantBadge}>중요</span>
-                        )}
-                        {/* Admin Actions */}
-                        <AdminNoticeActions
-                          noticeId={notice.id}
-                          isPinned={notice.isPinned}
-                          onUpdated={fetchNotices}
-                        />
-                      </div>
-
-                      {/* Author */}
-                      <span className={styles.cellAuthor}>{notice.author}</span>
-
-                      {/* Date */}
-                      <span className={styles.cellDate}>
-                        {formatShortDate(notice.createdAt)}
-                      </span>
-
-                      {/* Views */}
-                      <span className={styles.cellViews}>
-                        {notice.viewCount.toLocaleString()}
-                      </span>
-                    </Link>
-                  ))}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <div className={`${styles.board} ${isReordering ? styles.reordering : ''}`}>
+                {/* Table Header */}
+                <div className={styles.tableHeader}>
+                  {isModerator() && <span className={styles.colDrag}></span>}
+                  <span className={styles.colNumber}>번호</span>
+                  <span className={styles.colThumbnail}></span>
+                  <span className={styles.colCategory}>분류</span>
+                  <span className={styles.colTitle}>제목</span>
+                  <span className={styles.colAuthor}>작성자</span>
+                  <span className={styles.colDate}>작성일</span>
+                  <span className={styles.colViews}>조회</span>
                 </div>
-              )}
 
-              {/* Normal Notices */}
-              <div className={styles.tableBody}>
-                {normalNotices.map((notice, index) => (
-                  <Link
-                    key={notice.id}
-                    href={`/notice/${notice.id}`}
-                    className={`${styles.row} noticeRow`}
-                  >
-                    {/* Number */}
-                    <div className={styles.cellNumber}>
-                      {normalNotices.length - index}
-                    </div>
-
-                    {/* Thumbnail */}
-                    <div className={styles.cellThumbnail}>
-                      {notice.thumbnailUrl ? (
-                        <div className={styles.thumbnailWrapper}>
-                          <Image
-                            src={notice.thumbnailUrl}
-                            alt=""
-                            fill
-                            sizes="40px"
-                            className={styles.thumbnail}
-                          />
-                        </div>
-                      ) : (
-                        <div className={styles.thumbnailPlaceholder}>
-                          <ImageIcon size={14} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Category */}
-                    <div className={styles.cellCategory}>
-                      <span className={styles.categoryBadge}>{notice.category}</span>
-                    </div>
-
-                    {/* Title */}
-                    <div className={styles.cellTitle}>
-                      <h3 className={styles.postTitle}>{notice.title}</h3>
-                      {isNew(notice.createdAt) && (
-                        <span className={styles.newBadge}>N</span>
-                      )}
-                      {/* Admin Actions */}
-                      <AdminNoticeActions
-                        noticeId={notice.id}
-                        isPinned={notice.isPinned}
-                        onUpdated={fetchNotices}
+                <SortableContext
+                  items={filteredNotices.map(n => n.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className={styles.tableBody}>
+                    {filteredNotices.map((notice, index) => (
+                      <SortableNoticeRow
+                        key={notice.id}
+                        notice={notice}
+                        index={index}
+                        showDragHandle={isModerator()}
+                        fetchNotices={fetchNotices}
                       />
-                    </div>
-
-                    {/* Author */}
-                    <span className={styles.cellAuthor}>{notice.author}</span>
-
-                    {/* Date */}
-                    <span className={styles.cellDate}>
-                      {formatShortDate(notice.createdAt)}
-                    </span>
-
-                    {/* Views */}
-                    <span className={styles.cellViews}>
-                      {notice.viewCount.toLocaleString()}
-                    </span>
-                  </Link>
-                ))}
+                    ))}
+                  </div>
+                </SortableContext>
               </div>
-            </div>
+            </DndContext>
 
             {/* Mobile List */}
             <div className={styles.mobileList}>

@@ -55,6 +55,17 @@ export function getStreamIframeUrl(uid: string): string {
   return `https://iframe.videodelivery.net/${uid}`
 }
 
+/** Cloudflare Stream HLS URL (고화질 강제 옵션 포함) */
+export function getStreamHlsUrl(uid: string, options?: {
+  clientBandwidthHint?: number  // Mbps 단위, 10이면 1080p 강제
+}): string {
+  const baseUrl = `https://videodelivery.net/${uid}/manifest/video.m3u8`
+  if (options?.clientBandwidthHint) {
+    return `${baseUrl}?clientBandwidthHint=${options.clientBandwidthHint}`
+  }
+  return baseUrl
+}
+
 /** Cloudflare Stream 썸네일 URL */
 export function getStreamThumbnailUrl(
   uid: string,
@@ -92,6 +103,41 @@ export async function createDirectUpload(options?: {
   }
 
   return json.result
+}
+
+/** TUS Resumable Upload URL 발급 (대용량 파일용) */
+export async function createTusUpload(options?: {
+  maxDurationSeconds?: number
+  meta?: Record<string, string>
+}): Promise<DirectUploadResult> {
+  // Cloudflare Stream TUS endpoint
+  const res = await fetch(`${CLOUDFLARE_STREAM_API}?direct_user=true`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+      'Tus-Resumable': '1.0.0',
+      'Upload-Length': '0', // Will be set by client
+      'Upload-Metadata': options?.meta
+        ? Object.entries(options.meta)
+            .map(([k, v]) => `${k} ${Buffer.from(v).toString('base64')}`)
+            .join(',')
+        : '',
+    },
+  })
+
+  // TUS endpoint returns Location header with upload URL
+  const location = res.headers.get('Location') || res.headers.get('stream-media-id')
+  const streamMediaId = res.headers.get('stream-media-id')
+
+  if (!location && !streamMediaId) {
+    // Fallback: use direct_upload with standard method
+    return createDirectUpload(options)
+  }
+
+  return {
+    uploadURL: location || `https://upload.videodelivery.net/tus/${streamMediaId}`,
+    uid: streamMediaId || location?.split('/').pop() || '',
+  }
 }
 
 /** 영상 상태 조회 */
