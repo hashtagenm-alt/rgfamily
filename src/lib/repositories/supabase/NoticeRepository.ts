@@ -30,8 +30,8 @@ export class SupabaseNoticeRepository implements INoticeRepository {
       await this.supabase
         .from('notices')
         .select('*, author:profiles!author_id(nickname)')
-        // display_order가 있는 항목 먼저 (순서대로), 나머지는 최신순
-        .order('display_order', { ascending: true, nullsFirst: false })
+        // 새 글(display_order=NULL)이 먼저, 그 다음 수동 정렬된 항목
+        .order('display_order', { ascending: true, nullsFirst: true })
         .order('created_at', { ascending: false })
     )
     // author 정보를 평탄화
