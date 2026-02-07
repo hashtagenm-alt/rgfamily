@@ -20,9 +20,6 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Heading1,
-  Heading2,
-  Heading3,
   Quote,
   Code,
   Undo,
@@ -257,29 +254,6 @@ function MenuBar({ editor, onImageUpload }: MenuBarProps) {
       </div>
 
       <ToolbarDivider />
-
-      {/* Headings */}
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        isActive={editor.isActive('heading', { level: 1 })}
-        title="제목 1"
-      >
-        <Heading1 size={16} />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        isActive={editor.isActive('heading', { level: 2 })}
-        title="제목 2"
-      >
-        <Heading2 size={16} />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        isActive={editor.isActive('heading', { level: 3 })}
-        title="제목 3"
-      >
-        <Heading3 size={16} />
-      </ToolbarButton>
 
       <ToolbarDivider />
 
