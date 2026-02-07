@@ -4,16 +4,16 @@
  * - 계정 생성 + VIP 역할 부여
  */
 
+import { getServiceClient } from './lib/supabase'
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 
-import { createClient } from '@supabase/supabase-js'
 import * as fs from 'fs'
 import * as path from 'path'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, serviceRoleKey)
+const supabase = getServiceClient()
 
 // 닉네임을 이메일 친화적인 문자열로 변환
 function nicknameToEmail(nickname: string, index: number): string {

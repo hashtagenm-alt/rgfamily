@@ -3,30 +3,18 @@
  *
  * 기능:
  * - donations 테이블과 랭킹 테이블 간 데이터 일치 여부 확인
- * - 불일치 발견 시 자동 수정 옵션
+ * - 불일치 발견 시 자동 수정 옵션 (RPC 사용)
  *
  * 사용법:
  * - 검증만: npx tsx scripts/verify-ranking-integrity.ts
- * - 자동 수정: npx tsx scripts/verify-ranking-integrity.ts --fix
+ * - 시즌 랭킹 수정: npx tsx scripts/verify-ranking-integrity.ts --fix-season
+ * - 전체 수정: npx tsx scripts/verify-ranking-integrity.ts --fix
  */
 
-import { createClient } from '@supabase/supabase-js'
-import * as dotenv from 'dotenv'
-import * as path from 'path'
+import { getServiceClient } from './lib/supabase'
+import { withRetry, processBatch } from './lib/utils'
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('환경변수 설정 필요')
-  process.exit(1)
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { persistSession: false },
-})
+const supabase = getServiceClient()
 
 interface MismatchResult {
   donor_name: string
@@ -180,11 +168,8 @@ async function checkTotalRankingIntegrity(): Promise<MismatchResult[]> {
   return mismatches
 }
 
-async function fixSeasonRanking(seasonId: number) {
-  console.log(`\n🔧 시즌 ${seasonId} 랭킹 수정 중...`)
-
-  // 기존 데이터 삭제
-  await supabase.from('season_donation_rankings').delete().eq('season_id', seasonId)
+async function fixSeasonRankingWithRPC(seasonId: number) {
+  console.log(`\n🔧 시즌 ${seasonId} 랭킹 수정 중 (RPC)...`)
 
   // donations 기반 새 랭킹 생성 (페이지네이션으로 전체 데이터)
   const donations = await fetchAllDonations(seasonId)
@@ -198,34 +183,86 @@ async function fixSeasonRanking(seasonId: number) {
   }
 
   const sorted = [...aggregated.entries()].sort((a, b) => b[1] - a[1])
-  const maxAmount = sorted[0]?.[1] || 0
 
-  const rankingsToInsert = sorted.map(([name, amount], idx) => ({
-    season_id: seasonId,
+  const rankingsJson = sorted.slice(0, 50).map(([name, amount], idx) => ({
     rank: idx + 1,
     donor_name: name,
     total_amount: amount,
     donation_count: donationCounts.get(name) || 0,
     unit: 'excel',
-    gauge_percent: Math.round((amount / maxAmount) * 100),
   }))
 
-  // 100개씩 배치 삽입
+  try {
+    const result = await withRetry(
+      async () => {
+        const { data, error } = await supabase.rpc('upsert_season_rankings', {
+          p_season_id: seasonId,
+          p_unit: null,
+          p_rankings: rankingsJson,
+        })
+
+        if (error) throw new Error(error.message)
+        return data
+      },
+      {
+        maxRetries: 3,
+        onRetry: (error, attempt, delay) => {
+          console.log(`   ⚠️  재시도 ${attempt}/3: ${error.message} (${delay}ms 대기)`)
+        },
+      }
+    )
+
+    console.log(`   ✅ 시즌 ${seasonId}: RPC로 ${rankingsJson.length}명 랭킹 갱신 완료`)
+    if (result && result[0]) {
+      console.log(`   📊 삭제: ${result[0].deleted_count}건, 삽입: ${result[0].inserted_count}건`)
+    }
+  } catch (rpcError) {
+    console.log(`   ⚠️  RPC 실패, 폴백 실행: ${rpcError instanceof Error ? rpcError.message : rpcError}`)
+    await fixSeasonRankingFallback(seasonId, rankingsJson)
+  }
+}
+
+async function fixSeasonRankingFallback(
+  seasonId: number,
+  rankings: { rank: number; donor_name: string; total_amount: number; donation_count: number; unit: string }[]
+) {
+  // 기존 데이터 삭제
+  await withRetry(
+    async () => {
+      const { error } = await supabase.from('season_donation_rankings').delete().eq('season_id', seasonId)
+      if (error) throw new Error(error.message)
+    },
+    { maxRetries: 3 }
+  )
+
+  const rankingsToInsert = rankings.map((r) => ({
+    season_id: seasonId,
+    rank: r.rank,
+    donor_name: r.donor_name,
+    total_amount: r.total_amount,
+    donation_count: r.donation_count,
+    unit: r.unit,
+  }))
+
+  // 배치 삽입
   const batchSize = 100
   for (let i = 0; i < rankingsToInsert.length; i += batchSize) {
     const batch = rankingsToInsert.slice(i, i + batchSize)
-    await supabase.from('season_donation_rankings').insert(batch)
+    await withRetry(
+      async () => {
+        const { error } = await supabase.from('season_donation_rankings').insert(batch)
+        if (error) throw new Error(error.message)
+      },
+      { maxRetries: 3 }
+    )
   }
 
-  console.log(`   ✅ 시즌 ${seasonId}: ${rankingsToInsert.length}명 랭킹 갱신 완료`)
+  console.log(`   ✅ 시즌 ${seasonId}: 폴백으로 ${rankingsToInsert.length}명 랭킹 갱신 완료`)
 }
 
-async function fixTotalRanking() {
-  console.log(`\n🔧 종합 랭킹 수정 중...`)
+async function fixTotalRankingWithRPC() {
+  console.log(`\n🔧 종합 랭킹 수정 중 (RPC)...`)
   console.log(`   ⚠️  주의: 이 작업은 레거시 데이터를 덮어씁니다!`)
-
-  // 기존 데이터 삭제
-  await supabase.from('total_donation_rankings').delete().neq('id', 0)
 
   // donations 기반 새 랭킹 생성 (페이지네이션으로 전체 데이터)
   const donations = await fetchAllDonations()
@@ -237,21 +274,67 @@ async function fixTotalRanking() {
 
   const sorted = [...aggregated.entries()].sort((a, b) => b[1] - a[1])
 
-  const rankingsToInsert = sorted.map(([name, amount], idx) => ({
+  const rankingsJson = sorted.slice(0, 50).map(([name, amount], idx) => ({
     rank: idx + 1,
     donor_name: name,
     total_amount: amount,
     is_permanent_vip: false,
   }))
 
-  // 100개씩 배치 삽입
+  try {
+    const result = await withRetry(
+      async () => {
+        const { data, error } = await supabase.rpc('upsert_total_rankings', {
+          p_rankings: rankingsJson,
+        })
+
+        if (error) throw new Error(error.message)
+        return data
+      },
+      {
+        maxRetries: 3,
+        onRetry: (error, attempt, delay) => {
+          console.log(`   ⚠️  재시도 ${attempt}/3: ${error.message} (${delay}ms 대기)`)
+        },
+      }
+    )
+
+    console.log(`   ✅ 종합 랭킹: RPC로 ${rankingsJson.length}명 랭킹 갱신 완료`)
+    if (result && result[0]) {
+      console.log(`   📊 삭제: ${result[0].deleted_count}건, 삽입: ${result[0].inserted_count}건`)
+    }
+  } catch (rpcError) {
+    console.log(`   ⚠️  RPC 실패, 폴백 실행: ${rpcError instanceof Error ? rpcError.message : rpcError}`)
+    await fixTotalRankingFallback(rankingsJson)
+  }
+}
+
+async function fixTotalRankingFallback(
+  rankings: { rank: number; donor_name: string; total_amount: number; is_permanent_vip: boolean }[]
+) {
+  // 기존 데이터 삭제
+  await withRetry(
+    async () => {
+      const { error } = await supabase.from('total_donation_rankings').delete().neq('id', 0)
+      if (error) throw new Error(error.message)
+    },
+    { maxRetries: 3 }
+  )
+
+  // 배치 삽입
   const batchSize = 100
-  for (let i = 0; i < rankingsToInsert.length; i += batchSize) {
-    const batch = rankingsToInsert.slice(i, i + batchSize)
-    await supabase.from('total_donation_rankings').insert(batch)
+  for (let i = 0; i < rankings.length; i += batchSize) {
+    const batch = rankings.slice(i, i + batchSize)
+    await withRetry(
+      async () => {
+        const { error } = await supabase.from('total_donation_rankings').insert(batch)
+        if (error) throw new Error(error.message)
+      },
+      { maxRetries: 3 }
+    )
   }
 
-  console.log(`   ✅ 종합 랭킹: ${rankingsToInsert.length}명 랭킹 갱신 완료`)
+  console.log(`   ✅ 종합 랭킹: 폴백으로 ${rankings.length}명 랭킹 갱신 완료`)
 }
 
 async function main() {
@@ -274,7 +357,7 @@ async function main() {
     seasonMismatches += mismatches.length
 
     if ((shouldFix || fixSeason) && mismatches.length > 0) {
-      await fixSeasonRanking(season.id)
+      await fixSeasonRankingWithRPC(season.id)
     }
   }
 

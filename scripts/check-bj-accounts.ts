@@ -2,20 +2,13 @@
  * BJ 계정 상태 확인 스크립트
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import dotenv from 'dotenv'
-
-dotenv.config({ path: '.env.local' })
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
+const supabase = getServiceClient()
 
 const EXPECTED_BJ_EMAILS = [
   { nickname: '린아', email: 'qwerdf1101@rgfamily.kr' },

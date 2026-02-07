@@ -98,7 +98,7 @@ export function useEpisodeRankings({
             rank: index + 1,
             donorId: item.donorId,
             donorName: item.donorName,
-            totalAmount: item.totalAmount,
+            totalAmount: item.viewerScore,
           }))
         )
 
@@ -118,7 +118,7 @@ export function useEpisodeRankings({
             rank: index + 1,
             donorId: item.donorId,
             donorName: item.donorName,
-            totalAmount: item.totalAmount,
+            totalAmount: item.viewerScore,
           }))
         )
         setIsVip(false)

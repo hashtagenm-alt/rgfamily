@@ -1,7 +1,7 @@
  # RG Family - 개발 가이드 (Claude Code용)
 
 > 이 문서는 AI가 개발할 때 참고하는 지침서야. 모든 규칙에는 "왜?"가 있어.
-> **마지막 업데이트: 2026-01-24**
+> **마지막 업데이트: 2026-02-03**
  
 ---
  
@@ -26,6 +26,7 @@
 17. [관리자 페이지 목록](#17-관리자-페이지-목록)
 18. [Supabase 작업 방법 (CLI 스크립트 우선)](#18-supabase-작업-방법-cli-스크립트-우선)
 19. [CI 실패 시 해결 가이드](#19-ci-실패-시-해결-가이드)
+20. [영상 업로드 정책 (Google Drive → Cloudflare Stream)](#20-영상-업로드-정책-google-drive--cloudflare-stream)
 
 ---
 
@@ -191,8 +192,8 @@ const { data } = await supabase
 ```
 왜? 역대 누적 총 후원 랭킹을 별도로 관리하여 시즌 랭킹과 분리.
 
-⚠️ 중요: total_amount(총 후원 하트)는 외부에 절대 노출 금지!
-       UI에서는 게이지(퍼센트)로만 표현해야 함.
+⚠️ 중요: total_amount(원시 하트 개수)는 직접 노출 금지!
+       UI에서는 시청자 점수(total_amount × 50)로 표현해야 함.
 
 테이블 구조:
 ┌──────────────────┬──────────────────────────────────────────┐
@@ -201,21 +202,27 @@ const { data } = await supabase
 │ id               │ 자동 증가 PK                              │
 │ rank             │ 순위 (1~50) - UNIQUE                      │
 │ donor_name       │ 후원자 닉네임                             │
-│ total_amount     │ 총 후원하트 ⚠️ 외부 노출 절대 금지!        │
+│ total_amount     │ 총 후원하트 (DB 내부용, 직접 노출 금지)    │
+│ donation_count   │ 후원 횟수                                 │
+│ top_bj           │ 최다 선물 BJ 닉네임                       │
 │ is_permanent_vip │ 영구 VIP 여부                             │
 │ updated_at       │ 업데이트 시점                             │
 │ created_at       │ 생성 시점                                 │
 └──────────────────┴──────────────────────────────────────────┘
 
+Public View: total_rankings_public
+- viewer_score = total_amount × 50 (시청자 점수)
+- donation_count, top_bj 포함
+
 UI 표현 규칙:
-✅ 허용: 순위, 닉네임, 게이지(1위 대비 %)
-❌ 금지: 실제 하트 개수 표시, 영구VIP 표시, 숫자 노출
+✅ 허용: 순위, 닉네임, 시청자 점수(viewer_score), 후원 횟수, 최다 선물 BJ
+❌ 금지: 원시 하트 개수(total_amount) 직접 표시, 영구VIP 표시
 
 사용 예시:
-// Top 50 조회 (total_amount, is_permanent_vip 제외!)
+// Public View를 통해 조회 (시청자 점수 포함)
 const { data } = await supabase
-  .from('total_donation_rankings')
-  .select('rank, donor_name')
+  .from('total_rankings_public')
+  .select('rank, donor_name, viewer_score, donation_count, top_bj')
   .order('rank', { ascending: true })
   .limit(50)
 ```
@@ -258,29 +265,32 @@ MODERATOR_ROLES = ['admin', 'superadmin', 'moderator']
 
 ## 6. 보안 및 개인정보 보호
 
-### 6.1 후원 정보 외부 노출 절대 금지
+### 6.1 후원 정보 보안 정책
 
 ```
-⚠️ 가장 중요한 보안 규칙!
+⚠️ 중요 보안 규칙!
 
-왜? 후원 하트 개수는 개인 금전 정보와 같음. 외부에 노출되면 안 됨.
-    팬들 간의 비교나 외부 유출로 인한 갈등 방지 목적.
+왜? 후원 원시 하트 개수는 금전 정보와 같음. 외부 유출 시 갈등 발생 가능.
+    시청자 점수(하트 × 50)는 변환된 값이므로 홈페이지 내부에서 공개 허용.
 
-✅ 허용:
-- RG Family 홈페이지 내부 (https://www.rgfamily.kr/)
-- 로그인한 사용자에게만 랭킹 표시
-- 명예의 전당 페이지 (홈페이지 내부)
+✅ 홈페이지 내부 허용:
+- 시청자 점수 (viewer_score = total_amount × 50) 표시
+- 후원 횟수 (donation_count) 표시
+- 최다 선물 BJ (top_bj) 표시
+- 순위, 닉네임, 아바타
 
 ❌ 절대 금지:
-- 후원 하트 개수를 외부 사이트/SNS에 공개
-- Open Graph, meta 태그에 후원 금액 포함
+- 원시 하트 개수(total_amount) 직접 노출
+- 후원 정보를 외부 사이트/SNS에 공개
+- Open Graph, meta 태그에 후원 금액/점수 포함
 - API 응답을 외부에서 접근 가능하게 노출
 - 크롤링 가능한 형태로 후원 정보 제공
 - 스크린샷/캡처 유도하는 UI (공유 버튼 등)
 
 개발 시 주의사항:
-- 랭킹 페이지에 "외부 공유 금지" 안내 문구 표시
-- og:description에 후원 금액 절대 포함 금지
+- DB View(total_rankings_public, season_rankings_public)를 통해서만 데이터 조회
+- total_amount 컬럼은 View에서 viewer_score로 변환되어 제공됨
+- og:description에 후원 금액/점수 절대 포함 금지
 - robots.txt에서 랭킹 페이지 크롤링 차단 검토
 ```
 
@@ -542,7 +552,7 @@ src/
 | **빌드 확인 없이 PR** | `npm run build` 성공 확인 후 PR 생성 |
 | **Mock 데이터 사용** | Supabase 직접 연결만 허용 |
 | **스키마 확인 없이 개발** | src/types/database.ts 먼저 확인 |
-| **후원 하트 외부 노출** | 홈페이지 내부에서만 표시 |
+| **원시 하트 개수 직접 노출** | 시청자 점수(×50)로 변환하여 표시. total_amount 직접 노출 금지 |
 | **SOOP(별풍선) 용어** | 여긴 **PandaTV(하트)** 플랫폼 |
 | **아이디/이메일 노출** | 닉네임만 표시 |
 | **라이브 컬러 핑크** | LIVE는 **시안색**(#00d4ff) |
@@ -725,4 +735,56 @@ main이 업데이트된 경우 기존 PR 브랜치 리베이스 필요:
 3. git rebase origin/main
 4. git push --force-with-lease
 5. CI 자동 재실행 → 결과 대기
+```
+
+---
+
+## 20. 영상 업로드 정책 (Google Drive → Cloudflare Stream)
+
+```
+왜? 원본 4K 화질 유지가 중요. 잘못된 스크립트 사용 시 1080p로 다운스케일됨.
+
+### Google Drive 영상 소스 폴더
+
+| 구분 | Google Drive 폴더 ID | 용도 |
+|------|---------------------|------|
+| 시그니처 영상 | 1sMgXm1z0L8CY_LP5MxzPO2Bf2arBHYL- | 시즌1 시그리스트 (멤버별 하위폴더) |
+| 쇼츠 영상 | 1kEUuHsY3Ob_lvuy5gw2zkmVjQO58l3b1 | 세로 쇼츠 리스트 |
+
+시그니처 폴더 구조:
+시즌1/
+├── 가애/ (1TgBpNpbgKjRhU8ZM0U8F0L94iKe7hnAq)
+├── 가윤/ (1mo1iK2_RNHp_K5Fc7Q9QXDuxqlzzKQGM)
+├── 린아/ (1ohjsys-vPZV_jb-Xowa5GzZ4NFq8IVk4)
+├── 설윤/ (1fqgrz4FsrXLg5ITc9MJpk7tQaW99ygAE)
+├── 월아/ (1PFwQwep8J2Xf9RM1UsshgszVOFziErji)
+├── 채은/ (1cIxCBJTpJeAlnCfIshN3MjAzYVR5nb0f)
+├── 청아/ (1gwc9AiVC72JBHm4zvG0eZCOMvXSXwME3)
+├── 퀸로니/ (1FXEeJsMIplhLW4aXX_ILdlLCywOAvco6)
+├── 키키/ (1FXrYnOkQQgmpDfK7GXBtY4O-VLJr-geg)
+├── 한백설/ (1AMk9z6ZP00I5xpII5nuAixOUmyj_70cO)
+├── 한세아/ (1a7DlJE-SmK02Me_4A1nm3_gSn4TZjOny)
+├── 해린/ (1wJtlz6rOiJ54nbDkDYmLWM44LBo0bawN)
+└── 홍서하/ (1A2PGJf_LgvzmFEDqOxothYRfKdvsnAYX)
+
+### 원본 화질(4K) 업로드 원칙
+
+✅ 원본 화질이 유지되는 스크립트 (사용 권장):
+- scripts/batch-signature-upload.ts    → 시그니처 일괄 업로드 (Google Drive API)
+- scripts/gdrive-shorts-upload.ts      → 쇼츠 업로드 (Google Drive)
+- scripts/upload-shorts-videos.ts      → 쇼츠 TUS 업로드
+- scripts/upload-fancam-videos.ts      → 직캠 업로드
+
+❌ 원본 화질이 손실되는 스크립트 (4K 업로드 시 사용 금지):
+- scripts/upload-shorts-transcoded.ts  → FFmpeg 1080p 트랜스코딩 (8Mbps 제한)
+
+업로드 방식:
+- ≤200MB: FormData 직접 업로드 (원본 바이너리 그대로)
+- >200MB: TUS 프로토콜 (5MB 청크 분할, 압축 없음)
+- Cloudflare Stream은 업로드 후 서버측에서 adaptive bitrate 프로필 자동 생성
+
+⚠️ 새 업로드 스크립트 작성 시:
+- FFmpeg, sharp 등 트랜스코딩/리사이즈 도구 사용 금지
+- 파일을 읽어서 그대로 Cloudflare API에 전송해야 함
+- Google Drive API(서비스 계정) 방식 사용 (Puppeteer/fetch 직접 다운로드 불가)
 ```

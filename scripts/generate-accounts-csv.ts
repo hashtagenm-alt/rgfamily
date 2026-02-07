@@ -6,13 +6,12 @@
  * 사용법: npx tsx scripts/generate-accounts-csv.ts
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import * as fs from 'fs'
 import * as path from 'path'
 import dotenv from 'dotenv'
 
 // .env.local에서 환경변수 로드
-dotenv.config({ path: '.env.local' })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -24,7 +23,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+const supabase = getServiceClient()
 
 // 임시 비밀번호 생성 (8자리 랜덤)
 function generateTempPassword(): string {

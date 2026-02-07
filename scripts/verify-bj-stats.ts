@@ -2,14 +2,13 @@
  * BJ 후원 현황 검증 스크립트
  */
 
+import { getServiceClient } from './lib/supabase'
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 
-import { createClient } from '@supabase/supabase-js'
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, serviceRoleKey)
+const supabase = getServiceClient()
 
 async function main() {
   console.log('=== target_bj 고유 값 확인 ===')

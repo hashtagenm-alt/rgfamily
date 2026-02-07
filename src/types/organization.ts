@@ -26,6 +26,14 @@ export interface SocialLinks {
   instagram?: string
 }
 
+/** 공약 히스토리 항목 */
+export interface PledgeHistoryItem {
+  battle_number: number   // 직급전 회차 (1, 2, 3...)
+  season_id: number       // 시즌 ID
+  pledge_text: string     // 공약 내용
+  created_at: string      // 등록일
+}
+
 /** 프로필 정보 타입 (profile_info JSONB 컬럼) */
 export interface ProfileInfo {
   mbti?: string           // MBTI 성격 유형
@@ -35,7 +43,8 @@ export interface ProfileInfo {
   birthday?: string       // 생일
   signal_price?: number   // 신호탄 단가
   photo_delivery?: boolean // 사진 전달 유무
-  position_pledge?: string // 직급 공약 (긴 텍스트)
+  position_pledge?: string // 현재 직급 공약 (표시용)
+  pledge_history?: PledgeHistoryItem[] // 회차별 공약 히스토리
 }
 
 /**

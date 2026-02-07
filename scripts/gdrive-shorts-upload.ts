@@ -1,109 +1,85 @@
 /**
- * Google Drive 폴더 → Cloudflare Stream → media_content (Shorts)
- *
- * 사용법:
- *   npx tsx scripts/gdrive-shorts-upload.ts --folder-id FOLDER_ID
- *   npx tsx scripts/gdrive-shorts-upload.ts --folder-id FOLDER_ID --dry-run
+ * Google Drive 폴더 → Cloudflare Stream → media_content (Shorts) V3
+ * - 파일 하나씩 확실하게 다운로드/업로드
+ * - 손밍 관련 파일 제외
+ * - 다운로드 폴더 완전 초기화 후 진행
  */
 
+import { getServiceClient } from './lib/supabase'
 import puppeteer, { Browser, Page } from 'puppeteer'
-import { createClient } from '@supabase/supabase-js'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
 import dotenv from 'dotenv'
-
-dotenv.config({ path: '.env.local' })
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID!
 const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN!
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-const TEMP_DIR = path.join(os.tmpdir(), 'rg-shorts-upload')
+const supabase = getServiceClient()
+const TEMP_DIR = path.join(os.tmpdir(), 'rg-shorts-v3')
 
 interface DriveItem {
   id: string
   name: string
-  type: 'folder' | 'file'
 }
 
-interface UploadOptions {
-  folderId: string
-  dryRun: boolean
-  limit?: number
-  unit?: 'excel' | 'crew'
+// 폴더 완전 초기화
+function cleanTempDir() {
+  if (fs.existsSync(TEMP_DIR)) {
+    fs.readdirSync(TEMP_DIR).forEach(f => {
+      try { fs.unlinkSync(path.join(TEMP_DIR, f)) } catch {}
+    })
+  } else {
+    fs.mkdirSync(TEMP_DIR, { recursive: true })
+  }
 }
 
-// Google Drive 아이템 조회
-async function getDriveItems(page: Page, folderId: string): Promise<DriveItem[]> {
+// Google Drive 파일 목록 조회
+async function getDriveFiles(page: Page, folderId: string): Promise<DriveItem[]> {
   const folderUrl = `https://drive.google.com/drive/folders/${folderId}`
-
   await page.goto(folderUrl, { waitUntil: 'networkidle2', timeout: 60000 })
   await new Promise(resolve => setTimeout(resolve, 3000))
 
-  // 스크롤
-  let previousHeight = 0
+  // 스크롤해서 모든 파일 로드
   for (let i = 0; i < 10; i++) {
-    const currentHeight = await page.evaluate(() => document.body.scrollHeight)
-    if (currentHeight === previousHeight) break
-    previousHeight = currentHeight
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
   const items = await page.evaluate(() => {
-    const results: { id: string; name: string; type: 'folder' | 'file' }[] = []
+    const results: { id: string; name: string }[] = []
     document.querySelectorAll('[data-id]').forEach((el) => {
       const id = el.getAttribute('data-id')
       if (!id || id.length < 10) return
 
       const nameEl = el.querySelector('[data-tooltip]') as HTMLElement
-      const name = nameEl?.getAttribute('data-tooltip') ||
-                   nameEl?.textContent?.trim() ||
-                   el.textContent?.trim().split('\n')[0] || ''
+      let name = nameEl?.getAttribute('data-tooltip') || ''
 
       if (!name) return
 
-      const cleanName = name
-        .replace(/\s+동영상$/i, '')
-        .replace(/\s+이미지$/i, '')
-        .replace(/\s+문서$/i, '')
-        .trim()
+      name = name.replace(/\s+동영상$/i, '').trim()
 
       const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.m4v']
-      const isVideo = videoExtensions.some(ext => cleanName.toLowerCase().endsWith(ext))
-
-      if (isVideo) {
-        results.push({ id, name: cleanName, type: 'file' })
-      } else if (!cleanName.includes('.')) {
-        results.push({ id, name: cleanName, type: 'folder' })
+      if (videoExtensions.some(ext => name.toLowerCase().endsWith(ext))) {
+        results.push({ id, name })
       }
     })
     return results
   })
 
-  return items.filter((item, idx, self) => idx === self.findIndex(i => i.id === item.id))
+  // 중복 제거
+  const unique = items.filter((item, idx, self) =>
+    idx === self.findIndex(i => i.id === item.id)
+  )
+
+  return unique.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-// Google Drive 파일 다운로드
-async function downloadFromGoogleDrive(
-  browser: Browser,
-  fileId: string,
-  fileName: string
-): Promise<string> {
-  if (!fs.existsSync(TEMP_DIR)) {
-    fs.mkdirSync(TEMP_DIR, { recursive: true })
-  }
-
-  const downloadPath = path.join(TEMP_DIR, fileName)
-
-  if (fs.existsSync(downloadPath)) {
-    const stats = fs.statSync(downloadPath)
-    if (stats.size > 1000) return downloadPath
-    fs.unlinkSync(downloadPath)
-  }
+// 단일 파일 다운로드 (새 페이지에서)
+async function downloadFile(browser: Browser, fileId: string, fileName: string): Promise<string | null> {
+  cleanTempDir()
 
   const page = await browser.newPage()
 
@@ -114,62 +90,54 @@ async function downloadFromGoogleDrive(
       downloadPath: TEMP_DIR,
     })
 
+    // 직접 다운로드 URL
     const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`
-    await page.goto(downloadUrl, { waitUntil: 'networkidle2', timeout: 120000 })
-
+    await page.goto(downloadUrl, { waitUntil: 'networkidle2', timeout: 60000 })
     await new Promise(resolve => setTimeout(resolve, 2000))
 
-    // 바이러스 스캔 경고 처리
-    const confirmButton = await page.$('a[id="uc-download-link"]')
-    if (confirmButton) {
-      await confirmButton.click()
+    // 바이러스 스캔 경고 - 다운로드 버튼 클릭
+    const confirmLink = await page.$('a[id="uc-download-link"]')
+    if (confirmLink) {
+      await confirmLink.click()
       await new Promise(resolve => setTimeout(resolve, 3000))
     }
 
-    const formButton = await page.$('form button, form input[type="submit"]')
+    // form 버튼 클릭 (대용량 파일)
+    const formButton = await page.$('form#download-form input[type="submit"], form#download-form button')
     if (formButton) {
       await formButton.click()
       await new Promise(resolve => setTimeout(resolve, 3000))
     }
 
-    // 다운로드 완료 대기
-    let attempts = 0
-    const maxAttempts = 120
-
-    while (attempts < maxAttempts) {
+    // 다운로드 완료 대기 (최대 2분)
+    for (let i = 0; i < 120; i++) {
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      const files = fs.readdirSync(TEMP_DIR)
-      const downloadedFile = files.find(f =>
-        !f.endsWith('.crdownload') && !f.endsWith('.tmp') && f !== '.DS_Store'
+      const files = fs.readdirSync(TEMP_DIR).filter(f =>
+        f !== '.DS_Store' && !f.endsWith('.crdownload') && !f.endsWith('.tmp')
       )
 
-      if (downloadedFile) {
-        const currentPath = path.join(TEMP_DIR, downloadedFile)
-        const stats = fs.statSync(currentPath)
+      if (files.length > 0) {
+        const downloadedFile = files[0]
+        const filePath = path.join(TEMP_DIR, downloadedFile)
+        const stats = fs.statSync(filePath)
 
-        if (stats.size > 1000) {
-          if (downloadedFile !== fileName) {
-            fs.renameSync(currentPath, downloadPath)
-          }
-          return downloadPath
+        if (stats.size > 10000) { // 10KB 이상
+          return filePath
         }
       }
-
-      attempts++
     }
 
-    throw new Error('다운로드 타임아웃')
+    return null
   } finally {
     await page.close()
   }
 }
 
-// Cloudflare Stream 업로드
-async function uploadToCloudflare(filePath: string, title: string): Promise<string> {
+// Cloudflare 업로드
+async function uploadToCloudflare(filePath: string): Promise<string> {
   const fileBuffer = fs.readFileSync(filePath)
   const blob = new Blob([fileBuffer])
-
   const formData = new FormData()
   formData.append('file', blob, path.basename(filePath))
 
@@ -177,197 +145,132 @@ async function uploadToCloudflare(filePath: string, title: string): Promise<stri
     `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream`,
     {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-      },
+      headers: { Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}` },
       body: formData,
     }
   )
 
   const data = await response.json()
-
   if (!response.ok || !data.success) {
-    throw new Error(`Cloudflare 업로드 실패: ${data.errors?.[0]?.message || JSON.stringify(data.errors)}`)
+    throw new Error(data.errors?.[0]?.message || 'Upload failed')
   }
 
   return data.result.uid
 }
 
-// media_content에 저장
-async function saveToMediaContent(
-  cloudflareUid: string,
-  title: string,
-  unit: 'excel' | 'crew'
-): Promise<number> {
-  // 중복 확인
-  const { data: existing } = await supabase
-    .from('media_content')
-    .select('id')
-    .eq('cloudflare_uid', cloudflareUid)
-    .limit(1)
-
-  if (existing && existing.length > 0) {
-    return existing[0].id
-  }
-
-  const videoUrl = `https://iframe.videodelivery.net/${cloudflareUid}`
-  const thumbnailUrl = `https://videodelivery.net/${cloudflareUid}/thumbnails/thumbnail.jpg`
-
+// DB 저장
+async function saveToDb(cloudflareUid: string, title: string): Promise<number> {
   const { data, error } = await supabase
     .from('media_content')
     .insert({
       content_type: 'shorts',
       title: title,
-      video_url: videoUrl,
-      thumbnail_url: thumbnailUrl,
+      video_url: `https://iframe.videodelivery.net/${cloudflareUid}`,
+      thumbnail_url: `https://videodelivery.net/${cloudflareUid}/thumbnails/thumbnail.jpg?time=7s&width=720&height=1280&fit=crop`,
       cloudflare_uid: cloudflareUid,
-      unit: unit,
-      duration: 60, // 숏츠 기본 1분
+      unit: 'excel',
+      duration: 60,
       view_count: 0,
       is_featured: false
     })
     .select()
     .single()
 
-  if (error) throw new Error(`DB 저장 실패: ${error.message}`)
+  if (error) throw new Error(error.message)
   return data.id
 }
 
-function parseArgs(): UploadOptions {
-  const args = process.argv.slice(2)
-  const options: UploadOptions = { folderId: '', dryRun: false, unit: 'excel' }
-
-  for (let i = 0; i < args.length; i++) {
-    switch (args[i]) {
-      case '--folder-id': options.folderId = args[++i]; break
-      case '--dry-run': options.dryRun = true; break
-      case '--limit': options.limit = parseInt(args[++i], 10); break
-      case '--unit': options.unit = args[++i] as 'excel' | 'crew'; break
-    }
-  }
-
-  return options
-}
-
-function cleanupTempFiles() {
-  if (fs.existsSync(TEMP_DIR)) {
-    fs.readdirSync(TEMP_DIR).forEach(f => {
-      try { fs.unlinkSync(path.join(TEMP_DIR, f)) } catch {}
-    })
-  }
-}
-
+// 제목 추출 (확장자 제거)
 function extractTitle(fileName: string): string {
-  return fileName
-    .replace(/\.(mp4|mov|avi|mkv|webm|m4v)$/i, '')
-    .trim()
+  return fileName.replace(/\.(mp4|mov|avi|mkv|webm|m4v)$/i, '').trim()
 }
 
 async function main() {
-  console.log('═'.repeat(60))
-  console.log('🎬 Google Drive → Cloudflare Stream (Shorts 업로드)')
-  console.log('═'.repeat(60))
+  const folderId = process.argv[2]
 
-  if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
-    console.error('\n❌ Cloudflare 환경변수가 설정되지 않았습니다.')
+  if (!folderId) {
+    console.log('사용법: npx tsx scripts/gdrive-shorts-upload-v3.ts FOLDER_ID')
     process.exit(1)
   }
 
-  const options = parseArgs()
+  console.log('═'.repeat(60))
+  console.log('🎬 Google Drive → Cloudflare (손밍 제외)')
+  console.log('═'.repeat(60))
 
-  if (!options.folderId) {
-    console.log('\n사용법:')
-    console.log('  npx tsx scripts/gdrive-shorts-upload.ts --folder-id FOLDER_ID')
-    console.log('\n옵션:')
-    console.log('  --dry-run       검증만 수행')
-    console.log('  --limit <n>     처음 n개만 업로드')
-    console.log('  --unit <unit>   excel 또는 crew (기본: excel)')
-    process.exit(1)
-  }
+  cleanTempDir()
 
-  console.log(`\n📂 폴더 ID: ${options.folderId}`)
-  console.log(`📋 모드: ${options.dryRun ? '🔍 검증만' : '🚀 실제 업로드'}`)
-  console.log(`📋 Unit: ${options.unit}`)
-  if (options.limit) console.log(`📋 제한: ${options.limit}개`)
-
-  cleanupTempFiles()
-
-  console.log('\n🌐 브라우저 시작 중...')
+  console.log('\n🌐 브라우저 시작...')
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   })
 
   const page = await browser.newPage()
-  await page.setUserAgent(
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-  )
+  await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
 
   try {
-    console.log('\n📁 폴더 스캔 중...')
-    const items = await getDriveItems(page, options.folderId)
-    const videoFiles = items.filter(item => item.type === 'file')
+    console.log('📁 파일 목록 조회...')
+    const files = await getDriveFiles(page, folderId)
 
-    console.log(`   영상 파일: ${videoFiles.length}개`)
+    // 손밍 제외
+    const filteredFiles = files.filter(f => !f.name.includes('손밍'))
 
-    if (videoFiles.length === 0) {
-      console.log('\n⚠️ 업로드할 영상이 없습니다.')
-      await browser.close()
-      return
-    }
-
-    let toUpload = videoFiles
-    if (options.limit && videoFiles.length > options.limit) {
-      toUpload = videoFiles.slice(0, options.limit)
-      console.log(`\n📋 --limit ${options.limit} 적용`)
-    }
-
-    if (options.dryRun) {
-      console.log('\n🔍 [DRY RUN] 검증 완료')
-      toUpload.forEach((file, idx) => {
-        console.log(`  ${idx + 1}. ${file.name}`)
-      })
-      await browser.close()
-      return
-    }
-
-    console.log('\n🚀 업로드 시작...\n')
+    console.log(`   전체: ${files.length}개, 손밍 제외: ${filteredFiles.length}개\n`)
 
     let success = 0
     let failed = 0
 
-    for (let i = 0; i < toUpload.length; i++) {
-      const file = toUpload[i]
+    for (let i = 0; i < filteredFiles.length; i++) {
+      const file = filteredFiles[i]
       const title = extractTitle(file.name)
-      process.stdout.write(`[${i + 1}/${toUpload.length}] ${file.name}`)
+
+      process.stdout.write(`[${i + 1}/${filteredFiles.length}] ${file.name}`)
 
       try {
-        // 1. 다운로드
+        // 다운로드
         process.stdout.write(' 📥')
-        const localPath = await downloadFromGoogleDrive(browser, file.id, file.name)
+        const localPath = await downloadFile(browser, file.id, file.name)
 
-        // 2. Cloudflare 업로드
+        if (!localPath) {
+          console.log(' ❌ 다운로드 실패')
+          failed++
+          continue
+        }
+
+        const fileSize = fs.statSync(localPath).size
+        const sizeMB = (fileSize / 1024 / 1024).toFixed(1)
+        process.stdout.write(`(${sizeMB}MB)`)
+
+        // 200MB 초과 체크
+        if (fileSize > 200 * 1024 * 1024) {
+          console.log(' ❌ 크기 초과')
+          fs.unlinkSync(localPath)
+          failed++
+          continue
+        }
+
+        // 업로드
         process.stdout.write(' ☁️')
-        const cloudflareUid = await uploadToCloudflare(localPath, title)
+        const uid = await uploadToCloudflare(localPath)
 
-        // 3. DB 저장
+        // DB 저장
         process.stdout.write(' 💾')
-        const mediaId = await saveToMediaContent(cloudflareUid, title, options.unit!)
+        const id = await saveToDb(uid, title)
 
-        // 4. 로컬 파일 삭제
+        // 정리
         fs.unlinkSync(localPath)
 
-        console.log(` ✅ (id: ${mediaId}, uid: ${cloudflareUid.substring(0, 8)}...)`)
+        console.log(` ✅ id:${id}`)
         success++
+
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        console.log(` ❌ ${msg}`)
+        console.log(` ❌ ${msg.slice(0, 50)}`)
         failed++
       }
 
-      if (i < toUpload.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-      }
+      // 다음 파일 전 대기
+      await new Promise(resolve => setTimeout(resolve, 2000))
     }
 
     console.log('\n' + '═'.repeat(60))
@@ -376,12 +279,11 @@ async function main() {
 
   } finally {
     await browser.close()
-    cleanupTempFiles()
+    cleanTempDir()
   }
 }
 
 main().catch(err => {
-  console.error('\n❌ 오류:', err.message)
-  cleanupTempFiles()
+  console.error('❌', err.message)
   process.exit(1)
 })

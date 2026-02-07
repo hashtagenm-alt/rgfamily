@@ -15,13 +15,12 @@
  *     --season=1 --episode=3 --title="3화 조기퇴근데이"
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as dotenv from 'dotenv'
 
 // .env.local 로드
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
+ })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -32,9 +31,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false },
-})
+const supabase = getServiceClient()
 
 // CSV 파싱 결과 타입
 interface DonationRecord {
@@ -114,10 +111,14 @@ function extractNickname(idWithNickname: string): { id: string; nickname: string
 }
 
 /**
- * 참여 BJ 이름 정리: "손밍 (퇴근)" -> "손밍"
+ * 참여 BJ 이름 정리: 칭호/상태 접미사 제거
+ * 예: "손밍 (퇴근)" → "손밍", "청아(여왕)" → "청아"
  */
 function cleanMemberName(raw: string): string {
-  return raw.replace(/\s*\(퇴근\)\s*$/, '').trim()
+  return raw
+    .replace(/\[.*?\]\s*/g, '')
+    .replace(/\s*\((여왕|왕|공주|퇴근|조퇴|방장|매니저|열혈팬|우수팬|신규팬|대표BJ)\)\s*/g, '')
+    .trim()
 }
 
 /**

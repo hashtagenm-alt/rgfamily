@@ -1,14 +1,10 @@
+import { getServiceClient } from './lib/supabase'
 /**
  * Supabase 데이터베이스 스키마 검증 스크립트
  * - 실제 테이블 목록 확인
  * - 컬럼 누락 여부 확인
  * - database.ts와 비교
  */
-
-import { createClient } from '@supabase/supabase-js'
-import * as dotenv from 'dotenv'
-
-dotenv.config({ path: '.env.local' })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -18,9 +14,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false },
-})
+const supabase = getServiceClient()
 
 // database.ts에 정의된 테이블 목록
 const expectedTables = [

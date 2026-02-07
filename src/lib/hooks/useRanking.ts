@@ -25,7 +25,6 @@ interface UseRankingReturn {
   currentSeason: Season | null
   selectedSeasonId: number | null
   unitFilter: UnitFilter
-  maxAmount: number
   isLoading: boolean
   error: string | null
   setSelectedSeasonId: (id: number | null) => void
@@ -89,16 +88,12 @@ export function useRanking(options: UseRankingOptions = {}): UseRankingReturn {
     fetchRankings()
   }, [fetchRankings])
 
-  // 최대 후원 금액 (게이지 바 계산용)
-  const maxAmount = rankings.length > 0 ? rankings[0].totalAmount : 0
-
   return {
     rankings,
     seasons,
     currentSeason,
     selectedSeasonId,
     unitFilter,
-    maxAmount,
     isLoading,
     error,
     setSelectedSeasonId,

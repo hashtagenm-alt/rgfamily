@@ -47,7 +47,6 @@ export default function SeasonRankingPage() {
     currentSeason,
     selectedSeasonId,
     unitFilter,
-    maxAmount,
     isLoading,
     setSelectedSeasonId,
     setUnitFilter,
@@ -91,20 +90,20 @@ export default function SeasonRankingPage() {
   const top50 = rankings.slice(0, 50)
   const top3 = top50.slice(0, 3)
 
-  // 포디움 달성자 profile_id 목록 (VIP 페이지 링크용)
+  // VIP 페이지 클릭 가능한 사용자 (View의 is_vip_clickable 기반)
   const podiumProfileIds = useMemo(() => {
-    return top3
-      .filter(item => item.donorId)
+    return rankings
+      .filter(item => item.donorId && item.hasVipRewards)
       .map(item => item.donorId as string)
-  }, [top3])
+  }, [rankings])
 
   // 시즌 통계
   const seasonStats = useMemo(() => {
     if (rankings.length === 0) return null
-    const totalAmount = rankings.reduce((sum, r) => sum + r.totalAmount, 0)
+    const totalScore = rankings.reduce((sum, r) => sum + r.viewerScore, 0)
     const participantCount = rankings.length
-    const avgAmount = Math.round(totalAmount / participantCount)
-    return { totalAmount, participantCount, avgAmount }
+    const avgScore = Math.round(totalScore / participantCount)
+    return { totalScore, participantCount, avgScore }
   }, [rankings])
 
   // 시즌을 찾을 수 없는 경우
@@ -246,7 +245,6 @@ export default function SeasonRankingPage() {
               </div>
               <RankingFullList
                 rankings={top50}
-                maxAmount={maxAmount}
                 limit={50}
                 podiumProfileIds={podiumProfileIds}
               />

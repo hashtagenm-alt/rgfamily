@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RG Family - 아키텍처 다이어그램</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #eee;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 {
+      text-align: center;
+      color: #fd68ba;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 30px;
+    }
+    .diagram-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .diagram-section h2 {
+      color: #00d4ff;
+      font-size: 1.3rem;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mermaid {
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #fd68ba;
+    }
+    .stat-label {
+      color: #888;
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+    .stat-card.warning .stat-number { color: #ffa500; }
+    .stat-card.success .stat-number { color: #00d4ff; }
+    .stat-card.danger .stat-number { color: #ff4444; }
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
+    .issues-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .issues-list li {
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .issues-list li.critical { background: rgba(255,68,68,0.15); border-left: 3px solid #ff4444; }
+    .issues-list li.warning { background: rgba(255,165,0,0.15); border-left: 3px solid #ffa500; }
+    .issues-list li.info { background: rgba(0,212,255,0.15); border-left: 3px solid #00d4ff; }
+    .issue-icon { font-size: 1.2rem; }
+    .issue-content { flex: 1; }
+    .issue-title { font-weight: 600; margin-bottom: 4px; }
+    .issue-desc { font-size: 0.85rem; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>RG Family 프로젝트 아키텍처</h1>
+    <p class="subtitle">분석일: 2026-02-05 | Next.js 16 + Supabase + Cloudflare Stream</p>
+
+    <!-- 통계 카드 -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">352</div>
+        <div class="stat-label">소스 파일 (src/)</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-number">156</div>
+        <div class="stat-label">활성 스크립트</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-number">96%</div>
+        <div class="stat-label">공통 라이브러리 미사용</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-number">20</div>
+        <div class="stat-label">Server Actions</div>
+      </div>
+    </div>
+
+    <!-- 시스템 아키텍처 -->
+    <div class="diagram-section">
+      <h2>🏗️ 시스템 아키텍처</h2>
+      <div class="mermaid">
+graph TB
+    subgraph Client["🖥️ Client (Browser)"]
+        UI[React 19 + Tailwind CSS 4]
+        RQ[React Query]
+    end
+
+    subgraph Vercel["☁️ Vercel"]
+        subgraph NextJS["Next.js 16 App Router"]
+            Pages[Pages<br/>ranking, vip, admin...]
+            Actions[Server Actions<br/>20개 액션 파일]
+            API[API Routes<br/>cloudinary, pandatv...]
+        end
+    end
+
+    subgraph External["🌐 외부 서비스"]
+        Supabase[(Supabase<br/>PostgreSQL + Auth)]
+        CF[Cloudflare Stream<br/>영상 호스팅]
+        GDrive[Google Drive<br/>원본 영상]
+        PandaTV[PandaTV<br/>라이브 상태]
+    end
+
+    subgraph Scripts["🔧 운영 스크립트"]
+        Lib[scripts/lib/<br/>공통 유틸리티]
+        Ranking[랭킹 스크립트<br/>6개]
+        Other[기타 스크립트<br/>150개]
+    end
+
+    UI --> RQ
+    RQ --> Actions
+    Pages --> Actions
+    Actions --> Supabase
+    API --> CF
+    API --> PandaTV
+
+    Lib --> Ranking
+    Ranking --> Supabase
+    Other -.->|직접 연결| Supabase
+
+    GDrive --> Scripts
+    Scripts --> CF
+
+    style Lib fill:#00d4ff,color:#000
+    style Ranking fill:#00d4ff,color:#000
+    style Other fill:#ffa500,color:#000
+      </div>
+    </div>
+
+    <!-- 데이터 파이프라인 -->
+    <div class="diagram-section">
+      <h2>📊 데이터 파이프라인</h2>
+      <div class="mermaid">
+flowchart LR
+    subgraph Source["📥 데이터 소스"]
+        CSV[PandaTV CSV<br/>후원 내역]
+        GD[Google Drive<br/>4K 영상]
+    end
+
+    subgraph Process["⚙️ 처리 스크립트"]
+        IMP[import-donations.ts<br/>import-episode-*.ts]
+        UPLOAD[batch-signature-upload.ts<br/>gdrive-shorts-upload.ts]
+    end
+
+    subgraph DB["💾 데이터베이스"]
+        DON[(donations)]
+        SDR[(season_donation_rankings)]
+        TDR[(total_donation_rankings)]
+        SIG[(signature_videos)]
+        MC[(media_content)]
+    end
+
+    subgraph CDN["🌐 CDN"]
+        CFS[Cloudflare Stream]
+    end
+
+    CSV --> IMP
+    IMP --> DON
+    DON --> |refresh-season-rankings| SDR
+    DON --> |refresh-total-rankings| TDR
+
+    GD --> UPLOAD
+    UPLOAD --> CFS
+    UPLOAD --> SIG
+    UPLOAD --> MC
+
+    style DON fill:#fd68ba,color:#000
+    style SDR fill:#ffd700,color:#000
+    style TDR fill:#ffd700,color:#000
+      </div>
+    </div>
+
+    <!-- 스크립트 의존성 -->
+    <div class="diagram-section">
+      <h2>📁 스크립트 의존성 구조</h2>
+      <div class="mermaid">
+graph TD
+    subgraph Lib["scripts/lib/ (공통 라이브러리)"]
+        SB[supabase.ts<br/>환경변수 검증 + 싱글톤]
+        UT[utils.ts<br/>withRetry, processBatch]
+        CP[csv-parser.ts<br/>RFC 4180 파서]
+        NN[nickname.ts<br/>닉네임 정규화]
+    end
+
+    subgraph Good["✅ 공통 라이브러리 사용 (6개)"]
+        RS[refresh-season-rankings.ts]
+        RT[refresh-total-rankings.ts]
+        US[update-season-rankings.ts]
+        UT2[update-total-rankings.ts]
+        VR[verify-ranking-integrity.ts]
+        ML[migrate-legacy-data.ts]
+    end
+
+    subgraph Bad["❌ 직접 연결 (150개)"]
+        CV[check-vip-*.ts<br/>11개]
+        CB[check-bj-*.ts<br/>8개]
+        AN[analyze-*.ts<br/>15개]
+        UP[upload-*.ts<br/>20개]
+        OT[기타 96개]
+    end
+
+    SB --> Good
+    UT --> Good
+    CP --> US
+
+    Bad -.->|중복 코드| ENV[.env.local 직접 파싱]
+    Bad -.->|중복 코드| CC[createClient 직접 호출]
+
+    style Lib fill:#00d4ff,color:#000
+    style Good fill:#00ff88,color:#000
+    style Bad fill:#ff6b6b,color:#000
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background:#00d4ff"></div>
+          <span>공통 라이브러리</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background:#00ff88"></div>
+          <span>모범 사례 (6개)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background:#ff6b6b"></div>
+          <span>개선 필요 (150개)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Server Actions 구조 -->
+    <div class="diagram-section">
+      <h2>⚡ Server Actions 구조</h2>
+      <div class="mermaid">
+graph LR
+    subgraph Pages["📄 페이지"]
+        RP[/ranking]
+        VP[/vip]
+        AP[/admin]
+        CP[/community]
+    end
+
+    subgraph Actions["🔧 Server Actions"]
+        DR[donation-rankings.ts]
+        VRW[vip-rewards.ts<br/>16KB]
+        BJM[bj-messages.ts<br/>16KB]
+        MD[media.ts]
+        PS[posts.ts<br/>12KB]
+        PF[profiles.ts]
+        PM[permissions.ts]
+    end
+
+    subgraph Supabase["💾 Supabase"]
+        T1[(donations)]
+        T2[(vip_rewards)]
+        T3[(media_content)]
+        T4[(profiles)]
+    end
+
+    RP --> DR
+    VP --> VRW
+    VP --> BJM
+    AP --> MD
+    CP --> PS
+
+    DR --> T1
+    VRW --> T2
+    MD --> T3
+    PF --> T4
+
+    PM --> |권한 체크| Actions
+
+    style PM fill:#fd68ba,color:#000
+      </div>
+    </div>
+
+    <!-- 발견된 이슈 -->
+    <div class="diagram-section">
+      <h2>⚠️ 발견된 이슈 및 개선점</h2>
+      <ul class="issues-list">
+        <li class="critical">
+          <span class="issue-icon">🔴</span>
+          <div class="issue-content">
+            <div class="issue-title">중복된 Supabase 초기화 (150개 스크립트)</div>
+            <div class="issue-desc">96%의 스크립트가 공통 라이브러리를 사용하지 않고 직접 createClient 호출. 환경변수 검증 로직 중복.</div>
+          </div>
+        </li>
+        <li class="warning">
+          <span class="issue-icon">🟡</span>
+          <div class="issue-content">
+            <div class="issue-title">스크립트 과다 (156개 활성)</div>
+            <div class="issue-desc">유사 기능 중복 (check-vip-* 11개), 버전별 스크립트 (v2, v3), 일회성 스크립트 미정리.</div>
+          </div>
+        </li>
+        <li class="warning">
+          <span class="issue-icon">🟡</span>
+          <div class="issue-content">
+            <div class="issue-title">수동 환경변수 파싱 (~50개)</div>
+            <div class="issue-desc">fs.readFileSync로 .env.local 직접 읽기. dotenv.config 대신 수동 파싱.</div>
+          </div>
+        </li>
+        <li class="info">
+          <span class="issue-icon">🔵</span>
+          <div class="issue-content">
+            <div class="issue-title">개선 권장: Cloudflare/GDrive API 공통화</div>
+            <div class="issue-desc">scripts/lib/cloudflare.ts, scripts/lib/google-drive.ts 추가 권장.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 개선 우선순위 -->
+    <div class="diagram-section">
+      <h2>📋 개선 우선순위</h2>
+      <div class="mermaid">
+gantt
+    title 스크립트 리팩토링 로드맵
+    dateFormat  YYYY-MM-DD
+    section 우선순위 1
+    공통 라이브러리 적용 확대    :crit, a1, 2026-02-05, 3d
+    section 우선순위 2
+    구버전 스크립트 archive      :a2, after a1, 2d
+    일회성 스크립트 정리         :a3, after a2, 1d
+    section 우선순위 3
+    cloudflare.ts 추가          :a4, after a3, 2d
+    google-drive.ts 추가        :a5, after a4, 2d
+      </div>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#fd68ba',
+        primaryTextColor: '#fff',
+        primaryBorderColor: '#fd68ba',
+        lineColor: '#888',
+        secondaryColor: '#00d4ff',
+        tertiaryColor: '#1a1a2e'
+      }
+    });
+  </script>
+</body>
+</html>

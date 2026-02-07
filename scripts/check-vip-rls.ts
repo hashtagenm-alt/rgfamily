@@ -1,6 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import { getServiceClient } from './lib/supabase'
+;
+;
+;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -10,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = getServiceClient();
 
 async function checkVipImages() {
   console.log('=== VIP 이미지 RLS 점검 (anon key - 비로그인 상태) ===\n');

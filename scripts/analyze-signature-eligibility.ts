@@ -1,201 +1,186 @@
 /**
- * 개인 시그니처 자격 분석
- * - 1번째 시그: 당일 누적 10만 하트 이상
- * - 2번째 시그: 당일 누적 15만 하트 이상
+ * 시그니처 자격 분석 스크립트
+ *
+ * 기준:
+ * - 1번째 시그: 당일 누적 10만+ 하트
+ * - 2번째 시그: 1번째 이후 회차에서 당일 15만+ 하트
+ * - 3번째 시그: 2번째 이후 회차에서 당일 20만+ 하트
  */
 
-import { config } from 'dotenv'
-config({ path: '.env.local' })
+import { getServiceClient } from './lib/supabase'
+const supabase = getServiceClient()
 
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, serviceRoleKey)
-
-const FIRST_SIG_THRESHOLD = 100000  // 10만 하트
-const SECOND_SIG_THRESHOLD = 150000 // 15만 하트
-
-interface DonationRecord {
-  donor_name: string
-  amount: number
-  donated_at: string
-  episode_id: number
+// 시그니처 획득 기준
+const SIG_THRESHOLDS = {
+  1: 100000,  // 1번째 시그: 10만 하트
+  2: 150000,  // 2번째 시그: 15만 하트
+  3: 200000,  // 3번째 시그: 20만 하트
 }
 
-async function fetchAllDonations(): Promise<DonationRecord[]> {
-  const allData: DonationRecord[] = []
-  let page = 0
-  const pageSize = 1000
+interface EpisodeDonation {
+  episode_id: number
+  donor_name: string
+  total: number
+}
 
-  while (true) {
-    const { data, error } = await supabase
-      .from('donations')
-      .select('donor_name, amount, donated_at, episode_id')
-      .eq('season_id', 1)
-      .not('donated_at', 'is', null)
-      .range(page * pageSize, (page + 1) * pageSize - 1)
-
-    if (error) throw new Error(error.message)
-    if (!data || data.length === 0) break
-
-    allData.push(...data)
-    console.log(`  페이지 ${page + 1}: ${data.length}건 조회 (누적: ${allData.length}건)`)
-
-    if (data.length < pageSize) break
-    page++
-  }
-
-  return allData
+interface SignatureRecord {
+  sigNumber: number
+  episode_id: number
+  amount: number
 }
 
 async function main() {
-  console.log('=== 개인 시그니처 자격 분석 ===')
-  console.log(`1번째 시그: 당일 ${FIRST_SIG_THRESHOLD.toLocaleString()} 하트 이상`)
-  console.log(`2번째 시그: 당일 ${SECOND_SIG_THRESHOLD.toLocaleString()} 하트 이상\n`)
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🏆 시그니처 자격 분석')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('기준:')
+  console.log('  - 1번째 시그: 당일 10만+ 하트')
+  console.log('  - 2번째 시그: 1번째 이후 당일 15만+ 하트')
+  console.log('  - 3번째 시그: 2번째 이후 당일 20만+ 하트')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
 
-  // 1. 전체 후원 데이터 조회
-  console.log('1. 시즌 1 전체 후원 데이터 조회...')
-  const donations = await fetchAllDonations()
-  console.log(`총 ${donations.length}건 조회 완료\n`)
+  // 에피소드 정보 조회
+  const { data: episodes } = await supabase
+    .from('episodes')
+    .select('id, episode_number, title')
+    .order('id', { ascending: true })
 
-  // 2. 후원자별, 날짜별 집계
-  console.log('2. 후원자별 날짜별 집계...')
+  const episodeMap = new Map(episodes?.map(e => [e.id, e]) || [])
 
-  // donor_name -> date -> { total, episode_ids }
-  const donorDailyTotals: Map<string, Map<string, { total: number; episodes: Set<number> }>> = new Map()
+  // 전체 후원 데이터 조회 (Supabase 기본 limit 1000건 → 전체 데이터 가져오기)
+  let allDonations: { episode_id: number; donor_name: string; amount: number }[] = []
+  let offset = 0
+  const pageSize = 1000
 
+  while (true) {
+    const { data: page } = await supabase
+      .from('donations')
+      .select('episode_id, donor_name, amount')
+      .order('episode_id', { ascending: true })
+      .range(offset, offset + pageSize - 1)
+
+    if (!page || page.length === 0) break
+    allDonations = allDonations.concat(page)
+    if (page.length < pageSize) break
+    offset += pageSize
+  }
+
+  const donations = allDonations
+
+  if (!donations || donations.length === 0) {
+    console.log('후원 데이터가 없습니다.')
+    return
+  }
+
+  // 에피소드별 + 후원자별 당일 누적 계산
+  const episodeDonorTotals: Record<string, EpisodeDonation> = {}
   for (const d of donations) {
-    if (!d.donated_at || !d.donor_name) continue
-
-    // 날짜만 추출 (YYYY-MM-DD)
-    const date = d.donated_at.split('T')[0].split(' ')[0]
-
-    if (!donorDailyTotals.has(d.donor_name)) {
-      donorDailyTotals.set(d.donor_name, new Map())
+    const key = `${d.episode_id}|${d.donor_name}`
+    if (!episodeDonorTotals[key]) {
+      episodeDonorTotals[key] = { episode_id: d.episode_id, donor_name: d.donor_name, total: 0 }
     }
-
-    const dailyMap = donorDailyTotals.get(d.donor_name)!
-    if (!dailyMap.has(date)) {
-      dailyMap.set(date, { total: 0, episodes: new Set() })
-    }
-
-    const dayData = dailyMap.get(date)!
-    dayData.total += d.amount
-    dayData.episodes.add(d.episode_id)
+    episodeDonorTotals[key].total += d.amount
   }
 
-  // 3. 시그니처 자격자 분석
-  console.log('3. 시그니처 자격자 분석...\n')
+  // 10만+ 달성자만 필터링
+  const qualified = Object.values(episodeDonorTotals)
+    .filter(d => d.total >= SIG_THRESHOLDS[1])
+    .sort((a, b) => a.episode_id - b.episode_id || b.total - a.total)
 
-  interface SignatureEligibility {
-    donor_name: string
-    firstSigDays: { date: string; total: number; episodes: number[] }[]
-    secondSigDays: { date: string; total: number; episodes: number[] }[]
+  // 후원자별 달성 이력 정리
+  const donorHistory: Record<string, EpisodeDonation[]> = {}
+  for (const q of qualified) {
+    if (!donorHistory[q.donor_name]) donorHistory[q.donor_name] = []
+    donorHistory[q.donor_name].push(q)
   }
 
-  const eligibleDonors: SignatureEligibility[] = []
+  // 시그니처 자격 계산
+  const donorSignatures: Record<string, SignatureRecord[]> = {}
 
-  for (const [donor, dailyMap] of donorDailyTotals) {
-    const firstSigDays: { date: string; total: number; episodes: number[] }[] = []
-    const secondSigDays: { date: string; total: number; episodes: number[] }[] = []
+  for (const [name, history] of Object.entries(donorHistory)) {
+    history.sort((a, b) => a.episode_id - b.episode_id)
+    donorSignatures[name] = []
 
-    for (const [date, data] of dailyMap) {
-      if (data.total >= SECOND_SIG_THRESHOLD) {
-        secondSigDays.push({ date, total: data.total, episodes: Array.from(data.episodes) })
-      } else if (data.total >= FIRST_SIG_THRESHOLD) {
-        firstSigDays.push({ date, total: data.total, episodes: Array.from(data.episodes) })
-      }
-    }
+    for (const h of history) {
+      const currentSigCount = donorSignatures[name].length
+      const nextSigNumber = currentSigCount + 1
 
-    if (firstSigDays.length > 0 || secondSigDays.length > 0) {
-      eligibleDonors.push({
-        donor_name: donor,
-        firstSigDays,
-        secondSigDays
-      })
-    }
-  }
+      if (nextSigNumber > 3) continue // 최대 3개
 
-  // 정렬: 2번째 시그 자격 있는 사람 우선, 그 다음 1번째 시그 자격자
-  eligibleDonors.sort((a, b) => {
-    const aMax = Math.max(
-      ...a.secondSigDays.map(d => d.total),
-      ...a.firstSigDays.map(d => d.total),
-      0
-    )
-    const bMax = Math.max(
-      ...b.secondSigDays.map(d => d.total),
-      ...b.firstSigDays.map(d => d.total),
-      0
-    )
-    return bMax - aMax
-  })
-
-  // 4. 결과 출력
-  console.log('=' .repeat(70))
-  console.log('시그니처 자격자 목록')
-  console.log('=' .repeat(70))
-
-  // 2번째 시그 자격자 (15만 이상)
-  const secondSigEligible = eligibleDonors.filter(d => d.secondSigDays.length > 0)
-  console.log(`\n📌 2번째 시그 자격자 (당일 ${SECOND_SIG_THRESHOLD.toLocaleString()}+ 하트): ${secondSigEligible.length}명`)
-  console.log('-'.repeat(70))
-
-  for (const donor of secondSigEligible) {
-    console.log(`\n🏆 ${donor.donor_name}`)
-    for (const day of donor.secondSigDays) {
-      const epStr = day.episodes.map(e => `${e}화`).join(', ')
-      console.log(`   📅 ${day.date}: ${day.total.toLocaleString()} 하트 (${epStr})`)
-    }
-    // 1번째 시그 자격도 있으면 표시
-    if (donor.firstSigDays.length > 0) {
-      console.log(`   + 1번째 시그 자격일: ${donor.firstSigDays.length}일`)
-    }
-  }
-
-  // 1번째 시그만 자격자 (10만~15만)
-  const firstSigOnly = eligibleDonors.filter(d => d.secondSigDays.length === 0 && d.firstSigDays.length > 0)
-  console.log(`\n\n📌 1번째 시그 자격자 (당일 ${FIRST_SIG_THRESHOLD.toLocaleString()}~${SECOND_SIG_THRESHOLD.toLocaleString()-1} 하트): ${firstSigOnly.length}명`)
-  console.log('-'.repeat(70))
-
-  for (const donor of firstSigOnly) {
-    console.log(`\n⭐ ${donor.donor_name}`)
-    for (const day of donor.firstSigDays) {
-      const epStr = day.episodes.map(e => `${e}화`).join(', ')
-      console.log(`   📅 ${day.date}: ${day.total.toLocaleString()} 하트 (${epStr})`)
-    }
-  }
-
-  // 5. 요약
-  console.log('\n\n' + '='.repeat(70))
-  console.log('요약')
-  console.log('='.repeat(70))
-  console.log(`2번째 시그 자격자 (15만+): ${secondSigEligible.length}명`)
-  console.log(`1번째 시그만 자격자 (10만~15만): ${firstSigOnly.length}명`)
-  console.log(`총 시그니처 자격자: ${eligibleDonors.length}명`)
-
-  // 에피소드별 분포
-  console.log('\n에피소드별 자격 달성 분포:')
-  const epCounts: Record<number, { first: number; second: number }> = {}
-  for (const donor of eligibleDonors) {
-    for (const day of donor.secondSigDays) {
-      for (const ep of day.episodes) {
-        if (!epCounts[ep]) epCounts[ep] = { first: 0, second: 0 }
-        epCounts[ep].second++
-      }
-    }
-    for (const day of donor.firstSigDays) {
-      for (const ep of day.episodes) {
-        if (!epCounts[ep]) epCounts[ep] = { first: 0, second: 0 }
-        epCounts[ep].first++
+      const threshold = SIG_THRESHOLDS[nextSigNumber as 1 | 2 | 3]
+      if (h.total >= threshold) {
+        donorSignatures[name].push({
+          sigNumber: nextSigNumber,
+          episode_id: h.episode_id,
+          amount: h.total
+        })
       }
     }
   }
 
-  for (const ep of Object.keys(epCounts).map(Number).sort((a, b) => a - b)) {
-    console.log(`  ${ep}화: 1번째 시그 ${epCounts[ep].first}건, 2번째 시그 ${epCounts[ep].second}건`)
+  // 시그니처 개수별 분류
+  const sig3 = Object.entries(donorSignatures).filter(([, sigs]) => sigs.length >= 3)
+  const sig2 = Object.entries(donorSignatures).filter(([, sigs]) => sigs.length === 2)
+  const sig1 = Object.entries(donorSignatures).filter(([, sigs]) => sigs.length === 1)
+
+  // 출력
+  console.log(`🏆🏆🏆 3개 시그니처 (${sig3.length}명)`)
+  console.log('─'.repeat(60))
+  for (const [name, sigs] of sig3) {
+    console.log(`\n${name}:`)
+    for (const s of sigs) {
+      const ep = episodeMap.get(s.episode_id)
+      console.log(`  ${s.sigNumber}번째: EP${ep?.episode_number || s.episode_id} (${s.amount.toLocaleString()} 하트)`)
+    }
   }
+
+  console.log(`\n\n🏆🏆 2개 시그니처 (${sig2.length}명)`)
+  console.log('─'.repeat(60))
+  for (const [name, sigs] of sig2) {
+    const history = donorHistory[name]
+    const lastSig = sigs[sigs.length - 1]
+
+    // 3번째 시그까지 부족한 금액 계산
+    const futureEps = history.filter(h => h.episode_id > lastSig.episode_id)
+    const maxAfterSig2 = futureEps.length > 0 ? Math.max(...futureEps.map(h => h.total)) : 0
+    const shortfall = SIG_THRESHOLDS[3] - maxAfterSig2
+
+    console.log(`\n${name}:`)
+    for (const s of sigs) {
+      const ep = episodeMap.get(s.episode_id)
+      console.log(`  ${s.sigNumber}번째: EP${ep?.episode_number || s.episode_id} (${s.amount.toLocaleString()} 하트)`)
+    }
+    if (shortfall > 0) {
+      console.log(`  → 3번째까지 ${shortfall.toLocaleString()} 부족`)
+    }
+  }
+
+  console.log(`\n\n🏆 1개 시그니처 (${sig1.length}명)`)
+  console.log('─'.repeat(60))
+  for (const [name, sigs] of sig1) {
+    const history = donorHistory[name]
+    const lastSig = sigs[sigs.length - 1]
+
+    // 2번째 시그까지 부족한 금액 계산
+    const futureEps = history.filter(h => h.episode_id > lastSig.episode_id)
+    const maxAfterSig1 = futureEps.length > 0 ? Math.max(...futureEps.map(h => h.total)) : 0
+    const shortfall = SIG_THRESHOLDS[2] - maxAfterSig1
+
+    const ep = episodeMap.get(sigs[0].episode_id)
+    console.log(`\n${name}: EP${ep?.episode_number || sigs[0].episode_id} (${sigs[0].amount.toLocaleString()} 하트)`)
+    if (shortfall > 0 && maxAfterSig1 >= SIG_THRESHOLDS[1]) {
+      console.log(`  → 2번째까지 ${shortfall.toLocaleString()} 부족 (현재 최고: ${maxAfterSig1.toLocaleString()})`)
+    }
+  }
+
+  // 요약
+  console.log('\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('📊 요약')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log(`3개 시그: ${sig3.length}명 - ${sig3.map(([n]) => n).join(', ') || '없음'}`)
+  console.log(`2개 시그: ${sig2.length}명 - ${sig2.map(([n]) => n).join(', ') || '없음'}`)
+  console.log(`1개 시그: ${sig1.length}명`)
+  console.log(`총 자격자: ${sig3.length + sig2.length + sig1.length}명`)
 }
 
 main().catch(console.error)

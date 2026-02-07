@@ -1220,7 +1220,9 @@ export type Database = {
           rank: number
           donor_id: string | null // FK → profiles (연결된 프로필)
           donor_name: string
-          total_amount: number // ⚠️ 외부 노출 금지!
+          total_amount: number // ⚠️ 외부 노출 금지! (viewer_score로 변환하여 노출)
+          donation_count: number
+          top_bj: string | null
           is_permanent_vip: boolean
           updated_at: string
           created_at: string
@@ -1231,6 +1233,8 @@ export type Database = {
           donor_id?: string | null
           donor_name: string
           total_amount: number
+          donation_count?: number
+          top_bj?: string | null
           is_permanent_vip?: boolean
           updated_at?: string
           created_at?: string
@@ -1241,6 +1245,8 @@ export type Database = {
           donor_id?: string | null
           donor_name?: string
           total_amount?: number
+          donation_count?: number
+          top_bj?: string | null
           is_permanent_vip?: boolean
           updated_at?: string
           created_at?: string
@@ -1265,8 +1271,9 @@ export type Database = {
           rank: number
           donor_id: string | null // FK → profiles (연결된 프로필)
           donor_name: string
-          total_amount: number // ⚠️ 외부 노출 금지!
+          total_amount: number // ⚠️ 외부 노출 금지! (viewer_score로 변환하여 노출)
           donation_count: number
+          top_bj: string | null
           unit: 'excel' | 'crew' | null // 팬클럽 소속
           updated_at: string
           created_at: string
@@ -1279,6 +1286,7 @@ export type Database = {
           donor_name: string
           total_amount: number
           donation_count?: number
+          top_bj?: string | null
           unit?: 'excel' | 'crew' | null
           updated_at?: string
           created_at?: string
@@ -1291,6 +1299,7 @@ export type Database = {
           donor_name?: string
           total_amount?: number
           donation_count?: number
+          top_bj?: string | null
           unit?: 'excel' | 'crew' | null
           updated_at?: string
           created_at?: string

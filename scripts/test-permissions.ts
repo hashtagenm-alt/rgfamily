@@ -4,10 +4,8 @@
  * 각 권한별로 접근 가능/불가능한 기능 테스트
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import dotenv from 'dotenv'
-
-dotenv.config({ path: '.env.local' })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -27,7 +25,7 @@ async function runTests() {
   // ==================== 1. 관리자 테스트 ====================
   console.log('👑 [1/4] 관리자 권한 테스트...')
   {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    const supabase = getServiceClient()
     await supabase.auth.signInWithPassword({
       email: 'admin@rgfamily.com',
       password: 'rg4583!'
@@ -69,7 +67,7 @@ async function runTests() {
   // ==================== 2. BJ 테스트 ====================
   console.log('\n🎤 [2/4] BJ 권한 테스트...')
   {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    const supabase = getServiceClient()
     await supabase.auth.signInWithPassword({
       email: 'qwerdf1101@rgfamily.kr',
       password: 'rg7163!'
@@ -115,7 +113,7 @@ async function runTests() {
   // ==================== 3. VIP 테스트 ====================
   console.log('\n💎 [3/4] VIP 권한 테스트...')
   {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    const supabase = getServiceClient()
     await supabase.auth.signInWithPassword({
       email: 'vip2@rg-family.test',
       password: 'rg9609!'
@@ -162,7 +160,7 @@ async function runTests() {
   // ==================== 4. 일반 회원 테스트 ====================
   console.log('\n👤 [4/4] 일반 회원 권한 테스트...')
   {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    const supabase = getServiceClient()
     await supabase.auth.signInWithPassword({
       email: 'member01@rg-family.test',
       password: 'rg7390!'

@@ -39,5 +39,5 @@ export {
 // Database types
 export * from './database'
 
-// Ranking types (HallOfFameEntry, HallOfFameSeasonData, HallOfFameData)
+// Ranking types
 export * from './ranking'

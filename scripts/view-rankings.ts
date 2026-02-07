@@ -9,24 +9,9 @@
  *   npx tsx scripts/view-rankings.ts --type=episode --episode=3 --limit=20
  */
 
-import { createClient } from '@supabase/supabase-js'
-import * as path from 'path'
-import * as dotenv from 'dotenv'
+import { getServiceClient } from './lib/supabase'
 
-// .env.local 로드
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ 환경변수가 설정되지 않았습니다.')
-  process.exit(1)
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false },
-})
+const supabase = getServiceClient()
 
 type RankingType = 'total' | 'season' | 'episode'
 

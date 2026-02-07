@@ -18,21 +18,19 @@
  *   npx tsx scripts/pipeline-vod-upload.ts --dry-run
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import { spawn, execSync } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env.local' })
-
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID!
 const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN!
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+const supabase = getServiceClient()
 
 const GDRIVE_FOLDER_ID = '1SYjStc0DAk8NFIe8zj6ZHGd9TVtzfF9X'
 const RCLONE_OPTS = ['--drive-root-folder-id=' + GDRIVE_FOLDER_ID]

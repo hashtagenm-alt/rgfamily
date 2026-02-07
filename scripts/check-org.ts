@@ -1,18 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
-import * as dotenv from 'dotenv'
-import * as path from 'path'
+import { getServiceClient } from './lib/supabase'
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
-
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!url || !key) {
-  console.error('Missing env')
-  process.exit(1)
-}
-
-const supabase = createClient(url, key)
+const supabase = getServiceClient()
 
 async function main() {
   const { data } = await supabase.from('organization').select('*').order('id')

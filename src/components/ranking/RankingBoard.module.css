@@ -1,13 +1,15 @@
 /* Ranking Board - Premium Dark Style */
 .container {
-  background: var(--card-bg); /* Dark Card */
+  background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 20px;
   padding: 1.5rem;
   height: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .header {
@@ -74,14 +76,14 @@
 .item {
   display: flex;
   align-items: center;
-  padding: 0.8rem 1rem;
+  padding: var(--space-3) var(--space-4);
   background: var(--surface);
   border-radius: 12px;
   border: 1px solid var(--item-border);
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .item:hover {
@@ -94,7 +96,7 @@
 .rank {
   font-size: var(--text-subtitle);
   font-weight: 900;
-  width: 24px;
+  width: var(--space-6);
   color: var(--text-muted);
   font-style: italic;
   text-align: center;
@@ -162,6 +164,51 @@
   border-right: 1px solid var(--divider);
 }
 
+/* Score Display */
+.score {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  z-index: 2;
+  margin-left: auto;
+  letter-spacing: -0.02em;
+}
+
+.scoreUnit {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 1px;
+}
+
+.score1 {
+  color: var(--metallic-gold);
+}
+
+.score2 {
+  color: var(--metallic-silver);
+}
+
+.score3 {
+  color: var(--metallic-bronze);
+}
+
+/* Rank-specific item styles */
+.rank1Item {
+  border-color: rgba(255, 215, 0, 0.15);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.04) 0%, var(--surface) 60%);
+}
+
+.rank2Item {
+  border-color: rgba(192, 192, 192, 0.12);
+}
+
+.rank3Item {
+  border-color: rgba(205, 127, 50, 0.12);
+}
+
 .unitBadge {
   font-size: var(--text-caption);
   padding: 2px 6px;
@@ -169,7 +216,7 @@
   font-weight: 700;
   text-transform: uppercase;
   z-index: 2;
-  margin-left: auto; /* Push to right */
+  margin-left: auto;
 }
 
 .unitExcel {
@@ -296,8 +343,8 @@
   }
 
   .item {
-    padding: 0.625rem 0.75rem;
-    gap: 0.75rem;
+    padding: var(--space-2-5) var(--space-3);
+    gap: var(--space-3);
   }
 
   .rank {
@@ -309,7 +356,7 @@
     font-size: 0.875rem;
   }
 
-  .amount {
+  .score {
     font-size: 0.75rem;
   }
 }
@@ -335,7 +382,7 @@
   }
 
   .item {
-    padding: 0.5rem 0.625rem;
+    padding: var(--space-2) var(--space-2-5);
     border-radius: 10px;
   }
 
@@ -347,8 +394,8 @@
     font-size: 0.8rem;
   }
 
-  .amount {
-    font-size: 0.7rem;
+  .score {
+    font-size: 0.65rem;
   }
 
   .unitBadge {

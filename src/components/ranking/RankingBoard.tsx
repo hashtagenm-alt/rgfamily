@@ -37,7 +37,7 @@ export default function RankingBoard() {
   const rankingData: RankingDisplayItem[] = rankings.slice(0, 5).map((item, idx) => ({
     rank: idx + 1,
     name: item.donorName,
-    amount: item.totalAmount,
+    amount: item.viewerScore,
     unit: null, // Repository에서 unit 정보가 없으므로 null
   }));
 
@@ -88,8 +88,8 @@ export default function RankingBoard() {
             key={item.name}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className={styles.item}
+            transition={{ delay: index * 0.08 }}
+            className={`${styles.item} ${styles[`rank${item.rank}Item`] || ""}`}
           >
             {/* Progress Bar Background */}
             <div
@@ -110,18 +110,12 @@ export default function RankingBoard() {
                 )}
                 {item.name}
               </span>
-              {/* 하트 개수 숨김 - 게이지바만 표시 */}
             </div>
 
-            {item.unit && (
-              <span
-                className={`${styles.unitBadge} ${
-                  item.unit === "excel" ? styles.unitExcel : styles.unitCrew
-                }`}
-              >
-                {item.unit.toUpperCase()}
-              </span>
-            )}
+            <span className={`${styles.score} ${styles[`score${item.rank}`] || ""}`}>
+              {item.amount.toLocaleString()}
+              <span className={styles.scoreUnit}>점</span>
+            </span>
           </motion.div>
         ))}
       </div>
