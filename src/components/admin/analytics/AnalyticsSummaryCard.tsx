@@ -1,16 +1,72 @@
 'use client'
 
-import { Heart, Users, TrendingUp, Award, Loader2 } from 'lucide-react'
-import type { AnalyticsSummary, BjStats } from '@/lib/actions/analytics'
+import { useMemo } from 'react'
+import { Heart, Users, TrendingUp, Award, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts'
+import type { AnalyticsSummary, BjStats, EpisodeTrendData } from '@/lib/actions/analytics'
+import { ChartContainer, ChartTooltip, CHART_COLORS, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './AnalyticsSummaryCard.module.css'
 
 interface AnalyticsSummaryCardProps {
   summary: AnalyticsSummary | null
   bjStats: BjStats[]
+  episodeTrend: EpisodeTrendData[]
   isLoading: boolean
 }
 
-export function AnalyticsSummaryCard({ summary, bjStats, isLoading }: AnalyticsSummaryCardProps) {
+export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading }: AnalyticsSummaryCardProps) {
+  const deltas = useMemo(() => {
+    if (episodeTrend.length < 2) return null
+    const last = episodeTrend[episodeTrend.length - 1]
+    const prev = episodeTrend[episodeTrend.length - 2]
+
+    const calc = (a: number, b: number) => b > 0 ? Math.round(((a - b) / b) * 100) : 0
+
+    return {
+      heartsDelta: calc(last.total_hearts, prev.total_hearts),
+      donorsDelta: calc(last.donor_count, prev.donor_count),
+      avgDelta: calc(last.avg_donation, prev.avg_donation),
+    }
+  }, [episodeTrend])
+
+  const insights = useMemo(() => {
+    const items: string[] = []
+    if (episodeTrend.length >= 2) {
+      const last = episodeTrend[episodeTrend.length - 1]
+      const prev = episodeTrend[episodeTrend.length - 2]
+
+      if (last.total_hearts > prev.total_hearts) {
+        const pct = Math.round(((last.total_hearts - prev.total_hearts) / prev.total_hearts) * 100)
+        items.push(`${last.episode_number}화 후원이 전회차 대비 ${pct}% 증가`)
+      } else if (last.total_hearts < prev.total_hearts) {
+        const pct = Math.round(((prev.total_hearts - last.total_hearts) / prev.total_hearts) * 100)
+        items.push(`${last.episode_number}화 후원이 전회차 대비 ${pct}% 감소`)
+      }
+
+      if (last.new_donors > 0) items.push(`신규 후원자 ${last.new_donors}명 유입`)
+      if (last.returning_donors > 0) {
+        const retRate = Math.round((last.returning_donors / last.donor_count) * 100)
+        items.push(`재참여율 ${retRate}% (${last.returning_donors}명)`)
+      }
+    }
+
+    if (bjStats.length >= 2) {
+      const top = bjStats[0]
+      const totalHearts = bjStats.reduce((s, b) => s + b.total_hearts, 0)
+      const pct = Math.round((top.total_hearts / totalHearts) * 100)
+      items.push(`${top.bj_name} BJ가 전체 후원의 ${pct}% 차지`)
+    }
+
+    return items
+  }, [episodeTrend, bjStats])
+
+  const sparkHearts = useMemo(() => episodeTrend.map(e => ({ v: e.total_hearts })), [episodeTrend])
+  const sparkDonors = useMemo(() => episodeTrend.map(e => ({ v: e.donor_count })), [episodeTrend])
+  const sparkAvg = useMemo(() => episodeTrend.map(e => ({ v: e.avg_donation })), [episodeTrend])
+
+  const bjBarData = useMemo(() =>
+    bjStats.slice(0, 10).map(b => ({ name: b.bj_name, hearts: b.total_hearts })), [bjStats])
+
   if (isLoading) {
     return (
       <div className={styles.loading}>
@@ -31,50 +87,92 @@ export function AnalyticsSummaryCard({ summary, bjStats, isLoading }: AnalyticsS
 
   const formatNumber = (num: number) => num.toLocaleString()
 
-  // 전체 BJ (출연자 전체)
-  const allBjs = bjStats
+  const DeltaBadge = ({ value }: { value: number | undefined }) => {
+    if (value === undefined || value === null) return null
+    const isPositive = value > 0
+    const Icon = isPositive ? ArrowUpRight : ArrowDownRight
+    return (
+      <span className={`${styles.delta} ${isPositive ? styles.deltaUp : styles.deltaDown}`}>
+        <Icon size={14} />
+        {Math.abs(value)}%
+      </span>
+    )
+  }
+
+  const Sparkline = ({ data, color }: { data: { v: number }[]; color: string }) => {
+    if (data.length < 2) return null
+    return (
+      <div className={styles.sparkline}>
+        <LineChart width={100} height={40} data={data}>
+          <Line type="monotone" dataKey="v" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
+        </LineChart>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
-      {/* 요약 카드들 */}
+      {/* KPI 카드 */}
       <div className={styles.summaryGrid}>
         <div className={styles.card}>
-          <div className={styles.cardIcon} style={{ background: 'rgba(253, 104, 186, 0.1)' }}>
-            <Heart size={24} color="#fd68ba" />
+          <div className={styles.cardTop}>
+            <div className={styles.cardIcon} style={{ background: 'rgba(253, 104, 186, 0.1)' }}>
+              <Heart size={24} color="#fd68ba" />
+            </div>
+            <Sparkline data={sparkHearts} color="#fd68ba" />
           </div>
           <div className={styles.cardContent}>
             <span className={styles.cardLabel}>총 후원 하트</span>
-            <span className={styles.cardValue}>{formatNumber(summary.total_hearts)}</span>
+            <div className={styles.cardValueRow}>
+              <span className={styles.cardValue}>{formatNumber(summary.total_hearts)}</span>
+              <DeltaBadge value={deltas?.heartsDelta} />
+            </div>
           </div>
         </div>
 
         <div className={styles.card}>
-          <div className={styles.cardIcon} style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
-            <TrendingUp size={24} color="#3b82f6" />
+          <div className={styles.cardTop}>
+            <div className={styles.cardIcon} style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
+              <TrendingUp size={24} color="#3b82f6" />
+            </div>
           </div>
           <div className={styles.cardContent}>
             <span className={styles.cardLabel}>총 후원 건수</span>
-            <span className={styles.cardValue}>{formatNumber(summary.total_donations)}</span>
+            <div className={styles.cardValueRow}>
+              <span className={styles.cardValue}>{formatNumber(summary.total_donations)}</span>
+            </div>
           </div>
         </div>
 
         <div className={styles.card}>
-          <div className={styles.cardIcon} style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
-            <Users size={24} color="#10b981" />
+          <div className={styles.cardTop}>
+            <div className={styles.cardIcon} style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+              <Users size={24} color="#10b981" />
+            </div>
+            <Sparkline data={sparkDonors} color="#10b981" />
           </div>
           <div className={styles.cardContent}>
             <span className={styles.cardLabel}>후원자 수</span>
-            <span className={styles.cardValue}>{formatNumber(summary.unique_donors)}</span>
+            <div className={styles.cardValueRow}>
+              <span className={styles.cardValue}>{formatNumber(summary.unique_donors)}</span>
+              <DeltaBadge value={deltas?.donorsDelta} />
+            </div>
           </div>
         </div>
 
         <div className={styles.card}>
-          <div className={styles.cardIcon} style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
-            <Award size={24} color="#f59e0b" />
+          <div className={styles.cardTop}>
+            <div className={styles.cardIcon} style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
+              <Award size={24} color="#f59e0b" />
+            </div>
+            <Sparkline data={sparkAvg} color="#f59e0b" />
           </div>
           <div className={styles.cardContent}>
             <span className={styles.cardLabel}>평균 후원</span>
-            <span className={styles.cardValue}>{formatNumber(summary.avg_donation)}</span>
+            <div className={styles.cardValueRow}>
+              <span className={styles.cardValue}>{formatNumber(summary.avg_donation)}</span>
+              <DeltaBadge value={deltas?.avgDelta} />
+            </div>
           </div>
         </div>
       </div>
@@ -91,32 +189,36 @@ export function AnalyticsSummaryCard({ summary, bjStats, isLoading }: AnalyticsS
         </div>
       </div>
 
-      {/* 전체 BJ 후원 분포 */}
-      {allBjs.length > 0 && (
-        <div className={styles.topBjSection}>
-          <h3 className={styles.sectionTitle}>BJ별 후원 분포 (전체 출연자)</h3>
-          <div className={styles.barChart}>
-            {allBjs.map((bj, index) => {
-              const maxHearts = allBjs[0]?.total_hearts || 1
-              const percentage = (bj.total_hearts / maxHearts) * 100
-              return (
-                <div key={bj.bj_name} className={styles.barItem}>
-                  <div className={styles.barLabel}>
-                    <span className={styles.barRank}>{index + 1}</span>
-                    <span className={styles.barName}>{bj.bj_name}</span>
-                  </div>
-                  <div className={styles.barTrack}>
-                    <div
-                      className={styles.barFill}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <span className={styles.barValue}>{formatNumber(bj.total_hearts)}</span>
-                </div>
-              )
-            })}
+      {/* Quick Insights */}
+      {insights.length > 0 && (
+        <div className={styles.insightsSection}>
+          <h3 className={styles.sectionTitle}>Quick Insights</h3>
+          <div className={styles.insightsList}>
+            {insights.map((insight, i) => (
+              <div key={i} className={styles.insightItem}>
+                <span className={styles.insightBullet} />
+                <span>{insight}</span>
+              </div>
+            ))}
           </div>
         </div>
+      )}
+
+      {/* BJ 후원 분포 - Recharts 수평 BarChart */}
+      {bjBarData.length > 0 && (
+        <ChartContainer title="BJ별 후원 분포 (전체 출연자)" height={Math.max(250, bjBarData.length * 36)}>
+          <BarChart data={bjBarData} layout="vertical" margin={{ top: 5, right: 60, left: 10, bottom: 5 }}>
+            <CartesianGrid {...CHART_THEME.grid} horizontal={false} />
+            <XAxis type="number" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={formatChartNumber} />
+            <YAxis type="category" dataKey="name" width={70} {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 13 }} />
+            <ChartTooltip valueFormatter={(v) => `${v.toLocaleString()} 하트`} />
+            <Bar dataKey="hearts" radius={[0, 4, 4, 0]} maxBarSize={28}>
+              {bjBarData.map((_, i) => (
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ChartContainer>
       )}
     </div>
   )

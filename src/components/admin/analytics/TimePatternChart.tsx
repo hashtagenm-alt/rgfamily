@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { RefreshCw, Loader2 } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts'
 import type { TimePatternData } from '@/lib/actions/analytics'
+import { ChartContainer, ChartTooltip, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './TimePatternChart.module.css'
 
 interface TimePatternChartProps {
@@ -39,10 +41,6 @@ export function TimePatternChart({ timePattern, isLoading, onRefresh }: TimePatt
     )
   }
 
-  const maxValue = Math.max(
-    ...timePattern.map((d) => (viewMode === 'hearts' ? d.total_hearts : d.donation_count))
-  )
-
   const formatHour = (hour: number) => {
     if (hour === 0) return '12AM'
     if (hour < 12) return `${hour}AM`
@@ -52,12 +50,29 @@ export function TimePatternChart({ timePattern, isLoading, onRefresh }: TimePatt
 
   const formatNumber = (num: number) => num.toLocaleString()
 
-  // 피크 시간대 찾기
   const peakHour = [...timePattern].sort((a, b) =>
     viewMode === 'hearts'
       ? b.total_hearts - a.total_hearts
       : b.donation_count - a.donation_count
   )[0]
+
+  const maxVal = Math.max(
+    ...timePattern.map(d => viewMode === 'hearts' ? d.total_hearts : d.donation_count)
+  )
+
+  const chartData = timePattern.map(d => ({
+    hour: formatHour(d.hour),
+    hearts: d.total_hearts,
+    count: d.donation_count,
+    intensity: maxVal > 0 ? (viewMode === 'hearts' ? d.total_hearts : d.donation_count) / maxVal : 0,
+    isPeak: d.hour === peakHour?.hour,
+  }))
+
+  const getBarColor = (intensity: number, isPeak: boolean) => {
+    if (isPeak) return '#fd68ba'
+    const alpha = 0.2 + intensity * 0.6
+    return `rgba(59, 130, 246, ${alpha})`
+  }
 
   return (
     <div className={styles.container}>
@@ -78,17 +93,12 @@ export function TimePatternChart({ timePattern, isLoading, onRefresh }: TimePatt
               건수
             </button>
           </div>
-          <button
-            className={styles.refreshBtn}
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
+          <button className={styles.refreshBtn} onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshCw size={16} className={isRefreshing ? styles.spinning : ''} />
           </button>
         </div>
       </div>
 
-      {/* 피크 시간대 정보 */}
       {peakHour && (
         <div className={styles.peakInfo}>
           <span className={styles.peakLabel}>피크 시간대</span>
@@ -102,29 +112,30 @@ export function TimePatternChart({ timePattern, isLoading, onRefresh }: TimePatt
         </div>
       )}
 
-      {/* 차트 */}
-      <div className={styles.chart}>
-        {timePattern.map((data) => {
-          const value = viewMode === 'hearts' ? data.total_hearts : data.donation_count
-          const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0
-          const isPeak = peakHour && data.hour === peakHour.hour
-
-          return (
-            <div key={data.hour} className={styles.barWrapper}>
-              <div className={styles.barContainer}>
-                <div
-                  className={`${styles.bar} ${isPeak ? styles.peak : ''}`}
-                  style={{ height: `${percentage}%` }}
-                />
-              </div>
-              <span className={styles.hourLabel}>{formatHour(data.hour)}</span>
-              <span className={styles.barValue}>
-                {viewMode === 'hearts' ? formatNumber(data.total_hearts) : data.donation_count}
-              </span>
-            </div>
-          )
-        })}
-      </div>
+      <ChartContainer height={400}>
+        <BarChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
+          <CartesianGrid {...CHART_THEME.grid} />
+          <XAxis dataKey="hour" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 11 }} interval={1} />
+          <YAxis yAxisId="left" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={formatChartNumber} />
+          <YAxis yAxisId="right" orientation="right" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={(v: number) => `${v}건`} />
+          <ChartTooltip
+            valueFormatter={(v, name) => name === '하트' ? `${v.toLocaleString()} 하트` : `${v.toLocaleString()}건`}
+          />
+          {viewMode === 'hearts' ? (
+            <Bar yAxisId="left" dataKey="hearts" name="하트" radius={[4, 4, 0, 0]} maxBarSize={24}>
+              {chartData.map((entry, i) => (
+                <Cell key={i} fill={getBarColor(entry.intensity, entry.isPeak)} />
+              ))}
+            </Bar>
+          ) : (
+            <Bar yAxisId="right" dataKey="count" name="건수" radius={[4, 4, 0, 0]} maxBarSize={24}>
+              {chartData.map((entry, i) => (
+                <Cell key={i} fill={getBarColor(entry.intensity, entry.isPeak)} />
+              ))}
+            </Bar>
+          )}
+        </BarChart>
+      </ChartContainer>
 
       <div className={styles.legend}>
         <div className={styles.legendItem}>

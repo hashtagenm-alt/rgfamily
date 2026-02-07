@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Loader2, User, Heart, BarChart } from 'lucide-react'
+import { Search, Loader2, User, Heart, BarChart as BarChartIcon } from 'lucide-react'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import type { DonorSearch } from '@/lib/actions/analytics'
+import { ChartContainer, ChartTooltip, CHART_COLORS, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './DonorSearchPanel.module.css'
 
 interface DonorSearchPanelProps {
@@ -28,7 +30,7 @@ export function DonorSearchPanel({ result, isLoading, onSearch }: DonorSearchPan
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch()
     }
@@ -36,32 +38,34 @@ export function DonorSearchPanel({ result, isLoading, onSearch }: DonorSearchPan
 
   const formatNumber = (num: number) => num.toLocaleString()
 
+  const pieData = result?.bj_distribution.map(bj => ({
+    name: bj.bj_name,
+    value: bj.hearts,
+    percent: bj.percent,
+  })) || []
+
+  const epBarData = result?.episodes.map(ep => ({
+    name: ep.episode_title.replace(/^에피소드\s*/, ''),
+    hearts: ep.hearts,
+    count: ep.count,
+  })) || []
+
   return (
     <div className={styles.container}>
-      {/* 검색 입력 */}
       <div className={styles.searchBox}>
         <input
           type="text"
           placeholder="후원자 닉네임을 입력하세요..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           className={styles.searchInput}
         />
-        <button
-          className={styles.searchBtn}
-          onClick={handleSearch}
-          disabled={isLoading || !query.trim()}
-        >
-          {isLoading ? (
-            <Loader2 size={20} className={styles.spinner} />
-          ) : (
-            <Search size={20} />
-          )}
+        <button className={styles.searchBtn} onClick={handleSearch} disabled={isLoading || !query.trim()}>
+          {isLoading ? <Loader2 size={20} className={styles.spinner} /> : <Search size={20} />}
         </button>
       </div>
 
-      {/* 로딩 */}
       {isLoading && (
         <div className={styles.loading}>
           <Loader2 size={32} className={styles.spinner} />
@@ -69,7 +73,6 @@ export function DonorSearchPanel({ result, isLoading, onSearch }: DonorSearchPan
         </div>
       )}
 
-      {/* 결과 없음 */}
       {!isLoading && result === null && query && (
         <div className={styles.noResult}>
           <User size={48} />
@@ -77,26 +80,18 @@ export function DonorSearchPanel({ result, isLoading, onSearch }: DonorSearchPan
         </div>
       )}
 
-      {/* 결과 표시 */}
       {!isLoading && result && (
         <div className={styles.result}>
-          {/* 프로필 카드 */}
           <div className={styles.profileCard}>
             <div className={styles.profileHeader}>
-              <div className={styles.avatar}>
-                <User size={32} />
-              </div>
+              <div className={styles.avatar}><User size={32} /></div>
               <div className={styles.profileInfo}>
                 <h3 className={styles.donorName}>{result.donor_name}</h3>
-                <span
-                  className={styles.patternBadge}
-                  style={{ background: PATTERN_COLORS[result.pattern_type] }}
-                >
+                <span className={styles.patternBadge} style={{ background: PATTERN_COLORS[result.pattern_type] }}>
                   {result.pattern_type}
                 </span>
               </div>
             </div>
-
             <div className={styles.statsRow}>
               <div className={styles.statItem}>
                 <Heart size={16} className={styles.statIcon} />
@@ -104,59 +99,54 @@ export function DonorSearchPanel({ result, isLoading, onSearch }: DonorSearchPan
                 <span className={styles.statLabel}>총 하트</span>
               </div>
               <div className={styles.statItem}>
-                <BarChart size={16} className={styles.statIcon} />
+                <BarChartIcon size={16} className={styles.statIcon} />
                 <span className={styles.statValue}>{result.donation_count}</span>
                 <span className={styles.statLabel}>후원 건수</span>
               </div>
             </div>
           </div>
 
-          {/* 에피소드별 참여 */}
-          {result.episodes.length > 0 && (
+          {epBarData.length > 0 && (
             <div className={styles.section}>
-              <h4 className={styles.sectionTitle}>에피소드별 참여</h4>
-              <div className={styles.episodeList}>
-                {result.episodes.map((ep) => (
-                  <div key={ep.episode_id} className={styles.episodeItem}>
-                    <span className={styles.episodeTitle}>{ep.episode_title}</span>
-                    <span className={styles.episodeStats}>
-                      {formatNumber(ep.hearts)} 하트 · {ep.count}건
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <ChartContainer title="에피소드별 참여" height={Math.max(200, epBarData.length * 32)}>
+                <BarChart data={epBarData} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
+                  <CartesianGrid {...CHART_THEME.grid} horizontal={false} />
+                  <XAxis type="number" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={formatChartNumber} />
+                  <YAxis type="category" dataKey="name" width={80} {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 11 }} />
+                  <ChartTooltip valueFormatter={(v) => `${v.toLocaleString()} 하트`} />
+                  <Bar dataKey="hearts" name="하트" fill="#fd68ba" radius={[0, 4, 4, 0]} maxBarSize={22} />
+                </BarChart>
+              </ChartContainer>
             </div>
           )}
 
-          {/* BJ별 분포 */}
-          {result.bj_distribution.length > 0 && (
+          {pieData.length > 0 && (
             <div className={styles.section}>
-              <h4 className={styles.sectionTitle}>BJ별 후원 분포 (전체 출연자)</h4>
-              <div className={styles.distributionChart}>
-                {result.bj_distribution.map((bj, index) => (
-                  <div key={bj.bj_name} className={styles.distributionItem}>
-                    <div className={styles.bjInfo}>
-                      <span className={styles.bjRank}>{index + 1}</span>
-                      <span className={styles.bjName}>{bj.bj_name}</span>
-                    </div>
-                    <div className={styles.barTrack}>
-                      <div
-                        className={styles.barFill}
-                        style={{ width: `${bj.percent}%` }}
-                      />
-                    </div>
-                    <span className={styles.bjStats}>
-                      {formatNumber(bj.hearts)} ({bj.percent}%)
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <ChartContainer title="BJ별 후원 분포 (전체 출연자)" height={280}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={100}
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, percent }) => `${name} ${percent}%`}
+                    labelLine={false}
+                  >
+                    {pieData.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip valueFormatter={(v) => `${v.toLocaleString()} 하트`} />
+                </PieChart>
+              </ChartContainer>
             </div>
           )}
         </div>
       )}
 
-      {/* 초기 상태 */}
       {!isLoading && !result && !query && (
         <div className={styles.placeholder}>
           <Search size={48} />
