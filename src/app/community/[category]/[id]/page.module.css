@@ -199,6 +199,12 @@
   margin-bottom: 0;
 }
 
+/* 빈 줄 보존 */
+.content p:empty,
+.content p:has(> br:only-child) {
+  min-height: 1.9em;
+}
+
 .content h1 {
   font-size: 1.75rem;
   font-weight: 700;
