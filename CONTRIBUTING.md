@@ -105,7 +105,7 @@ export default function Component({ ...props }: Props) {
 
 ### Branch Naming
 
-```
+```text
 feature/feature-name    # New features
 fix/bug-description     # Bug fixes
 refactor/description    # Code refactoring
@@ -114,7 +114,7 @@ docs/description        # Documentation
 
 ### Commit Messages
 
-```
+```text
 feat: Add new ranking page
 fix: Resolve calendar display issue
 refactor: Improve component structure
@@ -131,7 +131,7 @@ style: Fix CSS formatting
 
 ## Project Structure
 
-```
+```text
 src/
 ├── app/           # Pages (Next.js App Router)
 ├── components/    # Reusable components

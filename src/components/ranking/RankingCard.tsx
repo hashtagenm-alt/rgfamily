@@ -69,10 +69,10 @@ export default function RankingCard({ item, maxAmount, index }: RankingCardProps
         <h3 className={styles.name}>{item.donorName}</h3>
       </div>
 
-      {/* Gauge Bar */}
+      {/* Viewer Score */}
       <div className={styles.gaugeWrapper}>
         <GaugeBar
-          value={item.totalAmount}
+          value={item.viewerScore}
           maxValue={maxAmount}
           rank={item.rank}
           size="lg"

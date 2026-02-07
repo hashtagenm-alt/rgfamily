@@ -27,8 +27,9 @@
 ## 2. 랭킹 테이블 구조
 
 ### season_donation_rankings
-- 시즌별 후원 랭킹 (donations 테이블에서 집계)
-- **donations 테이블과 100% 정합성 확인됨**
+- 시즌별 후원 랭킹 (레거시 + EP 데이터 합산)
+- **데이터 출처**: CSV import (EP 이전 레거시 포함)
+- donations 테이블은 EP1-6만 포함, 레거시는 별도
 - 컬럼: id, season_id, rank, donor_name, total_amount, created_at, updated_at
 
 ### total_donation_rankings
@@ -81,26 +82,43 @@ total_donation_rankings = donations + 레거시 데이터 (EP1 이전)
 
 ---
 
-## 4. VIP 클릭 가능 조건 (2026-02-03 업데이트)
+## 4. VIP 클릭 가능 조건 (2026-02-03 시그니처 자격 기반 전환)
 
-VIP 페이지 링크 활성화 조건 (두 조건 모두 충족 필요):
+### ⚠️ 중요 변경사항 (2026-02-03)
+**기존**: vip_rewards 테이블 기반 (49명 모두 클릭 가능)
+**변경**: signature_eligibility 테이블 기반 (시그니처 자격자 11명만 클릭 가능)
+
+### VIP 페이지 링크 활성화 조건 (모두 충족 필요)
 1. `profiles.avatar_url` 존재 (프로필 이미지)
-2. `vip_rewards` 테이블에 해당 `profile_id` 레코드 존재
+2. `signature_eligibility` 테이블에 해당 `donor_name` 레코드 존재
 
-### 구현 위치 (View 기반 - 2026-02-03 전환)
-- **DB View**: `vip_clickable_profiles`, `season_rankings_public`, `total_rankings_public`
-- **마이그레이션**: `supabase/migrations/20260203_vip_clickable_views.sql`
+### 시그니처 자격 기준
+| 시그 번호 | 기준 | 조건 |
+|-----------|------|------|
+| 1번째 | 당일 누적 10만+ 하트 | 최초 달성 |
+| 2번째 | 당일 누적 15만+ 하트 | 1번째 이후 회차 |
+| 3번째 | 당일 누적 20만+ 하트 | 2번째 이후 회차 |
+
+### 구현 위치 (View 기반 - 시그니처 자격 전환)
+- **DB View**: `vip_clickable_profiles` (signature_eligibility JOIN profiles)
+- **마이그레이션**: `supabase/migrations/20260203_signature_vip_click_system.sql`
 - **Repository**: `src/lib/repositories/supabase/RankingRepository.ts` (View의 `is_vip_clickable` 사용)
 - **UI**: `src/components/ranking/RankingFullList.tsx`에서 클릭 가능 여부 판단
 
-### 현재 클릭 가능한 11명
-르큐리, 미키™, 채은❤️여신, 에이맨♣️, 손밍매니아, 한세아내꺼♡호랭이, 
-사랑해씌발™, [RG]미드굿♣️가애, [J]젖문가, [RG]✨린아의발굴™, 농심육개장라면
+### 현재 클릭 가능한 시그니처 자격자 (11명)
+**3개 시그**: 르큐리
+**2개 시그**: 미키™, 에이맨♣️
+**1개 시그**: 손밍매니아, 쩔어서짜다, ❥CaNnOt, 한세아내꺼♡호랭이, 서연❤️까부는김회장, [A]젖문가, 사랑해씌발™, 채은❤️여신
 
-### 새 VIP 추가 시
-1. profiles 테이블에 계정 생성 (avatar_url 포함)
-2. vip_rewards 테이블에 레코드 추가
-3. (선택) vip_images에 시그니처 이미지 추가
+### 새 VIP 추가 시 (자동 처리)
+1. 후원 시 당일 10만+ 달성하면 자동 자격 획득
+2. `npx tsx scripts/manage-signature-eligibility.ts --sync` 실행하여 DB 동기화
+3. profiles 테이블에 avatar_url 설정 필요 (없으면 클릭 불가)
+
+### 관련 스크립트
+- `scripts/manage-signature-eligibility.ts --analyze`: 자격 분석
+- `scripts/manage-signature-eligibility.ts --sync`: DB 동기화
+- `scripts/manage-signature-eligibility.ts --claim=닉네임 --sig=1`: 수령 처리
 
 ---
 

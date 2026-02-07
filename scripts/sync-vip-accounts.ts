@@ -3,16 +3,11 @@
  * 시즌 랭킹 Top N에 맞춰 VIP 계정 및 리워드 생성/업데이트
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import dotenv from 'dotenv'
 import * as fs from 'fs'
 
-dotenv.config({ path: '.env.local' })
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+const supabase = getServiceClient()
 
 interface VipAccountInfo {
   rank: number

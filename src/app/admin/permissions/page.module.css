@@ -6,15 +6,15 @@
 }
 
 .statCard {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   align-items: flex-start;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   transition: border-color 0.2s ease;
 }
 
@@ -25,7 +25,7 @@
 .statCard strong {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .filterContainer {
@@ -45,10 +45,10 @@
 
 .filterButton {
   padding: 0.625rem 1rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--card-border);
   border-radius: 8px;
-  background: var(--color-background);
-  color: var(--color-text-secondary);
+  background: var(--background);
+  color: var(--text-secondary);
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -76,10 +76,10 @@
 .searchInput {
   width: 100%;
   padding: 0.625rem 0.875rem 0.625rem 2.5rem;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
+  background: var(--background);
+  border: 1px solid var(--card-border);
   border-radius: 8px;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.875rem;
   transition: border-color 0.2s ease;
 }
@@ -92,7 +92,7 @@
 .searchIcon {
   position: absolute;
   left: 0.875rem;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .clearSearch {
@@ -100,7 +100,7 @@
   right: 0.5rem;
   background: none;
   border: none;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -111,7 +111,7 @@
 }
 
 .clearSearch:hover {
-  background: var(--color-border);
+  background: var(--card-border);
 }
 
 .userCell {
@@ -124,12 +124,12 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--color-background);
+  background: var(--background);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
   flex-shrink: 0;
 }
 

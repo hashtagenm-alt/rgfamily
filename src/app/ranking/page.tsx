@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Trophy, Crown, Flame, TrendingUp, Users, Sparkles, Award } from "lucide-react";
+import { Trophy, Crown, Flame, TrendingUp, Users, Sparkles } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -58,7 +58,9 @@ export default function TotalRankingPage() {
           donorId: p.id,
           donorName: p.nickname || "익명",
           avatarUrl: p.avatar_url,
-          totalAmount: p.total_donation || 0,
+          viewerScore: (p.total_donation || 0) * 50,
+          donationCount: 0,
+          topBj: null,
           rank: idx + 1,
         }))
       );
@@ -67,13 +69,13 @@ export default function TotalRankingPage() {
     }
 
     // 총 후원 랭킹: total_rankings_public View에서 조회 (보안: total_amount 미노출)
-    const [seasonResult, totalRankingsResult, vipResult] = await Promise.all([
+    // View에 profile_id, avatar_url, is_vip_clickable 포함
+    const [seasonResult, totalRankingsResult] = await Promise.all([
       supabase.from("seasons").select("id, name, is_active").eq("is_active", true).single(),
       supabase.from("total_rankings_public")
-        .select("rank, donor_name, gauge_percent")
+        .select("rank, donor_name, viewer_score, donation_count, top_bj, profile_id, avatar_url, is_vip_clickable")
         .order("rank", { ascending: true })
-        .limit(50),
-      supabase.from("vip_rewards").select("profile_id, rank, profiles:profile_id(nickname)")
+        .limit(60),  // 불완전 데이터 필터 후 50명 채우기 위해 여유 확보
     ]);
 
     // 현재 시즌 랭킹도 가져오기 (듀얼 랭킹 표시용)
@@ -103,109 +105,42 @@ export default function TotalRankingPage() {
       setRankings([]);
       setIsLoading(false);
       return;
-    } else {
-      // 닉네임 → profile_id 매핑 생성 + VIP 페이지 보유자 추출
-      const nicknameToProfileId: Record<string, string> = {};
-      const podiumIds: string[] = [];
-      (vipResult.data || []).forEach((v) => {
-        const profileData = v.profiles;
-        const nickname = Array.isArray(profileData)
-          ? profileData[0]?.nickname
-          : (profileData as { nickname: string } | null)?.nickname;
-        if (nickname && v.profile_id) {
-          nicknameToProfileId[nickname] = v.profile_id;
-          // VIP 리워드가 있는 모든 사용자 (VIP 페이지 접근 가능)
-          podiumIds.push(v.profile_id);
-        }
-      });
-
-      // 모든 랭킹 사용자의 프로필 정보 (id, avatar_url) 조회
-      // trim 처리하여 공백 차이 해결
-      const allDonorNames = (totalRankingsResult.data || []).map(item => item.donor_name.trim());
-
-      // 프로필 조회 - 정확 매칭 + 전체 조회 fallback
-      let allProfilesData = null;
-      const { data: exactMatchProfiles } = await supabase
-        .from("profiles")
-        .select("id, nickname, avatar_url")
-        .in("nickname", allDonorNames);
-
-      if (exactMatchProfiles && exactMatchProfiles.length > 0) {
-        allProfilesData = exactMatchProfiles;
-      } else {
-        // 정확 매칭 실패 시 전체 프로필 조회 후 유사 매칭
-        const { data: allProfiles } = await supabase
-          .from("profiles")
-          .select("id, nickname, avatar_url")
-          .not("avatar_url", "is", null);
-        allProfilesData = allProfiles;
-      }
-
-      // 닉네임 → profile 정보 매핑 생성 (trim + 정규화)
-      const nicknameToProfile: Record<string, { id: string; avatar_url: string | null }> = {};
-      const normalizedNicknameMap: Record<string, string> = {}; // 정규화된 닉네임 → 원본 닉네임
-
-      (allProfilesData || []).forEach((profile) => {
-        if (profile.nickname) {
-          const normalizedNickname = profile.nickname.trim().toLowerCase();
-          nicknameToProfile[profile.nickname] = {
-            id: profile.id,
-            avatar_url: profile.avatar_url,
-          };
-          // 정규화된 버전도 저장
-          nicknameToProfile[profile.nickname.trim()] = {
-            id: profile.id,
-            avatar_url: profile.avatar_url,
-          };
-          normalizedNicknameMap[normalizedNickname] = profile.nickname;
-        }
-      });
-
-      // donor_name으로 프로필 찾기 헬퍼 함수
-      const findProfile = (donorName: string) => {
-        // 1. 정확 매칭
-        if (nicknameToProfile[donorName]) return nicknameToProfile[donorName];
-        // 2. trim 매칭
-        const trimmed = donorName.trim();
-        if (nicknameToProfile[trimmed]) return nicknameToProfile[trimmed];
-        // 3. 정규화 매칭 (lowercase)
-        const normalized = trimmed.toLowerCase();
-        const originalNickname = normalizedNicknameMap[normalized];
-        if (originalNickname && nicknameToProfile[originalNickname]) {
-          return nicknameToProfile[originalNickname];
-        }
-        return null;
-      };
-
-      // 기존 nicknameToProfileId에도 반영
-      Object.entries(nicknameToProfile).forEach(([nickname, data]) => {
-        if (!nicknameToProfileId[nickname]) {
-          nicknameToProfileId[nickname] = data.id;
-        }
-      });
-
-      const sorted = (totalRankingsResult.data || []).map((item) => {
-        const profile = findProfile(item.donor_name);
-        const trimmedName = item.donor_name.trim();
-        return {
-          donorId: nicknameToProfileId[item.donor_name] || profile?.id || null,
-          donorName: item.donor_name,
-          avatarUrl: profile?.avatar_url || null,
-          totalAmount: item.gauge_percent || 0, // 게이지 퍼센트 (1위=100 기준)
-          rank: item.rank,
-          totalRank: item.rank, // 종합 랭킹 페이지이므로 rank = totalRank
-          seasonRank: seasonRankingsMap[trimmedName] || undefined, // 시즌 랭킹
-        };
-      });
-
-      // 1~3위 후원자의 donorId도 podiumProfileIds에 추가
-      const top3Ids = sorted
-        .filter(item => item.rank <= 3 && item.donorId)
-        .map(item => item.donorId as string);
-      setPodiumProfileIds([...new Set([...podiumIds, ...top3Ids])]);
-
-      setRankings(sorted);
     }
+
+    // View에서 제공하는 데이터 직접 사용 (profile_id, avatar_url, is_vip_clickable 포함)
+    // 중복 닉네임만 제거 (donation_count/top_bj 없어도 포함하여 50명 채움)
+    const seenDonors = new Set<string>();
+    const filteredData = (totalRankingsResult.data || []).filter((item) => {
+      const name = item.donor_name.trim();
+      if (seenDonors.has(name)) return false;
+      seenDonors.add(name);
+      return true;
+    });
+
+    // 순위 재정렬 (1부터, 최대 50명)
+    const sorted = filteredData.slice(0, 50).map((item, idx) => {
+      const trimmedName = item.donor_name.trim();
+      return {
+        donorId: item.profile_id || null,
+        donorName: item.donor_name,
+        avatarUrl: item.avatar_url || null,
+        viewerScore: item.viewer_score || 0,
+        donationCount: item.donation_count || 0,
+        topBj: item.top_bj || null,
+        rank: idx + 1,
+        totalRank: idx + 1,
+        seasonRank: seasonRankingsMap[trimmedName] || undefined,
+        hasVipRewards: item.is_vip_clickable || false,
+      };
+    });
+
+    // VIP 페이지 클릭 가능한 사용자 (View의 is_vip_clickable 기반)
+    const clickableIds = sorted
+      .filter(item => item.donorId && item.hasVipRewards)
+      .map(item => item.donorId as string);
+    setPodiumProfileIds([...new Set(clickableIds)]);
+
+    setRankings(sorted);
 
     setIsLoading(false);
   }, [supabase, unitFilter]);
@@ -214,7 +149,6 @@ export default function TotalRankingPage() {
     fetchRankings();
   }, [fetchRankings]);
 
-  const maxAmount = rankings.length > 0 ? rankings[0].totalAmount : 0;
   const top3 = rankings.slice(0, 3);
 
   return (
@@ -240,10 +174,6 @@ export default function TotalRankingPage() {
                   <span>{currentSeason.name} 진행중</span>
                 </Link>
               )}
-              <Link href="/ranking/hall-of-fame" className={styles.heroLinkHallOfFame}>
-                <Award size={16} />
-                <span>명예의 전당</span>
-              </Link>
             </div>
           </div>
         </section>
@@ -312,10 +242,9 @@ export default function TotalRankingPage() {
                 </div>
                 <RankingFullList
                   rankings={rankings}
-                  maxAmount={maxAmount}
                   limit={50}
                   podiumProfileIds={podiumProfileIds}
-                                  />
+                />
               </section>
             </>
           )}

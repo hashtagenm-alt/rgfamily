@@ -224,11 +224,18 @@ export default function RankingPodium({ items, podiumProfileIds = [], onRefetch 
           )}
         </div>
 
-        {/* 닉네임 */}
+        {/* 닉네임 + 시청자 점수 */}
         <div className={styles.nameSection}>
           <h3 className={`${styles.name} ${isChampion ? styles.championName : ""}`}>
             {item.donorName}
           </h3>
+
+          {/* 시청자 점수 */}
+          <div className={styles.scoreSection}>
+            <span className={styles.score}>
+              {item.viewerScore.toLocaleString()}점
+            </span>
+          </div>
 
           {/* VIP 인디케이터 */}
           {hasVipPage && (

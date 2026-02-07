@@ -2,22 +2,18 @@
  * BJ API 쿼리 시뮬레이션 테스트
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import dotenv from 'dotenv'
-
-dotenv.config({ path: '.env.local' })
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Service Role 클라이언트
-const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false }
-})
+const serviceClient = getServiceClient()
 
 // Anon Key 클라이언트 (API와 동일)
-const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const anonClient = getServiceClient()
 
 async function main() {
   // 모든 Auth 사용자 조회 (페이지네이션)

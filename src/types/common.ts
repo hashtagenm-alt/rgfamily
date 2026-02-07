@@ -57,15 +57,16 @@ export interface RankingItem {
   donorId: string | null
   donorName: string
   avatarUrl: string | null
-  totalAmount: number
-  donationCount?: number      // 후원 횟수
-  messageCount?: number       // 메시지 수
-  lastDonationDate?: string   // 마지막 후원 날짜
+  viewerScore: number         // 시청자 점수 (하트 × 50)
+  donationCount: number       // 후원 횟수
+  topBj: string | null        // 최다 선물 BJ
   seasonId?: number
   seasonName?: string
   // 듀얼 랭킹 표시용 (종합 + 시즌)
   totalRank?: number          // 역대 총 후원 순위
   seasonRank?: number         // 현재 시즌 순위
+  // VIP 페이지 접근 가능 여부
+  hasVipRewards?: boolean     // VIP rewards 보유 여부 (개인 페이지 클릭 가능)
 }
 
 // Calendar types

@@ -4,17 +4,12 @@
  * 사용법: npx tsx scripts/import-episode-donations.ts
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import * as fs from 'fs'
 import * as path from 'path'
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env.local' })
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+const supabase = getServiceClient()
 
 interface CsvRow {
   donated_at: string
@@ -30,6 +25,17 @@ interface CsvRow {
 function extractNickname(idWithNickname: string): string {
   const match = idWithNickname.match(/\(([^)]+)\)/)
   return match ? match[1] : idWithNickname
+}
+
+/**
+ * BJ 이름에서 PandaTV 칭호/상태 접미사 제거
+ * 예: "청아(여왕)" → "청아", "손밍(퇴근)" → "손밍"
+ */
+function cleanBjName(bjName: string): string {
+  return bjName
+    .replace(/\[.*?\]\s*/g, '')
+    .replace(/\s*\((여왕|왕|공주|퇴근|조퇴|방장|매니저|열혈팬|우수팬|신규팬|대표BJ)\)\s*/g, '')
+    .trim()
 }
 
 function parseCSV(filePath: string): CsvRow[] {
@@ -51,7 +57,7 @@ function parseCSV(filePath: string): CsvRow[] {
       donated_at: parts[0]?.trim() || '',
       donor_name: nickname,
       amount: parseInt(parts[2]?.trim() || '0', 10),
-      target_bj: parts[3]?.trim().replace('(퇴근)', '').replace('(조퇴)', '').trim() || '',
+      target_bj: cleanBjName(parts[3]?.trim() || ''),
     }
   }).filter(row => row.donor_name && row.amount > 0)
 }
@@ -128,10 +134,10 @@ async function main() {
 
   const imports = [
     {
-      filePath: '/Users/bagjaeseog/Downloads/RG패밀리 엑셀부 시즌_내역_2026013002.csv',
+      filePath: '/Users/bagjaeseog/Downloads/RG패밀리 엑셀부 시즌_내역_2026020613.csv',
       seasonId: 1,
-      episodeId: 16,
-      episodeNumber: 5,
+      episodeId: 19,
+      episodeNumber: 8,
     },
   ]
 
@@ -158,7 +164,7 @@ async function main() {
     .from('episodes')
     .select('id, episode_number')
     .eq('season_id', 1)
-    .in('episode_number', [3, 4])
+    .in('episode_number', [8])
 
   for (const ep of episodes || []) {
     const { count } = await supabase

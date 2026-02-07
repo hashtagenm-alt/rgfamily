@@ -10,7 +10,7 @@
    ======================================= */
 .hero {
   position: relative;
-  padding: 120px var(--space-6) 80px;
+  padding: 100px var(--space-6) 60px;
   background: rgba(253, 104, 186, 0.04);
   text-align: center;
   overflow: hidden;
@@ -59,8 +59,7 @@
 }
 
 .heroLinkSeason,
-.heroLinkVip,
-.heroLinkHallOfFame {
+.heroLinkVip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
@@ -94,19 +93,6 @@
 }
 
 .heroLinkVip:hover {
-  background: rgba(255, 215, 0, 0.15);
-  border-color: var(--metallic-gold);
-  transform: translateY(-2px);
-}
-
-/* 명예의 전당 버튼 - 골드 테마 */
-.heroLinkHallOfFame {
-  background: rgba(255, 215, 0, 0.08);
-  border: 1px solid var(--metallic-gold-border);
-  color: var(--metallic-gold);
-}
-
-.heroLinkHallOfFame:hover {
   background: rgba(255, 215, 0, 0.15);
   border-color: var(--metallic-gold);
   transform: translateY(-2px);
@@ -378,15 +364,17 @@
   border: 1px solid var(--card-border);
   border-radius: var(--radius-2xl);
   overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
 .listHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-4) var(--space-6);
   background: var(--surface);
   border-bottom: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
 }
 
 .listTitle {
@@ -493,7 +481,7 @@
    ======================================= */
 @media (max-width: 768px) {
   .hero {
-    padding: 100px var(--space-5) 60px;
+    padding: 88px var(--space-5) 48px;
   }
 
   .heroTitle {
@@ -576,7 +564,7 @@
 
 @media (max-width: 480px) {
   .hero {
-    padding: 80px var(--space-4) 50px;
+    padding: 72px var(--space-4) 40px;
   }
 
   .heroTitle {
@@ -605,8 +593,7 @@
   }
 
   .heroLinkSeason,
-  .heroLinkVip,
-  .heroLinkHallOfFame {
+  .heroLinkVip {
     width: 100%;
     justify-content: center;
     padding: var(--space-3) var(--space-4);
@@ -674,7 +661,7 @@
 /* 360px 이하 소형 기기 */
 @media (max-width: 360px) {
   .hero {
-    padding: 70px var(--space-3) 40px;
+    padding: 64px var(--space-3) 32px;
   }
 
   .heroTitle {
@@ -686,8 +673,7 @@
   }
 
   .heroLinkSeason,
-  .heroLinkVip,
-  .heroLinkHallOfFame {
+  .heroLinkVip {
     padding: var(--space-2-5) var(--space-3);
     font-size: var(--text-xs);
   }

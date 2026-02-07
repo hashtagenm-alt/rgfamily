@@ -5,15 +5,12 @@
  * 실행: npx tsx scripts/update-org-profiles.ts
  */
 
+import { getServiceClient } from './lib/supabase'
 import { config } from 'dotenv'
-import { createClient } from '@supabase/supabase-js'
 
 config({ path: '.env.local' })
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+const supabase = getServiceClient()
 
 // 엑셀 데이터 기반 프로필 정보
 // 린아, 가애는 공약이 없음 (대표이므로)

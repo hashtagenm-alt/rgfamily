@@ -1,12 +1,11 @@
+import { getServiceClient } from './lib/supabase'
 /**
  * 닉네임 중복 확인 및 분석 테이블 체크
  */
 
-import { createClient } from '@supabase/supabase-js'
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, serviceRoleKey)
+const supabase = getServiceClient()
 
 async function main() {
   // 1. Check analysis tables

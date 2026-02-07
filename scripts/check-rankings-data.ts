@@ -1,23 +1,9 @@
 /**
  * 랭킹 데이터 비교 스크립트
  */
-import { createClient } from '@supabase/supabase-js'
-import * as dotenv from 'dotenv'
-import * as path from 'path'
+import { getServiceClient } from './lib/supabase'
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('환경변수 설정 필요')
-  process.exit(1)
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { persistSession: false }
-})
+const supabase = getServiceClient()
 
 async function main() {
   // 1. total_donation_rankings에서 상위 10명 확인

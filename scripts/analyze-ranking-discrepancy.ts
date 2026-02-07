@@ -2,15 +2,10 @@
  * 랭킹 데이터 불일치 근본 원인 분석 스크립트
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env.local' })
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+const supabase = getServiceClient()
 
 async function analyze() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')

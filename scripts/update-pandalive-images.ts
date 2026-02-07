@@ -4,24 +4,12 @@
  * 사용법: npx tsx scripts/update-pandalive-images.ts
  */
 
+import { getServiceClient } from './lib/supabase'
 import { chromium } from 'playwright'
-import { createClient } from '@supabase/supabase-js'
 import { v2 as cloudinary } from 'cloudinary'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as dotenv from 'dotenv'
 import https from 'https'
-
-// .env.local에서 환경변수 로드
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ Supabase 환경변수가 설정되지 않았습니다.')
-  process.exit(1)
-}
 
 // Cloudinary 설정
 cloudinary.config({
@@ -35,9 +23,7 @@ if (!process.env.CLOUDINARY_CLOUD_NAME) {
   process.exit(1)
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false }
-})
+const supabase = getServiceClient()
 
 const TEMP_DIR = '/tmp/pandalive-update'
 const TARGET_SIGNATURES = [10000, 10001, 12337]

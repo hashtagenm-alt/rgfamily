@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -21,10 +21,10 @@
 
 .button {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--card-border);
   border-radius: 9999px;
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
+  background: var(--surface);
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -87,9 +87,9 @@
   border-radius: 9999px;
   background: linear-gradient(
     90deg,
-    var(--color-surface) 25%,
-    var(--color-border) 50%,
-    var(--color-surface) 75%
+    var(--surface) 25%,
+    var(--card-border) 50%,
+    var(--surface) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;

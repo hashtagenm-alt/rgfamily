@@ -1,54 +1,60 @@
 /**
- * 최신 후원 데이터 날짜 확인
+ * 최신 후원 데이터 날짜 확인 (상세)
  */
 
+import { getServiceClient } from './lib/supabase'
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 
-import { createClient } from '@supabase/supabase-js'
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, serviceRoleKey)
+const supabase = getServiceClient()
 
 async function main() {
   console.log('=== 최신 후원 데이터 확인 ===\n')
-  console.log('오늘 날짜:', new Date().toISOString().split('T')[0])
+  console.log('현재 시간:', new Date().toISOString())
 
-  // 최신 후원 날짜 확인
-  const { data } = await supabase
+  // 6화(episode_id=17) 데이터만 확인
+  const { data: ep6Data, count } = await supabase
     .from('donations')
-    .select('donated_at, donor_name, amount, episode_id')
-    .eq('season_id', 1)
+    .select('donated_at, donor_name, amount', { count: 'exact' })
+    .eq('episode_id', 17)
     .order('donated_at', { ascending: false })
-    .limit(10)
+    .limit(20)
 
-  console.log('\n최근 후원 내역 (최신 10건):')
-  data?.forEach(d => {
+  console.log(`\n6화 데이터 총 ${count}건`)
+  console.log('\n6화 최근 후원 내역 (최신 20건):')
+  ep6Data?.forEach(d => {
     console.log(`  ${d.donated_at} - ${d.donor_name}: ${d.amount.toLocaleString()} 하트`)
   })
 
-  // 날짜별 건수
-  const { data: allDonations } = await supabase
+  // 6화 날짜별 집계
+  const { data: allEp6 } = await supabase
     .from('donations')
-    .select('donated_at')
-    .eq('season_id', 1)
-    .not('donated_at', 'is', null)
+    .select('donated_at, amount')
+    .eq('episode_id', 17)
 
-  const dateCounts: Record<string, number> = {}
-  allDonations?.forEach(d => {
-    const date = d.donated_at.split('T')[0].split(' ')[0]
-    dateCounts[date] = (dateCounts[date] || 0) + 1
+  const dateStats: Record<string, { count: number; total: number }> = {}
+  allEp6?.forEach(d => {
+    if (!d.donated_at) return
+    // 다양한 형식 처리
+    let date = d.donated_at
+    if (date.includes('T')) {
+      date = date.split('T')[0]
+    } else if (date.includes(' ')) {
+      date = date.split(' ')[0]
+    }
+    if (!dateStats[date]) {
+      dateStats[date] = { count: 0, total: 0 }
+    }
+    dateStats[date].count++
+    dateStats[date].total += d.amount
   })
 
-  console.log('\n날짜별 후원 건수:')
-  Object.entries(dateCounts).sort().forEach(([date, count]) => {
-    console.log(`  ${date}: ${count}건`)
+  console.log('\n6화 날짜별 후원 현황:')
+  Object.entries(dateStats).sort().forEach(([date, stats]) => {
+    console.log(`  ${date}: ${stats.count}건, ${stats.total.toLocaleString()} 하트`)
   })
-
-  // 마지막 import 날짜
-  const sortedDates = Object.keys(dateCounts).sort()
-  console.log(`\n마지막 데이터 날짜: ${sortedDates[sortedDates.length - 1]}`)
 }
 
 main().catch(console.error)

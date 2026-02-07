@@ -4,16 +4,16 @@
  * - 기존 계정 포함 전체 아이디/비밀번호 CSV 생성
  */
 
+import { getServiceClient } from './lib/supabase'
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 
-import { createClient } from '@supabase/supabase-js'
 import * as fs from 'fs'
 import * as path from 'path'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, serviceRoleKey)
+const supabase = getServiceClient()
 
 // 랜덤 비밀번호 생성 (12자리, 영문+숫자+특수문자)
 function generatePassword(): string {

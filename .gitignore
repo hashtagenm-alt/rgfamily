@@ -61,3 +61,10 @@ __pycache__/
 
 # Bulk upload generated CSVs
 scripts/bulk-upload-signature-videos/*.csv
+
+# Large binary directories (videos, downloads, thumbnails)
+scripts/downloads/
+scripts/downloaded-videos/
+scripts/thumbnails/
+scripts/data/
+download-log.txt

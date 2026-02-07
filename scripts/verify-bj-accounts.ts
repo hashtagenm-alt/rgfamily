@@ -1,12 +1,8 @@
+import { getServiceClient } from './lib/supabase'
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string
-)
+const supabase = getServiceClient()
 
 const accounts = [
   { name: '린아', email: 'qwerdf1101@rgfamily.kr' },

@@ -4,15 +4,11 @@
  * - 썸네일 시간 변경: 영상 중간 (30초)
  */
 
+import { getServiceClient } from './lib/supabase'
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabase = getServiceClient()
 
 // 제목 형식 변환: "시그명 이름" → "직캠(이름) 시그명"
 function formatTitle(originalTitle: string): string {

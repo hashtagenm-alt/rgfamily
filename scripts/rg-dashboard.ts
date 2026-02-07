@@ -212,7 +212,7 @@ function drawText(x: number, y: number, text: string): void {
 }
 
 // 대시보드 렌더링
-function renderDashboard(data: DashboardData, viewMode: string): void {
+async function renderDashboard(data: DashboardData, viewMode: string): Promise<void> {
   term.clear()
 
   const width = process.stdout.columns || 80
@@ -233,13 +233,13 @@ function renderDashboard(data: DashboardData, viewMode: string): void {
   if (viewMode === 'main') {
     renderMainView(data, width)
   } else if (viewMode === 'ranking') {
-    renderRankingView(data, width)
+    await renderRankingView(data, width)
   } else if (viewMode === 'vip') {
-    renderVipView(data, width)
+    await renderVipView(data, width)
   } else if (viewMode === 'videos') {
-    renderVideosView(data, width)
+    await renderVideosView(data, width)
   } else if (viewMode === 'episodes') {
-    renderEpisodesView(data, width)
+    await renderEpisodesView(data, width)
   } else if (viewMode === 'help') {
     renderHelpView(width)
   }
@@ -423,12 +423,12 @@ async function main(): Promise<void> {
 
   let viewMode = 'main'
   let data = await loadDashboardData()
-  renderDashboard(data, viewMode)
+  await renderDashboard(data, viewMode)
 
   // 자동 새로고침 타이머
   const refreshInterval = setInterval(async () => {
     data = await loadDashboardData()
-    renderDashboard(data, viewMode)
+    await renderDashboard(data, viewMode)
   }, 30000)
 
   // 키보드 입력 처리
@@ -444,25 +444,25 @@ async function main(): Promise<void> {
 
     if (key === 'r') {
       data = await loadDashboardData()
-      renderDashboard(data, viewMode)
+      await renderDashboard(data, viewMode)
     } else if (key === '1') {
       viewMode = 'ranking'
-      renderDashboard(data, viewMode)
+      await renderDashboard(data, viewMode)
     } else if (key === '2') {
       viewMode = 'vip'
-      renderDashboard(data, viewMode)
+      await renderDashboard(data, viewMode)
     } else if (key === '3') {
       viewMode = 'videos'
-      renderDashboard(data, viewMode)
+      await renderDashboard(data, viewMode)
     } else if (key === '4') {
       viewMode = 'episodes'
-      renderDashboard(data, viewMode)
+      await renderDashboard(data, viewMode)
     } else if (key === 'h') {
       viewMode = 'help'
-      renderDashboard(data, viewMode)
+      await renderDashboard(data, viewMode)
     } else if (key === '\r' || key === '\n') {
       viewMode = 'main'
-      renderDashboard(data, viewMode)
+      await renderDashboard(data, viewMode)
     }
   })
 

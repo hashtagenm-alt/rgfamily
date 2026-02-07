@@ -2,15 +2,10 @@
  * donations 테이블과 season_donation_rankings 완전 비교
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env.local' })
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+const supabase = getServiceClient()
 
 async function fetchAllDonations(seasonId: number) {
   const allData: { donor_name: string; amount: number; episode_id: number }[] = []

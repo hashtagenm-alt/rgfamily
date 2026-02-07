@@ -129,7 +129,9 @@ class MockRankingRepository implements IRankingRepository {
         donorId: profile.id,
         donorName: profile.nickname,
         avatarUrl: profile.avatar_url,
-        totalAmount: profile.total_donation || 0,
+        viewerScore: (profile.total_donation || 0) * 50,
+        donationCount: 0,
+        topBj: null,
         seasonId: undefined,
         rank: index + 1,
       }))

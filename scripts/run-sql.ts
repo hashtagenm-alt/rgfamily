@@ -8,12 +8,9 @@
  * 브라우저 대신 터미널에서 직접 SQL 실행 가능
  */
 
-import { createClient } from '@supabase/supabase-js'
-import * as dotenv from 'dotenv'
+import { getServiceClient } from './lib/supabase'
 import * as fs from 'fs'
 import * as path from 'path'
-
-dotenv.config({ path: '.env.local' })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -24,9 +21,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false },
-})
+const supabase = getServiceClient()
 
 async function runSQL(sql: string) {
   console.log('📝 실행할 SQL:')

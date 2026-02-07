@@ -24,7 +24,7 @@ export class SupabaseRankingRepository implements IRankingRepository {
       const { data, error } = await withRetry(async () => {
         let query = this.supabase
           .from('season_rankings_public')
-          .select('rank, donor_name, gauge_percent, donation_count, unit, profile_id, avatar_url, is_vip_clickable')
+          .select('rank, donor_name, viewer_score, donation_count, top_bj, unit, profile_id, avatar_url, is_vip_clickable')
           .eq('season_id', seasonId)
 
         // unit 필터 적용 (DB 레벨)
@@ -64,7 +64,9 @@ export class SupabaseRankingRepository implements IRankingRepository {
         donorId: item.profile_id || null,
         donorName: item.donor_name,
         avatarUrl: item.avatar_url || null,
-        totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
+        viewerScore: item.viewer_score || 0,
+        donationCount: item.donation_count || 0,
+        topBj: item.top_bj || null,
         rank: item.rank, // DB에서 가져온 rank 사용 (필터 시에도 원래 순위 유지)
         seasonId,
         seasonRank: item.rank, // 시즌 랭킹 페이지이므로 rank = seasonRank
@@ -78,32 +80,35 @@ export class SupabaseRankingRepository implements IRankingRepository {
     const { data, error } = await withRetry(async () => {
       return this.supabase
         .from('total_rankings_public')
-        .select('rank, donor_name, gauge_percent, profile_id, avatar_url, is_vip_clickable')
+        .select('rank, donor_name, viewer_score, donation_count, top_bj, profile_id, avatar_url, is_vip_clickable')
         .order('rank', { ascending: true })
-        .limit(50)
+        .limit(60)  // 불완전 데이터 필터 후 50명 채우기 위해 여유 확보
     })
 
     if (error) throw error
 
-    // 중복 제거: 같은 donor_name이 여러 번 나오면 첫 번째만 유지
+    // 중복 제거 + donation_count가 0이고 top_bj도 없는 불완전 데이터 제외
     const seenDonors = new Set<string>()
     const uniqueData = (data || []).filter((item) => {
       const name = item.donor_name.trim()
-      if (seenDonors.has(name)) {
-        return false
-      }
+      if (seenDonors.has(name)) return false
       seenDonors.add(name)
+      // 후원 횟수/최애BJ 모두 없는 불완전 데이터 스킵
+      if ((item.donation_count || 0) === 0 && !item.top_bj) return false
       return true
     })
 
-    return uniqueData.map((item) => ({
+    // 순위 재정렬 (1부터, 최대 50명)
+    return uniqueData.slice(0, 50).map((item, idx) => ({
       donorId: item.profile_id || null,
       donorName: item.donor_name,
       avatarUrl: item.avatar_url || null,
-      totalAmount: item.gauge_percent || 0, // gauge_percent를 totalAmount로 사용 (게이지 표시용)
-      rank: item.rank,
+      viewerScore: item.viewer_score || 0,
+      donationCount: item.donation_count || 0,
+      topBj: item.top_bj || null,
+      rank: idx + 1,
       seasonId: undefined,
-      hasVipRewards: item.is_vip_clickable || false, // View에서 직접 가져온 VIP 클릭 가능 여부
+      hasVipRewards: item.is_vip_clickable || false,
     }))
   }
 

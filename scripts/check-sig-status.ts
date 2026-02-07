@@ -1,15 +1,10 @@
 /**
  * 시그니처 영상 상태 확인
  */
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env.local' })
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+const supabase = getServiceClient()
 
 async function main() {
   console.log('═'.repeat(60))

@@ -5,19 +5,19 @@
 .uploadLabel {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   display: block;
 }
 
 .dropzone {
-  border: 2px dashed var(--color-border);
+  border: 2px dashed var(--card-border);
   border-radius: 8px;
   padding: 2rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: var(--color-bg-secondary);
+  background: var(--surface);
 }
 
 .dropzone:hover,
@@ -32,12 +32,12 @@
 }
 
 .uploadIcon {
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   margin-bottom: 0.75rem;
 }
 
 .uploadText {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: 0.875rem;
   margin: 0;
 }
@@ -47,7 +47,7 @@
 }
 
 .uploadHint {
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   font-size: 0.75rem;
   margin-top: 0.5rem;
 }
@@ -64,8 +64,8 @@
   position: relative;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
 }
 
 .previewImageWrapper {
@@ -108,7 +108,7 @@
 
 .previewFileName {
   font-size: 0.75rem;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -117,7 +117,7 @@
 
 .previewFileSize {
   font-size: 0.625rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .removeBtn {
@@ -138,7 +138,7 @@
 }
 
 .removeBtn:hover {
-  background: var(--color-danger);
+  background: var(--color-error);
 }
 
 /* 업로드 진행 상태 */
@@ -159,7 +159,7 @@
 
 /* 에러 상태 */
 .uploadError {
-  color: var(--color-danger);
+  color: var(--color-error);
   font-size: 0.75rem;
   margin-top: 0.5rem;
   display: flex;
