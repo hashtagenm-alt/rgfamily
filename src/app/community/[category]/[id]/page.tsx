@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, use } from 'react'
 import { useRouter, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Eye, Calendar, User, MessageSquare, Send, Trash2, Edit } from 'lucide-react'
+import { ArrowLeft, Eye, Calendar, User, MessageSquare, Send, Trash2, Edit, Heart } from 'lucide-react'
 import { deletePost, deleteComment } from '@/lib/actions/posts'
 import { useSupabaseContext, useAuthContext } from '@/lib/context'
 import { formatDate } from '@/lib/utils/format'
@@ -21,6 +21,7 @@ interface PostDetail {
   authorRealName?: string
   authorAvatar: string | null
   viewCount: number
+  likeCount: number
   createdAt: string
   isAnonymous: boolean
 }
@@ -62,6 +63,8 @@ export default function PostDetailPage({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
+  const [isLiked, setIsLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
 
   // 삭제 권한 확인 (작성자 또는 관리자)
   const canDelete = user && post && (user.id === post.authorId || isAdmin)
@@ -101,9 +104,22 @@ export default function PostDetailPage({
       authorRealName: isAnonymous ? realNickname : undefined,
       authorAvatar: !isAnonymous || isAdmin ? (postProfile?.avatar_url || null) : null,
       viewCount: (postData.view_count || 0) + 1,
+      likeCount: postData.like_count || 0,
       createdAt: postData.created_at,
       isAnonymous,
     })
+    setLikeCount(postData.like_count || 0)
+
+    // 현재 유저의 좋아요 여부 확인
+    if (user) {
+      const { data: likeData } = await supabase
+        .from('post_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      setIsLiked(!!likeData)
+    }
 
     // 댓글 조회
     const { data: commentsData } = await supabase
@@ -127,7 +143,7 @@ export default function PostDetailPage({
     )
 
     setIsLoading(false)
-  }, [supabase, postId])
+  }, [supabase, postId, user, isAdmin])
 
   useEffect(() => {
     fetchPost()
@@ -156,6 +172,37 @@ export default function PostDetailPage({
     setIsSubmitting(false)
   }
 
+
+  const handleToggleLike = async () => {
+    if (!user) return
+
+    // Optimistic update
+    const wasLiked = isLiked
+    setIsLiked(!wasLiked)
+    setLikeCount((prev) => wasLiked ? prev - 1 : prev + 1)
+
+    if (wasLiked) {
+      const { error } = await supabase
+        .from('post_likes')
+        .delete()
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+      if (error) {
+        // Rollback
+        setIsLiked(true)
+        setLikeCount((prev) => prev + 1)
+      }
+    } else {
+      const { error } = await supabase
+        .from('post_likes')
+        .insert({ post_id: postId, user_id: user.id })
+      if (error) {
+        // Rollback
+        setIsLiked(false)
+        setLikeCount((prev) => prev - 1)
+      }
+    }
+  }
 
   // 댓글 삭제 권한 확인 함수
   const canDeleteComment = (commentAuthorId: string) => {
@@ -310,6 +357,18 @@ export default function PostDetailPage({
             className={styles.content}
             dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
           />
+
+          {/* Article Footer - 좋아요 */}
+          <div className={styles.articleFooter}>
+            <button
+              className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
+              disabled={!user}
+              onClick={handleToggleLike}
+            >
+              <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
+              좋아요 {likeCount > 0 && likeCount}
+            </button>
+          </div>
         </article>
 
         {/* Comments */}
@@ -319,6 +378,7 @@ export default function PostDetailPage({
             댓글 {comments.length}
           </h2>
 
+          <div className={styles.commentsBody}>
           {/* Comment Form */}
           {user ? (
             <form onSubmit={handleSubmitComment} className={styles.commentForm}>
@@ -388,6 +448,7 @@ export default function PostDetailPage({
                 </div>
               ))
             )}
+          </div>
           </div>
         </section>
 
