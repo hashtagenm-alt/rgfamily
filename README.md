@@ -7,7 +7,7 @@ PandaTV 스트리머 팬 커뮤니티 공식 웹사이트
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-green?style=flat-square&logo=supabase)](https://supabase.com/)
 
-## Overview
+## Overview 
  
 RG Family는 PandaTV 스트리머 팬덤을 위한 프리미엄 커뮤니티 플랫폼입니다.
 
