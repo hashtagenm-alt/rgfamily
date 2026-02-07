@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Megaphone, Plus, X, Save, Pin } from 'lucide-react'
+import { Megaphone, Plus, X, Save, Pin, GripVertical } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
 import { RichEditor } from '@/components/ui'
 import { useAdminCRUD, useAlert, useImageUpload } from '@/lib/hooks'
+import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
 
 interface Notice {
@@ -13,11 +15,14 @@ interface Notice {
   content: string
   category: 'official' | 'excel' | 'crew'
   isPinned: boolean
+  displayOrder: number | null
   createdAt: string
 }
 
 export default function NoticesPage() {
   const alertHandler = useAlert()
+  const supabase = useSupabaseContext()
+  const [isReordering, setIsReordering] = useState(false)
 
   // 이미지 업로드 훅
   const { uploadImage } = useImageUpload({
@@ -37,6 +42,7 @@ export default function NoticesPage() {
     closeModal,
     handleSave,
     handleDelete,
+    refetch,
   } = useAdminCRUD<Notice>({
     tableName: 'notices',
     defaultItem: {
@@ -44,14 +50,20 @@ export default function NoticesPage() {
       content: '',
       category: 'official',
       isPinned: false,
+      displayOrder: null,
     },
-    orderBy: { column: 'created_at', ascending: false },
+    // display_order 있는 항목 먼저, 그 다음 최신순
+    orderBy: [
+      { column: 'display_order', ascending: true, nullsFirst: false },
+      { column: 'created_at', ascending: false },
+    ],
     fromDbFormat: (row) => ({
       id: row.id as number,
       title: row.title as string,
       content: (row.content as string) || '',
       category: row.category as 'official' | 'excel' | 'crew',
       isPinned: row.is_pinned as boolean,
+      displayOrder: row.display_order as number | null,
       createdAt: row.created_at as string,
     }),
     toDbFormat: (item) => ({
@@ -66,6 +78,37 @@ export default function NoticesPage() {
     },
     alertHandler,
   })
+
+  // 드래그앤드롭 순서 변경 핸들러
+  const handleReorder = async (reorderedItems: Notice[]) => {
+    setIsReordering(true)
+    try {
+      // 순서 업데이트 (1부터 시작)
+      const updates = reorderedItems.map((item, index) => ({
+        id: item.id,
+        display_order: index + 1,
+      }))
+
+      // 일괄 업데이트
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('notices')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id)
+
+        if (error) throw error
+      }
+
+      alertHandler.showSuccess('순서가 저장되었습니다.')
+      refetch()
+    } catch (error) {
+      console.error('순서 저장 실패:', error)
+      alertHandler.showError('순서 저장에 실패했습니다.')
+      refetch() // 원래 순서로 복원
+    } finally {
+      setIsReordering(false)
+    }
+  }
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('ko-KR', {
@@ -114,7 +157,9 @@ export default function NoticesPage() {
         onEdit={openEditModal}
         onDelete={handleDelete}
         searchPlaceholder="제목으로 검색..."
-        isLoading={isLoading}
+        isLoading={isLoading || isReordering}
+        draggable
+        onReorder={handleReorder}
       />
 
       {/* Modal */}

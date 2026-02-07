@@ -93,6 +93,12 @@ export interface AlertHandler {
   ) => Promise<boolean>
 }
 
+export interface OrderByConfig {
+  column: string
+  ascending?: boolean
+  nullsFirst?: boolean
+}
+
 export interface AdminCRUDConfig<T extends { id?: number | string }> {
   /** Supabase 테이블 이름 */
   tableName: string
@@ -100,11 +106,8 @@ export interface AdminCRUDConfig<T extends { id?: number | string }> {
   /** 새 항목 추가 시 기본값 */
   defaultItem: Partial<T>
 
-  /** 정렬 설정 (선택) */
-  orderBy?: {
-    column: string
-    ascending?: boolean
-  }
+  /** 정렬 설정 (선택) - 단일 또는 다중 정렬 지원 */
+  orderBy?: OrderByConfig | OrderByConfig[]
 
   /** 커스텀 select 쿼리 (선택, 기본값: '*') - 조인이 필요한 경우 사용 */
   selectQuery?: string
@@ -218,8 +221,16 @@ export function useAdminCRUD<T extends { id?: number | string }>(
 
     let query = supabase.from(tableName).select(selectQueryRef.current)
 
-    if (orderByRef.current) {
-      query = query.order(orderByRef.current.column, { ascending: orderByRef.current.ascending ?? true })
+    // 정렬 적용 (단일 또는 다중)
+    const orderByConfig = orderByRef.current
+    if (orderByConfig) {
+      const orderByArray = Array.isArray(orderByConfig) ? orderByConfig : [orderByConfig]
+      for (const ob of orderByArray) {
+        query = query.order(ob.column, {
+          ascending: ob.ascending ?? true,
+          nullsFirst: ob.nullsFirst ?? false,
+        })
+      }
     }
 
     const { data, error } = await query

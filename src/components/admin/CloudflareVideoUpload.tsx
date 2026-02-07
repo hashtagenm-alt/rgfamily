@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { Upload, Film, AlertCircle, CheckCircle, Loader2, Image as ImageIcon, Check } from 'lucide-react'
+import { Upload, Film, AlertCircle, CheckCircle, Loader2, Image as ImageIcon, Check, RefreshCw } from 'lucide-react'
 import Image from 'next/image'
+import * as tus from 'tus-js-client'
 import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import styles from './VideoUpload.module.css'
 
@@ -26,6 +27,9 @@ const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'vid
 
 // 썸네일 생성 시간대 (영상 길이 비율)
 const THUMBNAIL_TIME_RATIOS = [0, 0.1, 0.25, 0.5, 0.75, 0.9]
+
+// 1GB 이상 파일은 TUS 사용 (청크 업로드)
+const TUS_THRESHOLD = 1 * 1024 * 1024 * 1024 // 1GB
 
 type UploadStatus = 'idle' | 'uploading' | 'processing' | 'selecting_thumbnail' | 'success' | 'error'
 
@@ -51,6 +55,11 @@ export default function CloudflareVideoUpload({
   const [thumbnailOptions, setThumbnailOptions] = useState<Array<{ time: string; url: string }>>([])
   const [selectedThumbnailIndex, setSelectedThumbnailIndex] = useState<number>(2) // 기본: 25% 위치
   const [thumbnailLoadErrors, setThumbnailLoadErrors] = useState<Set<number>>(new Set())
+
+  // TUS 업로드 관련
+  const tusUploadRef = useRef<tus.Upload | null>(null)
+  const [isTusUpload, setIsTusUpload] = useState(false)
+  const [canResume, setCanResume] = useState(false)
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`
@@ -140,62 +149,143 @@ export default function CloudflareVideoUpload({
     })
   }
 
+  // TUS 업로드 (대용량 파일용 - 청크 업로드, 이어받기 지원)
+  const uploadWithTus = async (file: File): Promise<string> => {
+    setIsTusUpload(true)
+
+    // 1. TUS 업로드 URL 발급
+    const urlRes = await fetch('/api/cloudflare-stream/tus-upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uploadLength: file.size,
+        filename: file.name,
+      }),
+    })
+
+    if (!urlRes.ok) {
+      const err = await urlRes.json()
+      throw new Error(err.error || 'TUS 업로드 URL 발급 실패')
+    }
+
+    const { uploadURL, uid } = await urlRes.json()
+
+    // 2. TUS 클라이언트로 업로드
+    return new Promise((resolve, reject) => {
+      const upload = new tus.Upload(file, {
+        endpoint: uploadURL,
+        uploadUrl: uploadURL, // 이미 발급받은 URL 사용
+        retryDelays: [0, 1000, 3000, 5000, 10000], // 재시도 딜레이
+        chunkSize: 50 * 1024 * 1024, // 50MB 청크
+        metadata: {
+          filename: file.name,
+          filetype: file.type,
+        },
+        onError: (error) => {
+          console.error('TUS upload error:', error)
+          setCanResume(true) // 실패 시 이어받기 가능
+          reject(new Error(`업로드 실패: ${error.message || '네트워크 오류'}`))
+        },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const pct = Math.round((bytesUploaded / bytesTotal) * 100)
+          setUploadProgress(pct)
+        },
+        onSuccess: () => {
+          tusUploadRef.current = null
+          setCanResume(false)
+          resolve(uid)
+        },
+      })
+
+      tusUploadRef.current = upload
+
+      // 이전 업로드가 있으면 이어받기 시도
+      upload.findPreviousUploads().then((previousUploads) => {
+        if (previousUploads.length > 0) {
+          upload.resumeFromPreviousUpload(previousUploads[0])
+        }
+        upload.start()
+      })
+    })
+  }
+
+  // 일반 업로드 (작은 파일용)
+  const uploadWithXhr = async (file: File): Promise<string> => {
+    // 1. Direct Creator Upload URL 발급
+    const urlRes = await fetch('/api/cloudflare-stream/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: file.name }),
+    })
+
+    if (!urlRes.ok) {
+      const err = await urlRes.json()
+      throw new Error(err.error || '업로드 URL 발급 실패')
+    }
+
+    const { uploadURL, uid } = await urlRes.json()
+
+    // 2. Cloudflare에 직접 업로드 (XHR로 진행률 추적)
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      const formData = new FormData()
+      formData.append('file', file)
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(pct)
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve()
+        } else {
+          reject(new Error(`업로드 실패 (${xhr.status})`))
+        }
+      })
+
+      xhr.addEventListener('error', () => reject(new Error('네트워크 오류')))
+      xhr.addEventListener('abort', () => reject(new Error('업로드 취소')))
+
+      xhr.open('POST', uploadURL)
+      xhr.send(formData)
+    })
+
+    return uid
+  }
+
+  // 업로드 이어받기
+  const handleResumeUpload = () => {
+    if (tusUploadRef.current) {
+      setErrorMessage(null)
+      setUploadStatus('uploading')
+      setCanResume(false)
+      tusUploadRef.current.start()
+    }
+  }
+
   const uploadFile = async (file: File) => {
     setIsUploading(true)
     setUploadStatus('uploading')
     setUploadProgress(0)
     setErrorMessage(null)
+    setIsTusUpload(file.size >= TUS_THRESHOLD)
 
     try {
-      // 1. Direct Creator Upload URL 발급
-      const urlRes = await fetch('/api/cloudflare-stream/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: file.name }),
-      })
+      // 파일 크기에 따라 업로드 방식 선택
+      const uid = file.size >= TUS_THRESHOLD
+        ? await uploadWithTus(file)
+        : await uploadWithXhr(file)
 
-      if (!urlRes.ok) {
-        const err = await urlRes.json()
-        throw new Error(err.error || '업로드 URL 발급 실패')
-      }
-
-      const { uploadURL, uid } = await urlRes.json()
-
-      // 2. Cloudflare에 직접 업로드 (XHR로 진행률 추적)
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        const formData = new FormData()
-        formData.append('file', file)
-
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            const pct = Math.round((e.loaded / e.total) * 100)
-            setUploadProgress(pct)
-          }
-        })
-
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve()
-          } else {
-            reject(new Error(`업로드 실패 (${xhr.status})`))
-          }
-        })
-
-        xhr.addEventListener('error', () => reject(new Error('네트워크 오류')))
-        xhr.addEventListener('abort', () => reject(new Error('업로드 취소')))
-
-        xhr.open('POST', uploadURL)
-        xhr.send(formData)
-      })
-
-      // 3. 처리 상태 폴링
+      // 처리 상태 폴링
       setUploadStatus('processing')
       setProcessingProgress('0')
 
       const result = await pollVideoStatus(uid)
 
-      // 4. 썸네일 선택 단계 또는 바로 완료
+      // 썸네일 선택 단계 또는 바로 완료
       setVideoUid(result.uid)
       setVideoDuration(result.duration)
 
@@ -273,6 +363,11 @@ export default function CloudflareVideoUpload({
   }
 
   const handleReset = () => {
+    // TUS 업로드 취소
+    if (tusUploadRef.current) {
+      tusUploadRef.current.abort()
+      tusUploadRef.current = null
+    }
     setSelectedFile(null)
     setUploadStatus('idle')
     setUploadProgress(0)
@@ -284,6 +379,9 @@ export default function CloudflareVideoUpload({
     setThumbnailOptions([])
     setSelectedThumbnailIndex(2)
     setThumbnailLoadErrors(new Set())
+    // TUS 관련 상태 초기화
+    setIsTusUpload(false)
+    setCanResume(false)
   }
 
   return (
@@ -310,14 +408,20 @@ export default function CloudflareVideoUpload({
         <div className={styles.uploadingState}>
           <Film size={32} className={styles.icon} />
           <p className={styles.fileName}>{selectedFile.name}</p>
-          <p className={styles.fileSize}>{formatFileSize(selectedFile.size)}</p>
+          <p className={styles.fileSize}>
+            {formatFileSize(selectedFile.size)}
+            {isTusUpload && <span className={styles.tusLabel}> • 청크 업로드</span>}
+          </p>
           <div className={styles.progressBar}>
             <div
               className={styles.progressFill}
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
-          <p className={styles.progressText}>{uploadProgress}% 업로드 중...</p>
+          <p className={styles.progressText}>
+            {uploadProgress}% 업로드 중...
+            {isTusUpload && ' (끊겨도 이어받기 가능)'}
+          </p>
         </div>
       )}
 
@@ -418,9 +522,17 @@ export default function CloudflareVideoUpload({
         <div className={styles.errorState}>
           <AlertCircle size={32} className={styles.errorIcon} />
           <p className={styles.errorText}>{errorMessage}</p>
-          <button onClick={handleReset} className={styles.resetBtn}>
-            다시 시도
-          </button>
+          <div className={styles.errorActions}>
+            {canResume && (
+              <button onClick={handleResumeUpload} className={styles.selectBtn}>
+                <RefreshCw size={16} />
+                이어서 업로드
+              </button>
+            )}
+            <button onClick={handleReset} className={styles.resetBtn}>
+              {canResume ? '처음부터 다시' : '다시 시도'}
+            </button>
+          </div>
         </div>
       )}
 

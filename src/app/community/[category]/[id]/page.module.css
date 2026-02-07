@@ -254,17 +254,22 @@
   /* margin은 인라인 스타일로 처리 (정렬 지원) */
 }
 
-/* Image alignment wrapper divs */
-.content div[style*="text-align: center"] {
+/* Text alignment (Tiptap에서 생성하는 inline style 지원) */
+.content [style*="text-align: center"] {
   text-align: center;
 }
 
-.content div[style*="text-align: center"] img {
-  display: inline-block;
+.content [style*="text-align: right"] {
+  text-align: right;
 }
 
-.content div[style*="text-align: right"] {
-  text-align: right;
+.content [style*="text-align: left"] {
+  text-align: left;
+}
+
+/* Image alignment wrapper divs */
+.content div[style*="text-align: center"] img {
+  display: inline-block;
 }
 
 .content div[style*="text-align: right"] img {
