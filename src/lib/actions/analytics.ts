@@ -93,6 +93,58 @@ export interface AnalyticsSummary {
   top_bj: string
 }
 
+// ==================== 새로운 타입: 회차별 추이 ====================
+
+export interface EpisodeTrendData {
+  episode_id: number
+  episode_number: number
+  title: string
+  broadcast_date: string
+  is_rank_battle: boolean
+  total_hearts: number
+  donor_count: number
+  avg_donation: number
+  new_donors: number
+  returning_donors: number
+}
+
+// ==================== 새로운 타입: 후원자 리텐션 ====================
+
+export interface DonorRetentionData {
+  cohorts: {
+    first_episode: number
+    first_episode_title: string
+    total_donors: number
+    retention: { episode_number: number; retained: number; rate: number }[]
+  }[]
+  lifecycle: {
+    new_count: number
+    active_count: number
+    loyal_count: number
+    at_risk_count: number
+    churned_count: number
+  }
+  pareto: {
+    top_percent: number
+    hearts_percent: number
+  }[]
+  funnel: {
+    label: string
+    count: number
+  }[]
+}
+
+// ==================== 새로운 타입: BJ 에피소드별 추이 ====================
+
+export interface BjEpisodeTrendData {
+  bj_name: string
+  episodes: {
+    episode_number: number
+    hearts: number
+    donor_count: number
+  }[]
+}
+
 // ==================== BJ별 후원 현황 ====================
 
 export async function getBjStats(
@@ -671,4 +723,404 @@ export async function getSeasonList(): Promise<ActionResult<{
     if (error) throw new Error(error.message)
     return data || []
   })
+}
+
+// ==================== 회차별 추이 ====================
+
+export async function getEpisodeTrend(
+  seasonId?: number
+): Promise<ActionResult<EpisodeTrendData[]>> {
+  return adminAction(async (supabase) => {
+    // 에피소드 목록 조회
+    let epQuery = supabase
+      .from('episodes')
+      .select('id, episode_number, title, broadcast_date, is_rank_battle')
+      .order('episode_number', { ascending: true })
+
+    if (seasonId) {
+      epQuery = epQuery.eq('season_id', seasonId)
+    }
+
+    const { data: episodes, error: epError } = await epQuery
+    if (epError) throw new Error(epError.message)
+    if (!episodes || episodes.length === 0) return []
+
+    // 전체 후원 데이터 가져오기 (에피소드 ID, 후원자명, 금액)
+    const episodeIds = episodes.map(e => e.id)
+    const allDonations: { episode_id: number; donor_name: string; amount: number }[] = []
+    const pageSize = 1000
+
+    for (const epId of episodeIds) {
+      let page = 0
+      while (true) {
+        const { data, error } = await supabase
+          .from('donations')
+          .select('episode_id, donor_name, amount')
+          .eq('episode_id', epId)
+          .range(page * pageSize, (page + 1) * pageSize - 1)
+
+        if (error) throw new Error(error.message)
+        if (!data || data.length === 0) break
+        allDonations.push(...(data as { episode_id: number; donor_name: string; amount: number }[]))
+        if (data.length < pageSize) break
+        page++
+      }
+    }
+
+    // 에피소드별 집계 + 누적 후원자 Set으로 신규/재참여 계산
+    const seenDonors = new Set<string>()
+    const result: EpisodeTrendData[] = []
+
+    for (const ep of episodes) {
+      const epDonations = allDonations.filter(d => d.episode_id === ep.id)
+      const epDonors = new Set(epDonations.map(d => d.donor_name).filter(Boolean))
+      const totalHearts = epDonations.reduce((s, d) => s + (d.amount || 0), 0)
+
+      let newDonors = 0
+      let returningDonors = 0
+
+      for (const donor of epDonors) {
+        if (seenDonors.has(donor)) {
+          returningDonors++
+        } else {
+          newDonors++
+        }
+      }
+
+      // 누적에 추가
+      for (const donor of epDonors) {
+        seenDonors.add(donor)
+      }
+
+      result.push({
+        episode_id: ep.id,
+        episode_number: ep.episode_number,
+        title: ep.title,
+        broadcast_date: ep.broadcast_date,
+        is_rank_battle: ep.is_rank_battle,
+        total_hearts: totalHearts,
+        donor_count: epDonors.size,
+        avg_donation: epDonors.size > 0 ? Math.round(totalHearts / epDonations.length) : 0,
+        new_donors: newDonors,
+        returning_donors: returningDonors,
+      })
+    }
+
+    return result
+  })
+}
+
+// ==================== 후원자 리텐션 분석 ====================
+
+export async function getDonorRetention(
+  seasonId?: number
+): Promise<ActionResult<DonorRetentionData>> {
+  return adminAction(async (supabase) => {
+    // 에피소드 목록
+    let epQuery = supabase
+      .from('episodes')
+      .select('id, episode_number, title')
+      .order('episode_number', { ascending: true })
+
+    if (seasonId) {
+      epQuery = epQuery.eq('season_id', seasonId)
+    }
+
+    const { data: episodes, error: epError } = await epQuery
+    if (epError) throw new Error(epError.message)
+    if (!episodes || episodes.length === 0) {
+      return {
+        cohorts: [],
+        lifecycle: { new_count: 0, active_count: 0, loyal_count: 0, at_risk_count: 0, churned_count: 0 },
+        pareto: [],
+        funnel: [],
+      }
+    }
+
+    // 전체 후원 데이터 1회 fetch
+    const allDonations: { episode_id: number; donor_name: string; amount: number }[] = []
+    const pageSize = 1000
+
+    for (const ep of episodes) {
+      let page = 0
+      while (true) {
+        const { data, error } = await supabase
+          .from('donations')
+          .select('episode_id, donor_name, amount')
+          .eq('episode_id', ep.id)
+          .range(page * pageSize, (page + 1) * pageSize - 1)
+
+        if (error) throw new Error(error.message)
+        if (!data || data.length === 0) break
+        allDonations.push(...(data as { episode_id: number; donor_name: string; amount: number }[]))
+        if (data.length < pageSize) break
+        page++
+      }
+    }
+
+    // donor → 참여 에피소드 Map
+    const donorEpisodes = new Map<string, Set<number>>()
+    const donorHearts = new Map<string, number>()
+
+    for (const d of allDonations) {
+      if (!d.donor_name) continue
+      if (!donorEpisodes.has(d.donor_name)) {
+        donorEpisodes.set(d.donor_name, new Set())
+      }
+      donorEpisodes.get(d.donor_name)!.add(d.episode_id)
+      donorHearts.set(d.donor_name, (donorHearts.get(d.donor_name) || 0) + (d.amount || 0))
+    }
+
+    const episodeNumberMap = new Map(episodes.map(e => [e.id, e.episode_number]))
+    const episodeTitleMap = new Map(episodes.map(e => [e.episode_number, e.title]))
+    const episodeNumbers = episodes.map(e => e.episode_number).sort((a, b) => a - b)
+    const totalEpisodes = episodeNumbers.length
+    const lastEp = episodeNumbers[episodeNumbers.length - 1]
+    const secondLastEp = episodeNumbers.length >= 2 ? episodeNumbers[episodeNumbers.length - 2] : null
+
+    // donor → 첫 참여 에피소드 번호
+    const donorFirstEp = new Map<string, number>()
+    for (const [donor, epIds] of donorEpisodes) {
+      const epNums = [...epIds].map(id => episodeNumberMap.get(id) ?? 0).sort((a, b) => a - b)
+      donorFirstEp.set(donor, epNums[0])
+    }
+
+    // === 코호트 리텐션 ===
+    const cohortMap = new Map<number, Set<string>>()
+    for (const [donor, firstEp] of donorFirstEp) {
+      if (!cohortMap.has(firstEp)) cohortMap.set(firstEp, new Set())
+      cohortMap.get(firstEp)!.add(donor)
+    }
+
+    const cohorts = episodeNumbers
+      .filter(epNum => cohortMap.has(epNum))
+      .map(epNum => {
+        const cohortDonors = cohortMap.get(epNum)!
+        const retention = episodeNumbers
+          .filter(n => n >= epNum)
+          .map(targetEp => {
+            let retained = 0
+            for (const donor of cohortDonors) {
+              const epIds = donorEpisodes.get(donor)!
+              const epNums = [...epIds].map(id => episodeNumberMap.get(id) ?? 0)
+              if (epNums.includes(targetEp)) retained++
+            }
+            return {
+              episode_number: targetEp,
+              retained,
+              rate: cohortDonors.size > 0 ? Math.round((retained / cohortDonors.size) * 100) : 0,
+            }
+          })
+
+        return {
+          first_episode: epNum,
+          first_episode_title: episodeTitleMap.get(epNum) || `${epNum}화`,
+          total_donors: cohortDonors.size,
+          retention,
+        }
+      })
+
+    // === 라이프사이클 분류 ===
+    let newCount = 0
+    let activeCount = 0
+    let loyalCount = 0
+    let atRiskCount = 0
+    let churnedCount = 0
+
+    for (const [donor, epIds] of donorEpisodes) {
+      const epNums = [...epIds].map(id => episodeNumberMap.get(id) ?? 0)
+      const participationCount = epNums.length
+      const isInLast = epNums.includes(lastEp)
+      const isInSecondLast = secondLastEp ? epNums.includes(secondLastEp) : false
+      const firstEp = donorFirstEp.get(donor) ?? 0
+
+      if (firstEp === lastEp && participationCount === 1) {
+        newCount++
+      } else if (participationCount >= Math.ceil(totalEpisodes * 0.6)) {
+        loyalCount++
+      } else if (isInLast || isInSecondLast) {
+        activeCount++
+      } else if (participationCount >= 2) {
+        atRiskCount++
+      } else {
+        churnedCount++
+      }
+    }
+
+    // === 파레토 분석 ===
+    const sortedDonors = [...donorHearts.entries()].sort((a, b) => b[1] - a[1])
+    const totalHeartsAll = sortedDonors.reduce((s, [, h]) => s + h, 0)
+    const pareto: DonorRetentionData['pareto'] = []
+    let cumHearts = 0
+
+    for (const percent of [5, 10, 20, 30, 50, 80, 100]) {
+      const idx = Math.ceil(sortedDonors.length * (percent / 100))
+      cumHearts = sortedDonors.slice(0, idx).reduce((s, [, h]) => s + h, 0)
+      pareto.push({
+        top_percent: percent,
+        hearts_percent: totalHeartsAll > 0 ? Math.round((cumHearts / totalHeartsAll) * 100) : 0,
+      })
+    }
+
+    // === 퍼널 ===
+    const allDonorCount = donorEpisodes.size
+    const twoPlus = [...donorEpisodes.values()].filter(s => s.size >= 2).length
+    const threePlus = [...donorEpisodes.values()].filter(s => s.size >= 3).length
+    const allEps = [...donorEpisodes.values()].filter(s => s.size >= totalEpisodes).length
+
+    const funnel = [
+      { label: '전체 후원자', count: allDonorCount },
+      { label: '2회 이상', count: twoPlus },
+      { label: '3회 이상', count: threePlus },
+      { label: '전 회차 참여', count: allEps },
+    ]
+
+    return {
+      cohorts,
+      lifecycle: {
+        new_count: newCount,
+        active_count: activeCount,
+        loyal_count: loyalCount,
+        at_risk_count: atRiskCount,
+        churned_count: churnedCount,
+      },
+      pareto,
+      funnel,
+    }
+  })
+}
+
+// ==================== BJ 에피소드별 추이 ====================
+
+export async function getBjEpisodeTrend(
+  seasonId?: number
+): Promise<ActionResult<BjEpisodeTrendData[]>> {
+  return adminAction(async (supabase) => {
+    // 에피소드 목록
+    let epQuery = supabase
+      .from('episodes')
+      .select('id, episode_number')
+      .order('episode_number', { ascending: true })
+
+    if (seasonId) {
+      epQuery = epQuery.eq('season_id', seasonId)
+    }
+
+    const { data: episodes, error: epError } = await epQuery
+    if (epError) throw new Error(epError.message)
+    if (!episodes || episodes.length === 0) return []
+
+    const episodeIdToNumber = new Map(episodes.map(e => [e.id, e.episode_number]))
+
+    // bj_episode_performances 테이블 시도
+    const { data: perfData, error: perfError } = await supabase
+      .from('bj_episode_performances')
+      .select('episode_id, bj_member_id, donation_hearts, donation_count')
+      .in('episode_id', episodes.map(e => e.id))
+
+    if (!perfError && perfData && perfData.length > 0) {
+      // BJ 멤버 이름 조회
+      const bjMemberIds = [...new Set(perfData.map(p => p.bj_member_id))]
+      const { data: members } = await supabase
+        .from('organization')
+        .select('id, name')
+        .in('id', bjMemberIds)
+
+      const memberNameMap = new Map((members || []).map(m => [m.id, m.name]))
+
+      // BJ별 에피소드 집계
+      const bjMap = new Map<string, Map<number, { hearts: number; donor_count: number }>>()
+
+      for (const p of perfData) {
+        const bjName = memberNameMap.get(p.bj_member_id) || `BJ#${p.bj_member_id}`
+        const epNum = episodeIdToNumber.get(p.episode_id) ?? 0
+
+        if (!bjMap.has(bjName)) bjMap.set(bjName, new Map())
+        bjMap.get(bjName)!.set(epNum, {
+          hearts: p.donation_hearts,
+          donor_count: p.donation_count,
+        })
+      }
+
+      return buildBjTrendResult(bjMap, episodes.map(e => e.episode_number))
+    }
+
+    // Fallback: donations 테이블에서 집계
+    const allDonations: { episode_id: number; target_bj: string | null; amount: number; donor_name: string }[] = []
+    const pageSize = 1000
+
+    for (const ep of episodes) {
+      let page = 0
+      while (true) {
+        const { data, error } = await supabase
+          .from('donations')
+          .select('episode_id, target_bj, amount, donor_name')
+          .eq('episode_id', ep.id)
+          .not('target_bj', 'is', null)
+          .range(page * pageSize, (page + 1) * pageSize - 1)
+
+        if (error) throw new Error(error.message)
+        if (!data || data.length === 0) break
+        allDonations.push(...(data as typeof allDonations))
+        if (data.length < pageSize) break
+        page++
+      }
+    }
+
+    const bjMap = new Map<string, Map<number, { hearts: number; donors: Set<string> }>>()
+
+    for (const d of allDonations) {
+      const bjName = d.target_bj?.trim()
+      if (!bjName) continue
+      const epNum = episodeIdToNumber.get(d.episode_id) ?? 0
+
+      if (!bjMap.has(bjName)) bjMap.set(bjName, new Map())
+      const epMap = bjMap.get(bjName)!
+      if (!epMap.has(epNum)) epMap.set(epNum, { hearts: 0, donors: new Set() })
+      const stat = epMap.get(epNum)!
+      stat.hearts += d.amount || 0
+      if (d.donor_name) stat.donors.add(d.donor_name)
+    }
+
+    // Set을 count로 변환
+    const bjMapConverted = new Map<string, Map<number, { hearts: number; donor_count: number }>>()
+    for (const [bj, epMap] of bjMap) {
+      const converted = new Map<number, { hearts: number; donor_count: number }>()
+      for (const [epNum, stat] of epMap) {
+        converted.set(epNum, { hearts: stat.hearts, donor_count: stat.donors.size })
+      }
+      bjMapConverted.set(bj, converted)
+    }
+
+    return buildBjTrendResult(bjMapConverted, episodes.map(e => e.episode_number))
+  })
+}
+
+function buildBjTrendResult(
+  bjMap: Map<string, Map<number, { hearts: number; donor_count: number }>>,
+  episodeNumbers: number[]
+): BjEpisodeTrendData[] {
+  const result: BjEpisodeTrendData[] = []
+
+  for (const [bj_name, epMap] of bjMap) {
+    const episodes = episodeNumbers.map(epNum => {
+      const stat = epMap.get(epNum)
+      return {
+        episode_number: epNum,
+        hearts: stat?.hearts ?? 0,
+        donor_count: stat?.donor_count ?? 0,
+      }
+    })
+    const totalHearts = episodes.reduce((s, e) => s + e.hearts, 0)
+    result.push({ bj_name, episodes, _totalHearts: totalHearts } as BjEpisodeTrendData & { _totalHearts: number })
+  }
+
+  // 총 하트 기준 정렬
+  return result
+    .sort((a, b) => {
+      const aTotal = (a as BjEpisodeTrendData & { _totalHearts: number })._totalHearts
+      const bTotal = (b as BjEpisodeTrendData & { _totalHearts: number })._totalHearts
+      return bTotal - aTotal
+    })
+    .map(({ bj_name, episodes }) => ({ bj_name, episodes }))
 }

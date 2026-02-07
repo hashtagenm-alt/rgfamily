@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { RefreshCw, Loader2, ChevronUp, ChevronDown } from 'lucide-react'
-import type { BjStats } from '@/lib/actions/analytics'
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts'
+import type { BjStats, BjEpisodeTrendData } from '@/lib/actions/analytics'
+import { ChartContainer, ChartTooltip, CHART_COLORS, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './BjStatsTable.module.css'
 
 interface BjStatsTableProps {
   bjStats: BjStats[]
+  bjEpisodeTrend: BjEpisodeTrendData[]
   isLoading: boolean
   onRefresh: () => Promise<void>
 }
@@ -14,7 +17,7 @@ interface BjStatsTableProps {
 type SortField = 'total_hearts' | 'donation_count' | 'unique_donors' | 'avg_donation'
 type SortDirection = 'asc' | 'desc'
 
-export function BjStatsTable({ bjStats, isLoading, onRefresh }: BjStatsTableProps) {
+export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: BjStatsTableProps) {
   const [sortField, setSortField] = useState<SortField>('total_hearts')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -39,6 +42,42 @@ export function BjStatsTable({ bjStats, isLoading, onRefresh }: BjStatsTableProp
     const bVal = b[sortField]
     return sortDirection === 'asc' ? aVal - bVal : bVal - aVal
   })
+
+  const pieData = useMemo(() => {
+    const total = bjStats.reduce((s, b) => s + b.total_hearts, 0)
+    const top7 = bjStats.slice(0, 7).map(b => ({
+      name: b.bj_name,
+      value: b.total_hearts,
+      percent: total > 0 ? Math.round((b.total_hearts / total) * 100) : 0,
+    }))
+    const otherHearts = bjStats.slice(7).reduce((s, b) => s + b.total_hearts, 0)
+    if (otherHearts > 0) {
+      top7.push({
+        name: '기타',
+        value: otherHearts,
+        percent: total > 0 ? Math.round((otherHearts / total) * 100) : 0,
+      })
+    }
+    return top7
+  }, [bjStats])
+
+  const lineData = useMemo(() => {
+    if (bjEpisodeTrend.length === 0) return []
+    const top7 = bjEpisodeTrend.slice(0, 7)
+    if (top7.length === 0 || top7[0].episodes.length === 0) return []
+
+    return top7[0].episodes.map((_, epIdx) => {
+      const point: Record<string, number | string> = {
+        episode: `${top7[0].episodes[epIdx].episode_number}화`,
+      }
+      for (const bj of top7) {
+        point[bj.bj_name] = bj.episodes[epIdx]?.hearts ?? 0
+      }
+      return point
+    })
+  }, [bjEpisodeTrend])
+
+  const top7Names = useMemo(() => bjEpisodeTrend.slice(0, 7).map(b => b.bj_name), [bjEpisodeTrend])
 
   const formatNumber = (num: number) => num.toLocaleString()
 
@@ -68,16 +107,62 @@ export function BjStatsTable({ bjStats, isLoading, onRefresh }: BjStatsTableProp
     <div className={styles.container}>
       <div className={styles.header}>
         <h3 className={styles.title}>BJ별 후원 현황</h3>
-        <button
-          className={styles.refreshBtn}
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
+        <button className={styles.refreshBtn} onClick={handleRefresh} disabled={isRefreshing}>
           <RefreshCw size={16} className={isRefreshing ? styles.spinning : ''} />
           새로고침
         </button>
       </div>
 
+      {/* 차트 영역 */}
+      <div className={styles.chartsRow}>
+        {pieData.length > 0 && (
+          <ChartContainer title="BJ별 하트 점유율" height={300} className={styles.chartHalf}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={110}
+                dataKey="value"
+                nameKey="name"
+                label={({ name, percent }) => `${name} ${percent}%`}
+                labelLine={false}
+              >
+                {pieData.map((_, i) => (
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <ChartTooltip valueFormatter={(v) => `${v.toLocaleString()} 하트`} />
+            </PieChart>
+          </ChartContainer>
+        )}
+
+        {lineData.length > 0 && (
+          <ChartContainer title="BJ별 회차 추이 (상위 7)" height={300} className={styles.chartHalf}>
+            <LineChart data={lineData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <CartesianGrid {...CHART_THEME.grid} />
+              <XAxis dataKey="episode" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 11 }} />
+              <YAxis {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={formatChartNumber} />
+              <ChartTooltip valueFormatter={(v) => `${v.toLocaleString()} 하트`} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              {top7Names.map((name, i) => (
+                <Line
+                  key={name}
+                  type="monotone"
+                  dataKey={name}
+                  stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              ))}
+            </LineChart>
+          </ChartContainer>
+        )}
+      </div>
+
+      {/* 테이블 */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>

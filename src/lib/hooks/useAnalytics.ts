@@ -11,6 +11,9 @@ import {
   getAnalyticsSummary,
   getEpisodeList,
   getSeasonList,
+  getEpisodeTrend,
+  getDonorRetention,
+  getBjEpisodeTrend,
   type BjStats,
   type TimePatternData,
   type DonorBjRelation,
@@ -18,6 +21,9 @@ import {
   type EpisodeComparison,
   type DonorSearch,
   type AnalyticsSummary,
+  type EpisodeTrendData,
+  type DonorRetentionData,
+  type BjEpisodeTrendData,
 } from '@/lib/actions/analytics'
 
 interface UseAnalyticsOptions {
@@ -41,6 +47,9 @@ interface UseAnalyticsReturn {
   donorPatterns: DonorPattern[]
   episodeComparison: EpisodeComparison | null
   donorSearchResult: DonorSearch | null
+  episodeTrend: EpisodeTrendData[]
+  donorRetention: DonorRetentionData | null
+  bjEpisodeTrend: BjEpisodeTrendData[]
 
   // 로딩 상태
   isLoading: boolean
@@ -50,6 +59,9 @@ interface UseAnalyticsReturn {
   isDonorPatternsLoading: boolean
   isComparisonLoading: boolean
   isSearchLoading: boolean
+  isEpisodeTrendLoading: boolean
+  isDonorRetentionLoading: boolean
+  isBjEpisodeTrendLoading: boolean
 
   // 에러
   error: string | null
@@ -68,6 +80,9 @@ interface UseAnalyticsReturn {
   searchDonorByName: (name: string) => Promise<void>
   loadSeasons: () => Promise<void>
   loadEpisodes: () => Promise<void>
+  loadEpisodeTrend: () => Promise<void>
+  loadDonorRetention: () => Promise<void>
+  loadBjEpisodeTrend: () => Promise<void>
   refreshAll: () => Promise<void>
 }
 
@@ -86,6 +101,9 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const [donorPatterns, setDonorPatterns] = useState<DonorPattern[]>([])
   const [episodeComparison, setEpisodeComparison] = useState<EpisodeComparison | null>(null)
   const [donorSearchResult, setDonorSearchResult] = useState<DonorSearch | null>(null)
+  const [episodeTrend, setEpisodeTrend] = useState<EpisodeTrendData[]>([])
+  const [donorRetention, setDonorRetention] = useState<DonorRetentionData | null>(null)
+  const [bjEpisodeTrend, setBjEpisodeTrend] = useState<BjEpisodeTrendData[]>([])
 
   // 메타 데이터
   const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([])
@@ -99,6 +117,9 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const [isComparisonLoading, setIsComparisonLoading] = useState(false)
   const [isSearchLoading, setIsSearchLoading] = useState(false)
   const [isRelationsLoading, setIsRelationsLoading] = useState(false)
+  const [isEpisodeTrendLoading, setIsEpisodeTrendLoading] = useState(false)
+  const [isDonorRetentionLoading, setIsDonorRetentionLoading] = useState(false)
+  const [isBjEpisodeTrendLoading, setIsBjEpisodeTrendLoading] = useState(false)
 
   // 에러
   const [error, setError] = useState<string | null>(null)
@@ -192,6 +213,42 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     setIsSearchLoading(false)
   }, [seasonId])
 
+  const loadEpisodeTrend = useCallback(async () => {
+    setIsEpisodeTrendLoading(true)
+    setError(null)
+    const result = await getEpisodeTrend(seasonId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setEpisodeTrend(result.data)
+    }
+    setIsEpisodeTrendLoading(false)
+  }, [seasonId])
+
+  const loadDonorRetention = useCallback(async () => {
+    setIsDonorRetentionLoading(true)
+    setError(null)
+    const result = await getDonorRetention(seasonId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setDonorRetention(result.data)
+    }
+    setIsDonorRetentionLoading(false)
+  }, [seasonId])
+
+  const loadBjEpisodeTrend = useCallback(async () => {
+    setIsBjEpisodeTrendLoading(true)
+    setError(null)
+    const result = await getBjEpisodeTrend(seasonId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setBjEpisodeTrend(result.data)
+    }
+    setIsBjEpisodeTrendLoading(false)
+  }, [seasonId])
+
   const loadSeasons = useCallback(async () => {
     const result = await getSeasonList()
     if (result.data) {
@@ -212,8 +269,9 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       loadBjStats(),
       loadTimePattern(),
       loadDonorPatterns(),
+      loadEpisodeTrend(),
     ])
-  }, [loadSummary, loadBjStats, loadTimePattern, loadDonorPatterns])
+  }, [loadSummary, loadBjStats, loadTimePattern, loadDonorPatterns, loadEpisodeTrend])
 
   // 초기 로드
   useEffect(() => {
@@ -237,7 +295,10 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     isDonorPatternsLoading ||
     isComparisonLoading ||
     isSearchLoading ||
-    isRelationsLoading
+    isRelationsLoading ||
+    isEpisodeTrendLoading ||
+    isDonorRetentionLoading ||
+    isBjEpisodeTrendLoading
 
   return {
     // 필터
@@ -254,6 +315,9 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     donorPatterns,
     episodeComparison,
     donorSearchResult,
+    episodeTrend,
+    donorRetention,
+    bjEpisodeTrend,
 
     // 로딩
     isLoading,
@@ -263,6 +327,9 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     isDonorPatternsLoading,
     isComparisonLoading,
     isSearchLoading,
+    isEpisodeTrendLoading,
+    isDonorRetentionLoading,
+    isBjEpisodeTrendLoading,
 
     // 에러
     error,
@@ -281,6 +348,9 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     searchDonorByName,
     loadSeasons,
     loadEpisodes,
+    loadEpisodeTrend,
+    loadDonorRetention,
+    loadBjEpisodeTrend,
     refreshAll,
   }
 }

@@ -68,6 +68,24 @@
   animation: spin 1s linear infinite;
 }
 
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.chartHalf {
+  border: none !important;
+  padding: 12px !important;
+}
+
+@media (max-width: 1024px) {
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
 .tableWrapper {
   overflow-x: auto;
 }

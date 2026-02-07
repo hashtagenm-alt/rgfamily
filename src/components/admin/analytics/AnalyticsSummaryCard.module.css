@@ -37,8 +37,8 @@
 
 .card {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
   padding: 20px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -51,6 +51,12 @@
   transform: translateY(-2px);
 }
 
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .cardIcon {
   display: flex;
   align-items: center;
@@ -61,6 +67,11 @@
   flex-shrink: 0;
 }
 
+.sparkline {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
 .cardContent {
   display: flex;
   flex-direction: column;
@@ -68,14 +79,40 @@
 }
 
 .cardLabel {
-  font-size: 14px; /* 라벨은 14px 허용 (보조 텍스트) */
+  font-size: 14px;
   color: var(--text-secondary);
+}
+
+.cardValueRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .cardValue {
   font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.deltaUp {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.deltaDown {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
 }
 
 .highlights {
@@ -104,13 +141,6 @@
   color: var(--color-primary);
 }
 
-.topBjSection {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
-}
-
 .sectionTitle {
   font-size: 16px;
   font-weight: 600;
@@ -118,75 +148,33 @@
   margin-bottom: 16px;
 }
 
-.barChart {
+.insightsSection {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.insightsList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-.barItem {
+.insightItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background 0.2s;
+  gap: 10px;
+  font-size: 16px;
+  color: var(--text-primary);
 }
 
-.barItem:hover {
-  background: var(--bg-tertiary);
-}
-
-.barLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 120px;
-  flex-shrink: 0;
-}
-
-.barRank {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: var(--color-primary);
-  color: white;
+.insightBullet {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.barName {
-  font-size: 16px; /* CLAUDE.md: 최소 16px */
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.barTrack {
-  flex: 1;
-  height: 24px;
-  background: var(--bg-tertiary);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.barFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), #ff8fd8);
-  border-radius: 6px;
-  transition: width 0.3s ease;
-}
-
-.barValue {
-  width: 80px;
-  text-align: right;
-  font-size: 16px; /* CLAUDE.md: 최소 16px */
-  font-weight: 600;
-  color: var(--text-primary);
+  background: var(--color-primary);
+  flex-shrink: 0;
 }
 
 @media (max-width: 1024px) {

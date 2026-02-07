@@ -1,0 +1,158 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  gap: 12px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 라이프사이클 카드 */
+.lifecycleRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.lifecycleCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  transition: transform 0.2s;
+}
+
+.lifecycleCard:hover {
+  transform: translateY(-2px);
+}
+
+.lifecycleHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lifecycleLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lifecycleCount {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.lifecyclePct {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.lifecycleDesc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* 코호트 히트맵 */
+.cohortSection {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.sectionDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.cohortTableWrapper {
+  overflow-x: auto;
+}
+
+.cohortTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.cohortTable th,
+.cohortTable td {
+  padding: 8px 10px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.cohortTable th {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.cohortLabel {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left !important;
+}
+
+.cohortCount {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.cohortCell {
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  min-width: 48px;
+  transition: background 0.2s;
+}
+
+@media (max-width: 1024px) {
+  .lifecycleRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .lifecycleRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lifecycleCount {
+    font-size: 22px;
+  }
+}

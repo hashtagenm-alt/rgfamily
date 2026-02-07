@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { BarChart3, TrendingUp, Users, Clock, Search, GitCompare } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { BarChart3, TrendingUp, Users, Clock, Search, GitCompare, Activity, Repeat } from 'lucide-react'
 import { useAnalytics } from '@/lib/hooks'
 import {
   AnalyticsSummaryCard,
@@ -10,10 +10,12 @@ import {
   DonorPatternsTable,
   DonorSearchPanel,
   EpisodeComparisonPanel,
+  EpisodeTrendPanel,
+  DonorRetentionPanel,
 } from '@/components/admin/analytics'
 import styles from './page.module.css'
 
-type TabType = 'overview' | 'bj' | 'time' | 'patterns' | 'compare' | 'search'
+type TabType = 'overview' | 'trend' | 'bj' | 'retention' | 'time' | 'patterns' | 'compare' | 'search'
 
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
@@ -29,13 +31,18 @@ export default function AnalyticsPage() {
     donorPatterns,
     episodeComparison,
     donorSearchResult,
-    isLoading,
+    episodeTrend,
+    donorRetention,
+    bjEpisodeTrend,
     isSummaryLoading,
     isBjStatsLoading,
     isTimePatternLoading,
     isDonorPatternsLoading,
     isComparisonLoading,
     isSearchLoading,
+    isEpisodeTrendLoading,
+    isDonorRetentionLoading,
+    isBjEpisodeTrendLoading,
     error,
     seasons,
     episodes,
@@ -44,13 +51,25 @@ export default function AnalyticsPage() {
     loadDonorPatterns,
     loadEpisodeComparison,
     searchDonorByName,
-    loadDonorBjRelations,
-    donorBjRelations,
+    loadDonorRetention,
+    loadBjEpisodeTrend,
   } = useAnalytics({ autoLoad: true })
+
+  // Lazy loading: 탭 진입 시 해당 데이터 로드
+  useEffect(() => {
+    if (activeTab === 'retention' && !donorRetention && !isDonorRetentionLoading) {
+      loadDonorRetention()
+    }
+    if ((activeTab === 'bj' || activeTab === 'trend') && bjEpisodeTrend.length === 0 && !isBjEpisodeTrendLoading) {
+      loadBjEpisodeTrend()
+    }
+  }, [activeTab, donorRetention, isDonorRetentionLoading, loadDonorRetention, bjEpisodeTrend.length, isBjEpisodeTrendLoading, loadBjEpisodeTrend])
 
   const tabs = [
     { id: 'overview', label: '요약', icon: BarChart3 },
+    { id: 'trend', label: '회차별 추이', icon: Activity },
     { id: 'bj', label: 'BJ별 현황', icon: Users },
+    { id: 'retention', label: '후원자 리텐션', icon: Repeat },
     { id: 'time', label: '시간대 패턴', icon: Clock },
     { id: 'patterns', label: '후원자 패턴', icon: TrendingUp },
     { id: 'compare', label: '회차별 비교', icon: GitCompare },
@@ -65,7 +84,6 @@ export default function AnalyticsPage() {
           후원 분석 대시보드
         </h1>
 
-        {/* 필터 */}
         <div className={styles.filters}>
           <select
             value={seasonId || ''}
@@ -100,7 +118,6 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* 탭 네비게이션 */}
       <nav className={styles.tabs}>
         {tabs.map((tab) => {
           const Icon = tab.icon
@@ -117,21 +134,37 @@ export default function AnalyticsPage() {
         })}
       </nav>
 
-      {/* 탭 콘텐츠 */}
       <div className={styles.content}>
         {activeTab === 'overview' && (
           <AnalyticsSummaryCard
             summary={summary}
             bjStats={bjStats}
+            episodeTrend={episodeTrend}
             isLoading={isSummaryLoading || isBjStatsLoading}
+          />
+        )}
+
+        {activeTab === 'trend' && (
+          <EpisodeTrendPanel
+            episodeTrend={episodeTrend}
+            bjEpisodeTrend={bjEpisodeTrend}
+            isLoading={isEpisodeTrendLoading || isBjEpisodeTrendLoading}
           />
         )}
 
         {activeTab === 'bj' && (
           <BjStatsTable
             bjStats={bjStats}
+            bjEpisodeTrend={bjEpisodeTrend}
             isLoading={isBjStatsLoading}
             onRefresh={loadBjStats}
+          />
+        )}
+
+        {activeTab === 'retention' && (
+          <DonorRetentionPanel
+            retention={donorRetention}
+            isLoading={isDonorRetentionLoading}
           />
         )}
 
