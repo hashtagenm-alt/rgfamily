@@ -1,15 +1,17 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { RefreshCw, Loader2, ChevronUp, ChevronDown } from 'lucide-react'
-import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts'
-import type { BjStats, BjEpisodeTrendData } from '@/lib/actions/analytics'
+import { RefreshCw, Loader2, ChevronUp, ChevronDown, ChevronRight, Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar } from 'recharts'
+import type { BjStats, BjEpisodeTrendData, BjDetailedStats, BjDonorDetail } from '@/lib/actions/analytics'
 import { ChartContainer, ChartTooltip, CHART_COLORS, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './BjStatsTable.module.css'
 
 interface BjStatsTableProps {
   bjStats: BjStats[]
   bjEpisodeTrend: BjEpisodeTrendData[]
+  bjDetailedStats: BjDetailedStats[]
+  isBjDetailedStatsLoading: boolean
   isLoading: boolean
   onRefresh: () => Promise<void>
 }
@@ -17,10 +19,50 @@ interface BjStatsTableProps {
 type SortField = 'total_hearts' | 'donation_count' | 'unique_donors' | 'avg_donation'
 type SortDirection = 'asc' | 'desc'
 
-export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: BjStatsTableProps) {
+function TrendIcon({ trend }: { trend: 'up' | 'down' | 'stable' }) {
+  if (trend === 'up') return <TrendingUp size={14} color="#10b981" />
+  if (trend === 'down') return <TrendingDown size={14} color="#ef4444" />
+  return <Minus size={14} color="#6b7280" />
+}
+
+function MiniSparkline({ data }: { data: { episode_number: number; amount: number }[] }) {
+  if (data.length === 0) return null
+  const maxVal = Math.max(...data.map(d => d.amount), 1)
+  return (
+    <div className={styles.sparkline}>
+      {data.map((d, i) => (
+        <div
+          key={i}
+          className={styles.sparkBar}
+          style={{ height: `${Math.max(4, (d.amount / maxVal) * 28)}px` }}
+          title={`${d.episode_number}화: ${d.amount.toLocaleString()}`}
+        />
+      ))}
+    </div>
+  )
+}
+
+function DonorRow({ donor }: { donor: BjDonorDetail }) {
+  return (
+    <div className={styles.donorRow}>
+      <span className={styles.donorName2}>
+        {donor.donor_name}
+        {donor.is_new && <span className={styles.newBadge}>NEW</span>}
+      </span>
+      <span className={styles.donorHearts}>{donor.total_hearts.toLocaleString()}</span>
+      <span className={styles.donorCount}>{donor.donation_count}건</span>
+      <TrendIcon trend={donor.trend} />
+      <MiniSparkline data={donor.episode_amounts} />
+    </div>
+  )
+}
+
+export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDetailedStatsLoading, isLoading, onRefresh }: BjStatsTableProps) {
   const [sortField, setSortField] = useState<SortField>('total_hearts')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [expandedBj, setExpandedBj] = useState<string | null>(null)
+  const [selectedBjForConcentration, setSelectedBjForConcentration] = useState<string | null>(null)
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -61,6 +103,21 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: 
     return top7
   }, [bjStats])
 
+  const concentrationData = useMemo(() => {
+    const bj = selectedBjForConcentration || expandedBj
+    if (!bj) return null
+    const detail = bjDetailedStats.find(d => d.bj_name === bj)
+    if (!detail?.donor_concentration?.length) return null
+    const otherPct = 100 - detail.donor_concentration.reduce((s, d) => s + d.percent, 0)
+    const data = detail.donor_concentration.map(d => ({
+      name: d.donor_name,
+      value: d.hearts,
+      percent: d.percent,
+    }))
+    if (otherPct > 0) data.push({ name: '기타', value: 0, percent: otherPct })
+    return data
+  }, [bjDetailedStats, selectedBjForConcentration, expandedBj])
+
   const lineData = useMemo(() => {
     if (bjEpisodeTrend.length === 0) return []
     const top7 = bjEpisodeTrend.slice(0, 7)
@@ -78,6 +135,17 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: 
   }, [bjEpisodeTrend])
 
   const top7Names = useMemo(() => bjEpisodeTrend.slice(0, 7).map(b => b.bj_name), [bjEpisodeTrend])
+
+  // 신규 고액 후원자 알림
+  const notableAlerts = useMemo(() => {
+    const alerts: { bj_name: string; donors: string[] }[] = []
+    for (const bj of bjDetailedStats) {
+      if (bj.notable_new_donors.length > 0) {
+        alerts.push({ bj_name: bj.bj_name, donors: bj.notable_new_donors })
+      }
+    }
+    return alerts
+  }, [bjDetailedStats])
 
   const formatNumber = (num: number) => num.toLocaleString()
 
@@ -103,6 +171,8 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: 
     )
   }
 
+  const getDetailForBj = (name: string) => bjDetailedStats.find(d => d.bj_name === name)
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -112,6 +182,20 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: 
           새로고침
         </button>
       </div>
+
+      {/* 신규 고액 후원자 알림 */}
+      {notableAlerts.length > 0 && (
+        <div className={styles.alertsRow}>
+          {notableAlerts.map(alert => (
+            <div key={alert.bj_name} className={styles.alertCard}>
+              <Sparkles size={16} color="#f59e0b" />
+              <span>
+                <strong>{alert.bj_name}</strong>: {alert.donors.join(', ')} 신규 고액 후원
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 차트 영역 */}
       <div className={styles.chartsRow}>
@@ -138,7 +222,33 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: 
           </ChartContainer>
         )}
 
-        {lineData.length > 0 && (
+        {concentrationData ? (
+          <ChartContainer
+            title={`후원 집중도: ${selectedBjForConcentration || expandedBj}`}
+            subtitle="Top 10 후원자 비중"
+            height={300}
+            className={styles.chartHalf}
+          >
+            <PieChart>
+              <Pie
+                data={concentrationData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={110}
+                dataKey="percent"
+                nameKey="name"
+                label={({ name, percent }) => `${name} ${percent}%`}
+                labelLine={false}
+              >
+                {concentrationData.map((_, i) => (
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <ChartTooltip valueFormatter={(v) => `${v}%`} />
+            </PieChart>
+          </ChartContainer>
+        ) : lineData.length > 0 ? (
           <ChartContainer title="BJ별 회차 추이 (상위 7)" height={300} className={styles.chartHalf}>
             <LineChart data={lineData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
               <CartesianGrid {...CHART_THEME.grid} />
@@ -159,7 +269,7 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: 
               ))}
             </LineChart>
           </ChartContainer>
-        )}
+        ) : null}
       </div>
 
       {/* 테이블 */}
@@ -193,23 +303,69 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, isLoading, onRefresh }: 
               >
                 평균 후원 <SortIcon field="avg_donation" />
               </th>
+              <th className={styles.expandCol}></th>
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((bj, index) => (
-              <tr key={bj.bj_name}>
-                <td className={styles.rankCol}>
-                  <span className={`${styles.rank} ${index < 3 ? styles[`rank${index + 1}`] : ''}`}>
-                    {index + 1}
-                  </span>
-                </td>
-                <td className={styles.bjName}>{bj.bj_name}</td>
-                <td className={styles.hearts}>{formatNumber(bj.total_hearts)}</td>
-                <td>{formatNumber(bj.donation_count)}</td>
-                <td>{formatNumber(bj.unique_donors)}</td>
-                <td>{formatNumber(bj.avg_donation)}</td>
-              </tr>
-            ))}
+            {sortedData.map((bj, index) => {
+              const detail = getDetailForBj(bj.bj_name)
+              const isExpanded = expandedBj === bj.bj_name
+              return (
+                <>
+                  <tr
+                    key={bj.bj_name}
+                    className={isExpanded ? styles.expandedRow : ''}
+                    onClick={() => {
+                      setExpandedBj(isExpanded ? null : bj.bj_name)
+                      setSelectedBjForConcentration(isExpanded ? null : bj.bj_name)
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <td className={styles.rankCol}>
+                      <span className={`${styles.rank} ${index < 3 ? styles[`rank${index + 1}`] : ''}`}>
+                        {index + 1}
+                      </span>
+                    </td>
+                    <td className={styles.bjName}>
+                      {bj.bj_name}
+                      {detail && detail.new_donor_count > 0 && (
+                        <span className={styles.newCount}>+{detail.new_donor_count} new</span>
+                      )}
+                    </td>
+                    <td className={styles.hearts}>{formatNumber(bj.total_hearts)}</td>
+                    <td>{formatNumber(bj.donation_count)}</td>
+                    <td>{formatNumber(bj.unique_donors)}</td>
+                    <td>{formatNumber(bj.avg_donation)}</td>
+                    <td className={styles.expandCol}>
+                      <ChevronRight
+                        size={16}
+                        className={`${styles.expandIcon} ${isExpanded ? styles.expandIconOpen : ''}`}
+                      />
+                    </td>
+                  </tr>
+                  {isExpanded && detail && (
+                    <tr key={`${bj.bj_name}-detail`} className={styles.detailRow}>
+                      <td colSpan={7}>
+                        <div className={styles.detailContent}>
+                          <h4 className={styles.detailTitle}>Top 5 후원자</h4>
+                          {isBjDetailedStatsLoading ? (
+                            <div className={styles.detailLoading}>
+                              <Loader2 size={16} className={styles.spinner} /> 로딩 중...
+                            </div>
+                          ) : (
+                            <div className={styles.donorList}>
+                              {detail.top_donors.slice(0, 5).map(donor => (
+                                <DonorRow key={donor.donor_name} donor={donor} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              )
+            })}
           </tbody>
         </table>
       </div>
