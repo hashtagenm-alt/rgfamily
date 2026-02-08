@@ -158,7 +158,7 @@ export default function SchedulesPage() {
       render: (item) => formatDate(item.startDatetime),
     },
     {
-      key: 'startDatetime',
+      key: 'startTime',
       header: '시간',
       width: '100px',
       render: (item) => (item.isAllDay ? '종일' : formatTime(item.startDatetime)),

@@ -127,6 +127,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
               <span className={styles.cardValue}>{formatNumber(summary.total_hearts)}</span>
               <DeltaBadge value={deltas?.heartsDelta} />
             </div>
+            <span className={styles.cardDesc}>선택한 범위 내 전체 후원 하트 합계</span>
           </div>
         </div>
 
@@ -141,6 +142,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
             <div className={styles.cardValueRow}>
               <span className={styles.cardValue}>{formatNumber(summary.total_donations)}</span>
             </div>
+            <span className={styles.cardDesc}>개별 후원 횟수의 합계</span>
           </div>
         </div>
 
@@ -157,6 +159,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
               <span className={styles.cardValue}>{formatNumber(summary.unique_donors)}</span>
               <DeltaBadge value={deltas?.donorsDelta} />
             </div>
+            <span className={styles.cardDesc}>중복 제거된 고유 후원자 수</span>
           </div>
         </div>
 
@@ -173,6 +176,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
               <span className={styles.cardValue}>{formatNumber(summary.avg_donation)}</span>
               <DeltaBadge value={deltas?.avgDelta} />
             </div>
+            <span className={styles.cardDesc}>후원 1건당 평균 하트</span>
           </div>
         </div>
       </div>
@@ -192,7 +196,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
       {/* Quick Insights */}
       {insights.length > 0 && (
         <div className={styles.insightsSection}>
-          <h3 className={styles.sectionTitle}>Quick Insights</h3>
+          <h3 className={styles.sectionTitle}>주요 인사이트</h3>
           <div className={styles.insightsList}>
             {insights.map((insight, i) => (
               <div key={i} className={styles.insightItem}>

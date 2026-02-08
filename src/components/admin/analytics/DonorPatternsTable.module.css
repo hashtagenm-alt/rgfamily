@@ -19,6 +19,12 @@
   color: var(--text-primary);
 }
 
+.headerDesc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
 .refreshBtn {
   display: flex;
   align-items: center;
@@ -235,7 +241,7 @@
 }
 
 .donutWrapper {
-  flex: 0 0 240px;
+  flex: 0 0 320px;
 }
 
 /* 트렌드 토글 */

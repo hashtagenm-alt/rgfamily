@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import { RefreshCw, Loader2, ChevronUp, ChevronDown, ChevronRight, Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar } from 'recharts'
+import { Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar } from 'recharts'
 import type { BjStats, BjEpisodeTrendData, BjDetailedStats, BjDonorDetail } from '@/lib/actions/analytics'
 import { ChartContainer, ChartTooltip, CHART_COLORS, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './BjStatsTable.module.css'
@@ -176,7 +176,10 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDet
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>BJ별 후원 현황</h3>
+        <div>
+          <h3 className={styles.title}>BJ별 후원 현황</h3>
+          <p className={styles.headerDesc}>각 BJ가 받은 후원을 비교합니다. 행을 클릭하면 상세 정보를 볼 수 있습니다.</p>
+        </div>
         <button className={styles.refreshBtn} onClick={handleRefresh} disabled={isRefreshing}>
           <RefreshCw size={16} className={isRefreshing ? styles.spinning : ''} />
           새로고침
@@ -200,25 +203,18 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDet
       {/* 차트 영역 */}
       <div className={styles.chartsRow}>
         {pieData.length > 0 && (
-          <ChartContainer title="BJ별 하트 점유율" height={300} className={styles.chartHalf}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={110}
-                dataKey="value"
-                nameKey="name"
-                label={({ name, percent }) => `${name} ${percent}%`}
-                labelLine={false}
-              >
+          <ChartContainer title="BJ별 하트 점유율" height={Math.max(200, pieData.length * 40)} className={styles.chartHalf}>
+            <BarChart data={pieData} layout="vertical" margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
+              <CartesianGrid {...CHART_THEME.grid} horizontal={false} />
+              <XAxis type="number" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={(v: number) => `${v}%`} />
+              <YAxis type="category" dataKey="name" width={80} {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 13 }} />
+              <ChartTooltip valueFormatter={(v) => `${v}%`} />
+              <Bar dataKey="percent" name="점유율" radius={[0, 4, 4, 0]} maxBarSize={24}>
                 {pieData.map((_, i) => (
                   <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
-              </Pie>
-              <ChartTooltip valueFormatter={(v) => `${v.toLocaleString()} 하트`} />
-            </PieChart>
+              </Bar>
+            </BarChart>
           </ChartContainer>
         )}
 
@@ -226,27 +222,27 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDet
           <ChartContainer
             title={`후원 집중도: ${selectedBjForConcentration || expandedBj}`}
             subtitle="Top 10 후원자 비중"
-            height={300}
+            height={Math.max(200, concentrationData.length * 32)}
             className={styles.chartHalf}
           >
-            <PieChart>
-              <Pie
-                data={concentrationData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={110}
-                dataKey="percent"
-                nameKey="name"
-                label={({ name, percent }) => `${name} ${percent}%`}
-                labelLine={false}
-              >
+            <BarChart data={concentrationData} layout="vertical" margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
+              <CartesianGrid {...CHART_THEME.grid} horizontal={false} />
+              <XAxis type="number" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={(v: number) => `${v}%`} />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={80}
+                {...CHART_THEME.axis}
+                tick={{ ...CHART_THEME.axis.tick, fontSize: 12 }}
+                tickFormatter={(v: string) => v.length > 6 ? v.slice(0, 6) + '…' : v}
+              />
+              <ChartTooltip valueFormatter={(v) => `${v}%`} />
+              <Bar dataKey="percent" name="비중" radius={[0, 4, 4, 0]} maxBarSize={24}>
                 {concentrationData.map((_, i) => (
                   <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
-              </Pie>
-              <ChartTooltip valueFormatter={(v) => `${v}%`} />
-            </PieChart>
+              </Bar>
+            </BarChart>
           </ChartContainer>
         ) : lineData.length > 0 ? (
           <ChartContainer title="BJ별 회차 추이 (상위 7)" height={300} className={styles.chartHalf}>
@@ -311,9 +307,8 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDet
               const detail = getDetailForBj(bj.bj_name)
               const isExpanded = expandedBj === bj.bj_name
               return (
-                <>
+                <Fragment key={bj.bj_name}>
                   <tr
-                    key={bj.bj_name}
                     className={isExpanded ? styles.expandedRow : ''}
                     onClick={() => {
                       setExpandedBj(isExpanded ? null : bj.bj_name)
@@ -329,7 +324,7 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDet
                     <td className={styles.bjName}>
                       {bj.bj_name}
                       {detail && detail.new_donor_count > 0 && (
-                        <span className={styles.newCount}>+{detail.new_donor_count} new</span>
+                        <span className={styles.newCount}>+{detail.new_donor_count} 신규</span>
                       )}
                     </td>
                     <td className={styles.hearts}>{formatNumber(bj.total_hearts)}</td>
@@ -363,7 +358,7 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDet
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               )
             })}
           </tbody>

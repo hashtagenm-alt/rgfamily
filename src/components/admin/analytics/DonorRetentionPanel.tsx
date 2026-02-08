@@ -34,17 +34,17 @@ interface DonorRetentionPanelProps {
 }
 
 const LIFECYCLE_CONFIG = [
-  { key: 'new_count', label: 'New', icon: UserPlus, color: '#10b981', desc: '최신 회차 첫 참여' },
-  { key: 'active_count', label: 'Active', icon: UserCheck, color: '#3b82f6', desc: '최근 2회 이내 참여' },
-  { key: 'loyal_count', label: 'Loyal', icon: Shield, color: '#8b5cf6', desc: '60% 이상 회차 참여' },
-  { key: 'at_risk_count', label: 'At-risk', icon: AlertTriangle, color: '#f59e0b', desc: '참여 후 최근 불참' },
-  { key: 'churned_count', label: 'Churned', icon: UserX, color: '#ef4444', desc: '1회 참여 후 이탈' },
+  { key: 'new_count', label: '신규', icon: UserPlus, color: '#10b981', desc: '최신 회차에 처음 후원한 후원자' },
+  { key: 'active_count', label: '활성', icon: UserCheck, color: '#3b82f6', desc: '최근 2회 이내에 후원한 후원자' },
+  { key: 'loyal_count', label: '충성', icon: Shield, color: '#8b5cf6', desc: '전체 회차의 60% 이상 참여한 후원자' },
+  { key: 'at_risk_count', label: '위험', icon: AlertTriangle, color: '#f59e0b', desc: '이전에 참여했으나 최근 불참 중인 후원자' },
+  { key: 'churned_count', label: '이탈', icon: UserX, color: '#ef4444', desc: '1회만 참여 후 더 이상 후원하지 않는 후원자' },
 ] as const
 
 const SEGMENT_CONFIG = {
-  whale: { label: '고래 (Whale)', icon: Anchor, color: '#8b5cf6', desc: '상위 10% 후원자' },
-  dolphin: { label: '돌고래 (Dolphin)', icon: Waves, color: '#3b82f6', desc: '상위 10~50%' },
-  minnow: { label: '물고기 (Minnow)', icon: Fish, color: '#10b981', desc: '하위 50%' },
+  whale: { label: '고래', icon: Anchor, color: '#8b5cf6', desc: '핵심 후원자 (상위 10%)' },
+  dolphin: { label: '돌고래', icon: Waves, color: '#3b82f6', desc: '중간 후원자 (상위 10~50%)' },
+  minnow: { label: '물고기', icon: Fish, color: '#10b981', desc: '소액 후원자 (하위 50%)' },
 } as const
 
 const RISK_LABELS = {

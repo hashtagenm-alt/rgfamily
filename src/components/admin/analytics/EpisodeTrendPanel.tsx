@@ -123,6 +123,7 @@ export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: E
                 {kpi.heartChange > 0 ? '+' : ''}{kpi.heartChange}%
               </span>
             </div>
+            <span className={styles.kpiDesc}>가장 최근 에피소드의 총 후원 하트</span>
           </div>
           <div className={styles.kpiCard}>
             <span className={styles.kpiLabel}>최신 회차 후원자</span>
@@ -133,14 +134,17 @@ export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: E
                 {kpi.donorChange > 0 ? '+' : ''}{kpi.donorChange}%
               </span>
             </div>
+            <span className={styles.kpiDesc}>최근 에피소드에 참여한 고유 후원자 수</span>
           </div>
           <div className={styles.kpiCard}>
             <span className={styles.kpiLabel}>평균 하트/회차</span>
             <span className={styles.kpiValue}>{kpi.avgHearts.toLocaleString()}</span>
+            <span className={styles.kpiDesc}>전체 회차의 평균 후원 하트</span>
           </div>
           <div className={styles.kpiCard}>
             <span className={styles.kpiLabel}>총 회차</span>
             <span className={styles.kpiValue}>{kpi.totalEpisodes}</span>
+            <span className={styles.kpiDesc}>분석 대상 에피소드 수 (확정된 회차만)</span>
           </div>
         </div>
       )}

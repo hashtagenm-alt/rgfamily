@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import { RefreshCw, Loader2, Filter, TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react'
-import { PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts'
 import type { DonorPattern } from '@/lib/actions/analytics'
-import { ChartContainer, ChartTooltip, CHART_COLORS } from './charts/RechartsTheme'
+import { ChartContainer, ChartTooltip, CHART_THEME } from './charts/RechartsTheme'
 import styles from './DonorPatternsTable.module.css'
 
 interface DonorPatternsTableProps {
@@ -109,7 +109,10 @@ export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatt
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>후원자 패턴 분류</h3>
+        <div>
+          <h3 className={styles.title}>후원자 패턴 분류</h3>
+          <p className={styles.headerDesc}>후원 행동을 분석하여 각 후원자를 5가지 유형으로 자동 분류합니다</p>
+        </div>
         <button
           className={styles.refreshBtn}
           onClick={handleRefresh}
@@ -124,25 +127,18 @@ export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatt
       <div className={styles.topSection}>
         {donutData.length > 0 && (
           <div className={styles.donutWrapper}>
-            <ChartContainer title="패턴 분포" height={220}>
-              <PieChart>
-                <Pie
-                  data={donutData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={90}
-                  dataKey="value"
-                  nameKey="name"
-                  label={({ name, value }) => `${name} ${value}`}
-                  labelLine={false}
-                >
+            <ChartContainer title="패턴 분포" height={Math.max(160, donutData.length * 40)}>
+              <BarChart data={donutData} layout="vertical" margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
+                <CartesianGrid {...CHART_THEME.grid} horizontal={false} />
+                <XAxis type="number" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} />
+                <YAxis type="category" dataKey="name" width={70} {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 13 }} />
+                <ChartTooltip valueFormatter={(v) => `${v}명`} />
+                <Bar dataKey="value" name="후원자" radius={[0, 4, 4, 0]} maxBarSize={24}>
                   {donutData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
-                </Pie>
-                <ChartTooltip valueFormatter={(v) => `${v}명`} />
-              </PieChart>
+                </Bar>
+              </BarChart>
             </ChartContainer>
           </div>
         )}
@@ -213,9 +209,8 @@ export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatt
             {filteredPatterns.slice(0, 100).map((p) => {
               const isExpanded = expandedDonor === p.donor_name
               return (
-                <>
+                <Fragment key={p.donor_name}>
                   <tr
-                    key={p.donor_name}
                     onClick={() => setExpandedDonor(isExpanded ? null : p.donor_name)}
                     style={{ cursor: 'pointer' }}
                     className={isExpanded ? styles.expandedRow : ''}
@@ -269,7 +264,7 @@ export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatt
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               )
             })}
           </tbody>

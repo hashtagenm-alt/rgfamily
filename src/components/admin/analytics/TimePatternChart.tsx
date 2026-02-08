@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import { RefreshCw, Loader2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts'
 import type { TimePatternData, TimePatternEnhanced } from '@/lib/actions/analytics'
@@ -19,10 +19,17 @@ type ViewMode = 'overall' | 'perBj' | 'heatmap' | 'donors'
 type MetricMode = 'hearts' | 'count'
 
 const formatHour = (hour: number) => {
-  if (hour === 0) return '12AM'
-  if (hour < 12) return `${hour}AM`
-  if (hour === 12) return '12PM'
-  return `${hour - 12}PM`
+  if (hour === 0) return '오전 12시'
+  if (hour < 12) return `오전 ${hour}시`
+  if (hour === 12) return '오후 12시'
+  return `오후 ${hour - 12}시`
+}
+
+const formatHourShort = (hour: number) => {
+  if (hour === 0) return '오전12'
+  if (hour < 12) return `오전${hour}`
+  if (hour === 12) return '오후12'
+  return `오후${hour - 12}`
 }
 
 export function TimePatternChart({ timePattern, timePatternEnhanced, isTimePatternEnhancedLoading, isLoading, onRefresh }: TimePatternChartProps) {
@@ -67,7 +74,7 @@ export function TimePatternChart({ timePattern, timePatternEnhanced, isTimePatte
   )
 
   const overallChartData = timePattern.map(d => ({
-    hour: formatHour(d.hour),
+    hour: formatHourShort(d.hour),
     hearts: d.total_hearts,
     count: d.donation_count,
     intensity: maxVal > 0 ? (metricMode === 'hearts' ? d.total_hearts : d.donation_count) / maxVal : 0,
@@ -87,7 +94,7 @@ export function TimePatternChart({ timePattern, timePatternEnhanced, isTimePatte
     if (!bjData) return null
     const maxH = Math.max(...bjData.hours.map(h => h.hearts), 1)
     return bjData.hours.map(h => ({
-      hour: formatHour(h.hour),
+      hour: formatHourShort(h.hour),
       hearts: h.hearts,
       count: h.count,
       isPeak: h.hour === bjData.peak_hour,
@@ -153,6 +160,7 @@ export function TimePatternChart({ timePattern, timePatternEnhanced, isTimePatte
               : `${peakHour.donation_count.toLocaleString()}건`
             })
           </span>
+          <span className={styles.peakDesc}>후원이 가장 활발한 시간대입니다</span>
         </div>
       )}
 
@@ -263,8 +271,8 @@ export function TimePatternChart({ timePattern, timePatternEnhanced, isTimePatte
 
                   {/* 데이터 행 */}
                   {heatmapData.bjs.slice(0, 15).map(bj => (
-                    <>
-                      <div key={`label-${bj}`} className={styles.heatmapLabel}>{bj}</div>
+                    <Fragment key={`row-${bj}`}>
+                      <div className={styles.heatmapLabel}>{bj}</div>
                       {heatmapData.hours.map(hour => {
                         const cell = heatmapData.cells.find(c => c.bj_name === bj && c.hour === hour)
                         const intensity = cell?.intensity ?? 0
@@ -279,7 +287,7 @@ export function TimePatternChart({ timePattern, timePatternEnhanced, isTimePatte
                           </div>
                         )
                       })}
-                    </>
+                    </Fragment>
                   ))}
                 </div>
               </div>
