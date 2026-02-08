@@ -28,8 +28,8 @@ const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'vid
 // 썸네일 생성 시간대 (영상 길이 비율)
 const THUMBNAIL_TIME_RATIOS = [0, 0.1, 0.25, 0.5, 0.75, 0.9]
 
-// 1GB 이상 파일은 TUS 사용 (청크 업로드)
-const TUS_THRESHOLD = 1 * 1024 * 1024 * 1024 // 1GB
+// 200MB 이상 파일은 TUS 사용 (청크 업로드)
+const TUS_THRESHOLD = 200 * 1024 * 1024 // 200MB
 
 type UploadStatus = 'idle' | 'uploading' | 'processing' | 'selecting_thumbnail' | 'success' | 'error'
 

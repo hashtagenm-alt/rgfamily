@@ -226,7 +226,7 @@ export default function NoticePage() {
           id: n.id,
           title: n.title,
           isPinned: n.is_pinned,
-          isImportant: index < 2,
+          isImportant: false,
           createdAt: n.created_at,
           author: (n as { author_nickname?: string }).author_nickname || '운영자',
           viewCount: n.view_count || 0,
