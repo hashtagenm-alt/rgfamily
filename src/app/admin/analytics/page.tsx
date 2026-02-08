@@ -43,6 +43,10 @@ export default function AnalyticsPage() {
     isEpisodeTrendLoading,
     isDonorRetentionLoading,
     isBjEpisodeTrendLoading,
+    bjDetailedStats,
+    timePatternEnhanced,
+    isBjDetailedStatsLoading,
+    isTimePatternEnhancedLoading,
     error,
     seasons,
     episodes,
@@ -53,6 +57,8 @@ export default function AnalyticsPage() {
     searchDonorByName,
     loadDonorRetention,
     loadBjEpisodeTrend,
+    loadBjDetailedStats,
+    loadTimePatternEnhanced,
   } = useAnalytics({ autoLoad: true })
 
   // Lazy loading: 탭 진입 시 해당 데이터 로드
@@ -63,7 +69,13 @@ export default function AnalyticsPage() {
     if ((activeTab === 'bj' || activeTab === 'trend') && bjEpisodeTrend.length === 0 && !isBjEpisodeTrendLoading) {
       loadBjEpisodeTrend()
     }
-  }, [activeTab, donorRetention, isDonorRetentionLoading, loadDonorRetention, bjEpisodeTrend.length, isBjEpisodeTrendLoading, loadBjEpisodeTrend])
+    if (activeTab === 'bj' && bjDetailedStats.length === 0 && !isBjDetailedStatsLoading) {
+      loadBjDetailedStats()
+    }
+    if (activeTab === 'time' && !timePatternEnhanced && !isTimePatternEnhancedLoading) {
+      loadTimePatternEnhanced()
+    }
+  }, [activeTab, donorRetention, isDonorRetentionLoading, loadDonorRetention, bjEpisodeTrend.length, isBjEpisodeTrendLoading, loadBjEpisodeTrend, bjDetailedStats.length, isBjDetailedStatsLoading, loadBjDetailedStats, timePatternEnhanced, isTimePatternEnhancedLoading, loadTimePatternEnhanced])
 
   const tabs = [
     { id: 'overview', label: '요약', icon: BarChart3 },
@@ -156,6 +168,8 @@ export default function AnalyticsPage() {
           <BjStatsTable
             bjStats={bjStats}
             bjEpisodeTrend={bjEpisodeTrend}
+            bjDetailedStats={bjDetailedStats}
+            isBjDetailedStatsLoading={isBjDetailedStatsLoading}
             isLoading={isBjStatsLoading}
             onRefresh={loadBjStats}
           />
@@ -171,6 +185,8 @@ export default function AnalyticsPage() {
         {activeTab === 'time' && (
           <TimePatternChart
             timePattern={timePattern}
+            timePatternEnhanced={timePatternEnhanced}
+            isTimePatternEnhancedLoading={isTimePatternEnhancedLoading}
             isLoading={isTimePatternLoading}
             onRefresh={loadTimePattern}
           />

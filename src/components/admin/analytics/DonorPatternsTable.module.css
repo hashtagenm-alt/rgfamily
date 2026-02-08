@@ -226,6 +226,134 @@
   white-space: nowrap;
 }
 
+/* 상단 섹션: 도넛 + 통계 카드 */
+.topSection {
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.donutWrapper {
+  flex: 0 0 240px;
+}
+
+/* 트렌드 토글 */
+.trendToggle {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.trendBtn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.trendBtn:hover {
+  background: var(--bg-tertiary);
+}
+
+.trendActive {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* 확장 행 */
+.expandedRow {
+  background: rgba(253, 104, 186, 0.05) !important;
+}
+
+.detailRow {
+  background: var(--bg-tertiary);
+}
+
+.detailRow td {
+  padding: 0 !important;
+  border-bottom: 2px solid var(--color-primary, #fd68ba);
+}
+
+.expandCol {
+  width: 40px;
+  text-align: center;
+}
+
+.expandIcon {
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.expandIconOpen {
+  transform: rotate(90deg);
+}
+
+/* BJ별 분포 */
+.bjDistribution {
+  padding: 16px 20px;
+}
+
+.bjDistTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 12px;
+}
+
+.bjDistBars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bjDistItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bjDistName {
+  font-size: 14px;
+  color: var(--text-primary);
+  min-width: 80px;
+  font-weight: 500;
+}
+
+.bjDistBarBg {
+  flex: 1;
+  height: 16px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bjDistBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #fd68ba, #e054a0);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.bjDistPct {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 40px;
+  text-align: right;
+}
+
+.bjDistMeta {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 .moreInfo {
   padding: 12px;
   text-align: center;
@@ -237,6 +365,14 @@
 @media (max-width: 1024px) {
   .statsGrid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .topSection {
+    flex-direction: column;
+  }
+
+  .donutWrapper {
+    flex: none;
   }
 }
 
@@ -251,5 +387,13 @@
 
   .statDesc {
     display: none;
+  }
+
+  .searchWrapper {
+    flex-direction: column;
+  }
+
+  .bjDistName {
+    min-width: 60px;
   }
 }
