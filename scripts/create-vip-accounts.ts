@@ -9,16 +9,6 @@ import { getServiceClient } from './lib/supabase'
 import * as fs from 'fs'
 import * as path from 'path'
 
-// dotenv 수동 로드
-
-const supabaseUrl = envVars.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = envVars.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ 환경변수가 설정되지 않았습니다.')
-  process.exit(1)
-}
-
 const supabase = getServiceClient()
 
 interface VipAccount {

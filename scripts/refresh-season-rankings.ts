@@ -12,6 +12,21 @@ import { withRetry } from './lib/utils'
 
 const supabase = getServiceClient()
 
+// 닉네임 변경 매핑 (구 닉네임 → 현재 PandaTV 닉네임)
+// refresh-total-rankings.ts와 동일한 매핑 유지
+const nicknameAliases: Record<string, string> = {
+  '[J]젖문가': '젖문가™',
+  '시아에오ღ까부는넌내꺼야': '까부는넌내꺼야119',
+  '[RG]✨린아의발굴™': '[RG]✨린아의발굴™✨',
+  '박하은❤️린아❤️사탕': '찌개❤️사탕',
+  '가윤이꼬❤️마음⭐': '가윤이꼬❤️너만의마음⭐',
+  '☀칰힌사주면천사☀': '칰힌사주면천사❥',
+  '갈색말티푸': '김채은네_갈색말티푸',
+  '경리때리는❤️쪼다❤️': '경리의두쫀쿠키❤️쪼다❤️',
+  '가윤이꼬❤️함주라': '꽉B가윤이꼬❤️함주라',
+  '시라☆구구단☆시우': '바겐시우',
+}
+
 interface DonationRecord {
   donor_name: string
   amount: number
@@ -143,14 +158,15 @@ async function main() {
   const donations = await fetchAllDonations(seasonId)
   console.log(`   ${donations.length}건 로드됨`)
 
-  // 닉네임별 집계
+  // 닉네임별 집계 (닉변 매핑 적용)
   const donorTotals: Record<string, { total: number; count: number }> = {}
   for (const d of donations) {
-    if (!donorTotals[d.donor_name]) {
-      donorTotals[d.donor_name] = { total: 0, count: 0 }
+    const canonical = nicknameAliases[d.donor_name] || d.donor_name
+    if (!donorTotals[canonical]) {
+      donorTotals[canonical] = { total: 0, count: 0 }
     }
-    donorTotals[d.donor_name].total += d.amount
-    donorTotals[d.donor_name].count++
+    donorTotals[canonical].total += d.amount
+    donorTotals[canonical].count++
   }
 
   // 정렬 및 상위 50명 추출

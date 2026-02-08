@@ -44,7 +44,7 @@ function ReplayContent() {
     async function fetchMedia() {
       setLoading(true);
       const [vodResult, shortsResult] = await Promise.all([
-        getVODs({ limit: 100 }),
+        getVODs({ limit: 100, sortBy: 'title_asc' }),
         getShorts({ limit: 100 }),
       ]);
 

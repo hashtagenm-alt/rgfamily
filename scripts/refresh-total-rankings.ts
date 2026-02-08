@@ -12,27 +12,42 @@ import { withRetry } from './lib/utils'
 
 const supabase = getServiceClient()
 
+// 닉네임 변경 매핑 (구 닉네임 → 현재 PandaTV 닉네임)
+// 같은 사람이 닉네임을 변경한 경우, 시즌 후원이 여러 이름으로 분산됨
+// 이 매핑으로 합산하여 정확한 총합 산출
+const nicknameAliases: Record<string, string> = {
+  '[J]젖문가': '젖문가™',
+  '시아에오ღ까부는넌내꺼야': '까부는넌내꺼야119',
+  '[RG]✨린아의발굴™': '[RG]✨린아의발굴™✨',
+  '박하은❤️린아❤️사탕': '찌개❤️사탕',
+  '가윤이꼬❤️마음⭐': '가윤이꼬❤️너만의마음⭐',
+  '☀칰힌사주면천사☀': '칰힌사주면천사❥',
+  '갈색말티푸': '김채은네_갈색말티푸',
+  '경리때리는❤️쪼다❤️': '경리의두쫀쿠키❤️쪼다❤️',
+  '가윤이꼬❤️함주라': '꽉B가윤이꼬❤️함주라',
+  '시라☆구구단☆시우': '바겐시우',
+}
+
 // 레거시 데이터 (시즌1 이전 누적)
-// 2026-02-06 업데이트: PandaTV 실제 Top 50 교차검증 완료
-// - 같은 계정 닉변: 레거시 = PandaTV총합 - 시즌donations로 재계산
-// - 다른 계정 동일인물: 채은여신+김회장, J젖문가+Another젖문가 (레거시 정상)
-// 2026-02-07 수정: 시아에오ღ까부는넌내꺼야 → 까부는넌내꺼야119 닉변 통합
+// 2026-02-08 업데이트: PandaTV 실제 Top 50 교차검증 + 닉변 매핑 적용
+// - 키: PandaTV 현재 닉네임 사용 (구 닉네임은 nicknameAliases로 매핑)
+// - 채은❤️여신: 시즌 데이터에 까부는김회장분 83,461 오귀속 → 보정값 적용
 const legacyData: Record<string, number> = {
   '미키™': 411282,
-  '까부는넌내꺼야119': 209322,
   '[RG]미드굿♣️가애': 147864,
-  '[RG]✨린아의발굴™': 67199,
-  '[J]젖문가': 65066,
-  '채은❤️여신': 60777,
+  '농심육개장라면': 84177,
+  '까부는김회장': 83461,
+  '[RG]✨린아의발굴™✨': 67199,
   '[RG]여행™': 60495,
   '❥CaNnOt': 59632,
-  '바겐시우': 57108,
+  '바겐시우': 102,
   '태린공주❤️줄여보자': 46926,
   '⭐건빵이미래쥐': 42395,
   '⚡도도➷라론⚡': 39003,
   '내마지막은키르❤️머네로': 36312,
   '도도화♔원픽♔': 34270,
   '✨가윤❤️바위늪✨': 32492,
+  '가윤이꼬❤️털이': 30532,
   '선하❤️삐딱이': 25172,
   '[오골계]': 23085,
   '✨❤️라율◡ღ카사❤️✨': 22914,
@@ -56,15 +71,13 @@ const legacyData: Record<string, number> = {
   '가윤이꼬❤️가플단니킥': 12374,
   '[가플단]가윤❤️호기': 12110,
   '[RG]가애여황': 10090,
-  '농심육개장라면': 84177,
+  '젖문가™': 9496,
   '김스껄': 9404,
-  '갈색말티푸': 9206,
   '[RG]가애ෆ잔바리': 8208,
   '홍서하네❥홍바스': 7918,
   '미쯔✨': 7606,
   '신세련❤️영원한니꺼✦쿨': 7503,
   '[RG]린아네☀둥그레': 7052,
-  '가윤이꼬❤️털이': 30532,
   '퉁퉁퉁퉁퉁퉁사우르': 5671,
   '[RG]✨린아의단진™': 5554,
   '사랑해씌발™': 3349,
@@ -72,17 +85,19 @@ const legacyData: Record<string, number> = {
   '한세아내꺼♡호랭이': 2933,
   '홍서하네❥페르소나™': 2586,
   '가윤이꼬❤️관씨': 2557,
-  '가윤이꼬❤️마음⭐': 779,
+  '가윤이꼬❤️너만의마음⭐': 779,
   'ღ❥가애ღ개맛도링❥ღ': 564,
   '한세아♡백작♡하얀만두피': 500,
   '[RG]가애ෆ57774': 212,
-  '박하은❤️린아❤️사탕': 144,
-  '손밍ღ타코보이': 26,
+  '김채은네_갈색말티푸': 200,
+  '찌개❤️사탕': 144,
+  '손밍ღ타코보이': 58,
   '손밍매니아': 21,
-  '☀칰힌사주면천사☀': 14,
+  '칰힌사주면천사❥': 14,
   '❤️지수ෆ해린❤️치토스㉦': 10,
   '글레스고키스': 6,
   '파민♣️': 4,
+  '채은❤️여신': -83461,
 }
 
 async function fetchAllDonations() {
@@ -207,16 +222,17 @@ async function main() {
   const donations = await fetchAllDonations()
   console.log(`   ${donations.length}건 로드됨`)
 
-  // 3. 닉네임별 합계 + donation_count + top_bj (donations)
+  // 3. 닉네임별 합계 + donation_count + top_bj (닉변 매핑 적용)
   const seasonTotals: Record<string, number> = {}
   const donationCounts: Record<string, number> = {}
   const bjTotals: Record<string, Record<string, number>> = {}
   for (const d of donations) {
-    seasonTotals[d.donor_name] = (seasonTotals[d.donor_name] || 0) + d.amount
-    donationCounts[d.donor_name] = (donationCounts[d.donor_name] || 0) + 1
+    const canonical = nicknameAliases[d.donor_name] || d.donor_name
+    seasonTotals[canonical] = (seasonTotals[canonical] || 0) + d.amount
+    donationCounts[canonical] = (donationCounts[canonical] || 0) + 1
     if (d.target_bj) {
-      if (!bjTotals[d.donor_name]) bjTotals[d.donor_name] = {}
-      bjTotals[d.donor_name][d.target_bj] = (bjTotals[d.donor_name][d.target_bj] || 0) + d.amount
+      if (!bjTotals[canonical]) bjTotals[canonical] = {}
+      bjTotals[canonical][d.target_bj] = (bjTotals[canonical][d.target_bj] || 0) + d.amount
     }
   }
 

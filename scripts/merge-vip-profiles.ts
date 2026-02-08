@@ -6,8 +6,6 @@
 
 import { getServiceClient } from './lib/supabase'
 
-// dotenv 수동 로드
-
 const supabase = getServiceClient()
 
 interface ProfileData {
@@ -80,8 +78,8 @@ async function main() {
     // vip_rewards에서 기존 프로필 ID 사용 여부 확인
     const { data: vipRewards } = await supabase
       .from('vip_rewards')
-      .select('id, user_id')
-      .eq('user_id', oldProfile.id)
+      .select('id, profile_id')
+      .eq('profile_id', oldProfile.id)
 
     if (vipRewards && vipRewards.length > 0) {
       console.log(`   🎁 vip_rewards ${vipRewards.length}개 발견`)
@@ -124,8 +122,8 @@ async function main() {
       if (vipRewards && vipRewards.length > 0) {
         const { error: vipError } = await supabase
           .from('vip_rewards')
-          .update({ user_id: newProfile.id })
-          .eq('user_id', oldProfile.id)
+          .update({ profile_id: newProfile.id })
+          .eq('profile_id', oldProfile.id)
 
         if (vipError) {
           console.log(`   ⚠️  vip_rewards 업데이트 실패: ${vipError.message}`)

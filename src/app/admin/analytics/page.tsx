@@ -55,27 +55,40 @@ export default function AnalyticsPage() {
     loadDonorPatterns,
     loadEpisodeComparison,
     searchDonorByName,
+    loadEpisodeTrend,
     loadDonorRetention,
     loadBjEpisodeTrend,
     loadBjDetailedStats,
     loadTimePatternEnhanced,
   } = useAnalytics({ autoLoad: true })
 
-  // Lazy loading: 탭 진입 시 해당 데이터 로드
+  // Lazy loading: 탭 진입 시 해당 데이터만 로드 (초기에는 summary만 로드됨)
   useEffect(() => {
+    // overview 탭: summary는 refreshAll에서 이미 로드됨, bjStats/episodeTrend는 lazy
+    if (activeTab === 'overview') {
+      if (bjStats.length === 0 && !isBjStatsLoading) loadBjStats()
+      if (episodeTrend.length === 0 && !isEpisodeTrendLoading) loadEpisodeTrend()
+    }
+    if (activeTab === 'trend') {
+      if (episodeTrend.length === 0 && !isEpisodeTrendLoading) loadEpisodeTrend()
+      if (bjEpisodeTrend.length === 0 && !isBjEpisodeTrendLoading) loadBjEpisodeTrend()
+    }
+    if (activeTab === 'bj') {
+      if (bjStats.length === 0 && !isBjStatsLoading) loadBjStats()
+      if (bjEpisodeTrend.length === 0 && !isBjEpisodeTrendLoading) loadBjEpisodeTrend()
+      if (bjDetailedStats.length === 0 && !isBjDetailedStatsLoading) loadBjDetailedStats()
+    }
     if (activeTab === 'retention' && !donorRetention && !isDonorRetentionLoading) {
       loadDonorRetention()
     }
-    if ((activeTab === 'bj' || activeTab === 'trend') && bjEpisodeTrend.length === 0 && !isBjEpisodeTrendLoading) {
-      loadBjEpisodeTrend()
+    if (activeTab === 'time') {
+      if (timePattern.length === 0 && !isTimePatternLoading) loadTimePattern()
+      if (!timePatternEnhanced && !isTimePatternEnhancedLoading) loadTimePatternEnhanced()
     }
-    if (activeTab === 'bj' && bjDetailedStats.length === 0 && !isBjDetailedStatsLoading) {
-      loadBjDetailedStats()
+    if (activeTab === 'patterns') {
+      if (donorPatterns.length === 0 && !isDonorPatternsLoading) loadDonorPatterns()
     }
-    if (activeTab === 'time' && !timePatternEnhanced && !isTimePatternEnhancedLoading) {
-      loadTimePatternEnhanced()
-    }
-  }, [activeTab, donorRetention, isDonorRetentionLoading, loadDonorRetention, bjEpisodeTrend.length, isBjEpisodeTrendLoading, loadBjEpisodeTrend, bjDetailedStats.length, isBjDetailedStatsLoading, loadBjDetailedStats, timePatternEnhanced, isTimePatternEnhancedLoading, loadTimePatternEnhanced])
+  }, [activeTab, bjStats.length, isBjStatsLoading, loadBjStats, episodeTrend.length, isEpisodeTrendLoading, loadEpisodeTrend, bjEpisodeTrend.length, isBjEpisodeTrendLoading, loadBjEpisodeTrend, bjDetailedStats.length, isBjDetailedStatsLoading, loadBjDetailedStats, donorRetention, isDonorRetentionLoading, loadDonorRetention, timePattern.length, isTimePatternLoading, loadTimePattern, timePatternEnhanced, isTimePatternEnhancedLoading, loadTimePatternEnhanced, donorPatterns.length, isDonorPatternsLoading, loadDonorPatterns])
 
   const tabs = [
     { id: 'overview', label: '요약', icon: BarChart3 },

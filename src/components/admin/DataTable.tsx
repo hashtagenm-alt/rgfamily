@@ -212,7 +212,7 @@ function SortableRow<T extends { id: string | number }>({
         </Table.Td>
       ))}
       {hasActions && (
-        <Table.Td>
+        <Table.Td onClick={(e: React.MouseEvent) => e.stopPropagation()}>
           <Group justify="center">
             <Menu shadow="md" width={140} position="bottom-end">
               <Menu.Target>
@@ -686,7 +686,7 @@ export default function DataTable<T extends { id: string | number }>({
         )
       })}
       {hasActions && (
-        <Table.Td>
+        <Table.Td onClick={(e: React.MouseEvent) => e.stopPropagation()}>
           <Group justify="center">
             <Menu shadow="md" width={140} position="bottom-end">
               <Menu.Target>

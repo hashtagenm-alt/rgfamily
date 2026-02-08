@@ -261,6 +261,13 @@ export async function getTimePattern(
   episodeId?: number
 ): Promise<ActionResult<TimePatternData[]>> {
   return adminAction(async (supabase) => {
+    // 특정 회차 미지정 시 확정된 회차만
+    let finalizedIds: number[] | null = null
+    if (!episodeId) {
+      finalizedIds = await fetchFinalizedEpisodeIds(supabase, seasonId)
+      if (finalizedIds.length === 0) return []
+    }
+
     // 페이지네이션으로 전체 데이터 가져오기
     const allData: { donated_at: string; amount: number }[] = []
     let page = 0
@@ -275,8 +282,8 @@ export async function getTimePattern(
 
       if (episodeId) {
         query = query.eq('episode_id', episodeId)
-      } else if (seasonId) {
-        query = query.eq('season_id', seasonId)
+      } else {
+        query = query.in('episode_id', finalizedIds!)
       }
 
       const { data, error } = await query
@@ -298,7 +305,7 @@ export async function getTimePattern(
 
     for (const donation of allData) {
       if (!donation.donated_at) continue
-      const hour = new Date(donation.donated_at).getHours()
+      const hour = new Date(donation.donated_at).getUTCHours()
       const hourData = hourMap.get(hour)!
       hourData.total_hearts += donation.amount || 0
       hourData.donation_count += 1
@@ -681,12 +688,37 @@ export async function searchDonor(
 // ==================== 헬퍼: 페이지네이션으로 전체 데이터 가져오기 ====================
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchFinalizedEpisodeIds(
+  supabase: any,
+  seasonId?: number
+): Promise<number[]> {
+  let query = supabase
+    .from('episodes')
+    .select('id')
+    .eq('is_finalized', true)
+
+  if (seasonId) {
+    query = query.eq('season_id', seasonId)
+  }
+
+  const { data, error } = await query
+  if (error || !data) return []
+  return (data as { id: number }[]).map(e => e.id)
+}
+
 async function fetchAllDonations(
   supabase: any,
   seasonId?: number,
   episodeId?: number,
   _selectFields: string = 'donor_name, target_bj, amount'
 ): Promise<{ donor_name: string; target_bj: string | null; amount: number }[]> {
+  // 특정 회차 미지정 시 확정된 회차의 donation만 조회
+  let finalizedIds: number[] | null = null
+  if (!episodeId) {
+    finalizedIds = await fetchFinalizedEpisodeIds(supabase, seasonId)
+    if (finalizedIds.length === 0) return []
+  }
+
   const allData: { donor_name: string; target_bj: string | null; amount: number }[] = []
   let page = 0
   const pageSize = 1000
@@ -699,8 +731,8 @@ async function fetchAllDonations(
 
     if (episodeId) {
       query = query.eq('episode_id', episodeId)
-    } else if (seasonId) {
-      query = query.eq('season_id', seasonId)
+    } else {
+      query = query.in('episode_id', finalizedIds!)
     }
 
     const { data, error } = await query
@@ -732,6 +764,13 @@ async function fetchAllDonationsExtended(
   seasonId?: number,
   episodeId?: number,
 ): Promise<ExtendedDonation[]> {
+  // 특정 회차 미지정 시 확정된 회차의 donation만 조회
+  let finalizedIds: number[] | null = null
+  if (!episodeId) {
+    finalizedIds = await fetchFinalizedEpisodeIds(supabase, seasonId)
+    if (finalizedIds.length === 0) return []
+  }
+
   const allData: ExtendedDonation[] = []
   let page = 0
   const pageSize = 1000
@@ -744,8 +783,8 @@ async function fetchAllDonationsExtended(
 
     if (episodeId) {
       query = query.eq('episode_id', episodeId)
-    } else if (seasonId) {
-      query = query.eq('season_id', seasonId)
+    } else {
+      query = query.in('episode_id', finalizedIds!)
     }
 
     const { data, error } = await query
@@ -830,11 +869,12 @@ export async function getEpisodeList(seasonId?: number): Promise<ActionResult<{
   season_id: number
   episode_number: number
   broadcast_date: string | null
+  is_finalized: boolean
 }[]>> {
   return adminAction(async (supabase) => {
     let query = supabase
       .from('episodes')
-      .select('id, title, season_id, episode_number, broadcast_date')
+      .select('id, title, season_id, episode_number, broadcast_date, is_finalized')
       .order('episode_number', { ascending: true })
 
     if (seasonId) {
@@ -871,10 +911,11 @@ export async function getEpisodeTrend(
   seasonId?: number
 ): Promise<ActionResult<EpisodeTrendData[]>> {
   return adminAction(async (supabase) => {
-    // 에피소드 목록 조회
+    // 에피소드 목록 조회 (확정된 회차만)
     let epQuery = supabase
       .from('episodes')
       .select('id, episode_number, title, broadcast_date, is_rank_battle')
+      .eq('is_finalized', true)
       .order('episode_number', { ascending: true })
 
     if (seasonId) {
@@ -954,10 +995,11 @@ export async function getDonorRetention(
   seasonId?: number
 ): Promise<ActionResult<DonorRetentionData>> {
   return adminAction(async (supabase) => {
-    // 에피소드 목록
+    // 에피소드 목록 (확정된 회차만 — totalEpisodes 기반 계산 정합성)
     let epQuery = supabase
       .from('episodes')
       .select('id, episode_number, title')
+      .eq('is_finalized', true)
       .order('episode_number', { ascending: true })
 
     if (seasonId) {
@@ -1257,10 +1299,11 @@ export async function getBjEpisodeTrend(
   seasonId?: number
 ): Promise<ActionResult<BjEpisodeTrendData[]>> {
   return adminAction(async (supabase) => {
-    // 에피소드 목록
+    // 에피소드 목록 (확정된 회차만)
     let epQuery = supabase
       .from('episodes')
       .select('id, episode_number')
+      .eq('is_finalized', true)
       .order('episode_number', { ascending: true })
 
     if (seasonId) {
@@ -1391,14 +1434,18 @@ export async function getBjDetailedStats(
   episodeId?: number
 ): Promise<ActionResult<BjDetailedStats[]>> {
   return adminAction(async (supabase) => {
-    // 에피소드 목록
+    // 에피소드 목록 (특정 회차 미지정 시 확정된 회차만)
     let epQuery = supabase
       .from('episodes')
       .select('id, episode_number, broadcast_date')
       .order('episode_number', { ascending: true })
 
+    if (episodeId) {
+      epQuery = epQuery.eq('id', episodeId)
+    } else {
+      epQuery = epQuery.eq('is_finalized', true)
+    }
     if (seasonId) epQuery = epQuery.eq('season_id', seasonId)
-    if (episodeId) epQuery = epQuery.eq('id', episodeId)
 
     const { data: episodes, error: epError } = await epQuery
     if (epError) throw new Error(epError.message)
@@ -1523,6 +1570,15 @@ export async function getTimePatternEnhanced(
   episodeId?: number
 ): Promise<ActionResult<TimePatternEnhanced>> {
   return adminAction(async (supabase) => {
+    // 특정 회차 미지정 시 확정된 회차만
+    let finalizedIds: number[] | null = null
+    if (!episodeId) {
+      finalizedIds = await fetchFinalizedEpisodeIds(supabase, seasonId)
+      if (finalizedIds.length === 0) {
+        return { overall: [], perBj: [], topDonorTimes: [], heatmap: [] }
+      }
+    }
+
     // 페이지네이션으로 전체 데이터
     const allData: { donated_at: string; amount: number; target_bj: string | null; donor_name: string }[] = []
     let page = 0
@@ -1536,7 +1592,7 @@ export async function getTimePatternEnhanced(
         .range(page * pageSize, (page + 1) * pageSize - 1)
 
       if (episodeId) query = query.eq('episode_id', episodeId)
-      else if (seasonId) query = query.eq('season_id', seasonId)
+      else query = query.in('episode_id', finalizedIds!)
 
       const { data, error } = await query
       if (error) throw new Error(error.message)
@@ -1562,7 +1618,7 @@ export async function getTimePatternEnhanced(
     const donorHourMap = new Map<string, Map<number, number>>()
 
     for (const d of allData) {
-      const hour = new Date(d.donated_at).getHours()
+      const hour = new Date(d.donated_at).getUTCHours()
       const amount = d.amount || 0
 
       // overall

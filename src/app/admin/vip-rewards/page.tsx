@@ -196,7 +196,7 @@ export default function VipRewardsPage() {
       personalMessage: '',
       dedicationVideoUrl: '',
     },
-    orderBy: { column: 'created_at', ascending: false },
+    orderBy: { column: 'rank', ascending: true },
     selectQuery: `
       id,
       profile_id,
