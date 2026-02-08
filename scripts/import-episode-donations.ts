@@ -34,7 +34,7 @@ function extractNickname(idWithNickname: string): string {
 function cleanBjName(bjName: string): string {
   return bjName
     .replace(/\[.*?\]\s*/g, '')
-    .replace(/\s*\((여왕|왕|공주|퇴근|조퇴|방장|매니저|열혈팬|우수팬|신규팬|대표BJ)\)\s*/g, '')
+    .replace(/\s*\([^)]+\)\s*$/g, '')
     .trim()
 }
 
@@ -124,6 +124,30 @@ async function importDonations(
   }
 
   console.log(`   ✅ Import 완료: ${inserted}건 성공, ${errors}건 실패`)
+
+  // 에피소드 확정 처리 (is_finalized + 집계 업데이트)
+  if (inserted > 0) {
+    const totalHearts = rows.reduce((sum, r) => sum + r.amount, 0)
+    const uniqueDonors = new Set(rows.map(r => r.donor_name)).size
+
+    const { error: updateError } = await supabase
+      .from('episodes')
+      .update({
+        is_finalized: true,
+        finalized_at: new Date().toISOString(),
+        total_hearts: totalHearts,
+        donor_count: uniqueDonors,
+        source_file: path.basename(filePath),
+      })
+      .eq('id', episodeId)
+
+    if (updateError) {
+      console.error(`   ⚠️  에피소드 확정 실패:`, updateError.message)
+    } else {
+      console.log(`   📌 에피소드 확정: is_finalized=true, 총 ${totalHearts.toLocaleString()} 하트, ${uniqueDonors}명`)
+    }
+  }
+
   return true
 }
 
@@ -134,10 +158,10 @@ async function main() {
 
   const imports = [
     {
-      filePath: '/Users/bagjaeseog/Downloads/RG패밀리 엑셀부 시즌_내역_2026020613.csv',
+      filePath: '/Users/bagjaeseog/Downloads/RG패밀리 엑셀부 시즌_내역_2026020802.csv',
       seasonId: 1,
-      episodeId: 19,
-      episodeNumber: 8,
+      episodeId: 20,
+      episodeNumber: 9,
     },
   ]
 
@@ -164,7 +188,7 @@ async function main() {
     .from('episodes')
     .select('id, episode_number')
     .eq('season_id', 1)
-    .in('episode_number', [8])
+    .in('episode_number', [9])
 
   for (const ep of episodes || []) {
     const { count } = await supabase

@@ -130,6 +130,31 @@ async function importDonations(
   }
 
   console.log(`   ✅ EP${episodeNumber}: ${insertedCount}건 임포트 완료`)
+
+  // 에피소드 확정 처리 (is_finalized + 집계 업데이트)
+  if (insertedCount > 0) {
+    const totalHearts = allRows.reduce((sum, r) => sum + r.amount, 0)
+    const uniqueDonors = new Set(allRows.map(r => r.donor_name)).size
+    const sourceFiles = filePaths.map(f => path.basename(f)).join(', ')
+
+    const { error: updateError } = await supabase
+      .from('episodes')
+      .update({
+        is_finalized: true,
+        finalized_at: new Date().toISOString(),
+        total_hearts: totalHearts,
+        donor_count: uniqueDonors,
+        source_file: sourceFiles,
+      })
+      .eq('id', episodeId)
+
+    if (updateError) {
+      console.error(`   ⚠️  에피소드 확정 실패:`, updateError.message)
+    } else {
+      console.log(`   📌 에피소드 확정: is_finalized=true, 총 ${totalHearts.toLocaleString()} 하트, ${uniqueDonors}명`)
+    }
+  }
+
   return insertedCount
 }
 

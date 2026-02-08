@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trophy, Upload, Download, X, Save, Trash2, Edit3, AlertCircle } from 'lucide-react'
+import { Trophy, Upload, Download, X, Save, RefreshCw, FileText, AlertCircle, Loader2 } from 'lucide-react'
 import { exportToExcel } from '@/lib/utils/excel'
-import { DataTable, Column, CsvUploader } from '@/components/admin'
+import { DataTable, Column } from '@/components/admin'
 import { useAlert } from '@/lib/hooks'
 import {
   getSeasonRankings,
@@ -13,14 +13,19 @@ import {
   deleteSeasonRanking,
   updateTotalRanking,
   deleteTotalRanking,
-  bulkReplaceSeasonRankings,
-  bulkReplaceTotalRankings,
   getAllSeasons,
 } from '@/lib/actions/donation-rankings'
+import {
+  refreshSeasonRankings,
+  refreshTotalRankings,
+  importDonationsCsv,
+  getEpisodesForImport,
+} from '@/lib/actions/donations'
+import { parseDonationCsv } from '@/lib/utils/donation-csv'
 import type { SeasonDonationRanking, TotalDonationRanking, Season } from '@/types/database'
 import styles from '../shared.module.css'
 
-type TabType = 'season' | 'total' | 'upload'
+type TabType = 'season' | 'total' | 'import'
 
 interface SeasonRankingUI {
   id: number
@@ -37,6 +42,21 @@ interface TotalRankingUI {
   donorName: string
   totalAmount: number
   updatedAt: string
+}
+
+interface EpisodeOption {
+  id: number
+  episode_number: number
+  title: string
+  is_finalized: boolean
+}
+
+interface CsvPreview {
+  rowCount: number
+  uniqueDonors: number
+  totalHearts: number
+  top5: Array<{ donor_name: string; total: number }>
+  csvText: string
 }
 
 export default function DonationRankingsPage() {
@@ -59,8 +79,16 @@ export default function DonationRankingsPage() {
   const [editingItem, setEditingItem] = useState<SeasonRankingUI | TotalRankingUI | null>(null)
   const [editType, setEditType] = useState<'season' | 'total'>('season')
 
-  // Upload state
-  const [uploadType, setUploadType] = useState<'season' | 'total'>('season')
+  // Refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // Import state
+  const [importSeasonId, setImportSeasonId] = useState<number | null>(null)
+  const [importEpisodeId, setImportEpisodeId] = useState<number | null>(null)
+  const [episodes, setEpisodes] = useState<EpisodeOption[]>([])
+  const [csvPreview, setCsvPreview] = useState<CsvPreview | null>(null)
+  const [isImporting, setIsImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Load seasons on mount
   useEffect(() => {
@@ -68,12 +96,13 @@ export default function DonationRankingsPage() {
       const result = await getAllSeasons()
       if (result.data) {
         setSeasons(result.data)
-        // 활성 시즌 선택
         const activeSeason = result.data.find(s => s.is_active)
         if (activeSeason) {
           setSelectedSeasonId(activeSeason.id)
+          setImportSeasonId(activeSeason.id)
         } else if (result.data.length > 0) {
           setSelectedSeasonId(result.data[0].id)
+          setImportSeasonId(result.data[0].id)
         }
       }
     }
@@ -93,6 +122,13 @@ export default function DonationRankingsPage() {
       loadTotalRankings()
     }
   }, [activeTab])
+
+  // Load episodes when import season changes
+  useEffect(() => {
+    if (importSeasonId) {
+      loadEpisodes(importSeasonId)
+    }
+  }, [importSeasonId])
 
   const loadSeasonRankings = async (seasonId: number) => {
     setIsLoading(true)
@@ -114,6 +150,14 @@ export default function DonationRankingsPage() {
       alert.showError(result.error)
     }
     setIsLoading(false)
+  }
+
+  const loadEpisodes = async (seasonId: number) => {
+    const result = await getEpisodesForImport(seasonId)
+    if (result.data) {
+      setEpisodes(result.data)
+      setImportEpisodeId(null)
+    }
   }
 
   const convertSeasonToUI = (r: SeasonDonationRanking): SeasonRankingUI => ({
@@ -211,90 +255,121 @@ export default function DonationRankingsPage() {
     }
   }
 
-  // CSV Upload handler
-  const handleCsvUpload = useCallback(async (data: Record<string, string>[]) => {
-    // 필터링: RG_family, 대표BJ 제외
-    const excludeNames = ['RG_family', '대표BJ', 'RG_Family', 'rg_family']
+  // ========================================
+  // Phase 2: 랭킹 갱신 핸들러
+  // ========================================
 
-    // 파싱
-    const parsed = data
-      .filter(row => {
-        const nickname = extractNickname(row)
-        return !excludeNames.some(name => nickname?.toLowerCase().includes(name.toLowerCase()))
-      })
-      .map((row, index) => {
-        const rank = parseInt(row['순위'] || row['rank'] || String(index + 1))
-        const nickname = extractNickname(row)
-        const hearts = parseHearts(row['하트'] || row['총 후원하트'] || row['total_amount'] || '0')
-        const count = parseInt(row['건수'] || row['donation_count'] || '0') || 0
-
-        return {
-          rank,
-          donor_name: nickname || `Unknown_${index + 1}`,
-          total_amount: hearts,
-          donation_count: count,
-        }
-      })
-      .filter(item => item.donor_name && item.total_amount > 0)
-      .slice(0, 50) // Top 50만
-
-    if (parsed.length === 0) {
-      return { success: 0, errors: ['유효한 데이터가 없습니다.'] }
+  const handleRefreshSeasonRankings = async () => {
+    if (!selectedSeasonId) {
+      alert.showError('시즌을 선택해주세요.')
+      return
     }
 
-    // 순위 재정렬
-    const sorted = parsed.sort((a, b) => b.total_amount - a.total_amount)
-    sorted.forEach((item, idx) => {
-      item.rank = idx + 1
-    })
+    const selectedSeason = seasons.find(s => s.id === selectedSeasonId)
+    const seasonName = selectedSeason?.name || `시즌 ${selectedSeasonId}`
 
+    if (!confirm(`${seasonName}의 랭킹을 donations 데이터 기준으로 재계산하시겠습니까?\n\n기존 시즌 랭킹 데이터가 모두 교체됩니다.`)) {
+      return
+    }
+
+    setIsRefreshing(true)
     try {
-      if (uploadType === 'season') {
-        if (!selectedSeasonId) {
-          return { success: 0, errors: ['시즌을 선택해주세요.'] }
-        }
-        const result = await bulkReplaceSeasonRankings(selectedSeasonId, sorted)
-        if (result.error) {
-          return { success: 0, errors: [result.error] }
-        }
+      const result = await refreshSeasonRankings(selectedSeasonId)
+      if (result.error) {
+        alert.showError(result.error)
+      } else if (result.data) {
+        alert.showSuccess(
+          `시즌 랭킹 갱신 완료! (후원 ${result.data.totalDonations.toLocaleString()}건 → ${result.data.rankedCount}명 랭킹)`
+        )
         loadSeasonRankings(selectedSeasonId)
-        return { success: result.data?.insertedCount || sorted.length, errors: [] }
-      } else {
-        const totalData = sorted.map(item => ({
-          rank: item.rank,
-          donor_name: item.donor_name,
-          total_amount: item.total_amount,
-        }))
-        const result = await bulkReplaceTotalRankings(totalData)
-        if (result.error) {
-          return { success: 0, errors: [result.error] }
-        }
-        loadTotalRankings()
-        return { success: result.data?.insertedCount || sorted.length, errors: [] }
       }
-    } catch (err) {
-      return { success: 0, errors: [err instanceof Error ? err.message : '업로드 실패'] }
+    } finally {
+      setIsRefreshing(false)
     }
-  }, [uploadType, selectedSeasonId])
-
-  // Helpers
-  const extractNickname = (row: Record<string, string>): string => {
-    // 닉네임 컬럼 우선 확인
-    if (row['닉네임']) return row['닉네임'].trim()
-    if (row['donor_name']) return row['donor_name'].trim()
-
-    // ID(닉네임) 형식에서 닉네임 추출
-    const idNickname = row['후원 아이디(닉네임)'] || row['후원 아이디'] || ''
-    const match = idNickname.match(/\(([^)]+)\)/)
-    if (match) return match[1].trim()
-
-    return idNickname.trim()
   }
 
-  const parseHearts = (value: string): number => {
-    // 콤마 제거 후 파싱
-    const cleaned = value.replace(/,/g, '').trim()
-    return parseInt(cleaned) || 0
+  const handleRefreshTotalRankings = async () => {
+    if (!confirm('종합 랭킹을 레거시 + 시즌 데이터 기준으로 재계산하시겠습니까?\n\n기존 종합 랭킹 데이터가 모두 교체됩니다.')) {
+      return
+    }
+
+    setIsRefreshing(true)
+    try {
+      const result = await refreshTotalRankings()
+      if (result.error) {
+        alert.showError(result.error)
+      } else if (result.data) {
+        alert.showSuccess(
+          `종합 랭킹 갱신 완료! (후원 ${result.data.totalDonations.toLocaleString()}건 + 레거시 ${result.data.legacyEntries}건 → ${result.data.rankedCount}명 랭킹)`
+        )
+        loadTotalRankings()
+      }
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  // ========================================
+  // Phase 1: CSV 임포트 핸들러
+  // ========================================
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      const { rows, totalHearts, uniqueDonors, top5 } = parseDonationCsv(text)
+
+      if (rows.length === 0) {
+        alert.showError('유효한 후원 데이터가 없습니다. CSV 형식을 확인해주세요.')
+        return
+      }
+
+      setCsvPreview({
+        rowCount: rows.length,
+        uniqueDonors,
+        totalHearts,
+        top5,
+        csvText: text,
+      })
+    }
+    reader.readAsText(file)
+  }
+
+  const handleImport = async () => {
+    if (!importSeasonId || !importEpisodeId || !csvPreview) return
+
+    const selectedEpisode = episodes.find(e => e.id === importEpisodeId)
+    if (selectedEpisode?.is_finalized) {
+      if (!confirm(`이 에피소드는 이미 확정되었습니다. 기존 데이터를 덮어쓰시겠습니까?`)) {
+        return
+      }
+    }
+
+    setIsImporting(true)
+    try {
+      const result = await importDonationsCsv(importSeasonId, importEpisodeId, csvPreview.csvText)
+      if (result.error) {
+        alert.showError(result.error)
+      } else if (result.data) {
+        alert.showSuccess(
+          `임포트 완료! ${result.data.importedCount.toLocaleString()}건 (${result.data.uniqueDonors}명, ${result.data.totalHearts.toLocaleString()} 하트)`
+        )
+        setCsvPreview(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+        // 에피소드 목록 새로고침 (finalized 상태 반영)
+        loadEpisodes(importSeasonId)
+      }
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
+  const handleClearImport = () => {
+    setCsvPreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const formatNumber = (num: number): string => {
@@ -422,14 +497,6 @@ export default function DonationRankingsPage() {
     },
   ]
 
-  // CSV columns for uploader
-  const csvColumns = [
-    { key: '순위', altKey: 'rank', label: '순위', required: false },
-    { key: '닉네임', altKey: '후원 아이디(닉네임)', label: '닉네임', required: true },
-    { key: '하트', altKey: '총 후원하트', label: '하트', required: true },
-    { key: '건수', altKey: 'donation_count', label: '건수', required: false },
-  ]
-
   return (
     <div className={styles.page}>
       {/* Header */}
@@ -457,17 +524,17 @@ export default function DonationRankingsPage() {
             종합 랭킹
           </button>
           <button
-            className={`${styles.tabButton} ${activeTab === 'upload' ? styles.active : ''}`}
-            onClick={() => setActiveTab('upload')}
+            className={`${styles.tabButton} ${activeTab === 'import' ? styles.active : ''}`}
+            onClick={() => setActiveTab('import')}
           >
-            <Upload size={16} />
-            CSV 업로드
+            <FileText size={16} />
+            후원 내역 임포트
           </button>
         </div>
       </header>
 
-      {/* Season Selector (for season tab) */}
-      {(activeTab === 'season' || (activeTab === 'upload' && uploadType === 'season')) && (
+      {/* Season Selector + Refresh Button (for season tab) */}
+      {activeTab === 'season' && (
         <div className={styles.uploadOptions}>
           <div className={styles.optionRow}>
             <label className={styles.optionLabel}>시즌 선택</label>
@@ -483,23 +550,43 @@ export default function DonationRankingsPage() {
               ))}
             </select>
             {activeTab === 'season' && (
-              <button
-                className={styles.downloadButton}
-                onClick={handleDownloadSeasonRankings}
-                disabled={isLoading || seasonRankings.length === 0}
-              >
-                <Download size={16} />
-                Excel 다운로드
-              </button>
+              <>
+                <button
+                  className={styles.saveButton}
+                  onClick={handleRefreshSeasonRankings}
+                  disabled={isRefreshing || isLoading}
+                  style={{ gap: '0.5rem' }}
+                >
+                  {isRefreshing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  시즌 랭킹 갱신
+                </button>
+                <button
+                  className={styles.downloadButton}
+                  onClick={handleDownloadSeasonRankings}
+                  disabled={isLoading || seasonRankings.length === 0}
+                >
+                  <Download size={16} />
+                  Excel 다운로드
+                </button>
+              </>
             )}
           </div>
         </div>
       )}
 
-      {/* Download button for total rankings */}
+      {/* Download + Refresh button for total rankings */}
       {activeTab === 'total' && (
         <div className={styles.uploadOptions}>
           <div className={styles.optionRow}>
+            <button
+              className={styles.saveButton}
+              onClick={handleRefreshTotalRankings}
+              disabled={isRefreshing || isLoading}
+              style={{ gap: '0.5rem' }}
+            >
+              {isRefreshing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+              종합 랭킹 갱신
+            </button>
             <button
               className={styles.downloadButton}
               onClick={handleDownloadTotalRankings}
@@ -536,43 +623,242 @@ export default function DonationRankingsPage() {
         />
       )}
 
-      {/* Upload Tab */}
-      {activeTab === 'upload' && (
+      {/* Import Tab - 후원 내역 CSV 임포트 */}
+      {activeTab === 'import' && (
         <div className={styles.uploadSection}>
           <div className={styles.uploadInfo}>
-            <h3>CSV 파일 업로드</h3>
-            <p>시즌별 또는 종합 랭킹 데이터를 CSV 파일로 일괄 업로드합니다.</p>
+            <h3>후원 내역 CSV 임포트</h3>
+            <p>PandaTV 후원 내역 CSV 파일을 에피소드별로 임포트합니다.</p>
             <p style={{ color: 'var(--color-warning)', marginTop: '0.5rem' }}>
               <AlertCircle size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-              기존 데이터가 모두 교체됩니다. RG_family, 대표BJ는 자동 제외됩니다.
+              해당 에피소드의 기존 후원 데이터가 모두 교체됩니다. RG_family, 대표BJ는 자동 제외됩니다.
             </p>
           </div>
 
-          {/* Upload Type Selection */}
+          {/* Season + Episode Selection */}
           <div className={styles.uploadOptions}>
             <div className={styles.optionRow}>
-              <label className={styles.optionLabel}>업로드 대상</label>
-              <div className={styles.typeSelector}>
-                <button
-                  className={`${styles.typeButton} ${uploadType === 'season' ? styles.active : ''}`}
-                  onClick={() => setUploadType('season')}
-                >
-                  시즌 랭킹
-                </button>
-                <button
-                  className={`${styles.typeButton} ${uploadType === 'total' ? styles.active : ''}`}
-                  onClick={() => setUploadType('total')}
-                >
-                  종합 랭킹
-                </button>
-              </div>
+              <label className={styles.optionLabel}>시즌 선택</label>
+              <select
+                className={styles.optionSelect}
+                value={importSeasonId || ''}
+                onChange={(e) => {
+                  setImportSeasonId(Number(e.target.value))
+                  setCsvPreview(null)
+                }}
+              >
+                {seasons.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    {season.name} {season.is_active ? '(활성)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.optionRow}>
+              <label className={styles.optionLabel}>에피소드 선택</label>
+              <select
+                className={styles.optionSelect}
+                value={importEpisodeId || ''}
+                onChange={(e) => {
+                  setImportEpisodeId(Number(e.target.value) || null)
+                  setCsvPreview(null)
+                }}
+              >
+                <option value="">에피소드를 선택하세요</option>
+                {episodes.map((ep) => (
+                  <option key={ep.id} value={ep.id}>
+                    {ep.episode_number}회 - {ep.title}
+                    {ep.is_finalized ? ' (확정)' : ' (미확정)'}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          <CsvUploader
-            columns={csvColumns}
-            onUpload={handleCsvUpload}
-          />
+          {/* CSV File Input */}
+          {importEpisodeId && (
+            <div style={{ marginTop: '1rem' }}>
+              <div
+                style={{
+                  border: '2px dashed var(--card-border)',
+                  borderRadius: '12px',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s',
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--primary)' }}
+                onDragLeave={(e) => { e.currentTarget.style.borderColor = 'var(--card-border)' }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  e.currentTarget.style.borderColor = 'var(--card-border)'
+                  const file = e.dataTransfer.files[0]
+                  if (file && file.name.endsWith('.csv')) {
+                    const reader = new FileReader()
+                    reader.onload = (ev) => {
+                      const text = ev.target?.result as string
+                      const { rows, totalHearts, uniqueDonors, top5 } = parseDonationCsv(text)
+                      if (rows.length === 0) {
+                        alert.showError('유효한 후원 데이터가 없습니다.')
+                        return
+                      }
+                      setCsvPreview({ rowCount: rows.length, uniqueDonors, totalHearts, top5, csvText: text })
+                    }
+                    reader.readAsText(file)
+                  }
+                }}
+              >
+                {csvPreview ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                    <FileText size={24} style={{ color: 'var(--primary)' }} />
+                    <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {csvPreview.rowCount.toLocaleString()}건 파싱됨
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleClearImport() }}
+                      style={{
+                        background: 'var(--color-error-bg-strong)',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '0.375rem 0.75rem',
+                        color: 'var(--color-error)',
+                        cursor: 'pointer',
+                        fontSize: '0.8125rem',
+                      }}
+                    >
+                      <X size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                      제거
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                    <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                      CSV 파일을 드래그하거나 클릭하여 선택
+                    </p>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: '0.5rem' }}>
+                      형식: 후원시간, 후원아이디(닉네임), 후원하트, 참여BJ
+                    </p>
+                  </>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* CSV Preview */}
+          {csvPreview && (
+            <div style={{ marginTop: '1.5rem' }}>
+              {/* Summary Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '1rem',
+                marginBottom: '1.5rem',
+              }}>
+                <div style={{
+                  background: 'var(--surface)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>
+                    {csvPreview.rowCount.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                    총 후원 건수
+                  </div>
+                </div>
+                <div style={{
+                  background: 'var(--surface)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>
+                    {csvPreview.uniqueDonors.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                    고유 후원자
+                  </div>
+                </div>
+                <div style={{
+                  background: 'var(--surface)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>
+                    {csvPreview.totalHearts.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                    총 하트
+                  </div>
+                </div>
+              </div>
+
+              {/* Top 5 Preview */}
+              {csvPreview.top5.length > 0 && (
+                <div style={{
+                  background: 'var(--surface)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  marginBottom: '1.5rem',
+                }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
+                    Top 5 후원자
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {csvPreview.top5.map((donor, i) => (
+                      <div key={i} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.5rem 0.75rem',
+                        background: 'var(--card-bg)',
+                        borderRadius: '6px',
+                      }}>
+                        <span style={{
+                          fontWeight: 600,
+                          color: i < 3 ? 'var(--primary)' : 'var(--text-primary)',
+                        }}>
+                          {i + 1}. {donor.donor_name}
+                        </span>
+                        <span className={styles.amountCell}>
+                          {donor.total.toLocaleString()} 하트
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Import Button */}
+              <button
+                className={styles.saveButton}
+                onClick={handleImport}
+                disabled={isImporting}
+                style={{ width: '100%', justifyContent: 'center', padding: '0.875rem', fontSize: '1rem' }}
+              >
+                {isImporting ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Upload size={18} />
+                )}
+                {isImporting
+                  ? '임포트 중...'
+                  : `${csvPreview.rowCount.toLocaleString()}건 임포트`
+                }
+              </button>
+            </div>
+          )}
         </div>
       )}
 

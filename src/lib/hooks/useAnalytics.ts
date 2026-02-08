@@ -76,7 +76,7 @@ interface UseAnalyticsReturn {
 
   // 메타 데이터
   seasons: { id: number; name: string }[]
-  episodes: { id: number; title: string; season_id: number; episode_number: number; broadcast_date: string | null }[]
+  episodes: { id: number; title: string; season_id: number; episode_number: number; broadcast_date: string | null; is_finalized: boolean }[]
 
   // 액션
   loadSummary: () => Promise<void>
@@ -101,7 +101,6 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
   // 초기 자동 선택 여부 추적 (최초 1회만)
   const hasAutoSelectedSeason = useRef(!!options.seasonId)
-  const hasAutoSelectedEpisode = useRef(!!options.episodeId)
 
   // 필터 상태
   const [seasonId, setSeasonId] = useState<number | undefined>(options.seasonId)
@@ -123,7 +122,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
   // 메타 데이터
   const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([])
-  const [episodes, setEpisodes] = useState<{ id: number; title: string; season_id: number; episode_number: number; broadcast_date: string | null }[]>([])
+  const [episodes, setEpisodes] = useState<{ id: number; title: string; season_id: number; episode_number: number; broadcast_date: string | null; is_finalized: boolean }[]>([])
 
   // 로딩 상태
   const [isSummaryLoading, setIsSummaryLoading] = useState(false)
@@ -305,15 +304,21 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     }
   }, [seasonId])
 
+  const resetAllData = useCallback(() => {
+    setBjStats([])
+    setTimePattern([])
+    setDonorPatterns([])
+    setEpisodeTrend([])
+    setDonorRetention(null)
+    setBjEpisodeTrend([])
+    setBjDetailedStats([])
+    setTimePatternEnhanced(null)
+  }, [])
+
   const refreshAll = useCallback(async () => {
-    await Promise.all([
-      loadSummary(),
-      loadBjStats(),
-      loadTimePattern(),
-      loadDonorPatterns(),
-      loadEpisodeTrend(),
-    ])
-  }, [loadSummary, loadBjStats, loadTimePattern, loadDonorPatterns, loadEpisodeTrend])
+    resetAllData()
+    await loadSummary()
+  }, [resetAllData, loadSummary])
 
   // 초기 로드
   useEffect(() => {
@@ -333,24 +338,9 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     }
   }, [seasons])
 
-  // 에피소드 자동 선택: 방송일이 오늘 이하인 에피소드 중 가장 최신 회차 선택 (최초 1회)
-  useEffect(() => {
-    if (!hasAutoSelectedEpisode.current && seasonId && episodes.length > 0) {
-      const now = new Date()
-      const seasonEpisodes = episodes
-        .filter(e => e.season_id === seasonId)
-        .filter(e => {
-          if (!e.broadcast_date) return false
-          return new Date(e.broadcast_date) <= now
-        })
-        .sort((a, b) => b.episode_number - a.episode_number)
-
-      if (seasonEpisodes.length > 0) {
-        hasAutoSelectedEpisode.current = true
-        setEpisodeId(seasonEpisodes[0].id)
-      }
-    }
-  }, [seasonId, episodes])
+  // 에피소드 자동 선택: "전체 에피소드"(undefined) 기본값
+  // 서버 액션이 is_finalized 필터를 처리하므로 특정 회차 선택 불필요
+  // 사용자가 필요 시 드롭다운에서 특정 회차 선택 가능
 
   useEffect(() => {
     if (autoLoad) {

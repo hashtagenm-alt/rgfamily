@@ -5,8 +5,6 @@
 
 import { getServiceClient } from './lib/supabase'
 
-// dotenv 수동 로드
-
 const supabase = getServiceClient()
 
 async function linkProfiles() {

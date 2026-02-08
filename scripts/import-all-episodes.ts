@@ -137,6 +137,9 @@ async function importDonations(
     .update({
       total_hearts: totalHearts,
       donor_count: donorCount,
+      is_finalized: true,
+      finalized_at: new Date().toISOString(),
+      source_file: filePaths.map(f => path.basename(f)).join(', '),
     })
     .eq('id', episodeId)
 
