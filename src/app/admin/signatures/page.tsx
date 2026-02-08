@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Image as ImageIcon, Plus, X, Save, Hash, Video, Upload, Loader2, Zap, ChevronDown, ChevronUp, User, Play, Trash2, Link2, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
-import { DataTable, Column, ImageUpload, VideoUpload } from '@/components/admin'
+import { DataTable, Column, ImageUpload } from '@/components/admin'
+import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
+import { getStreamIframeUrl } from '@/lib/cloudflare'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import { useSupabaseContext } from '@/lib/context'
 import styles from '../shared.module.css'
@@ -202,7 +204,7 @@ export default function SignaturesPage() {
   }, [expandedSigId, fetchSignatureVideos])
 
   // 인라인 영상 추가
-  const handleAddVideo = useCallback(async (sigId: number, memberId: number, videoUrl: string) => {
+  const handleAddVideo = useCallback(async (sigId: number, memberId: number, videoUrl: string, cloudflareUid?: string) => {
     if (!videoUrl.trim()) {
       alertHandler.showWarning('영상 URL을 입력해주세요.', '입력 오류')
       return
@@ -219,6 +221,7 @@ export default function SignaturesPage() {
       signature_id: sigId,
       member_id: memberId,
       video_url: videoUrl.trim(),
+      ...(cloudflareUid ? { cloudflare_uid: cloudflareUid } : {}),
     })
 
     if (error) {
@@ -917,12 +920,13 @@ export default function SignaturesPage() {
                         </>
                       ) : (
                         <>
-                          <VideoUpload
-                            onUploadComplete={(url) => handleAddVideo(sig.id, member.id, url)}
+                          <CloudflareVideoUpload
+                            onUploadComplete={(result) => {
+                              const videoUrl = getStreamIframeUrl(result.uid)
+                              handleAddVideo(sig.id, member.id, videoUrl, result.uid)
+                            }}
                             onError={(error) => alertHandler.showError(error)}
-                            bucketName="videos"
-                            folderPath="signature-videos"
-                            maxSize={100}
+                            skipThumbnailSelection
                           />
                           <button
                             onClick={() => {
