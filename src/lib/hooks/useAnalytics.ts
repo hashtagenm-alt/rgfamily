@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   getBjStats,
   getTimePattern,
@@ -14,6 +14,8 @@ import {
   getEpisodeTrend,
   getDonorRetention,
   getBjEpisodeTrend,
+  getBjDetailedStats,
+  getTimePatternEnhanced,
   type BjStats,
   type TimePatternData,
   type DonorBjRelation,
@@ -24,6 +26,8 @@ import {
   type EpisodeTrendData,
   type DonorRetentionData,
   type BjEpisodeTrendData,
+  type BjDetailedStats,
+  type TimePatternEnhanced,
 } from '@/lib/actions/analytics'
 
 interface UseAnalyticsOptions {
@@ -50,6 +54,8 @@ interface UseAnalyticsReturn {
   episodeTrend: EpisodeTrendData[]
   donorRetention: DonorRetentionData | null
   bjEpisodeTrend: BjEpisodeTrendData[]
+  bjDetailedStats: BjDetailedStats[]
+  timePatternEnhanced: TimePatternEnhanced | null
 
   // 로딩 상태
   isLoading: boolean
@@ -62,13 +68,15 @@ interface UseAnalyticsReturn {
   isEpisodeTrendLoading: boolean
   isDonorRetentionLoading: boolean
   isBjEpisodeTrendLoading: boolean
+  isBjDetailedStatsLoading: boolean
+  isTimePatternEnhancedLoading: boolean
 
   // 에러
   error: string | null
 
   // 메타 데이터
   seasons: { id: number; name: string }[]
-  episodes: { id: number; title: string; season_id: number }[]
+  episodes: { id: number; title: string; season_id: number; episode_number: number; broadcast_date: string | null }[]
 
   // 액션
   loadSummary: () => Promise<void>
@@ -83,11 +91,17 @@ interface UseAnalyticsReturn {
   loadEpisodeTrend: () => Promise<void>
   loadDonorRetention: () => Promise<void>
   loadBjEpisodeTrend: () => Promise<void>
+  loadBjDetailedStats: () => Promise<void>
+  loadTimePatternEnhanced: () => Promise<void>
   refreshAll: () => Promise<void>
 }
 
 export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsReturn {
   const { autoLoad = true } = options
+
+  // 초기 자동 선택 여부 추적 (최초 1회만)
+  const hasAutoSelectedSeason = useRef(!!options.seasonId)
+  const hasAutoSelectedEpisode = useRef(!!options.episodeId)
 
   // 필터 상태
   const [seasonId, setSeasonId] = useState<number | undefined>(options.seasonId)
@@ -104,10 +118,12 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const [episodeTrend, setEpisodeTrend] = useState<EpisodeTrendData[]>([])
   const [donorRetention, setDonorRetention] = useState<DonorRetentionData | null>(null)
   const [bjEpisodeTrend, setBjEpisodeTrend] = useState<BjEpisodeTrendData[]>([])
+  const [bjDetailedStats, setBjDetailedStats] = useState<BjDetailedStats[]>([])
+  const [timePatternEnhanced, setTimePatternEnhanced] = useState<TimePatternEnhanced | null>(null)
 
   // 메타 데이터
   const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([])
-  const [episodes, setEpisodes] = useState<{ id: number; title: string; season_id: number }[]>([])
+  const [episodes, setEpisodes] = useState<{ id: number; title: string; season_id: number; episode_number: number; broadcast_date: string | null }[]>([])
 
   // 로딩 상태
   const [isSummaryLoading, setIsSummaryLoading] = useState(false)
@@ -120,6 +136,8 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const [isEpisodeTrendLoading, setIsEpisodeTrendLoading] = useState(false)
   const [isDonorRetentionLoading, setIsDonorRetentionLoading] = useState(false)
   const [isBjEpisodeTrendLoading, setIsBjEpisodeTrendLoading] = useState(false)
+  const [isBjDetailedStatsLoading, setIsBjDetailedStatsLoading] = useState(false)
+  const [isTimePatternEnhancedLoading, setIsTimePatternEnhancedLoading] = useState(false)
 
   // 에러
   const [error, setError] = useState<string | null>(null)
@@ -249,6 +267,30 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     setIsBjEpisodeTrendLoading(false)
   }, [seasonId])
 
+  const loadBjDetailedStats = useCallback(async () => {
+    setIsBjDetailedStatsLoading(true)
+    setError(null)
+    const result = await getBjDetailedStats(seasonId, episodeId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setBjDetailedStats(result.data)
+    }
+    setIsBjDetailedStatsLoading(false)
+  }, [seasonId, episodeId])
+
+  const loadTimePatternEnhanced = useCallback(async () => {
+    setIsTimePatternEnhancedLoading(true)
+    setError(null)
+    const result = await getTimePatternEnhanced(seasonId, episodeId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setTimePatternEnhanced(result.data)
+    }
+    setIsTimePatternEnhancedLoading(false)
+  }, [seasonId, episodeId])
+
   const loadSeasons = useCallback(async () => {
     const result = await getSeasonList()
     if (result.data) {
@@ -282,6 +324,34 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     loadEpisodes()
   }, [loadEpisodes])
 
+  // 시즌 자동 선택: 시즌 목록 로드 후 가장 최신 시즌 선택 (최초 1회)
+  useEffect(() => {
+    if (!hasAutoSelectedSeason.current && seasons.length > 0) {
+      hasAutoSelectedSeason.current = true
+      const latestSeason = seasons[seasons.length - 1]
+      setSeasonId(latestSeason.id)
+    }
+  }, [seasons])
+
+  // 에피소드 자동 선택: 방송일이 오늘 이하인 에피소드 중 가장 최신 회차 선택 (최초 1회)
+  useEffect(() => {
+    if (!hasAutoSelectedEpisode.current && seasonId && episodes.length > 0) {
+      const now = new Date()
+      const seasonEpisodes = episodes
+        .filter(e => e.season_id === seasonId)
+        .filter(e => {
+          if (!e.broadcast_date) return false
+          return new Date(e.broadcast_date) <= now
+        })
+        .sort((a, b) => b.episode_number - a.episode_number)
+
+      if (seasonEpisodes.length > 0) {
+        hasAutoSelectedEpisode.current = true
+        setEpisodeId(seasonEpisodes[0].id)
+      }
+    }
+  }, [seasonId, episodes])
+
   useEffect(() => {
     if (autoLoad) {
       refreshAll()
@@ -298,7 +368,9 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     isRelationsLoading ||
     isEpisodeTrendLoading ||
     isDonorRetentionLoading ||
-    isBjEpisodeTrendLoading
+    isBjEpisodeTrendLoading ||
+    isBjDetailedStatsLoading ||
+    isTimePatternEnhancedLoading
 
   return {
     // 필터
@@ -318,6 +390,8 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     episodeTrend,
     donorRetention,
     bjEpisodeTrend,
+    bjDetailedStats,
+    timePatternEnhanced,
 
     // 로딩
     isLoading,
@@ -330,6 +404,8 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     isEpisodeTrendLoading,
     isDonorRetentionLoading,
     isBjEpisodeTrendLoading,
+    isBjDetailedStatsLoading,
+    isTimePatternEnhancedLoading,
 
     // 에러
     error,
@@ -351,6 +427,8 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     loadEpisodeTrend,
     loadDonorRetention,
     loadBjEpisodeTrend,
+    loadBjDetailedStats,
+    loadTimePatternEnhanced,
     refreshAll,
   }
 }
