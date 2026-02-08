@@ -63,6 +63,11 @@
   font-weight: 600;
 }
 
+.kpiDesc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
 .deltaUp { color: #10b981; }
 .deltaDown { color: #ef4444; }
 
