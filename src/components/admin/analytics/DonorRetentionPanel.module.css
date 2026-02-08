@@ -76,6 +76,33 @@
   color: var(--text-tertiary);
 }
 
+/* 인사이트 카드 Row */
+.insightsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.insightCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1 1 280px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.insightCard svg {
+  flex-shrink: 0;
+  color: #3b82f6;
+  margin-top: 2px;
+}
+
 /* 코호트 히트맵 */
 .cohortSection {
   background: var(--bg-secondary);
@@ -141,8 +168,165 @@
   transition: background 0.2s;
 }
 
+/* 평균 후원 추이 */
+.avgTrendSection {
+  /* wrapper for spacing context */
+}
+
+/* 후원자 가치 세그먼트 */
+.segmentsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.segmentCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid;
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s;
+}
+
+.segmentCard:hover {
+  transform: translateY(-2px);
+}
+
+.segmentIcon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.segmentDesc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.segmentCount {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.segmentValue {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.segmentUnit {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.segmentHearts,
+.segmentRetention {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-color);
+}
+
+.segmentMetricLabel {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.segmentMetricValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 재활성화율 */
+.reactivationSection {
+  /* wrapper for spacing context */
+}
+
+/* 이탈 위험 테이블 */
+.churnSection {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.churnTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.churnTable th,
+.churnTable td {
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.churnTable th {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.churnTable tbody tr {
+  transition: background 0.15s;
+}
+
+.churnTable tbody tr:hover {
+  background: rgba(253, 104, 186, 0.04);
+}
+
+.churnDonorName {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left !important;
+}
+
+.riskBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.riskHigh {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.riskMedium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.riskLow {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+/* Responsive */
 @media (max-width: 1024px) {
   .lifecycleRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .segmentsRow {
     grid-template-columns: repeat(3, 1fr);
   }
 }
@@ -154,5 +338,17 @@
 
   .lifecycleCount {
     font-size: 22px;
+  }
+
+  .segmentsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .insightsRow {
+    flex-direction: column;
+  }
+
+  .insightCard {
+    flex: 1 1 auto;
   }
 }

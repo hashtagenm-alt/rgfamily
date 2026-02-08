@@ -28,14 +28,14 @@
   border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 14px; /* 버튼 텍스트 14px */
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .refreshBtn:hover {
   background: var(--bg-tertiary);
-  color: var(--color-primary, #fd68ba); /* CLAUDE.md: 호버 시 핑크 */
+  color: var(--color-primary, #fd68ba);
   border-color: var(--color-primary, #fd68ba);
 }
 
@@ -66,6 +66,27 @@
 
 .spinner {
   animation: spin 1s linear infinite;
+}
+
+/* 신규 고액 후원자 알림 */
+.alertsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.alertCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
 }
 
 .chartsRow {
@@ -104,14 +125,14 @@
 
 .table th {
   background: var(--bg-tertiary);
-  font-size: 14px; /* 헤더는 14px 허용 */
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
 .table td {
-  font-size: 16px; /* CLAUDE.md: 본문 최소 16px */
+  font-size: 16px;
   color: var(--text-primary);
 }
 
@@ -120,7 +141,7 @@
 }
 
 .table tbody tr:hover {
-  background: rgba(253, 104, 186, 0.08); /* 핑크 틴트 */
+  background: rgba(253, 104, 186, 0.08);
 }
 
 .table tbody tr:hover td {
@@ -175,6 +196,15 @@
 
 .bjName {
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.newCount {
+  font-size: 11px;
+  color: #10b981;
+  font-weight: 600;
 }
 
 .hearts {
@@ -182,10 +212,134 @@
   font-weight: 600;
 }
 
+.expandCol {
+  width: 40px;
+  text-align: center;
+}
+
+.expandIcon {
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.expandIconOpen {
+  transform: rotate(90deg);
+}
+
+/* 확장 행 */
+.expandedRow {
+  background: rgba(253, 104, 186, 0.05) !important;
+}
+
+.detailRow {
+  background: var(--bg-tertiary);
+}
+
+.detailRow td {
+  padding: 0 !important;
+  border-bottom: 2px solid var(--color-primary, #fd68ba);
+}
+
+.detailContent {
+  padding: 16px 20px;
+}
+
+.detailTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.detailLoading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.donorList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.donorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.donorName2 {
+  min-width: 100px;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.newBadge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #10b981;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.donorHearts {
+  min-width: 80px;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.donorCount {
+  min-width: 50px;
+  color: var(--text-secondary);
+}
+
+/* 미니 스파크라인 */
+.sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 28px;
+  margin-left: auto;
+}
+
+.sparkBar {
+  width: 6px;
+  min-height: 4px;
+  background: var(--color-primary, #fd68ba);
+  border-radius: 2px 2px 0 0;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.sparkBar:hover {
+  opacity: 1;
+}
+
 @media (max-width: 768px) {
   .table th,
   .table td {
     padding: 10px 12px;
-    font-size: 14px; /* 모바일에서도 14px 이상 유지 */
+    font-size: 14px;
+  }
+
+  .donorRow {
+    flex-wrap: wrap;
+  }
+
+  .sparkline {
+    display: none;
   }
 }

@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { RefreshCw, Loader2, Filter } from 'lucide-react'
+import { RefreshCw, Loader2, Filter, TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react'
+import { PieChart, Pie, Cell } from 'recharts'
 import type { DonorPattern } from '@/lib/actions/analytics'
+import { ChartContainer, ChartTooltip, CHART_COLORS } from './charts/RechartsTheme'
 import styles from './DonorPatternsTable.module.css'
 
 interface DonorPatternsTableProps {
@@ -12,6 +14,7 @@ interface DonorPatternsTableProps {
 }
 
 type PatternType = '전체' | '올인형' | '분산형' | '소액다건' | '고액소건' | '일반'
+type TrendFilter = 'all' | 'increasing' | 'decreasing' | 'stable'
 
 const PATTERN_COLORS: Record<string, string> = {
   올인형: '#ef4444',
@@ -29,10 +32,18 @@ const PATTERN_DESCRIPTIONS: Record<string, string> = {
   일반: '일반적인 후원 패턴',
 }
 
+function TrendIcon({ trend }: { trend: string }) {
+  if (trend === 'increasing') return <TrendingUp size={14} color="#10b981" />
+  if (trend === 'decreasing') return <TrendingDown size={14} color="#ef4444" />
+  return <Minus size={14} color="#6b7280" />
+}
+
 export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatternsTableProps) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [filterType, setFilterType] = useState<PatternType>('전체')
+  const [trendFilter, setTrendFilter] = useState<TrendFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [expandedDonor, setExpandedDonor] = useState<string | null>(null)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -55,14 +66,26 @@ export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatt
     return stats
   }, [patterns])
 
+  // 패턴 분포 도넛 차트
+  const donutData = useMemo(() => {
+    return Object.entries(patternStats)
+      .filter(([, count]) => count > 0)
+      .map(([type, count]) => ({
+        name: type,
+        value: count,
+        color: PATTERN_COLORS[type],
+      }))
+  }, [patternStats])
+
   // 필터링된 데이터
   const filteredPatterns = useMemo(() => {
     return patterns.filter((p) => {
       const matchesType = filterType === '전체' || p.pattern_type === filterType
       const matchesSearch = p.donor_name.toLowerCase().includes(searchQuery.toLowerCase())
-      return matchesType && matchesSearch
+      const matchesTrend = trendFilter === 'all' || p.trend === trendFilter
+      return matchesType && matchesSearch && matchesTrend
     })
-  }, [patterns, filterType, searchQuery])
+  }, [patterns, filterType, searchQuery, trendFilter])
 
   const formatNumber = (num: number) => num.toLocaleString()
 
@@ -97,23 +120,50 @@ export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatt
         </button>
       </div>
 
-      {/* 패턴별 통계 */}
-      <div className={styles.statsGrid}>
-        {Object.entries(patternStats).map(([type, count]) => (
-          <button
-            key={type}
-            className={`${styles.statCard} ${filterType === type ? styles.active : ''}`}
-            onClick={() => setFilterType(filterType === type ? '전체' : type as PatternType)}
-            style={{ '--pattern-color': PATTERN_COLORS[type] } as React.CSSProperties}
-          >
-            <span className={styles.statType}>{type}</span>
-            <span className={styles.statCount}>{count}명</span>
-            <span className={styles.statDesc}>{PATTERN_DESCRIPTIONS[type]}</span>
-          </button>
-        ))}
+      {/* 패턴 분포 도넛 차트 + 패턴별 통계 */}
+      <div className={styles.topSection}>
+        {donutData.length > 0 && (
+          <div className={styles.donutWrapper}>
+            <ChartContainer title="패턴 분포" height={220}>
+              <PieChart>
+                <Pie
+                  data={donutData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={90}
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, value }) => `${name} ${value}`}
+                  labelLine={false}
+                >
+                  {donutData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <ChartTooltip valueFormatter={(v) => `${v}명`} />
+              </PieChart>
+            </ChartContainer>
+          </div>
+        )}
+
+        <div className={styles.statsGrid}>
+          {Object.entries(patternStats).map(([type, count]) => (
+            <button
+              key={type}
+              className={`${styles.statCard} ${filterType === type ? styles.active : ''}`}
+              onClick={() => setFilterType(filterType === type ? '전체' : type as PatternType)}
+              style={{ '--pattern-color': PATTERN_COLORS[type] } as React.CSSProperties}
+            >
+              <span className={styles.statType}>{type}</span>
+              <span className={styles.statCount}>{count}명</span>
+              <span className={styles.statDesc}>{PATTERN_DESCRIPTIONS[type]}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 검색 */}
+      {/* 검색 + 필터 */}
       <div className={styles.searchWrapper}>
         <input
           type="text"
@@ -122,6 +172,17 @@ export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatt
           onChange={(e) => setSearchQuery(e.target.value)}
           className={styles.searchInput}
         />
+        <div className={styles.trendToggle}>
+          {(['all', 'increasing', 'decreasing', 'stable'] as TrendFilter[]).map(t => (
+            <button
+              key={t}
+              className={`${styles.trendBtn} ${trendFilter === t ? styles.trendActive : ''}`}
+              onClick={() => setTrendFilter(t)}
+            >
+              {{ all: '전체', increasing: '증가', decreasing: '감소', stable: '안정' }[t]}
+            </button>
+          ))}
+        </div>
         {filterType !== '전체' && (
           <span className={styles.filterBadge} style={{ background: PATTERN_COLORS[filterType] }}>
             <Filter size={12} />
@@ -140,32 +201,77 @@ export function DonorPatternsTable({ patterns, isLoading, onRefresh }: DonorPatt
               <th>패턴</th>
               <th>총 하트</th>
               <th>건수</th>
+              <th>참여</th>
+              <th>추이</th>
               <th>BJ 수</th>
               <th>최대 비중</th>
-              <th>평균 후원</th>
               <th>주 대상</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {filteredPatterns.slice(0, 100).map((p) => (
-              <tr key={p.donor_name}>
-                <td className={styles.donorName}>{p.donor_name}</td>
-                <td>
-                  <span
-                    className={styles.patternBadge}
-                    style={{ background: PATTERN_COLORS[p.pattern_type] }}
+            {filteredPatterns.slice(0, 100).map((p) => {
+              const isExpanded = expandedDonor === p.donor_name
+              return (
+                <>
+                  <tr
+                    key={p.donor_name}
+                    onClick={() => setExpandedDonor(isExpanded ? null : p.donor_name)}
+                    style={{ cursor: 'pointer' }}
+                    className={isExpanded ? styles.expandedRow : ''}
                   >
-                    {p.pattern_type}
-                  </span>
-                </td>
-                <td className={styles.hearts}>{formatNumber(p.total_hearts)}</td>
-                <td>{p.donation_count}</td>
-                <td>{p.unique_bjs}</td>
-                <td>{p.max_bj_ratio}%</td>
-                <td>{formatNumber(p.avg_donation)}</td>
-                <td className={styles.favoriteBj}>{p.favorite_bj}</td>
-              </tr>
-            ))}
+                    <td className={styles.donorName}>{p.donor_name}</td>
+                    <td>
+                      <span
+                        className={styles.patternBadge}
+                        style={{ background: PATTERN_COLORS[p.pattern_type] }}
+                      >
+                        {p.pattern_type}
+                      </span>
+                    </td>
+                    <td className={styles.hearts}>{formatNumber(p.total_hearts)}</td>
+                    <td>{p.donation_count}</td>
+                    <td>{p.episodes_participated}회</td>
+                    <td><TrendIcon trend={p.trend} /></td>
+                    <td>{p.unique_bjs}</td>
+                    <td>{p.max_bj_ratio}%</td>
+                    <td className={styles.favoriteBj}>{p.favorite_bj}</td>
+                    <td className={styles.expandCol}>
+                      <ChevronRight
+                        size={14}
+                        className={`${styles.expandIcon} ${isExpanded ? styles.expandIconOpen : ''}`}
+                      />
+                    </td>
+                  </tr>
+                  {isExpanded && p.bj_distribution.length > 0 && (
+                    <tr key={`${p.donor_name}-detail`} className={styles.detailRow}>
+                      <td colSpan={10}>
+                        <div className={styles.bjDistribution}>
+                          <span className={styles.bjDistTitle}>BJ별 분포</span>
+                          <div className={styles.bjDistBars}>
+                            {p.bj_distribution.slice(0, 5).map(bj => (
+                              <div key={bj.bj_name} className={styles.bjDistItem}>
+                                <span className={styles.bjDistName}>{bj.bj_name}</span>
+                                <div className={styles.bjDistBarBg}>
+                                  <div
+                                    className={styles.bjDistBarFill}
+                                    style={{ width: `${bj.percent}%` }}
+                                  />
+                                </div>
+                                <span className={styles.bjDistPct}>{bj.percent}%</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className={styles.bjDistMeta}>
+                            첫 참여: {p.first_episode}화 / 최근: {p.last_episode}화
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              )
+            })}
           </tbody>
         </table>
         {filteredPatterns.length > 100 && (
