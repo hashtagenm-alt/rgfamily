@@ -1,28 +1,12 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
-import { motion, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { RankingItem } from "@/types/common";
 import { getInitials } from "@/lib/utils";
 import styles from "./RankingFullList.module.css";
-
-/** 점수 카운트업 애니메이션 컴포넌트 */
-function AnimatedScore({ value }: { value: number }) {
-  const spring = useSpring(0, { stiffness: 50, damping: 20 });
-  const display = useTransform(spring, (v) =>
-    Math.round(v).toLocaleString()
-  );
-
-  // mount 시 값 설정
-  useMemo(() => {
-    spring.set(value);
-  }, [spring, value]);
-
-  return <motion.span>{display}</motion.span>;
-}
 
 interface RankingFullListProps {
   rankings: RankingItem[];
@@ -138,11 +122,7 @@ export default function RankingFullList({
             {/* 시청자 점수 - 별도 컬럼 */}
             <div className={styles.scoreColumn}>
               <span className={styles.viewerScore}>
-                {isTopRank ? (
-                  <AnimatedScore value={item.viewerScore} />
-                ) : (
-                  item.viewerScore.toLocaleString()
-                )}
+                {item.viewerScore.toLocaleString()}
               </span>
               <span className={styles.scoreUnit}>점</span>
             </div>
