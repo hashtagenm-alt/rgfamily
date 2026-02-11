@@ -25,6 +25,10 @@ interface Media {
   unit: 'excel' | 'crew' | null
   isFeatured: boolean
   createdAt: string
+  parentId: number | null
+  partNumber: number
+  totalParts: number
+  duration: number | null
 }
 
 // Cloudflare 썸네일 시간 옵션 (초 단위)
@@ -52,6 +56,13 @@ export default function MediaPage() {
   const thumbnailInputRef = useRef<HTMLInputElement>(null)
   const [thumbnailTargetId, setThumbnailTargetId] = useState<number | null>(null)
 
+  // 멀티파트 VOD 상태
+  const [expandedVodId, setExpandedVodId] = useState<number | null>(null)
+  const [vodParts, setVodParts] = useState<Media[]>([])
+  const [loadingParts, setLoadingParts] = useState(false)
+  const [addPartModalOpen, setAddPartModalOpen] = useState(false)
+  const [addPartTarget, setAddPartTarget] = useState<Media | null>(null)
+
   const {
     items: allMediaList,
     isLoading,
@@ -76,6 +87,10 @@ export default function MediaPage() {
       cloudflareUid: null,
       unit: null,
       isFeatured: false,
+      parentId: null,
+      partNumber: 1,
+      totalParts: 1,
+      duration: null,
     },
     orderBy: { column: 'created_at', ascending: false },
     fromDbFormat: (row) => ({
@@ -89,6 +104,10 @@ export default function MediaPage() {
       unit: row.unit as 'excel' | 'crew' | null,
       isFeatured: row.is_featured as boolean,
       createdAt: row.created_at as string,
+      parentId: (row.parent_id as number) || null,
+      partNumber: (row.part_number as number) || 1,
+      totalParts: (row.total_parts as number) || 1,
+      duration: (row.duration as number) || null,
     }),
     toDbFormat: (item) => ({
       title: item.title,
@@ -99,7 +118,20 @@ export default function MediaPage() {
       cloudflare_uid: item.cloudflareUid,
       unit: item.unit,
       is_featured: item.isFeatured,
+      parent_id: item.parentId,
+      part_number: item.partNumber,
+      total_parts: item.totalParts,
+      duration: item.duration,
     }),
+    beforeSave: async (item, isNewItem) => {
+      // 기존 멀티파트 VOD의 total_parts 변경 시 자식 파트도 일괄 업데이트
+      if (!isNewItem && item.id && item.totalParts && item.totalParts > 1) {
+        await supabase
+          .from('media_content')
+          .update({ total_parts: item.totalParts })
+          .eq('parent_id', item.id)
+      }
+    },
     validate: (item) => {
       if (!item.title) return '제목을 입력해주세요.'
       if (!item.videoUrl && !item.cloudflareUid) return '영상을 업로드하거나 URL을 입력해주세요.'
@@ -108,8 +140,35 @@ export default function MediaPage() {
     alertHandler,
   })
 
-  // 삭제 시 Cloudflare 영상도 함께 삭제
+  // 삭제 시 Cloudflare 영상도 함께 삭제 (멀티파트인 경우 자식 파트도 연쇄 삭제)
   const handleDelete = async (media: Media) => {
+    // 자식 파트 삭제 (멀티파트 부모인 경우)
+    if (media.totalParts > 1) {
+      const { data: children } = await supabase
+        .from('media_content')
+        .select('id, cloudflare_uid')
+        .eq('parent_id', media.id)
+
+      if (children && children.length > 0) {
+        // 자식 파트들의 Cloudflare 영상 삭제
+        for (const child of children) {
+          if (child.cloudflare_uid) {
+            try {
+              await fetch(`/api/cloudflare-stream/${child.cloudflare_uid}`, { method: 'DELETE' })
+            } catch (e) {
+              console.error(`자식 파트 Cloudflare 삭제 실패 (${child.id}):`, e)
+            }
+          }
+        }
+        // 자식 파트 DB 레코드 삭제
+        await supabase
+          .from('media_content')
+          .delete()
+          .eq('parent_id', media.id)
+      }
+    }
+
+    // 부모 Cloudflare 영상 삭제
     if (media.cloudflareUid) {
       try {
         await fetch(`/api/cloudflare-stream/${media.cloudflareUid}`, { method: 'DELETE' })
@@ -117,6 +176,12 @@ export default function MediaPage() {
         console.error('Cloudflare 영상 삭제 실패:', e)
       }
     }
+
+    // 파트 목록 패널이 열려있으면 닫기
+    if (expandedVodId === media.id) {
+      setExpandedVodId(null)
+    }
+
     baseHandleDelete(media)
   }
 
@@ -250,7 +315,7 @@ export default function MediaPage() {
   }
 
   // Filter by activeType
-  const mediaList = allMediaList.filter((m) => m.contentType === activeType)
+  const mediaList = allMediaList.filter((m) => m.contentType === activeType && m.parentId === null)
 
   // Refetch when activeType changes
   useEffect(() => {
@@ -270,6 +335,59 @@ export default function MediaPage() {
   const closePreview = () => {
     setPreviewUrl(null)
     setPreviewCloudflareUid(null)
+  }
+
+  // 멀티파트 VOD 파트 조회
+  const fetchVodParts = useCallback(async (parentId: number) => {
+    setLoadingParts(true)
+    try {
+      const { data, error } = await supabase
+        .from('media_content')
+        .select('*')
+        .or(`id.eq.${parentId},parent_id.eq.${parentId}`)
+        .order('part_number', { ascending: true })
+
+      if (error) throw error
+      setVodParts((data || []).map(row => ({
+        id: row.id,
+        title: row.title,
+        description: row.description || '',
+        contentType: row.content_type as ContentType,
+        videoUrl: row.video_url,
+        thumbnailUrl: row.thumbnail_url || '',
+        cloudflareUid: row.cloudflare_uid || null,
+        unit: row.unit as 'excel' | 'crew' | null,
+        isFeatured: row.is_featured,
+        createdAt: row.created_at,
+        parentId: row.parent_id || null,
+        partNumber: row.part_number || 1,
+        totalParts: row.total_parts || 1,
+        duration: row.duration || null,
+      })))
+    } catch (e) {
+      console.error('파트 조회 실패:', e)
+      alertHandler.showError('파트 목록을 불러오지 못했습니다.')
+    } finally {
+      setLoadingParts(false)
+    }
+  }, [supabase, alertHandler])
+
+  // expandedVodId 변경 시 파트 조회
+  useEffect(() => {
+    if (expandedVodId) {
+      fetchVodParts(expandedVodId)
+    } else {
+      setVodParts([])
+    }
+  }, [expandedVodId, fetchVodParts])
+
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return '-'
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = Math.floor(seconds % 60)
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    return `${m}:${String(s).padStart(2, '0')}`
   }
 
   const formatDate = (dateStr: string) => {
@@ -390,6 +508,63 @@ export default function MediaPage() {
         </div>
       ),
     },
+    // VOD 탭에서만 파트 열 표시
+    ...(activeType === 'vod' ? [{
+      key: 'totalParts' as keyof Media,
+      header: '파트',
+      width: '140px',
+      render: (item: Media) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {item.totalParts <= 1 ? (
+            <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>단일</span>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setExpandedVodId(expandedVodId === item.id ? null : item.id)
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '2px 8px',
+                background: 'var(--primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {item.totalParts}파트
+            </button>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setAddPartTarget(item)
+              setAddPartModalOpen(true)
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '2px',
+              padding: '2px 6px',
+              background: 'transparent',
+              color: 'var(--primary)',
+              border: '1px solid var(--primary)',
+              borderRadius: '4px',
+              fontSize: '11px',
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={12} />
+            추가
+          </button>
+        </div>
+      ),
+    }] : []),
     {
       key: 'unit',
       header: '부서',
@@ -525,6 +700,115 @@ export default function MediaPage() {
         isLoading={isLoading}
       />
 
+      {/* 멀티파트 VOD 파트 목록 패널 */}
+      <AnimatePresence>
+        {activeType === 'vod' && expandedVodId && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{
+              background: 'var(--card-bg)',
+              border: '1px solid var(--card-border)',
+              borderRadius: '12px',
+              padding: '16px',
+              marginTop: '-8px',
+              marginBottom: '16px',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>
+                파트 목록
+                {vodParts.length > 0 && (
+                  <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: '8px' }}>
+                    {vodParts.filter(p => p.cloudflareUid).length}/{vodParts[0]?.totalParts || vodParts.length}개 업로드됨
+                  </span>
+                )}
+              </h3>
+              <button
+                onClick={() => setExpandedVodId(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-tertiary)',
+                  padding: '4px',
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {loadingParts ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)', padding: '12px 0' }}>
+                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                파트 목록 로딩 중...
+              </div>
+            ) : vodParts.length === 0 ? (
+              <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', margin: 0 }}>파트 정보 없음</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {vodParts.map((part) => (
+                  <div
+                    key={part.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '8px 12px',
+                      background: 'var(--surface)',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                    }}
+                  >
+                    <span style={{
+                      fontWeight: 600,
+                      color: 'var(--primary)',
+                      minWidth: '50px',
+                    }}>
+                      Part {part.partNumber}
+                    </span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {part.title}
+                    </span>
+                    {part.cloudflareUid ? (
+                      <span title="Cloudflare Stream"><Cloud size={14} style={{ color: '#f6821f', flexShrink: 0 }} /></span>
+                    ) : (
+                      <span style={{ fontSize: '11px', color: 'var(--color-warning)', flexShrink: 0 }}>미업로드</span>
+                    )}
+                    <span style={{ color: 'var(--text-tertiary)', minWidth: '60px', textAlign: 'right' }}>
+                      {formatDuration(part.duration)}
+                    </span>
+                    {part.cloudflareUid && (
+                      <button
+                        onClick={() => handlePreview(part)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '2px',
+                          padding: '2px 8px',
+                          background: 'var(--primary)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Play size={10} />
+                        재생
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 인라인 썸네일 업로드용 숨김 input */}
       <input
         ref={thumbnailInputRef}
@@ -592,6 +876,30 @@ export default function MediaPage() {
                   </div>
                 </div>
 
+                {/* 총 파트 수 - VOD 신규 생성 시에만 표시 */}
+                {editingMedia.contentType === 'vod' && isNew && (
+                  <div className={styles.formGroup}>
+                    <label>총 파트 수</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={editingMedia.totalParts || 1}
+                      onChange={(e) => {
+                        const val = Math.max(1, Math.min(20, parseInt(e.target.value) || 1))
+                        setEditingMedia({ ...editingMedia, totalParts: val })
+                      }}
+                      className={styles.input}
+                      style={{ width: '120px' }}
+                    />
+                    <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                      {(editingMedia.totalParts || 1) <= 1
+                        ? '단일 영상으로 등록됩니다.'
+                        : `멀티파트 VOD — 지금 업로드하는 영상이 Part 1이 됩니다. 나머지 파트는 저장 후 "추가" 버튼으로 업로드하세요.`}
+                    </p>
+                  </div>
+                )}
+
                 <div className={styles.formGroup}>
                   <label>부서</label>
                   <div className={styles.typeSelector}>
@@ -639,6 +947,7 @@ export default function MediaPage() {
                           cloudflareUid: uid,
                           videoUrl: `https://iframe.videodelivery.net/${uid}`,
                           thumbnailUrl: thumbnailUrl || editingMedia.thumbnailUrl,
+                          duration: duration || null,
                         })
                       }}
                       onError={(error) => alertHandler.showError(error)}
@@ -878,6 +1187,112 @@ export default function MediaPage() {
                   allowFullScreen
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 파트 추가 모달 */}
+      <AnimatePresence>
+        {addPartModalOpen && addPartTarget && (
+          <motion.div
+            className={styles.modalOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setAddPartModalOpen(false)}
+          >
+            <motion.div
+              className={styles.modal}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={styles.modalHeader}>
+                <h2>파트 추가 — {addPartTarget.title}</h2>
+                <button onClick={() => setAddPartModalOpen(false)} className={styles.closeButton}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className={styles.modalBody}>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                  다음 파트 영상을 업로드하면 자동으로 저장됩니다.
+                </p>
+
+                <CloudflareVideoUpload
+                  onUploadComplete={async ({ uid, thumbnailUrl, duration }) => {
+                    // 현재 파트 수 조회하여 다음 part_number 계산
+                    const { data: existingParts } = await supabase
+                      .from('media_content')
+                      .select('part_number')
+                      .or(`id.eq.${addPartTarget.id},parent_id.eq.${addPartTarget.id}`)
+                      .order('part_number', { ascending: false })
+                      .limit(1)
+
+                    const nextPartNumber = (existingParts?.[0]?.part_number || 1) + 1
+                    const partTitle = `${addPartTarget.title} (Part ${nextPartNumber})`
+
+                    const cfThumbUrl = thumbnailUrl || ''
+
+                    // 새 파트 DB 삽입
+                    const { error: insertError } = await supabase
+                      .from('media_content')
+                      .insert({
+                        title: partTitle,
+                        description: addPartTarget.description || '',
+                        content_type: 'vod',
+                        video_url: `https://iframe.videodelivery.net/${uid}`,
+                        thumbnail_url: cfThumbUrl,
+                        cloudflare_uid: uid,
+                        unit: addPartTarget.unit,
+                        is_featured: false,
+                        parent_id: addPartTarget.id,
+                        part_number: nextPartNumber,
+                        total_parts: addPartTarget.totalParts,
+                        duration: duration || null,
+                      })
+
+                    if (insertError) {
+                      alertHandler.showError('파트 저장에 실패했습니다: ' + insertError.message)
+                      return
+                    }
+
+                    // 부모의 total_parts가 nextPartNumber보다 작으면 업데이트
+                    if (nextPartNumber > addPartTarget.totalParts) {
+                      const newTotal = nextPartNumber
+                      await supabase
+                        .from('media_content')
+                        .update({ total_parts: newTotal })
+                        .eq('id', addPartTarget.id)
+                      // 기존 자식 파트들도 total_parts 업데이트
+                      await supabase
+                        .from('media_content')
+                        .update({ total_parts: newTotal })
+                        .eq('parent_id', addPartTarget.id)
+                    }
+
+                    alertHandler.showSuccess(`Part ${nextPartNumber} 업로드 완료!`)
+                    setAddPartModalOpen(false)
+                    setAddPartTarget(null)
+                    refetch()
+                    // 파트 목록도 새로고침
+                    if (expandedVodId === addPartTarget.id) {
+                      fetchVodParts(addPartTarget.id)
+                    } else {
+                      setExpandedVodId(addPartTarget.id)
+                    }
+                  }}
+                  onError={(error) => alertHandler.showError(error)}
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button onClick={() => setAddPartModalOpen(false)} className={styles.cancelButton}>
+                  닫기
+                </button>
               </div>
             </motion.div>
           </motion.div>
