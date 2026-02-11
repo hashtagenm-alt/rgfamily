@@ -189,9 +189,30 @@ export async function getSignatureVideos(
       .from('signature_videos')
       .select('*')
       .eq('signature_id', signatureId)
+      .eq('is_published', true)
       .order('created_at', { ascending: true })
 
     if (error) throw new Error(error.message)
     return data || []
   })
+}
+
+/**
+ * 시그니처 영상 공개/비공개 토글
+ */
+export async function toggleSignatureVideoPublished(
+  id: number,
+  isPublished: boolean
+): Promise<ActionResult<SignatureVideo>> {
+  return adminAction(async (supabase) => {
+    const { data: video, error } = await supabase
+      .from('signature_videos')
+      .update({ is_published: isPublished })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+    return video
+  }, ['/admin/signatures', '/signature'])
 }

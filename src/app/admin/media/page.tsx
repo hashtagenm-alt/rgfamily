@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon, Cloud, Upload, Loader2, Clock } from 'lucide-react'
+import { Film, Plus, X, Save, ExternalLink, Play, Star, Image as ImageIcon, Cloud, Upload, Loader2, Clock, Eye, EyeOff } from 'lucide-react'
 import { DataTable, Column, ImageUpload } from '@/components/admin'
 import { Menu, ActionIcon } from '@mantine/core'
 import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
@@ -24,6 +24,7 @@ interface Media {
   cloudflareUid: string | null
   unit: 'excel' | 'crew' | null
   isFeatured: boolean
+  isPublished: boolean
   createdAt: string
   parentId: number | null
   partNumber: number
@@ -87,6 +88,7 @@ export default function MediaPage() {
       cloudflareUid: null,
       unit: null,
       isFeatured: false,
+      isPublished: false,
       parentId: null,
       partNumber: 1,
       totalParts: 1,
@@ -103,6 +105,7 @@ export default function MediaPage() {
       cloudflareUid: (row.cloudflare_uid as string) || null,
       unit: row.unit as 'excel' | 'crew' | null,
       isFeatured: row.is_featured as boolean,
+      isPublished: row.is_published as boolean,
       createdAt: row.created_at as string,
       parentId: (row.parent_id as number) || null,
       partNumber: (row.part_number as number) || 1,
@@ -118,6 +121,7 @@ export default function MediaPage() {
       cloudflare_uid: item.cloudflareUid,
       unit: item.unit,
       is_featured: item.isFeatured,
+      is_published: item.isPublished,
       parent_id: item.parentId,
       part_number: item.partNumber,
       total_parts: item.totalParts,
@@ -200,6 +204,32 @@ export default function MediaPage() {
       alertHandler.showSuccess(newFeatured ? '추천 콘텐츠로 설정되었습니다.' : '추천 해제되었습니다.')
       refetch()
     }
+  }
+
+  // Toggle published status (멀티파트 VOD 자식 동기화 포함)
+  const handleTogglePublished = async (media: Media) => {
+    const newPublished = !media.isPublished
+    const { error } = await supabase
+      .from('media_content')
+      .update({ is_published: newPublished })
+      .eq('id', media.id)
+
+    if (error) {
+      console.error('공개 상태 변경 실패:', error)
+      alertHandler.showError('변경에 실패했습니다.')
+      return
+    }
+
+    // 멀티파트 VOD 부모인 경우 자식 파트도 동기화
+    if (media.parentId === null && media.totalParts > 1) {
+      await supabase
+        .from('media_content')
+        .update({ is_published: newPublished })
+        .eq('parent_id', media.id)
+    }
+
+    alertHandler.showSuccess(newPublished ? '공개로 전환되었습니다.' : '비공개로 전환되었습니다.')
+    refetch()
   }
 
   // 인라인 편집 핸들러
@@ -358,6 +388,7 @@ export default function MediaPage() {
         cloudflareUid: row.cloudflare_uid || null,
         unit: row.unit as 'excel' | 'crew' | null,
         isFeatured: row.is_featured,
+        isPublished: row.is_published,
         createdAt: row.created_at,
         parentId: row.parent_id || null,
         partNumber: row.part_number || 1,
@@ -574,6 +605,37 @@ export default function MediaPage() {
           {item.unit === 'excel' ? '엑셀부' : '크루부'}
         </span>
       ) : <span style={{ color: 'var(--text-tertiary)' }}>-</span>,
+    },
+    {
+      key: 'isPublished',
+      header: '공개',
+      width: '80px',
+      render: (item) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleTogglePublished(item)
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px',
+            background: item.isPublished ? 'var(--primary)' : 'transparent',
+            border: item.isPublished ? 'none' : '1px solid var(--card-border)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+          }}
+          title={item.isPublished ? '비공개로 전환' : '공개로 전환'}
+        >
+          {item.isPublished ? (
+            <Eye size={16} style={{ color: 'white' }} />
+          ) : (
+            <EyeOff size={16} style={{ color: 'var(--text-tertiary)' }} />
+          )}
+        </button>
+      ),
     },
     {
       key: 'isFeatured',
@@ -1118,6 +1180,20 @@ export default function MediaPage() {
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
+                      checked={editingMedia.isPublished || false}
+                      onChange={(e) =>
+                        setEditingMedia({ ...editingMedia, isPublished: e.target.checked })
+                      }
+                      className={styles.checkbox}
+                    />
+                    공개
+                  </label>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
                       checked={editingMedia.isFeatured || false}
                       onChange={(e) =>
                         setEditingMedia({ ...editingMedia, isFeatured: e.target.checked })
@@ -1237,7 +1313,7 @@ export default function MediaPage() {
 
                     const cfThumbUrl = thumbnailUrl || ''
 
-                    // 새 파트 DB 삽입
+                    // 새 파트 DB 삽입 (부모의 is_published 상속)
                     const { error: insertError } = await supabase
                       .from('media_content')
                       .insert({
@@ -1249,6 +1325,7 @@ export default function MediaPage() {
                         cloudflare_uid: uid,
                         unit: addPartTarget.unit,
                         is_featured: false,
+                        is_published: addPartTarget.isPublished,
                         parent_id: addPartTarget.id,
                         part_number: nextPartNumber,
                         total_parts: addPartTarget.totalParts,

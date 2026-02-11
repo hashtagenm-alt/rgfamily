@@ -14,6 +14,8 @@ import {
   User,
   Play,
   Image as ImageIcon,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { DataTable, Column, AdminModal, VideoUpload, CloudflareVideoUpload } from '@/components/admin'
 import { useSupabaseContext } from '@/lib/context'
@@ -37,6 +39,7 @@ interface SignatureVideo {
   memberImageUrl: string | null
   videoUrl: string
   cloudflareUid: string | null
+  isPublished: boolean
   createdAt: string
 }
 
@@ -119,6 +122,7 @@ export default function SignatureDetailPage() {
             memberImageUrl: member?.image_url || null,
             videoUrl: v.video_url,
             cloudflareUid: v.cloudflare_uid || null,
+            isPublished: v.is_published ?? true,
             createdAt: v.created_at,
           }
         })
@@ -265,6 +269,24 @@ export default function SignatureDetailPage() {
     }
   }
 
+  // Toggle published
+  const handleTogglePublished = async (video: SignatureVideo) => {
+    const newPublished = !video.isPublished
+    const { error } = await supabase
+      .from('signature_videos')
+      .update({ is_published: newPublished })
+      .eq('id', video.id)
+
+    if (error) {
+      console.error('공개 상태 변경 실패:', error)
+      showError('변경에 실패했습니다.')
+      return
+    }
+
+    showSuccess(newPublished ? '공개로 전환되었습니다.' : '비공개로 전환되었습니다.')
+    setVideos(prev => prev.map(v => v.id === video.id ? { ...v, isPublished: newPublished } : v))
+  }
+
   // Handle video preview
   const handleView = (video: SignatureVideo) => {
     setPreviewUrl(video.videoUrl)
@@ -382,6 +404,37 @@ export default function SignatureDetailPage() {
             <ExternalLink size={14} />
           </a>
         </div>
+      ),
+    },
+    {
+      key: 'isPublished',
+      header: '공개',
+      width: '80px',
+      render: (item) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleTogglePublished(item)
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px',
+            background: item.isPublished ? 'var(--primary)' : 'transparent',
+            border: item.isPublished ? 'none' : '1px solid var(--card-border)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+          }}
+          title={item.isPublished ? '비공개로 전환' : '공개로 전환'}
+        >
+          {item.isPublished ? (
+            <Eye size={16} style={{ color: 'white' }} />
+          ) : (
+            <EyeOff size={16} style={{ color: 'var(--text-tertiary)' }} />
+          )}
+        </button>
       ),
     },
     {

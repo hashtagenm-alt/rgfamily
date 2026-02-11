@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Image as ImageIcon, Plus, X, Save, Hash, Video, Upload, Loader2, Zap, ChevronDown, ChevronUp, User, Play, Trash2, Link2, ExternalLink } from 'lucide-react'
+import { Image as ImageIcon, Plus, X, Save, Hash, Video, Upload, Loader2, Zap, ChevronDown, ChevronUp, User, Play, Trash2, Link2, ExternalLink, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 import { DataTable, Column, ImageUpload } from '@/components/admin'
 import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
@@ -31,6 +31,7 @@ interface SignatureVideo {
   memberName: string
   memberImageUrl: string | null
   videoUrl: string
+  isPublished: boolean
   createdAt: string
 }
 
@@ -161,6 +162,7 @@ export default function SignaturesPage() {
             memberName: member?.name || '알 수 없음',
             memberImageUrl: member?.image_url || null,
             videoUrl: v.video_url,
+            isPublished: v.is_published ?? true,
             createdAt: v.created_at,
           }
         })
@@ -264,6 +266,24 @@ export default function SignaturesPage() {
     setSigVideos(prev => prev.filter(v => v.id !== video.id))
     refetch() // 영상 카운트 업데이트
   }, [supabase, alertHandler, refetch])
+
+  // 영상 공개/비공개 토글
+  const handleToggleVideoPublished = useCallback(async (video: SignatureVideo) => {
+    const newPublished = !video.isPublished
+    const { error } = await supabase
+      .from('signature_videos')
+      .update({ is_published: newPublished })
+      .eq('id', video.id)
+
+    if (error) {
+      console.error('공개 상태 변경 실패:', error)
+      alertHandler.showError('변경에 실패했습니다.')
+      return
+    }
+
+    alertHandler.showSuccess(newPublished ? '공개로 전환되었습니다.' : '비공개로 전환되었습니다.')
+    setSigVideos(prev => prev.map(v => v.id === video.id ? { ...v, isPublished: newPublished } : v))
+  }, [supabase, alertHandler])
 
   // YouTube URL을 embed URL로 변환
   const getEmbedUrl = (url: string) => {
@@ -778,6 +798,24 @@ export default function SignaturesPage() {
                   {/* 영상 액션 버튼 */}
                   {hasVideo ? (
                     <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        onClick={() => handleToggleVideoPublished(video)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '28px',
+                          height: '28px',
+                          background: video.isPublished ? 'var(--primary)' : 'var(--surface)',
+                          border: video.isPublished ? 'none' : '1px solid var(--card-border)',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          color: video.isPublished ? 'white' : 'var(--text-tertiary)',
+                        }}
+                        title={video.isPublished ? '비공개로 전환' : '공개로 전환'}
+                      >
+                        {video.isPublished ? <Eye size={12} /> : <EyeOff size={12} />}
+                      </button>
                       <button
                         onClick={() => setPreviewVideoUrl(video.videoUrl)}
                         style={{

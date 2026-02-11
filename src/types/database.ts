@@ -411,6 +411,7 @@ export type Database = {
           member_id: number
           video_url: string
           cloudflare_uid: string | null
+          is_published: boolean
           created_at: string
         }
         Insert: {
@@ -419,6 +420,7 @@ export type Database = {
           member_id: number
           video_url: string
           cloudflare_uid?: string | null
+          is_published?: boolean
           created_at?: string
         }
         Update: {
@@ -427,6 +429,7 @@ export type Database = {
           member_id?: number
           video_url?: string
           cloudflare_uid?: string | null
+          is_published?: boolean
           created_at?: string
         }
         Relationships: [
@@ -776,6 +779,7 @@ export type Database = {
           duration: number | null
           view_count: number
           is_featured: boolean
+          is_published: boolean
           created_at: string
           // VOD 파트 분할용 필드
           parent_id: number | null
@@ -794,6 +798,7 @@ export type Database = {
           duration?: number | null
           view_count?: number
           is_featured?: boolean
+          is_published?: boolean
           created_at?: string
           parent_id?: number | null
           part_number?: number
@@ -811,6 +816,7 @@ export type Database = {
           duration?: number | null
           view_count?: number
           is_featured?: boolean
+          is_published?: boolean
           created_at?: string
           parent_id?: number | null
           part_number?: number

@@ -112,6 +112,7 @@ export async function getShorts(options?: {
       .from('media_content')
       .select('*')
       .eq('content_type', 'shorts')
+      .eq('is_published', true)
       .order('created_at', { ascending: false })
 
     if (options?.unit) {
@@ -152,6 +153,7 @@ export async function getVODs(options?: {
       .from('media_content')
       .select('*')
       .eq('content_type', 'vod')
+      .eq('is_published', true)
       .is('parent_id', null)  // 대표 항목만 (파트 1 또는 단일 영상)
 
     // 정렬 옵션
@@ -189,6 +191,7 @@ export async function getVODParts(parentId: number): Promise<ActionResult<MediaC
       .from('media_content')
       .select('*')
       .eq('id', parentId)
+      .eq('is_published', true)
       .single()
 
     if (parentError) throw new Error(parentError.message)
@@ -204,6 +207,7 @@ export async function getVODParts(parentId: number): Promise<ActionResult<MediaC
       .from('media_content')
       .select('*')
       .eq('parent_id', parentId)
+      .eq('is_published', true)
       .order('part_number', { ascending: true })
 
     if (childrenError) throw new Error(childrenError.message)
@@ -224,6 +228,36 @@ export async function getFeaturedMedia(
     return getShorts({ featured: true, limit })
   }
   return getVODs({ featured: true, limit })
+}
+
+/**
+ * 공개/비공개 토글
+ * 멀티파트 VOD의 경우 부모 토글 시 자식도 동기화
+ */
+export async function toggleMediaPublished(
+  id: number,
+  isPublished: boolean
+): Promise<ActionResult<MediaContent>> {
+  return adminAction(async (supabase) => {
+    const { data: media, error } = await supabase
+      .from('media_content')
+      .update({ is_published: isPublished })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+
+    // 멀티파트 VOD 부모인 경우 자식 파트도 동기화
+    if (media.parent_id === null && media.total_parts > 1) {
+      await supabase
+        .from('media_content')
+        .update({ is_published: isPublished })
+        .eq('parent_id', id)
+    }
+
+    return media
+  }, ['/admin/media', '/'])
 }
 
 /**

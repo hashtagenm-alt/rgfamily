@@ -118,6 +118,7 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
             organization!member_id(id, name, image_url)
           `)
           .in('signature_id', sigIds)
+          .eq('is_published', true)
           .order('created_at', { ascending: false })
       )
 
