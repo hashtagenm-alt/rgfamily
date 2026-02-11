@@ -1,104 +1,203 @@
+#!/usr/bin/env npx tsx
 /**
- * 로컬 VOD 파일 → Cloudflare Stream 업로드
+ * 로컬 VOD 분할 업로드 스크립트
+ *
+ * 로컬 파일 → 3시간 단위 분할 (무압축 -c copy) → Cloudflare Stream 업로드 → DB 저장
+ * 기존 2화/3화 업로드 패턴(parent_id/part_number/total_parts) 유지
  *
  * 사용법:
- *   npx tsx scripts/upload-local-vod.ts --folder /path/to/videos
- *   npx tsx scripts/upload-local-vod.ts --folder /path/to/videos --dry-run
+ *   npx tsx scripts/upload-local-vod.ts                    # 전체 실행
+ *   npx tsx scripts/upload-local-vod.ts --dry-run          # 미리보기
+ *   npx tsx scripts/upload-local-vod.ts --episode 1        # 1화만
+ *   npx tsx scripts/upload-local-vod.ts --episode 4        # 4화만
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient } from './lib/supabase'
+import { spawn, execSync } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
-import dotenv from 'dotenv'
+import * as os from 'os'
 
-dotenv.config({ path: '.env.local' })
+const supabase = getServiceClient()
 
-// ============================================
-// 설정
-// ============================================
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID!
 const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN!
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+// 분할 설정: 3시간 단위 → 파트당 ~22GB (Cloudflare 30GB 제한 이내)
+const SEGMENT_DURATION = 3 * 60 * 60  // 3시간 (초)
+const TEMP_DIR = path.join(os.tmpdir(), 'rg-vod-local')
 
-// 지원하는 영상 확장자
-const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.m4v']
+// 업로드 대상
+const TARGETS = [
+  {
+    episode: 1,
+    inputPath: '/Volumes/Untitled/엑셀부 시즌1_01화 첫 직급전.mp4',
+    title: '엑셀부 시즌1_01화 첫 직급전',
+    unit: 'excel' as const,
+  },
+  {
+    episode: 4,
+    inputPath: '/Volumes/Untitled/엑셀부 시즌1_04화 명품데이.mp4',
+    title: '엑셀부 시즌1_04화 명품데이',
+    unit: 'excel' as const,
+  },
+  {
+    episode: 5,
+    inputPath: '/Volumes/1테라ssd/엑셀부 시즌1_05화 3 vs 9.mp4',
+    title: '엑셀부 시즌1_05화 3 vs 9',
+    unit: 'excel' as const,
+  },
+]
 
 // ============================================
-// 타입 정의
+// 유틸리티
 // ============================================
 
-interface UploadOptions {
-  folder: string
-  contentType: 'vod' | 'shorts'
-  unit?: 'excel' | 'crew'
-  dryRun: boolean
-  limit?: number
+let globalStartTime = Date.now()
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)}MB`
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)}GB`
 }
 
-interface LocalFile {
-  path: string
-  name: string
-  size: number
+function formatDuration(seconds: number): string {
+  const hrs = Math.floor(seconds / 3600)
+  const mins = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
+  if (hrs > 0) return `${hrs}h ${mins}m`
+  if (mins > 0) return `${mins}m ${secs}s`
+  return `${secs}s`
 }
 
-interface CloudflareUploadResult {
-  uid: string
-  status: string
+function log(prefix: string, message: string) {
+  const elapsed = formatDuration((Date.now() - globalStartTime) / 1000)
+  const time = new Date().toLocaleTimeString('ko-KR')
+  console.log(`[${time}] [${elapsed}] ${prefix} ${message}`)
+}
+
+function progressBar(percent: number, width = 30): string {
+  const filled = Math.round(width * percent / 100)
+  const empty = width - filled
+  return `[${'█'.repeat(filled)}${'░'.repeat(empty)}] ${percent}%`
+}
+
+function getVideoDuration(filePath: string): number {
+  const result = execSync(
+    `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`,
+    { encoding: 'utf-8' }
+  )
+  return parseFloat(result.trim())
 }
 
 // ============================================
-// 로컬 파일 목록 조회
+// 분할 계산
 // ============================================
 
-function getVideoFiles(folderPath: string, limit?: number): LocalFile[] {
-  const absolutePath = path.resolve(folderPath)
+interface SegmentInfo {
+  partNumber: number
+  startTime: number
+  duration: number
+  outputPath: string
+}
 
-  if (!fs.existsSync(absolutePath)) {
-    throw new Error(`폴더를 찾을 수 없습니다: ${absolutePath}`)
+function calculateSegments(totalDuration: number, baseName: string): SegmentInfo[] {
+  const segments: SegmentInfo[] = []
+  let currentTime = 0
+  let partNumber = 1
+
+  while (currentTime < totalDuration) {
+    const remainingDuration = totalDuration - currentTime
+    const segmentDuration = Math.min(SEGMENT_DURATION, remainingDuration)
+
+    segments.push({
+      partNumber,
+      startTime: currentTime,
+      duration: segmentDuration,
+      outputPath: path.join(TEMP_DIR, `${baseName}_Part${partNumber}.mp4`),
+    })
+
+    currentTime += segmentDuration
+    partNumber++
   }
 
-  const files = fs.readdirSync(absolutePath)
-  const videoFiles: LocalFile[] = []
+  return segments
+}
 
-  for (const file of files) {
-    const ext = path.extname(file).toLowerCase()
-    if (VIDEO_EXTENSIONS.includes(ext)) {
-      const filePath = path.join(absolutePath, file)
-      const stats = fs.statSync(filePath)
+// ============================================
+// 분할 (무압축 스트림 복사)
+// ============================================
 
-      videoFiles.push({
-        path: filePath,
-        name: file,
-        size: stats.size,
-      })
+function splitSegment(
+  inputPath: string,
+  segment: SegmentInfo,
+  totalParts: number,
+): Promise<{ duration: number; size: number }> {
+  return new Promise((resolve, reject) => {
+    const splitStart = Date.now()
 
-      if (limit && videoFiles.length >= limit) {
-        break
+    log('✂️', `Part ${segment.partNumber}/${totalParts} 분할 시작 (-c copy, 무압축)`)
+    console.log(`   범위: ${formatDuration(segment.startTime)} ~ ${formatDuration(segment.startTime + segment.duration)}`)
+
+    const args = [
+      '-ss', String(segment.startTime),
+      '-i', inputPath,
+      '-t', String(segment.duration),
+      '-c', 'copy',
+      '-avoid_negative_ts', 'make_zero',
+      '-movflags', '+faststart',
+      '-y', segment.outputPath,
+    ]
+
+    const ffmpeg = spawn('ffmpeg', args, { stdio: ['pipe', 'pipe', 'pipe'] })
+
+    let lastUpdate = Date.now()
+
+    ffmpeg.stderr.on('data', (data) => {
+      const line = data.toString()
+      const timeMatch = line.match(/time=(\d+):(\d+):(\d+)/)
+      const speedMatch = line.match(/speed=\s*([\d.]+)x/)
+
+      if (timeMatch) {
+        const currentSecs = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3])
+        const percent = Math.floor((currentSecs / segment.duration) * 100)
+        const speed = speedMatch ? parseFloat(speedMatch[1]) : 0
+
+        const now = Date.now()
+        if (now - lastUpdate > 2000) {
+          const remaining = speed > 0 ? (segment.duration - currentSecs) / speed : 0
+          process.stdout.write(`\r   ${progressBar(Math.min(percent, 100))} ${formatDuration(currentSecs)}/${formatDuration(segment.duration)} | ${speed.toFixed(1)}x | ETA: ${formatDuration(remaining)}`)
+          lastUpdate = now
+        }
       }
-    }
-  }
+    })
 
-  // 파일명 기준 정렬
-  videoFiles.sort((a, b) => a.name.localeCompare(b.name))
+    ffmpeg.on('close', (code) => {
+      console.log()
+      const elapsed = (Date.now() - splitStart) / 1000
 
-  return videoFiles
+      if (code === 0) {
+        const size = fs.statSync(segment.outputPath).size
+        log('✅', `Part ${segment.partNumber} 분할 완료 (${formatSize(size)}, ${formatDuration(elapsed)})`)
+        resolve({ duration: segment.duration, size })
+      } else {
+        reject(new Error(`Part ${segment.partNumber} 분할 실패: exit code ${code}`))
+      }
+    })
+
+    ffmpeg.on('error', reject)
+  })
 }
 
 // ============================================
-// Cloudflare Stream 업로드 (TUS)
+// Cloudflare TUS 업로드
 // ============================================
 
-async function uploadToCloudflare(
-  filePath: string,
-  meta: Record<string, string>
-): Promise<CloudflareUploadResult> {
+async function uploadToCloudflare(filePath: string, title: string): Promise<string> {
+  const uploadStart = Date.now()
   const fileSize = fs.statSync(filePath).size
+  log('☁️', `업로드 시작: ${title} (${formatSize(fileSize)})`)
 
-  // 1. TUS 업로드 URL 생성
   const initRes = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream?direct_user=true`,
     {
@@ -107,284 +206,259 @@ async function uploadToCloudflare(
         Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
         'Tus-Resumable': '1.0.0',
         'Upload-Length': String(fileSize),
-        'Upload-Metadata': Object.entries(meta)
-          .map(([k, v]) => `${k} ${Buffer.from(v).toString('base64')}`)
-          .join(','),
+        'Upload-Metadata': `name ${Buffer.from(title).toString('base64')}, maxDurationSeconds ${Buffer.from('21600').toString('base64')}`,
       },
     }
   )
 
-  if (!initRes.ok) {
-    const errorText = await initRes.text()
-    throw new Error(`Cloudflare TUS 초기화 실패: ${initRes.status} - ${errorText}`)
-  }
+  if (!initRes.ok) throw new Error(`TUS 초기화 실패: ${initRes.status}`)
 
-  const uploadUrl = initRes.headers.get('location')
-  const streamMediaId = initRes.headers.get('stream-media-id')
+  const uploadUrl = initRes.headers.get('location')!
+  const uid = initRes.headers.get('stream-media-id')!
 
-  if (!uploadUrl || !streamMediaId) {
-    throw new Error('Cloudflare 업로드 URL을 받지 못했습니다')
-  }
+  const chunkSize = 100 * 1024 * 1024  // 100MB (안정성 향상)
+  const MAX_RETRIES = 5
+  const fd = fs.openSync(filePath, 'r')
+  const buffer = Buffer.alloc(chunkSize)
+  let offset = 0
+  let lastUpdate = Date.now()
 
-  console.log(`   Cloudflare UID: ${streamMediaId}`)
+  try {
+    while (offset < fileSize) {
+      const bytesRead = fs.readSync(fd, buffer, 0, chunkSize, offset)
+      const chunk = buffer.subarray(0, bytesRead)
 
-  // 2. 청크 업로드 (5MB씩)
-  const chunkSize = 5 * 1024 * 1024 // 5MB
-  const fileStream = fs.createReadStream(filePath, { highWaterMark: chunkSize })
-  let uploadedBytes = 0
+      let success = false
+      for (let retry = 0; retry < MAX_RETRIES; retry++) {
+        try {
+          const res = await fetch(uploadUrl, {
+            method: 'PATCH',
+            headers: {
+              'Tus-Resumable': '1.0.0',
+              'Upload-Offset': String(offset),
+              'Content-Type': 'application/offset+octet-stream',
+            },
+            body: chunk,
+          })
 
-  for await (const chunk of fileStream) {
-    const buffer = chunk as Buffer
+          if (res.ok) {
+            success = true
+            break
+          }
+          log('⚠️', `청크 응답 ${res.status}, 재시도 ${retry + 1}/${MAX_RETRIES}...`)
+        } catch (err: any) {
+          log('⚠️', `네트워크 오류 (${err.message}), 재시도 ${retry + 1}/${MAX_RETRIES}...`)
+        }
+        await new Promise(r => setTimeout(r, 3000 * (retry + 1)))
+      }
 
-    const patchRes = await fetch(uploadUrl, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/offset+octet-stream',
-        'Upload-Offset': String(uploadedBytes),
-        'Tus-Resumable': '1.0.0',
-      },
-      body: buffer,
-    })
+      if (!success) throw new Error(`업로드 실패: ${MAX_RETRIES}회 재시도 후에도 실패 (offset: ${offset})`)
 
-    if (!patchRes.ok) {
-      throw new Error(`Cloudflare 청크 업로드 실패: ${patchRes.status}`)
+      offset += bytesRead
+      const percent = Math.floor((offset / fileSize) * 100)
+      const elapsed = (Date.now() - uploadStart) / 1000
+      const speed = offset / elapsed / 1024 / 1024
+
+      const now = Date.now()
+      if (now - lastUpdate > 2000) {
+        const eta = (fileSize - offset) / (offset / elapsed)
+        process.stdout.write(`\r   ${progressBar(percent)} ${formatSize(offset)}/${formatSize(fileSize)} | ${speed.toFixed(1)} MB/s | ETA: ${formatDuration(eta)}`)
+        lastUpdate = now
+      }
     }
-
-    uploadedBytes += buffer.length
-    const percent = ((uploadedBytes / fileSize) * 100).toFixed(1)
-    process.stdout.write(`\r   업로드 중: ${percent}% (${formatBytes(uploadedBytes)} / ${formatBytes(fileSize)})`)
+  } finally {
+    fs.closeSync(fd)
   }
 
-  console.log('\n   업로드 완료!')
-
-  return {
-    uid: streamMediaId,
-    status: 'queued',
-  }
+  console.log()
+  const elapsed = (Date.now() - uploadStart) / 1000
+  log('✅', `업로드 완료 (UID: ${uid}, ${formatDuration(elapsed)})`)
+  return uid
 }
 
 // ============================================
-// Supabase media_content 등록
+// DB 저장 (기존 패턴 유지)
 // ============================================
 
-async function registerToDatabase(
-  uid: string,
-  title: string,
-  contentType: 'vod' | 'shorts',
-  unit?: 'excel' | 'crew',
-  description?: string
+async function savePartsToDatabase(
+  baseTitle: string,
+  parts: Array<{ uid: string; partNumber: number; duration: number }>,
+  unit: 'excel' | 'crew'
 ) {
-  const { data, error } = await supabase
+  const totalParts = parts.length
+
+  // Part 1 저장 (대표 항목)
+  const firstPart = parts[0]
+  const { data: parent, error: parentError } = await supabase
     .from('media_content')
     .insert({
-      content_type: contentType,
-      title,
-      description: description || null,
-      video_url: `https://iframe.videodelivery.net/${uid}`,
-      cloudflare_uid: uid,
-      thumbnail_url: `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg`,
-      unit: unit || null,
+      content_type: 'vod',
+      title: baseTitle,
+      video_url: `https://iframe.videodelivery.net/${firstPart.uid}`,
+      cloudflare_uid: firstPart.uid,
+      thumbnail_url: `https://videodelivery.net/${firstPart.uid}/thumbnails/thumbnail.jpg`,
+      unit,
       is_featured: false,
       view_count: 0,
+      part_number: 1,
+      total_parts: totalParts,
+      duration: Math.round(firstPart.duration),
     })
     .select()
     .single()
 
-  if (error) {
-    throw new Error(`DB 등록 실패: ${error.message}`)
-  }
+  if (parentError) throw new Error(`Part 1 DB 저장 실패: ${parentError.message}`)
+  log('💾', `Part 1 저장 (ID: ${parent.id})`)
 
-  return data
-}
+  // 나머지 파트 저장
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i]
+    const { error } = await supabase
+      .from('media_content')
+      .insert({
+        content_type: 'vod',
+        title: `${baseTitle} (Part ${part.partNumber})`,
+        video_url: `https://iframe.videodelivery.net/${part.uid}`,
+        cloudflare_uid: part.uid,
+        thumbnail_url: `https://videodelivery.net/${part.uid}/thumbnails/thumbnail.jpg`,
+        unit,
+        is_featured: false,
+        view_count: 0,
+        parent_id: parent.id,
+        part_number: part.partNumber,
+        total_parts: totalParts,
+        duration: Math.round(part.duration),
+      })
 
-// ============================================
-// 중복 체크
-// ============================================
-
-async function checkDuplicate(title: string): Promise<boolean> {
-  const { data } = await supabase
-    .from('media_content')
-    .select('id')
-    .eq('title', title)
-    .limit(1)
-
-  return (data && data.length > 0)
-}
-
-// ============================================
-// 유틸리티
-// ============================================
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-function parseArgs(): UploadOptions {
-  const args = process.argv.slice(2)
-  const options: UploadOptions = {
-    folder: '',
-    contentType: 'vod',
-    dryRun: false,
-  }
-
-  for (let i = 0; i < args.length; i++) {
-    switch (args[i]) {
-      case '--folder':
-        options.folder = args[++i]
-        break
-      case '--content-type':
-        options.contentType = args[++i] as 'vod' | 'shorts'
-        break
-      case '--unit':
-        options.unit = args[++i] as 'excel' | 'crew'
-        break
-      case '--dry-run':
-        options.dryRun = true
-        break
-      case '--limit':
-        options.limit = parseInt(args[++i], 10)
-        break
+    if (error) {
+      log('⚠️', `Part ${part.partNumber} DB 저장 실패: ${error.message}`)
+    } else {
+      log('💾', `Part ${part.partNumber} 저장`)
     }
   }
 
-  return options
+  return parent.id
 }
 
 // ============================================
-// 메인 로직
+// 메인
 // ============================================
-
-async function processFile(
-  file: LocalFile,
-  options: UploadOptions,
-  index: number,
-  total: number
-) {
-  // 파일명에서 제목 추출 (확장자 제거)
-  const title = file.name.replace(/\.[^/.]+$/, '')
-
-  console.log(`\n[${index + 1}/${total}] ${file.name}`)
-  console.log(`   크기: ${formatBytes(file.size)}`)
-  console.log(`   제목: ${title}`)
-
-  // 중복 체크
-  const isDuplicate = await checkDuplicate(title)
-  if (isDuplicate) {
-    console.log('   ⚠️  이미 등록된 제목입니다. 건너뜀.')
-    return { skipped: true }
-  }
-
-  if (options.dryRun) {
-    console.log('   [DRY RUN] 실제 업로드 건너뜀')
-    return { skipped: false }
-  }
-
-  // 1. Cloudflare에 업로드
-  const result = await uploadToCloudflare(file.path, {
-    name: title,
-    source: 'local',
-  })
-
-  // 2. DB에 등록
-  const dbRecord = await registerToDatabase(
-    result.uid,
-    title,
-    options.contentType,
-    options.unit
-  )
-
-  console.log(`   ✅ DB 등록 완료 (id: ${dbRecord.id})`)
-
-  return { skipped: false }
-}
 
 async function main() {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('🎬 로컬 VOD → Cloudflare Stream 업로드')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('═'.repeat(60))
+  console.log('🎬 로컬 VOD 분할 업로드 (USB → 무압축 분할 → Cloudflare)')
+  console.log('═'.repeat(60))
 
-  // 환경변수 체크
-  if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN) {
-    console.error('\n❌ Cloudflare 환경변수가 설정되지 않았습니다.')
-    console.error('   .env.local에 CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN 추가 필요')
+  const args = process.argv.slice(2)
+  const dryRun = args.includes('--dry-run')
+  const episodeIdx = args.indexOf('--episode')
+  const onlyEpisode = episodeIdx !== -1 ? parseInt(args[episodeIdx + 1]) : null
+
+  // 환경변수 확인
+  if (!dryRun && (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_API_TOKEN)) {
+    log('❌', 'CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN 환경변수 필요')
     process.exit(1)
   }
 
-  const options = parseArgs()
+  // 대상 필터링
+  const targets = onlyEpisode
+    ? TARGETS.filter(t => t.episode === onlyEpisode)
+    : TARGETS
 
-  if (!options.folder) {
-    console.error('\n❌ --folder 옵션을 지정해주세요.')
-    console.error('\n사용법:')
-    console.error('  npx tsx scripts/upload-local-vod.ts --folder /path/to/videos')
-    console.error('\n옵션:')
-    console.error('  --folder /path       영상 파일이 있는 폴더 경로 (필수)')
-    console.error('  --content-type vod   vod 또는 shorts (기본: vod)')
-    console.error('  --unit excel         excel 또는 crew')
-    console.error('  --dry-run            테스트 실행 (실제 업로드 안 함)')
-    console.error('  --limit 10           최대 업로드 수')
-    console.error('\n예시:')
-    console.error('  npx tsx scripts/upload-local-vod.ts --folder ~/Downloads/VOD --dry-run')
-    console.error('  npx tsx scripts/upload-local-vod.ts --folder ~/Downloads/VOD --content-type vod')
+  if (targets.length === 0) {
+    log('❌', `${onlyEpisode}화를 찾을 수 없습니다`)
     process.exit(1)
   }
 
-  // 파일 목록 가져오기
-  let files: LocalFile[]
-  try {
-    files = getVideoFiles(options.folder, options.limit)
-    console.log(`\n📁 폴더: ${path.resolve(options.folder)}`)
-    console.log(`📹 영상 파일: ${files.length}개`)
-  } catch (error) {
-    console.error(`\n❌ ${(error as Error).message}`)
-    process.exit(1)
-  }
-
-  if (files.length === 0) {
-    console.log('\n⚠️  업로드할 영상 파일이 없습니다.')
-    console.log(`   지원 확장자: ${VIDEO_EXTENSIONS.join(', ')}`)
-    return
-  }
-
-  // 파일 목록 출력
-  console.log('\n파일 목록:')
-  files.forEach((f, i) => {
-    console.log(`  ${i + 1}. ${f.name} (${formatBytes(f.size)})`)
-  })
-
-  if (options.dryRun) {
-    console.log('\n🔍 [DRY RUN 모드] 실제 업로드 없이 테스트만 진행합니다.')
-  }
-
-  // 파일 처리
-  let success = 0
-  let failed = 0
-  let skipped = 0
-
-  for (let i = 0; i < files.length; i++) {
-    try {
-      const result = await processFile(files[i], options, i, files.length)
-      if (result.skipped) {
-        skipped++
-      } else {
-        success++
-      }
-    } catch (error) {
-      console.error(`   ❌ 실패: ${(error as Error).message}`)
-      failed++
+  // 파일 존재 확인
+  for (const target of targets) {
+    if (!fs.existsSync(target.inputPath)) {
+      log('❌', `파일 없음: ${target.inputPath}`)
+      process.exit(1)
     }
   }
 
-  // 결과 출력
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log(`📊 결과: 성공 ${success}개, 실패 ${failed}개, 건너뜀 ${skipped}개`)
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  // 임시 디렉토리 생성
+  if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR, { recursive: true })
+  }
+
+  globalStartTime = Date.now()
+
+  for (const target of targets) {
+    console.log('\n' + '═'.repeat(60))
+    log('🎬', `${target.episode}화 처리: ${target.title}`)
+    console.log('═'.repeat(60))
+
+    const fileSize = fs.statSync(target.inputPath).size
+    const totalDuration = getVideoDuration(target.inputPath)
+
+    console.log(`   파일: ${formatSize(fileSize)}`)
+    console.log(`   길이: ${formatDuration(totalDuration)}`)
+
+    // 분할 계획
+    const baseName = target.title.replace(/[^\w가-힣]/g, '_')
+    const segments = calculateSegments(totalDuration, baseName)
+
+    console.log(`\n   📋 분할 계획: ${segments.length}개 파트`)
+    segments.forEach(seg => {
+      console.log(`      Part ${seg.partNumber}: ${formatDuration(seg.startTime)} ~ ${formatDuration(seg.startTime + seg.duration)}`)
+    })
+
+    if (dryRun) {
+      console.log(`\n   🔍 [DRY-RUN] 실제 실행하지 않음`)
+      continue
+    }
+
+    // 순차 처리: 압축 → 업로드 (파트 하나씩)
+    const uploadedParts: Array<{ uid: string; partNumber: number; duration: number }> = []
+
+    for (const segment of segments) {
+      console.log('\n' + '─'.repeat(50))
+
+      // 1. 무압축 분할
+      const result = await splitSegment(target.inputPath, segment, segments.length)
+
+      // 2. Cloudflare 업로드
+      const partTitle = segments.length > 1
+        ? `${target.title} (Part ${segment.partNumber}/${segments.length})`
+        : target.title
+
+      const uid = await uploadToCloudflare(segment.outputPath, partTitle)
+
+      uploadedParts.push({
+        uid,
+        partNumber: segment.partNumber,
+        duration: result.duration,
+      })
+
+      // 3. 임시 파일 삭제 (디스크 절약)
+      fs.unlinkSync(segment.outputPath)
+      log('🗑️', `임시 파일 삭제 (${formatSize(result.size)} 확보)`)
+    }
+
+    // DB 저장
+    if (uploadedParts.length > 0) {
+      console.log('\n' + '─'.repeat(50))
+      const parentId = await savePartsToDatabase(target.title, uploadedParts, target.unit)
+      log('✅', `${target.episode}화 DB 저장 완료 (Parent ID: ${parentId})`)
+    }
+  }
+
+  // 최종 결과
+  const totalElapsed = (Date.now() - globalStartTime) / 1000
+  console.log('\n' + '═'.repeat(60))
+  console.log('📊 최종 결과')
+  console.log('═'.repeat(60))
+  console.log(`   ⏱️  총 소요: ${formatDuration(totalElapsed)}`)
+  console.log(`   ⏳ Cloudflare 인코딩 진행 중...`)
+  if (CLOUDFLARE_ACCOUNT_ID) {
+    console.log(`   https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/stream`)
+  }
+  console.log('═'.repeat(60))
 }
 
-main().catch((error) => {
-  console.error('\n❌ 오류 발생:', error.message)
+main().catch(err => {
+  console.error('\n❌ 오류:', err.message)
   process.exit(1)
 })
