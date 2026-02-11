@@ -1,47 +1,39 @@
 /**
  * 시즌별 후원 랭킹 업데이트 스크립트
  *
- * CSV 파일들에서 후원 데이터를 읽어서 season_donation_rankings 테이블을 업데이트합니다.
- * RPC 함수를 사용하여 트랜잭션 안전성을 보장합니다.
+ * donations 테이블에서 시즌 전체 후원 데이터를 집계하여
+ * season_donation_rankings 테이블을 업데이트합니다.
+ *
+ * ⚠️ 이 스크립트는 CSV에서 직접 읽지 않습니다!
+ *    CSV → donations 임포트는 import-episode-donations.ts 를 사용하세요.
  *
  * 사용법:
- *   npx tsx scripts/update-season-rankings.ts --season=1 --unit=excel --files="./data/ep1.csv,./data/ep2.csv"
+ *   npx tsx scripts/update-season-rankings.ts --season=1 --unit=excel
  *
  * 옵션:
- *   --season=<ID>     시즌 ID (필수)
- *   --unit=<excel|crew>  팬클럽 소속 (선택, 기본값: null)
- *   --files=<파일들>   CSV 파일 경로들 (쉼표로 구분)
- *   --dry-run         실제 저장하지 않고 미리보기만
+ *   --season=<ID>        시즌 ID (필수)
+ *   --unit=<excel|crew>  팬클럽 소속 (선택, 기본값: null → 전체)
+ *   --dry-run            실제 저장하지 않고 미리보기만
+ *   --force              안전 검사 무시하고 강제 실행
  */
 
-import * as fs from 'fs'
-import * as path from 'path'
-import { getServiceClient, checkError } from './lib/supabase'
-import { withRetry, printProgress } from './lib/utils'
+import { getServiceClient } from './lib/supabase'
+import { withRetry } from './lib/utils'
 
 const supabase = getServiceClient()
 
-interface DonorData {
-  nickname: string
-  totalHearts: number
-  donationCount: number
-}
-
 type Unit = 'excel' | 'crew' | null
 
-function parseArgs(): { seasonId: number; filePaths: string[]; unit: Unit; dryRun: boolean } {
+function parseArgs(): { seasonId: number; unit: Unit; dryRun: boolean; force: boolean } {
   const args = process.argv.slice(2)
-  let seasonId = 1
-  let filePaths: string[] = []
+  let seasonId = 0
   let unit: Unit = null
   let dryRun = false
+  let force = false
 
   for (const arg of args) {
     if (arg.startsWith('--season=')) {
       seasonId = parseInt(arg.split('=')[1], 10)
-    } else if (arg.startsWith('--files=')) {
-      const filesStr = arg.split('=')[1].replace(/^["']|["']$/g, '')
-      filePaths = filesStr.split(',').map((f) => f.trim())
     } else if (arg.startsWith('--unit=')) {
       const unitValue = arg.split('=')[1].toLowerCase()
       if (unitValue === 'excel' || unitValue === 'crew') {
@@ -52,169 +44,191 @@ function parseArgs(): { seasonId: number; filePaths: string[]; unit: Unit; dryRu
       }
     } else if (arg === '--dry-run') {
       dryRun = true
+    } else if (arg === '--force') {
+      force = true
     }
   }
 
-  if (filePaths.length === 0) {
-    console.error('사용법: npx tsx scripts/update-season-rankings.ts --season=<ID> --unit=<excel|crew> --files=<CSV파일들>')
+  if (!seasonId) {
+    console.error('사용법: npx tsx scripts/update-season-rankings.ts --season=<ID> --unit=<excel|crew>')
+    console.error('')
+    console.error('워크플로우:')
+    console.error('  1. CSV 임포트: npx tsx scripts/import-episode-donations.ts --season=1 --episode=10 --file=...')
+    console.error('  2. 랭킹 갱신: npx tsx scripts/update-season-rankings.ts --season=1 --unit=excel')
     process.exit(1)
   }
 
-  return { seasonId, filePaths, unit, dryRun }
+  return { seasonId, unit, dryRun, force }
 }
 
-function extractNickname(idWithNickname: string): string {
-  // 형식: "아이디(닉네임)" → 닉네임 추출
-  const match = idWithNickname.match(/\(([^)]+)\)/)
-  return match ? match[1] : idWithNickname
-}
+async function main() {
+  console.log('🚀 시즌 랭킹 업데이트 시작\n')
 
-function parseDonationCsv(filePath: string): Map<string, DonorData> {
-  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
+  const { seasonId, unit, dryRun, force } = parseArgs()
 
-  if (!fs.existsSync(absolutePath)) {
-    console.error(`❌ 파일을 찾을 수 없습니다: ${absolutePath}`)
-    return new Map()
+  console.log(`📌 시즌: ${seasonId}`)
+  console.log(`📌 팬클럽: ${unit || '전체(미지정)'}`)
+  if (dryRun) console.log('⚠️  DRY-RUN 모드')
+
+  // 1. 시즌 에피소드 현황 확인
+  const { data: episodes } = await supabase
+    .from('episodes')
+    .select('id, episode_number, is_finalized, total_hearts, donor_count')
+    .eq('season_id', seasonId)
+    .order('episode_number')
+
+  if (!episodes || episodes.length === 0) {
+    console.error('❌ 해당 시즌의 에피소드가 없습니다.')
+    process.exit(1)
   }
 
-  // BOM 제거 및 인코딩 처리
-  let content = fs.readFileSync(absolutePath, 'utf-8')
-  if (content.charCodeAt(0) === 0xfeff) {
-    content = content.slice(1)
+  console.log('\n📋 에피소드 현황:')
+  let donationsEpisodeIds: number[] = []
+  for (const ep of episodes) {
+    const status = ep.is_finalized ? '✅' : '⬜'
+    const hearts = ep.total_hearts ? `${ep.total_hearts.toLocaleString()}하트` : '-'
+    console.log(`   ${status} ${ep.episode_number}화: ${hearts} (${ep.donor_count || 0}명)`)
+
+    // donations 테이블에 데이터가 있는 에피소드만 포함
+    const { count } = await supabase
+      .from('donations')
+      .select('*', { count: 'exact', head: true })
+      .eq('episode_id', ep.id)
+    if (count && count > 0) {
+      donationsEpisodeIds.push(ep.id)
+    }
   }
 
-  const lines = content
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
+  console.log(`\n📊 donations 데이터 있는 에피소드: ${donationsEpisodeIds.length}개`)
 
-  const donorMap = new Map<string, DonorData>()
+  if (donationsEpisodeIds.length === 0) {
+    console.error('❌ donations 테이블에 데이터가 없습니다. 먼저 CSV를 임포트하세요.')
+    console.error('   npx tsx scripts/import-episode-donations.ts --season=1 --episode=<N> --file=<CSV>')
+    process.exit(1)
+  }
 
-  for (let i = 1; i < lines.length; i++) {
-    // 따옴표 내 쉼표 처리
-    const cols = parseCSVLine(lines[i])
-    if (cols.length < 3) continue
+  // 2. donations 테이블에서 집계
+  console.log('\n📊 donations 테이블에서 집계 중...')
+  const allDonations: { donor_name: string; amount: number; target_bj: string | null }[] = []
+  let page = 0
+  const pageSize = 1000
 
-    const idWithNickname = cols[1]
-    const hearts = parseInt(cols[2].replace(/,/g, ''), 10) || 0
+  while (true) {
+    let query = supabase
+      .from('donations')
+      .select('donor_name, amount, target_bj')
+      .in('episode_id', donationsEpisodeIds)
+      .gt('amount', 0)
 
-    if (hearts <= 0) continue
+    if (unit) {
+      query = query.eq('unit', unit)
+    }
 
-    const nickname = extractNickname(idWithNickname)
+    const { data, error } = await query.range(page * pageSize, (page + 1) * pageSize - 1)
+    if (error || !data || data.length === 0) break
+    allDonations.push(...data)
+    if (data.length < pageSize) break
+    page++
+  }
 
-    // 시스템 계정 제외
-    if (nickname.includes('RG_family') || nickname.includes('대표BJ')) continue
+  console.log(`   총 ${allDonations.length}건 조회`)
 
-    const existing = donorMap.get(nickname)
+  // 후원자별 집계
+  const donorMap = new Map<string, { totalHearts: number; donationCount: number }>()
+  const bjTotals: Record<string, Record<string, number>> = {}
+
+  for (const d of allDonations) {
+    const existing = donorMap.get(d.donor_name)
     if (existing) {
-      existing.totalHearts += hearts
+      existing.totalHearts += d.amount
       existing.donationCount += 1
     } else {
-      donorMap.set(nickname, {
-        nickname,
-        totalHearts: hearts,
-        donationCount: 1,
-      })
+      donorMap.set(d.donor_name, { totalHearts: d.amount, donationCount: 1 })
+    }
+
+    if (d.target_bj) {
+      if (!bjTotals[d.donor_name]) bjTotals[d.donor_name] = {}
+      bjTotals[d.donor_name][d.target_bj] = (bjTotals[d.donor_name][d.target_bj] || 0) + d.amount
     }
   }
 
-  return donorMap
-}
+  const donors = [...donorMap.entries()]
+    .map(([name, data]) => ({ nickname: name, ...data }))
+    .sort((a, b) => b.totalHearts - a.totalHearts)
 
-/**
- * CSV 라인 파싱 (따옴표 내 쉼표 처리)
- */
-function parseCSVLine(line: string): string[] {
-  const result: string[] = []
-  let current = ''
-  let inQuotes = false
+  console.log(`   고유 후원자: ${donors.length}명`)
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
+  // 3. 기존 데이터와 비교 (안전 검사)
+  let existingQuery = supabase
+    .from('season_donation_rankings')
+    .select('rank, donor_name, total_amount')
+    .eq('season_id', seasonId)
+    .order('rank')
 
-    if (char === '"') {
-      inQuotes = !inQuotes
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim())
-      current = ''
-    } else {
-      current += char
+  if (unit) existingQuery = existingQuery.eq('unit', unit)
+
+  const { data: existingRankings } = await existingQuery
+
+  if (existingRankings && existingRankings.length > 0) {
+    const existingTotal = existingRankings.reduce((s, r) => s + r.total_amount, 0)
+    const newTotal = donors.slice(0, 50).reduce((s, d) => s + d.totalHearts, 0)
+    const existingTop1 = existingRankings[0]
+    const newTop1 = donors[0]
+
+    console.log('\n🔍 기존 vs 신규 데이터 비교:')
+    console.log(`   기존 Top50 합계: ${existingTotal.toLocaleString()}하트 (1위: ${existingTop1.donor_name} ${existingTop1.total_amount.toLocaleString()})`)
+    console.log(`   신규 Top50 합계: ${newTotal.toLocaleString()}하트 (1위: ${newTop1.nickname} ${newTop1.totalHearts.toLocaleString()})`)
+
+    // 안전 검사: 신규 데이터가 기존보다 50% 이상 작으면 경고
+    if (newTotal < existingTotal * 0.5 && !force) {
+      console.error('\n🚨 경고: 신규 데이터가 기존보다 50% 이상 적습니다!')
+      console.error('   단일 에피소드 CSV로 전체 시즌 데이터를 덮어쓰려는 것이 아닌지 확인하세요.')
+      console.error('   에피소드 CSV 임포트는: npx tsx scripts/import-episode-donations.ts 를 사용하세요.')
+      console.error('   강제 실행하려면: --force 옵션을 추가하세요.')
+      process.exit(1)
+    }
+
+    // 안전 검사: 신규 1위 금액이 기존 1위보다 훨씬 작으면 경고
+    if (newTop1.totalHearts < existingTop1.total_amount * 0.3 && !force) {
+      console.error('\n🚨 경고: 신규 1위 금액이 기존 1위의 30% 미만입니다!')
+      console.error(`   기존 1위: ${existingTop1.donor_name} (${existingTop1.total_amount.toLocaleString()})`)
+      console.error(`   신규 1위: ${newTop1.nickname} (${newTop1.totalHearts.toLocaleString()})`)
+      console.error('   강제 실행하려면: --force 옵션을 추가하세요.')
+      process.exit(1)
     }
   }
-  result.push(current.trim())
 
-  return result
-}
+  // Top 10 표시
+  const top50 = donors.slice(0, 50)
 
-function mergeDonations(filePaths: string[]): DonorData[] {
-  const mergedMap = new Map<string, DonorData>()
-
-  for (const filePath of filePaths) {
-    console.log(`📄 파싱 중: ${filePath}`)
-    const donorMap = parseDonationCsv(filePath)
-
-    for (const [nickname, data] of donorMap) {
-      const existing = mergedMap.get(nickname)
-      if (existing) {
-        existing.totalHearts += data.totalHearts
-        existing.donationCount += data.donationCount
-      } else {
-        mergedMap.set(nickname, { ...data })
+  console.log('\n📋 Top 10:')
+  for (let i = 0; i < Math.min(10, top50.length); i++) {
+    const d = top50[i]
+    let topBj = '-'
+    if (bjTotals[d.nickname]) {
+      let maxAmt = 0
+      for (const [bj, amt] of Object.entries(bjTotals[d.nickname])) {
+        if (amt > maxAmt) { maxAmt = amt; topBj = bj }
       }
     }
+    console.log(`   ${i + 1}. ${d.nickname}: ${d.totalHearts.toLocaleString()}하트 (${d.donationCount}건, 최애: ${topBj})`)
   }
 
-  return Array.from(mergedMap.values()).sort((a, b) => b.totalHearts - a.totalHearts)
-}
+  if (dryRun) {
+    console.log('\n💡 실제 저장하려면 --dry-run 옵션 없이 실행하세요.')
+    return
+  }
 
-async function upsertWithRPC(seasonId: number, unit: Unit, rankings: DonorData[]) {
-  const rankingsJson = rankings.slice(0, 50).map((donor, index) => ({
-    rank: index + 1,
-    donor_name: donor.nickname,
-    total_amount: donor.totalHearts,
-    donation_count: donor.donationCount,
-    unit: unit,
-  }))
+  // 4. DB 업데이트
+  console.log('\n📊 시즌 랭킹 업데이트 중...')
 
-  console.log('\n📊 RPC 함수로 트랜잭션 실행 중...')
-
-  const result = await withRetry(
-    async () => {
-      const { data, error } = await supabase.rpc('upsert_season_rankings', {
-        p_season_id: seasonId,
-        p_unit: unit,
-        p_rankings: rankingsJson,
-      })
-
-      if (error) throw new Error(error.message)
-      return data
-    },
-    {
-      maxRetries: 3,
-      onRetry: (error, attempt, delay) => {
-        console.log(`   ⚠️  재시도 ${attempt}/3: ${error.message} (${delay}ms 대기)`)
-      },
-    }
-  )
-
-  return result
-}
-
-async function upsertWithFallback(seasonId: number, unit: Unit, rankings: DonorData[]) {
-  const top50 = rankings.slice(0, 50)
-
-  console.log('\n📊 폴백: 개별 쿼리로 업데이트 중...')
-
-  // 1. 기존 데이터 삭제
-  console.log(`🗑️  시즌 ${seasonId} ${unit ? `(${unit})` : '전체'} 기존 데이터 삭제...`)
+  // 기존 삭제
   let deleteQuery = supabase
     .from('season_donation_rankings')
     .delete()
     .eq('season_id', seasonId)
 
-  if (unit) {
-    deleteQuery = deleteQuery.eq('unit', unit)
-  }
+  if (unit) deleteQuery = deleteQuery.eq('unit', unit)
 
   await withRetry(
     async () => {
@@ -224,17 +238,27 @@ async function upsertWithFallback(seasonId: number, unit: Unit, rankings: DonorD
     { maxRetries: 3 }
   )
 
-  // 2. 새 데이터 삽입
-  console.log('📊 시즌 랭킹 데이터 삽입...')
-  const insertData = top50.map((donor, index) => ({
-    season_id: seasonId,
-    rank: index + 1,
-    donor_name: donor.nickname,
-    total_amount: donor.totalHearts,
-    donation_count: donor.donationCount,
-    unit: unit,
-    updated_at: new Date().toISOString(),
-  }))
+  // 새 데이터 삽입
+  const insertData = top50.map((d, idx) => {
+    let topBj: string | null = null
+    if (bjTotals[d.nickname]) {
+      let maxAmt = 0
+      for (const [bj, amt] of Object.entries(bjTotals[d.nickname])) {
+        if (amt > maxAmt) { maxAmt = amt; topBj = bj }
+      }
+    }
+
+    return {
+      season_id: seasonId,
+      rank: idx + 1,
+      donor_name: d.nickname,
+      total_amount: d.totalHearts,
+      donation_count: d.donationCount,
+      unit: unit,
+      top_bj: topBj,
+      updated_at: new Date().toISOString(),
+    }
+  })
 
   await withRetry(
     async () => {
@@ -244,124 +268,7 @@ async function upsertWithFallback(seasonId: number, unit: Unit, rankings: DonorD
     { maxRetries: 3 }
   )
 
-  return { inserted_count: top50.length, deleted_count: 0 }
-}
-
-async function backfillTopBj(seasonId: number) {
-  console.log('\n🔄 top_bj 백필 중 (donations 테이블에서 집계)...')
-
-  // 해당 시즌의 에피소드 ID 조회
-  const { data: episodes } = await supabase
-    .from('episodes')
-    .select('id')
-    .eq('season_id', seasonId)
-
-  if (!episodes || episodes.length === 0) {
-    console.log('   ⚠️  에피소드 없음, top_bj 백필 건너뜀')
-    return
-  }
-
-  const episodeIds = episodes.map((e) => e.id)
-
-  // 해당 시즌 donations에서 donor별 target_bj 집계
-  const allDonations: { donor_name: string; target_bj: string; amount: number }[] = []
-  let page = 0
-  const pageSize = 1000
-
-  while (true) {
-    const { data, error } = await supabase
-      .from('donations')
-      .select('donor_name, target_bj, amount')
-      .in('episode_id', episodeIds)
-      .not('target_bj', 'is', null)
-      .gt('amount', 0)
-      .range(page * pageSize, (page + 1) * pageSize - 1)
-
-    if (error || !data || data.length === 0) break
-    allDonations.push(...(data as { donor_name: string; target_bj: string; amount: number }[]))
-    if (data.length < pageSize) break
-    page++
-  }
-
-  // donor별 top_bj 계산
-  const bjTotals: Record<string, Record<string, number>> = {}
-  for (const d of allDonations) {
-    if (!bjTotals[d.donor_name]) bjTotals[d.donor_name] = {}
-    bjTotals[d.donor_name][d.target_bj] = (bjTotals[d.donor_name][d.target_bj] || 0) + d.amount
-  }
-
-  let updated = 0
-  for (const [donor, bjs] of Object.entries(bjTotals)) {
-    let maxBj: string | null = null
-    let maxAmount = 0
-    for (const [bj, amount] of Object.entries(bjs)) {
-      if (amount > maxAmount) { maxAmount = amount; maxBj = bj }
-    }
-    if (maxBj) {
-      const { error } = await supabase
-        .from('season_donation_rankings')
-        .update({ top_bj: maxBj })
-        .eq('season_id', seasonId)
-        .eq('donor_name', donor)
-      if (!error) updated++
-    }
-  }
-
-  console.log(`   ✅ ${updated}명 top_bj 업데이트`)
-}
-
-async function main() {
-  console.log('🚀 시즌 랭킹 업데이트 시작\n')
-
-  const { seasonId, filePaths, unit, dryRun } = parseArgs()
-
-  console.log(`📌 시즌: ${seasonId}`)
-  console.log(`📌 팬클럽: ${unit || '전체(미지정)'}`)
-
-  if (dryRun) {
-    console.log('⚠️  DRY-RUN 모드\n')
-  }
-
-  // 1. CSV 파일 병합
-  console.log('📊 후원 데이터 집계 중...')
-  const donors = mergeDonations(filePaths)
-  console.log(`   총 ${donors.length}명 집계 완료`)
-
-  if (donors.length === 0) {
-    console.error('❌ 후원 데이터가 없습니다.')
-    process.exit(1)
-  }
-
-  // 2. Top 50 추출
-  const top50 = donors.slice(0, 50)
-
-  console.log('\n📋 Top 10:')
-  for (let i = 0; i < Math.min(10, top50.length); i++) {
-    const d = top50[i]
-    console.log(`   ${i + 1}. ${d.nickname}: ${d.totalHearts.toLocaleString()}하트 (${d.donationCount}건)`)
-  }
-
-  if (dryRun) {
-    console.log('\n💡 실제 저장하려면 --dry-run 옵션 없이 실행하세요.')
-    return
-  }
-
-  // 3. RPC 또는 폴백으로 업데이트
-  try {
-    const result = await upsertWithRPC(seasonId, unit, donors)
-    console.log(`   ✅ 시즌 ${seasonId} Top 50 업데이트 완료! (RPC)`)
-    if (result && result[0]) {
-      console.log(`   📊 삭제: ${result[0].deleted_count}건, 삽입: ${result[0].inserted_count}건`)
-    }
-  } catch (rpcError) {
-    console.log(`   ⚠️  RPC 실패, 폴백 실행: ${rpcError instanceof Error ? rpcError.message : rpcError}`)
-    const result = await upsertWithFallback(seasonId, unit, donors)
-    console.log(`   ✅ 시즌 ${seasonId} Top 50 업데이트 완료! (폴백)`)
-    console.log(`   📊 삽입: ${result.inserted_count}건`)
-  }
-
-  // 4. top_bj 백필 (donations 테이블에서 자동 집계)
-  await backfillTopBj(seasonId)
+  console.log(`✅ 시즌 ${seasonId} ${unit || '전체'} Top ${top50.length} 랭킹 업데이트 완료!`)
 }
 
 main().catch((err) => {
