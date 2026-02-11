@@ -13,28 +13,28 @@ export class SupabaseMediaRepository implements IMediaRepository {
 
   async findById(id: number): Promise<MediaContent | null> {
     const { data } = await withRetry(async () =>
-      await this.supabase.from('media_content').select('*').eq('id', id).single()
+      await this.supabase.from('media_content').select('*').eq('id', id).eq('is_published', true).single()
     )
     return data
   }
 
   async findByType(type: 'shorts' | 'vod'): Promise<MediaContent[]> {
     const { data } = await withRetry(async () =>
-      await this.supabase.from('media_content').select('*').eq('content_type', type).order('created_at', { ascending: false })
+      await this.supabase.from('media_content').select('*').eq('content_type', type).eq('is_published', true).order('created_at', { ascending: false })
     )
     return data || []
   }
 
   async findFeatured(): Promise<MediaContent[]> {
     const { data } = await withRetry(async () =>
-      await this.supabase.from('media_content').select('*').eq('is_featured', true).order('created_at', { ascending: false })
+      await this.supabase.from('media_content').select('*').eq('is_featured', true).eq('is_published', true).order('created_at', { ascending: false })
     )
     return data || []
   }
 
   async findAll(): Promise<MediaContent[]> {
     const { data } = await withRetry(async () =>
-      await this.supabase.from('media_content').select('*').order('created_at', { ascending: false })
+      await this.supabase.from('media_content').select('*').eq('is_published', true).order('created_at', { ascending: false })
     )
     return data || []
   }
