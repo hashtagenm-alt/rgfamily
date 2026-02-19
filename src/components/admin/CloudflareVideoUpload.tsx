@@ -173,10 +173,9 @@ export default function CloudflareVideoUpload({
     // 2. TUS 클라이언트로 업로드
     return new Promise((resolve, reject) => {
       const upload = new tus.Upload(file, {
-        endpoint: uploadURL,
-        uploadUrl: uploadURL, // 이미 발급받은 URL 사용
+        uploadUrl: uploadURL, // 이미 생성된 URL로만 업로드 (endpoint 제거)
         retryDelays: [0, 1000, 3000, 5000, 10000], // 재시도 딜레이
-        chunkSize: 50 * 1024 * 1024, // 50MB 청크
+        chunkSize: 5 * 1024 * 1024, // 5MB 청크 (스크립트와 동일)
         metadata: {
           filename: file.name,
           filetype: file.type,
