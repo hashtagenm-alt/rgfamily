@@ -687,8 +687,8 @@ export async function searchDonor(
 
 // ==================== 헬퍼: 페이지네이션으로 전체 데이터 가져오기 ====================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchFinalizedEpisodeIds(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   seasonId?: number
 ): Promise<number[]> {
@@ -707,6 +707,7 @@ async function fetchFinalizedEpisodeIds(
 }
 
 async function fetchAllDonations(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   seasonId?: number,
   episodeId?: number,
@@ -758,8 +759,8 @@ interface ExtendedDonation {
   donated_at: string | null
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchAllDonationsExtended(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   seasonId?: number,
   episodeId?: number,

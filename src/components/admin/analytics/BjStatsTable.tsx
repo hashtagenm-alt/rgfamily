@@ -149,7 +149,7 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDet
 
   const formatNumber = (num: number) => num.toLocaleString()
 
-  const SortIcon = ({ field }: { field: SortField }) => {
+  const renderSortIcon = (field: SortField) => {
     if (sortField !== field) return null
     return sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
   }
@@ -279,25 +279,25 @@ export function BjStatsTable({ bjStats, bjEpisodeTrend, bjDetailedStats, isBjDet
                 className={`${styles.sortable} ${sortField === 'total_hearts' ? styles.active : ''}`}
                 onClick={() => handleSort('total_hearts')}
               >
-                총 하트 <SortIcon field="total_hearts" />
+                총 하트 {renderSortIcon("total_hearts")}
               </th>
               <th
                 className={`${styles.sortable} ${sortField === 'donation_count' ? styles.active : ''}`}
                 onClick={() => handleSort('donation_count')}
               >
-                후원 건수 <SortIcon field="donation_count" />
+                후원 건수 {renderSortIcon("donation_count")}
               </th>
               <th
                 className={`${styles.sortable} ${sortField === 'unique_donors' ? styles.active : ''}`}
                 onClick={() => handleSort('unique_donors')}
               >
-                후원자 수 <SortIcon field="unique_donors" />
+                후원자 수 {renderSortIcon("unique_donors")}
               </th>
               <th
                 className={`${styles.sortable} ${sortField === 'avg_donation' ? styles.active : ''}`}
                 onClick={() => handleSort('avg_donation')}
               >
-                평균 후원 <SortIcon field="avg_donation" />
+                평균 후원 {renderSortIcon("avg_donation")}
               </th>
               <th className={styles.expandCol}></th>
             </tr>

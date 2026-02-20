@@ -376,7 +376,7 @@ export async function getVipProfileData(
       let seasonRank: number | null = null
 
       if (profileData.nickname) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         const [totalResult, seasonRankResult] = await Promise.all([
           // 종합 랭킹 조회
           (supabase as any)
@@ -394,6 +394,7 @@ export async function getVipProfileData(
                 .single()
             : Promise.resolve({ data: null }),
         ])
+        /* eslint-enable @typescript-eslint/no-explicit-any */
 
         totalRank = totalResult.data?.rank || null
         seasonRank = seasonRankResult.data?.rank || null
@@ -445,7 +446,7 @@ export async function getVipProfileData(
     let seasonRank: number | null = null
 
     if (profile?.nickname) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       const [totalResult, seasonRankResult] = await Promise.all([
         // 종합 랭킹 조회
         (supabase as any)
@@ -463,6 +464,7 @@ export async function getVipProfileData(
               .single()
           : Promise.resolve({ data: null }),
       ])
+      /* eslint-enable @typescript-eslint/no-explicit-any */
 
       totalRank = totalResult.data?.rank || null
       seasonRank = seasonRankResult.data?.rank || null

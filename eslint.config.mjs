@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Scripts folder uses CommonJS require() - exclude from ESLint
     "scripts/**",
+    // Python virtual environment - contains JS files that shouldn't be linted
+    "python-live-scraper/**",
+    // Claude Code hooks - auto-generated
+    ".claude/**",
   ]),
   // Custom rule overrides
   {

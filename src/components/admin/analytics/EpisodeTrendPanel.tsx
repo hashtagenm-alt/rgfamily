@@ -18,6 +18,12 @@ interface EpisodeTrendPanelProps {
   isLoading: boolean
 }
 
+function TrendIcon({ value }: { value: number }) {
+  if (value > 0) return <TrendingUp size={16} className={styles.trendUp} />
+  if (value < 0) return <TrendingDown size={16} className={styles.trendDown} />
+  return <Minus size={16} className={styles.trendNeutral} />
+}
+
 export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: EpisodeTrendPanelProps) {
   const [showHearts, setShowHearts] = useState(true)
   const [showDonors, setShowDonors] = useState(true)
@@ -85,12 +91,6 @@ export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: E
       newDonors: e.new_donors,
       returning: e.returning_donors,
     })), [episodeTrend])
-
-  const TrendIcon = ({ value }: { value: number }) => {
-    if (value > 0) return <TrendingUp size={16} className={styles.trendUp} />
-    if (value < 0) return <TrendingDown size={16} className={styles.trendDown} />
-    return <Minus size={16} className={styles.trendNeutral} />
-  }
 
   if (isLoading) {
     return (
