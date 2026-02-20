@@ -69,9 +69,19 @@ export async function POST(request: NextRequest) {
 
     if (!tusRes.ok) {
       const errorText = await tusRes.text()
-      console.error('Cloudflare TUS init error:', errorText)
+      console.error('Cloudflare TUS init error:', tusRes.status, errorText)
+
+      // Cloudflare 에러 상세를 파싱하여 클라이언트에 전달
+      let detail = ''
+      try {
+        const parsed = JSON.parse(errorText)
+        detail = parsed.errors?.[0]?.message || parsed.messages?.[0]?.message || ''
+      } catch {
+        detail = errorText.slice(0, 200)
+      }
+
       return NextResponse.json(
-        { error: 'TUS 업로드 초기화 실패' },
+        { error: `TUS 업로드 초기화 실패${detail ? `: ${detail}` : ''} (HTTP ${tusRes.status})` },
         { status: 500 }
       )
     }
