@@ -45,6 +45,31 @@ export function TimePatternChart({ timePattern, timePatternEnhanced, isTimePatte
     setIsRefreshing(false)
   }
 
+  // Hooks must be called before any early returns
+  const bjChartData = useMemo(() => {
+    if (!timePatternEnhanced?.perBj || !selectedBj) return null
+    const bjData = timePatternEnhanced.perBj.find(b => b.bj_name === selectedBj)
+    if (!bjData) return null
+    const maxH = Math.max(...bjData.hours.map(h => h.hearts), 1)
+    return bjData.hours.map(h => ({
+      hour: formatHourShort(h.hour),
+      hearts: h.hearts,
+      count: h.count,
+      isPeak: h.hour === bjData.peak_hour,
+      intensity: h.hearts / maxH,
+    }))
+  }, [timePatternEnhanced, selectedBj])
+
+  // 히트맵 데이터
+  const heatmapData = useMemo(() => {
+    if (!timePatternEnhanced?.heatmap) return { bjs: [] as string[], hours: [] as number[], cells: [] as { bj_name: string; hour: number; intensity: number; hearts: number }[] }
+    const bjSet = new Set<string>()
+    for (const h of timePatternEnhanced.heatmap) bjSet.add(h.bj_name)
+    const bjs = [...bjSet]
+    const hours = Array.from({ length: 24 }, (_, i) => i)
+    return { bjs, hours, cells: timePatternEnhanced.heatmap }
+  }, [timePatternEnhanced])
+
   if (isLoading) {
     return (
       <div className={styles.loading}>
@@ -86,31 +111,6 @@ export function TimePatternChart({ timePattern, timePatternEnhanced, isTimePatte
     const alpha = 0.2 + intensity * 0.6
     return `rgba(59, 130, 246, ${alpha})`
   }
-
-  // BJ별 뷰 데이터
-  const bjChartData = useMemo(() => {
-    if (!timePatternEnhanced?.perBj || !selectedBj) return null
-    const bjData = timePatternEnhanced.perBj.find(b => b.bj_name === selectedBj)
-    if (!bjData) return null
-    const maxH = Math.max(...bjData.hours.map(h => h.hearts), 1)
-    return bjData.hours.map(h => ({
-      hour: formatHourShort(h.hour),
-      hearts: h.hearts,
-      count: h.count,
-      isPeak: h.hour === bjData.peak_hour,
-      intensity: h.hearts / maxH,
-    }))
-  }, [timePatternEnhanced, selectedBj])
-
-  // 히트맵 데이터
-  const heatmapData = useMemo(() => {
-    if (!timePatternEnhanced?.heatmap) return { bjs: [] as string[], hours: [] as number[], cells: [] as { bj_name: string; hour: number; intensity: number; hearts: number }[] }
-    const bjSet = new Set<string>()
-    for (const h of timePatternEnhanced.heatmap) bjSet.add(h.bj_name)
-    const bjs = [...bjSet]
-    const hours = Array.from({ length: 24 }, (_, i) => i)
-    return { bjs, hours, cells: timePatternEnhanced.heatmap }
-  }, [timePatternEnhanced])
 
   return (
     <div className={styles.container}>
