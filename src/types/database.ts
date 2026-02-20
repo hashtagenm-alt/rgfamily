@@ -750,7 +750,7 @@ export type Database = {
           post_id: number
           user_id: string
         }
-        Update: {}
+        Update: Record<string, never>
         Relationships: [
           {
             foreignKeyName: 'post_likes_post_id_fkey'

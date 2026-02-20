@@ -14,6 +14,29 @@ interface AnalyticsSummaryCardProps {
   isLoading: boolean
 }
 
+function DeltaBadge({ value }: { value: number | undefined }) {
+  if (value === undefined || value === null) return null
+  const isPositive = value > 0
+  const Icon = isPositive ? ArrowUpRight : ArrowDownRight
+  return (
+    <span className={`${styles.delta} ${isPositive ? styles.deltaUp : styles.deltaDown}`}>
+      <Icon size={14} />
+      {Math.abs(value)}%
+    </span>
+  )
+}
+
+function Sparkline({ data, color }: { data: { v: number }[]; color: string }) {
+  if (data.length < 2) return null
+  return (
+    <div className={styles.sparkline}>
+      <LineChart width={100} height={40} data={data}>
+        <Line type="monotone" dataKey="v" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
+      </LineChart>
+    </div>
+  )
+}
+
 export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading }: AnalyticsSummaryCardProps) {
   const deltas = useMemo(() => {
     if (episodeTrend.length < 2) return null
@@ -86,29 +109,6 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
   }
 
   const formatNumber = (num: number) => num.toLocaleString()
-
-  const DeltaBadge = ({ value }: { value: number | undefined }) => {
-    if (value === undefined || value === null) return null
-    const isPositive = value > 0
-    const Icon = isPositive ? ArrowUpRight : ArrowDownRight
-    return (
-      <span className={`${styles.delta} ${isPositive ? styles.deltaUp : styles.deltaDown}`}>
-        <Icon size={14} />
-        {Math.abs(value)}%
-      </span>
-    )
-  }
-
-  const Sparkline = ({ data, color }: { data: { v: number }[]; color: string }) => {
-    if (data.length < 2) return null
-    return (
-      <div className={styles.sparkline}>
-        <LineChart width={100} height={40} data={data}>
-          <Line type="monotone" dataKey="v" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
-        </LineChart>
-      </div>
-    )
-  }
 
   return (
     <div className={styles.container}>

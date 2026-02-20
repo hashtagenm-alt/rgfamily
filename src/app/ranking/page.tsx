@@ -79,7 +79,7 @@ export default function TotalRankingPage() {
     ]);
 
     // 현재 시즌 랭킹도 가져오기 (듀얼 랭킹 표시용)
-    let seasonRankingsMap: Record<string, number> = {};
+    const seasonRankingsMap: Record<string, number> = {};
     if (seasonResult.data?.id) {
       const { data: seasonRankingsData } = await supabase
         .from("season_rankings_public")
