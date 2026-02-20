@@ -31,6 +31,13 @@ const THUMBNAIL_TIME_RATIOS = [0, 0.1, 0.25, 0.5, 0.75, 0.9]
 // 200MB 이상 파일은 TUS 사용 (청크 업로드)
 const TUS_THRESHOLD = 200 * 1024 * 1024 // 200MB
 
+// 파일 크기에 따른 동적 청크 사이즈 (Cloudflare 권장: 50MB, 허용 범위: 5MB~200MB)
+function getChunkSize(fileSize: number): number {
+  if (fileSize <= 500 * 1024 * 1024) return 10 * 1024 * 1024   // ~500MB → 10MB 청크
+  if (fileSize <= 2 * 1024 * 1024 * 1024) return 50 * 1024 * 1024  // ~2GB → 50MB 청크
+  return 100 * 1024 * 1024  // >2GB → 100MB 청크
+}
+
 type UploadStatus = 'idle' | 'uploading' | 'processing' | 'selecting_thumbnail' | 'success' | 'error'
 
 export default function CloudflareVideoUpload({
@@ -171,11 +178,15 @@ export default function CloudflareVideoUpload({
     const { uploadURL, uid } = await urlRes.json()
 
     // 2. TUS 클라이언트로 업로드
+    const chunkSize = getChunkSize(file.size)
+    console.log(`TUS upload: ${formatFileSize(file.size)}, chunk size: ${formatFileSize(chunkSize)}, ~${Math.ceil(file.size / chunkSize)} chunks`)
+
     return new Promise((resolve, reject) => {
       const upload = new tus.Upload(file, {
         uploadUrl: uploadURL, // 이미 생성된 URL로만 업로드 (endpoint 제거)
-        retryDelays: [0, 1000, 3000, 5000, 10000], // 재시도 딜레이
-        chunkSize: 5 * 1024 * 1024, // 5MB 청크 (스크립트와 동일)
+        retryDelays: [0, 1000, 3000, 5000, 10000, 15000, 30000], // 대용량 파일용 재시도 딜레이 확장
+        chunkSize,
+        removeFingerprintOnSuccess: true, // 성공 시 로컬 TUS 핑거프린트 정리
         metadata: {
           filename: file.name,
           filetype: file.type,
@@ -184,6 +195,13 @@ export default function CloudflareVideoUpload({
           console.error('TUS upload error:', error)
           setCanResume(true) // 실패 시 이어받기 가능
           reject(new Error(`업로드 실패: ${error.message || '네트워크 오류'}`))
+        },
+        onShouldRetry: (err, retryAttempt, _options) => {
+          const status = (err as tus.DetailedError).originalResponse?.getStatus()
+          // 4xx 클라이언트 에러는 재시도 불필요 (401, 403, 404 등)
+          if (status && status >= 400 && status < 500) return false
+          console.warn(`TUS retry attempt ${retryAttempt}, status: ${status || 'unknown'}`)
+          return true
         },
         onProgress: (bytesUploaded, bytesTotal) => {
           const pct = Math.round((bytesUploaded / bytesTotal) * 100)
