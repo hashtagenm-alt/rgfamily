@@ -24,59 +24,201 @@
   to { transform: rotate(360deg); }
 }
 
-/* 라이프사이클 카드 */
-.lifecycleRow {
+/* 시즌 요약 카드 */
+.summaryRow {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
 
-.lifecycleCard {
+.summaryCard {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-top: 3px solid;
   border-radius: 10px;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 6px;
-  transition: transform 0.2s;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.lifecycleCard:hover {
+.summaryCard:hover {
   transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
 }
 
-.lifecycleHeader {
+.summaryHeader {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.lifecycleLabel {
+.summaryLabel {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.lifecycleCount {
-  font-size: 28px;
+.summaryCount {
+  font-size: 26px;
   font-weight: 700;
 }
 
-.lifecyclePct {
+.summaryPct {
   font-size: 14px;
   color: var(--text-secondary);
 }
 
-.lifecycleDesc {
+.summaryDesc {
   font-size: 12px;
   color: var(--text-tertiary);
 }
 
-/* 인사이트 카드 Row */
+/* 시즌 핵심 지표 */
+.keyMetrics {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.keyMetricItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 200px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.keyMetricIcon {
+  flex-shrink: 0;
+  color: #fd68ba;
+}
+
+.keyMetricText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.keyMetricValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.keyMetricLabel {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* 상위 5명 의존도 */
+.top5Section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.top5Header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.top5Title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.top5Subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.top5List {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.top5Item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.top5Rank {
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+
+.top5Name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 100px;
+}
+
+.top5Bar {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.top5BarFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.top5Hearts {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 60px;
+  text-align: right;
+}
+
+.top5Pct {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 40px;
+  text-align: right;
+}
+
+.epRange {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.epRangeDivider {
+  color: var(--text-tertiary);
+}
+
+/* 인사이트 */
 .insightsRow {
   display: flex;
   flex-wrap: wrap;
@@ -88,10 +230,10 @@
   align-items: flex-start;
   gap: 10px;
   flex: 1 1 280px;
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.15);
   border-radius: 10px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-primary);
@@ -107,8 +249,9 @@
 .cohortSection {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .sectionTitle {
@@ -121,7 +264,7 @@
 .sectionDesc {
   font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .cohortTableWrapper {
@@ -131,12 +274,12 @@
 .cohortTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .cohortTable th,
 .cohortTable td {
-  padding: 8px 10px;
+  padding: 7px 8px;
   text-align: center;
   border: 1px solid var(--border-color);
   white-space: nowrap;
@@ -146,7 +289,7 @@
   background: var(--bg-tertiary);
   color: var(--text-secondary);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .cohortLabel {
@@ -163,131 +306,71 @@
 .cohortCell {
   color: #fff;
   font-weight: 600;
-  font-size: 12px;
-  min-width: 48px;
+  font-size: 11px;
+  min-width: 44px;
   transition: background 0.2s;
 }
 
-/* 평균 후원 추이 */
-.avgTrendSection {
-  /* wrapper for spacing context */
-}
-
-/* 후원자 가치 세그먼트 */
-.segmentsRow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-.segmentCard {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-top: 3px solid;
-  border-radius: 10px;
-  padding: 18px;
+/* Growth Accounting */
+.growthSection {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: transform 0.2s;
+  gap: 16px;
 }
 
-.segmentCard:hover {
-  transform: translateY(-2px);
-}
-
-.segmentIcon {
-  display: flex;
-  align-items: center;
+/* 흐름 분석 기준 범례 */
+.flowLegend {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
 }
 
-.segmentDesc {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin: 0;
-}
-
-.segmentCount {
+.flowLegendItem {
   display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.segmentValue {
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.segmentUnit {
-  font-size: 14px;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.segmentHearts,
-.segmentRetention {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding-top: 6px;
-  border-top: 1px solid var(--border-color);
+  gap: 6px;
 }
 
-.segmentMetricLabel {
-  font-size: 13px;
-  color: var(--text-secondary);
+.flowLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.segmentMetricValue {
+.flowLegendLabel {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 
-/* 재활성화율 */
-.reactivationSection {
-  /* wrapper for spacing context */
+.flowLegendDesc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
 }
+
+@media (max-width: 768px) {
+  .flowLegend {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 평균 후원 추이 */
+.avgTrendSection {}
 
 /* 이탈 위험 테이블 */
 .churnSection {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.churnTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.churnTable th,
-.churnTable td {
-  padding: 10px 12px;
-  text-align: center;
-  border: 1px solid var(--border-color);
-  white-space: nowrap;
-}
-
-.churnTable th {
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 12px;
-}
-
-.churnTable tbody tr {
-  transition: background 0.15s;
-}
-
-.churnTable tbody tr:hover {
-  background: rgba(253, 104, 186, 0.04);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .churnDonorName {
@@ -298,50 +381,160 @@
 
 .riskBadge {
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
 }
 
-.riskHigh {
-  background: rgba(239, 68, 68, 0.15);
+/* Advanced Churn Table */
+.advancedChurnTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.advancedChurnTable th,
+.advancedChurnTable td {
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border-color);
+}
+
+.advancedChurnTable th {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.advancedChurnTable tbody tr {
+  transition: background 0.15s;
+}
+
+.advancedChurnTable tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Signal bars */
+.signalBars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 160px;
+}
+
+.signalBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.signalLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 30px;
+}
+
+.signalTrack {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.signalFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.signalValue {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 20px;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Recommendation text */
+.recommendation {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+/* Risk badges for advanced churn */
+.riskDanger {
+  background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
 }
 
-.riskMedium {
-  background: rgba(245, 158, 11, 0.15);
+.riskWarning {
+  background: rgba(245, 158, 11, 0.12);
   color: #f59e0b;
 }
 
-.riskLow {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+.riskWatch {
+  background: rgba(234, 179, 8, 0.12);
+  color: #eab308;
 }
 
-/* Responsive */
+.riskSafe {
+  background: rgba(107, 114, 128, 0.12);
+  color: #6b7280;
+}
+
+/* Churn summary cards */
+.churnSummaryRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.churnSummaryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.churnSummaryCount {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.churnSummaryLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 @media (max-width: 1024px) {
-  .lifecycleRow {
-    grid-template-columns: repeat(3, 1fr);
+  .summaryRow {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .segmentsRow {
-    grid-template-columns: repeat(3, 1fr);
+  .keyMetrics {
+    flex-direction: column;
   }
 }
 
 @media (max-width: 640px) {
-  .lifecycleRow {
+  .summaryRow {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .lifecycleCount {
-    font-size: 22px;
-  }
-
-  .segmentsRow {
-    grid-template-columns: 1fr;
+  .summaryCount {
+    font-size: 20px;
   }
 
   .insightsRow {

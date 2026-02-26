@@ -3,15 +3,15 @@
 import { useMemo } from 'react'
 import {
   Loader2,
-  UserPlus,
-  UserCheck,
   Shield,
-  AlertTriangle,
-  UserX,
+  Users,
+  UserCheck,
+  UserMinus,
   Lightbulb,
-  Fish,
-  Waves,
-  Anchor,
+  Heart,
+  TrendingUp,
+  AlertTriangle,
+  Crown,
 } from 'lucide-react'
 import {
   ComposedChart,
@@ -25,36 +25,48 @@ import {
   BarChart,
 } from 'recharts'
 import type { DonorRetentionData } from '@/lib/actions/analytics'
+import type { ChurnPredictionData } from '@/lib/actions/analytics-advanced'
 import { ChartContainer, ChartTooltip, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './DonorRetentionPanel.module.css'
 
 interface DonorRetentionPanelProps {
   retention: DonorRetentionData | null
   isLoading: boolean
+  churnPrediction?: ChurnPredictionData | null
+  isChurnPredictionLoading?: boolean
 }
 
-const LIFECYCLE_CONFIG = [
-  { key: 'new_count', label: '신규', icon: UserPlus, color: '#10b981', desc: '최신 회차에 처음 후원한 후원자' },
-  { key: 'active_count', label: '활성', icon: UserCheck, color: '#3b82f6', desc: '최근 2회 이내에 후원한 후원자' },
-  { key: 'loyal_count', label: '충성', icon: Shield, color: '#8b5cf6', desc: '전체 회차의 60% 이상 참여한 후원자' },
-  { key: 'at_risk_count', label: '위험', icon: AlertTriangle, color: '#f59e0b', desc: '이전에 참여했으나 최근 불참 중인 후원자' },
-  { key: 'churned_count', label: '이탈', icon: UserX, color: '#ef4444', desc: '1회만 참여 후 더 이상 후원하지 않는 후원자' },
+// 시즌 참여 분류 (완결 시즌 기준 - 회고적 분류 + 매출 포함)
+const SUMMARY_CONFIG = [
+  { key: 'core_fans', heartsKey: 'core_fans_hearts', pctKey: 'core_fans_hearts_pct', label: '핵심 팬', icon: Shield, color: '#8b5cf6', desc: '60%+ 회차 참여' },
+  { key: 'regular_donors', heartsKey: 'regular_hearts', pctKey: 'regular_hearts_pct', label: '단골', icon: UserCheck, color: '#3b82f6', desc: '4회+ 참여' },
+  { key: 'occasional_donors', heartsKey: 'occasional_hearts', pctKey: 'occasional_hearts_pct', label: '간헐', icon: Users, color: '#10b981', desc: '2~3회 참여' },
+  { key: 'onetime_donors', heartsKey: 'onetime_hearts', pctKey: 'onetime_hearts_pct', label: '1회성', icon: UserMinus, color: '#6b7280', desc: '1회만 참여' },
 ] as const
 
-const SEGMENT_CONFIG = {
-  whale: { label: '고래', icon: Anchor, color: '#8b5cf6', desc: '핵심 후원자 (상위 10%)' },
-  dolphin: { label: '돌고래', icon: Waves, color: '#3b82f6', desc: '중간 후원자 (상위 10~50%)' },
-  minnow: { label: '물고기', icon: Fish, color: '#10b981', desc: '소액 후원자 (하위 50%)' },
-} as const
+const ADVANCED_RISK_STYLES: Record<string, string> = {
+  '위험': styles.riskDanger,
+  '주의': styles.riskWarning,
+  '관심': styles.riskWatch,
+  '안전': styles.riskSafe,
+}
 
-const RISK_LABELS = {
-  high: '높음',
-  medium: '보통',
-  low: '낮음',
-} as const
+function SignalBar({ label, value, max = 25 }: { label: string; value: number; max?: number }) {
+  const pct = Math.min(100, (value / max) * 100)
+  const color = pct >= 75 ? '#ef4444' : pct >= 50 ? '#f59e0b' : pct >= 25 ? '#eab308' : '#6b7280'
+  return (
+    <div className={styles.signalBar}>
+      <span className={styles.signalLabel}>{label}</span>
+      <div className={styles.signalTrack}>
+        <div className={styles.signalFill} style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <span className={styles.signalValue}>{value}</span>
+    </div>
+  )
+}
 
-export function DonorRetentionPanel({ retention, isLoading }: DonorRetentionPanelProps) {
-  // 파레토 차트 데이터 (개별 + 누적)
+export function DonorRetentionPanel({ retention, isLoading, churnPrediction, isChurnPredictionLoading }: DonorRetentionPanelProps) {
+  // 파레토 차트 데이터
   const paretoData = useMemo(() => {
     if (!retention?.pareto) return []
     return retention.pareto.map(p => ({
@@ -85,13 +97,30 @@ export function DonorRetentionPanel({ retention, isLoading }: DonorRetentionPane
     }))
   }, [retention])
 
-  // 재활성화 데이터
-  const reactivationData = useMemo(() => {
-    if (!retention?.reactivation) return []
-    return retention.reactivation.map(r => ({
-      name: `${r.episode_number}화`,
-      reactivated: r.reactivated,
-      rate: r.rate,
+  // Growth Accounting 데이터 (후원자 수)
+  const growthData = useMemo(() => {
+    if (!retention?.growthAccounting) return []
+    return retention.growthAccounting.map(ga => ({
+      name: `${ga.episode_number}화`,
+      label: ga.description ? `${ga.episode_number}화 (${ga.description})` : `${ga.episode_number}화`,
+      new: ga.new_donors,
+      retained: ga.retained_donors,
+      resurrected: ga.resurrected_donors,
+      churned: -ga.churned_donors,
+      net: ga.net_growth,
+      is_rank_battle: ga.is_rank_battle,
+    }))
+  }, [retention])
+
+  // Growth Accounting 데이터 (하트)
+  const growthHeartsData = useMemo(() => {
+    if (!retention?.growthAccounting) return []
+    return retention.growthAccounting.map(ga => ({
+      name: `${ga.episode_number}화`,
+      new_hearts: ga.new_hearts,
+      retained_hearts: ga.retained_hearts,
+      resurrected_hearts: ga.resurrected_hearts,
+      lost_hearts: ga.lost_hearts,
     }))
   }, [retention])
 
@@ -112,33 +141,102 @@ export function DonorRetentionPanel({ retention, isLoading }: DonorRetentionPane
     )
   }
 
-  const lifecycle = retention.lifecycle
+  const ss = retention.seasonSummary
 
   return (
     <div className={styles.container}>
-      {/* 라이프사이클 카드 5개 */}
-      <div className={styles.lifecycleRow}>
-        {LIFECYCLE_CONFIG.map(({ key, label, icon: Icon, color, desc }) => {
-          const count = lifecycle[key]
-          const total = lifecycle.new_count + lifecycle.active_count + lifecycle.loyal_count +
-            lifecycle.at_risk_count + lifecycle.churned_count
-          const pct = total > 0 ? Math.round((count / total) * 100) : 0
+      {/* 매출 핵심 지표 (총매출, 에피소드당 평균, 안정성, 상위 의존도) */}
+      <div className={styles.keyMetrics}>
+        <div className={styles.keyMetricItem}>
+          <Heart size={20} className={styles.keyMetricIcon} />
+          <div className={styles.keyMetricText}>
+            <span className={styles.keyMetricValue}>{formatChartNumber(ss.total_hearts)}</span>
+            <span className={styles.keyMetricLabel}>총 하트 ({ss.total_episodes}회차, {ss.total_donors}명)</span>
+          </div>
+        </div>
+        <div className={styles.keyMetricItem}>
+          <TrendingUp size={20} className={styles.keyMetricIcon} />
+          <div className={styles.keyMetricText}>
+            <span className={styles.keyMetricValue}>{formatChartNumber(ss.avg_hearts_per_episode)}</span>
+            <span className={styles.keyMetricLabel}>회차당 평균 하트</span>
+          </div>
+        </div>
+        <div className={styles.keyMetricItem}>
+          <Shield size={20} className={styles.keyMetricIcon} />
+          <div className={styles.keyMetricText}>
+            <span className={styles.keyMetricValue}>{ss.stable_revenue_ratio}%</span>
+            <span className={styles.keyMetricLabel}>안정 매출 비중 (단골 4회+)</span>
+          </div>
+        </div>
+        <div className={styles.keyMetricItem}>
+          <AlertTriangle size={20} className={styles.keyMetricIcon} />
+          <div className={styles.keyMetricText}>
+            <span className={styles.keyMetricValue}>{ss.top5_hearts_pct}%</span>
+            <span className={styles.keyMetricLabel}>상위 5명 의존도</span>
+          </div>
+        </div>
+      </div>
 
+      {/* 세그먼트별 매출 기여도 카드 */}
+      <div className={styles.summaryRow}>
+        {SUMMARY_CONFIG.map(({ key, heartsKey, pctKey, label, icon: Icon, color, desc }) => {
+          const count = ss[key as keyof typeof ss] as number
+          const hearts = ss[heartsKey as keyof typeof ss] as number
+          const heartsPct = ss[pctKey as keyof typeof ss] as number
+          const donorPct = ss.total_donors > 0 ? Math.round((count / ss.total_donors) * 100) : 0
           return (
-            <div key={key} className={styles.lifecycleCard} style={{ borderTopColor: color }}>
-              <div className={styles.lifecycleHeader}>
-                <Icon size={20} color={color} />
-                <span className={styles.lifecycleLabel}>{label}</span>
+            <div key={key} className={styles.summaryCard} style={{ borderTopColor: color }}>
+              <div className={styles.summaryHeader}>
+                <Icon size={18} color={color} />
+                <span className={styles.summaryLabel}>{label}</span>
               </div>
-              <span className={styles.lifecycleCount} style={{ color }}>{count}</span>
-              <span className={styles.lifecyclePct}>{pct}%</span>
-              <span className={styles.lifecycleDesc}>{desc}</span>
+              <span className={styles.summaryCount} style={{ color }}>{formatChartNumber(hearts)}</span>
+              <span className={styles.summaryPct}>매출의 {heartsPct}%</span>
+              <span className={styles.summaryDesc}>{count}명 ({donorPct}%) · {desc}</span>
             </div>
           )
         })}
       </div>
 
-      {/* 인사이트 카드 Row */}
+      {/* 상위 5명 의존도 상세 */}
+      {ss.top5_donors && ss.top5_donors.length > 0 && (
+        <div className={styles.top5Section}>
+          <div className={styles.top5Header}>
+            <Crown size={18} color="#ffd700" />
+            <span className={styles.top5Title}>상위 5명 후원자</span>
+            <span className={styles.top5Subtitle}>
+              전체 매출의 {ss.top5_hearts_pct}% · 상위 10명은 {ss.top10_hearts_pct}%
+            </span>
+          </div>
+          <div className={styles.top5List}>
+            {ss.top5_donors.map((d, idx) => {
+              const pct = ss.total_hearts > 0 ? Math.round((d.hearts / ss.total_hearts) * 1000) / 10 : 0
+              return (
+                <div key={d.name} className={styles.top5Item}>
+                  <span className={styles.top5Rank} style={{ color: idx === 0 ? '#ffd700' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : 'var(--text-secondary)' }}>
+                    {idx + 1}
+                  </span>
+                  <span className={styles.top5Name}>{d.name}</span>
+                  <div className={styles.top5Bar}>
+                    <div className={styles.top5BarFill} style={{ width: `${Math.min(100, pct * 2)}%`, background: SUMMARY_CONFIG[0].color }} />
+                  </div>
+                  <span className={styles.top5Hearts}>{formatChartNumber(d.hearts)}</span>
+                  <span className={styles.top5Pct}>{pct}%</span>
+                </div>
+              )
+            })}
+          </div>
+          {ss.best_episode.number > 0 && ss.worst_episode.number > 0 && (
+            <div className={styles.epRange}>
+              <span>최고 {ss.best_episode.number}화 ({formatChartNumber(ss.best_episode.hearts)} 하트)</span>
+              <span className={styles.epRangeDivider}>|</span>
+              <span>최저 {ss.worst_episode.number}화 ({formatChartNumber(ss.worst_episode.hearts)} 하트)</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 인사이트 카드 */}
       {retention.insights.length > 0 && (
         <div className={styles.insightsRow}>
           {retention.insights.map((insight, idx) => (
@@ -150,11 +248,157 @@ export function DonorRetentionPanel({ retention, isLoading }: DonorRetentionPane
         </div>
       )}
 
+      {/* 이탈 위험 후원자 (유지) */}
+      {churnPrediction && churnPrediction.entries.length > 0 ? (
+        <div className={styles.churnSection}>
+          <h4 className={styles.sectionTitle}>이탈 위험 후원자</h4>
+          <p className={styles.sectionDesc}>
+            최근 불참 횟수, 부재 기간, 금액 추세 등을 종합해서 이탈 위험을 예측합니다 (하트 많은 순)
+          </p>
+
+          <div className={styles.churnSummaryRow}>
+            <div className={styles.churnSummaryCard}>
+              <span className={styles.churnSummaryCount} style={{ color: '#ef4444' }}>
+                {churnPrediction.summary.danger_count}
+              </span>
+              <span className={styles.churnSummaryLabel}>위험</span>
+            </div>
+            <div className={styles.churnSummaryCard}>
+              <span className={styles.churnSummaryCount} style={{ color: '#f59e0b' }}>
+                {churnPrediction.summary.warning_count}
+              </span>
+              <span className={styles.churnSummaryLabel}>주의</span>
+            </div>
+            <div className={styles.churnSummaryCard}>
+              <span className={styles.churnSummaryCount} style={{ color: '#eab308' }}>
+                {churnPrediction.summary.watch_count}
+              </span>
+              <span className={styles.churnSummaryLabel}>관심</span>
+            </div>
+            <div className={styles.churnSummaryCard}>
+              <span className={styles.churnSummaryCount} style={{ color: '#6b7280' }}>
+                {churnPrediction.summary.safe_count}
+              </span>
+              <span className={styles.churnSummaryLabel}>안전</span>
+            </div>
+          </div>
+
+          <div className={styles.cohortTableWrapper}>
+            <table className={styles.advancedChurnTable}>
+              <thead>
+                <tr>
+                  <th>닉네임</th>
+                  <th>총 하트</th>
+                  <th>위험도</th>
+                  <th>시그널</th>
+                  <th>추천</th>
+                </tr>
+              </thead>
+              <tbody>
+                {churnPrediction.entries.map((entry, idx) => (
+                  <tr key={`${entry.donor_name}-${idx}`}>
+                    <td className={styles.churnDonorName}>{entry.donor_name}</td>
+                    <td>{formatChartNumber(entry.total_hearts)}</td>
+                    <td>
+                      <span className={`${styles.riskBadge} ${ADVANCED_RISK_STYLES[entry.risk_level] || ''}`}>
+                        {entry.risk_level} ({entry.risk_score})
+                      </span>
+                    </td>
+                    <td>
+                      <div className={styles.signalBars}>
+                        <SignalBar label="최근불참" value={entry.signals.frequency} max={35} />
+                        <SignalBar label="부재기간" value={entry.signals.gap} max={30} />
+                        <SignalBar label="금액추세" value={entry.signals.amount} max={20} />
+                        <SignalBar label="직급전" value={entry.signals.rank_battle} max={15} />
+                      </div>
+                    </td>
+                    <td>
+                      <span className={styles.recommendation}>{entry.recommendation}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : isChurnPredictionLoading ? (
+        <div className={styles.churnSection}>
+          <h4 className={styles.sectionTitle}>이탈 위험 후원자</h4>
+          <div className={styles.loading} style={{ padding: '30px 20px' }}>
+            <Loader2 size={24} className={styles.spinner} />
+            <span>이탈 위험 분석 중...</span>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Growth Accounting 차트 */}
+      {growthData.length > 0 && (
+        <div className={styles.growthSection}>
+          <ChartContainer title="후원자 흐름 분석" subtitle="에피소드마다 후원자가 어떻게 변했는지 보여줍니다" height={300}>
+            <BarChart data={growthData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }} stackOffset="sign">
+              <CartesianGrid {...CHART_THEME.grid} />
+              <XAxis dataKey="name" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 11 }} />
+              <YAxis {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} />
+              <ChartTooltip
+                labelFormatter={(_, payload) => payload?.[0]?.payload?.label ?? String(_)}
+                valueFormatter={(v, name) => {
+                  const absV = Math.abs(Number(v))
+                  return `${absV}명 (${name})`
+                }}
+              />
+              <ReferenceLine y={0} stroke="var(--text-tertiary)" strokeWidth={1} />
+              <Bar dataKey="new" name="신규" stackId="a" fill="#10b981" />
+              <Bar dataKey="retained" name="유지" stackId="a" fill="#3b82f6" />
+              <Bar dataKey="resurrected" name="복귀" stackId="a" fill="#8b5cf6" />
+              <Bar dataKey="churned" name="이탈" stackId="a" fill="#ef4444" />
+            </BarChart>
+          </ChartContainer>
+
+          {/* 분류 기준 범례 */}
+          <div className={styles.flowLegend}>
+            <div className={styles.flowLegendItem}>
+              <span className={styles.flowLegendDot} style={{ background: '#10b981' }} />
+              <span className={styles.flowLegendLabel}>신규</span>
+              <span className={styles.flowLegendDesc}>이번 회차에 처음 후원한 사람</span>
+            </div>
+            <div className={styles.flowLegendItem}>
+              <span className={styles.flowLegendDot} style={{ background: '#3b82f6' }} />
+              <span className={styles.flowLegendLabel}>유지</span>
+              <span className={styles.flowLegendDesc}>직전 회차에도 후원 + 이번에도 후원</span>
+            </div>
+            <div className={styles.flowLegendItem}>
+              <span className={styles.flowLegendDot} style={{ background: '#8b5cf6' }} />
+              <span className={styles.flowLegendLabel}>복귀</span>
+              <span className={styles.flowLegendDesc}>예전에 후원했지만 직전에 빠졌다가 다시 온 사람</span>
+            </div>
+            <div className={styles.flowLegendItem}>
+              <span className={styles.flowLegendDot} style={{ background: '#ef4444' }} />
+              <span className={styles.flowLegendLabel}>이탈</span>
+              <span className={styles.flowLegendDesc}>직전 회차에 후원했지만 이번에 안 온 사람</span>
+            </div>
+          </div>
+
+          <ChartContainer title="하트 흐름 분석" subtitle="에피소드마다 하트가 어떻게 변했는지 보여줍니다" height={300}>
+            <BarChart data={growthHeartsData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }} stackOffset="sign">
+              <CartesianGrid {...CHART_THEME.grid} />
+              <XAxis dataKey="name" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 11 }} />
+              <YAxis {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={formatChartNumber} />
+              <ChartTooltip valueFormatter={(v) => `${formatChartNumber(Math.abs(Number(v)))} 하트`} />
+              <ReferenceLine y={0} stroke="var(--text-tertiary)" strokeWidth={1} />
+              <Bar dataKey="new_hearts" name="신규 하트" stackId="a" fill="#10b981" />
+              <Bar dataKey="retained_hearts" name="유지 하트" stackId="a" fill="#3b82f6" />
+              <Bar dataKey="resurrected_hearts" name="복귀 하트" stackId="a" fill="#8b5cf6" />
+              <Bar dataKey="lost_hearts" name="이탈 하트" stackId="a" fill="#ef4444" />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      )}
+
       {/* 코호트 히트맵 테이블 */}
       {retention.cohorts.length > 0 && (
         <div className={styles.cohortSection}>
-          <h4 className={styles.sectionTitle}>코호트 리텐션 히트맵</h4>
-          <p className={styles.sectionDesc}>첫 참여 회차별 리텐션율 (%, 배경색 강도 = 리텐션율)</p>
+          <h4 className={styles.sectionTitle}>첫 참여 회차별 유지율</h4>
+          <p className={styles.sectionDesc}>처음 후원한 회차 기준으로, 이후에도 계속 후원한 비율</p>
           <div className={styles.cohortTableWrapper}>
             <table className={styles.cohortTable}>
               <thead>
@@ -194,24 +438,24 @@ export function DonorRetentionPanel({ retention, isLoading }: DonorRetentionPane
         </div>
       )}
 
-      {/* 퍼널 차트 - 가로 BarChart */}
+      {/* 참여 깊이 분석 (퍼널) */}
       {funnelData.length > 0 && (
-        <ChartContainer title="참여 퍼널" subtitle="전체 -> 다회 참여 -> 전회차 참여" height={200}>
+        <ChartContainer title="참여 깊이 분석" subtitle="전체 후원자 중 얼마나 깊이 참여하는지" height={240}>
           <BarChart data={funnelData} layout="vertical" margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
             <CartesianGrid {...CHART_THEME.grid} horizontal={false} />
             <XAxis type="number" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} />
-            <YAxis type="category" dataKey="name" width={90} {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 13 }} />
+            <YAxis type="category" dataKey="name" width={100} {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 13 }} />
             <ChartTooltip valueFormatter={(v) => `${v}명`} />
             <Bar dataKey="count" name="후원자" fill="#fd68ba" radius={[0, 4, 4, 0]} maxBarSize={28} />
           </BarChart>
         </ChartContainer>
       )}
 
-      {/* 파레토 차트 - ComposedChart: 개별(Bar) + 누적(Line) + 80% 참조선 */}
+      {/* 파레토 차트 */}
       {paretoData.length > 0 && (
         <ChartContainer
-          title="파레토 분석"
-          subtitle="상위 N% 후원자가 전체 하트의 몇 %를 차지하는지"
+          title="상위 후원자 집중도"
+          subtitle="소수의 후원자가 전체 하트의 대부분을 차지합니다"
           height={300}
         >
           <ComposedChart data={paretoData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
@@ -231,12 +475,12 @@ export function DonorRetentionPanel({ retention, isLoading }: DonorRetentionPane
         </ChartContainer>
       )}
 
-      {/* 평균 후원 추이 LineChart */}
+      {/* 평균 후원 추이 */}
       {avgTrendData.length > 0 && (
         <div className={styles.avgTrendSection}>
           <ChartContainer
-            title="회차별 평균 후원 추이"
-            subtitle="평균(avg)과 중앙값(median) 비교 - 차이가 클수록 고액 후원자 영향 큼"
+            title="1인당 평균 후원 추이"
+            subtitle="평균과 중앙값 비교 — 차이가 크면 고액 후원자의 영향이 큽니다"
             height={280}
           >
             <LineChart data={avgTrendData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
@@ -269,125 +513,6 @@ export function DonorRetentionPanel({ retention, isLoading }: DonorRetentionPane
               />
             </LineChart>
           </ChartContainer>
-        </div>
-      )}
-
-      {/* 후원자 가치 세그먼트 카드 */}
-      {retention.donorValueSegments.length > 0 && (
-        <div className={styles.segmentsRow}>
-          {retention.donorValueSegments.map((seg) => {
-            const config = SEGMENT_CONFIG[seg.segment]
-            const SegIcon = config.icon
-            return (
-              <div
-                key={seg.segment}
-                className={styles.segmentCard}
-                style={{ borderTopColor: config.color }}
-              >
-                <div className={styles.segmentIcon} style={{ color: config.color }}>
-                  <SegIcon size={24} />
-                  <span>{config.label}</span>
-                </div>
-                <p className={styles.segmentDesc}>{config.desc}</p>
-                <div className={styles.segmentCount}>
-                  <span className={styles.segmentValue} style={{ color: config.color }}>
-                    {seg.count}
-                  </span>
-                  <span className={styles.segmentUnit}>명</span>
-                </div>
-                <div className={styles.segmentHearts}>
-                  <span className={styles.segmentMetricLabel}>총 하트</span>
-                  <span className={styles.segmentMetricValue}>{formatChartNumber(seg.total_hearts)}</span>
-                </div>
-                <div className={styles.segmentRetention}>
-                  <span className={styles.segmentMetricLabel}>평균 참여율</span>
-                  <span className={styles.segmentMetricValue}>{seg.avg_retention_rate}%</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* 재활성화율 LineChart */}
-      {reactivationData.length > 0 && (
-        <div className={styles.reactivationSection}>
-          <ChartContainer
-            title="재활성화율 추이"
-            subtitle="이전 회차 불참 후 다시 참여한 후원자 비율"
-            height={260}
-          >
-            <LineChart data={reactivationData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
-              <CartesianGrid {...CHART_THEME.grid} />
-              <XAxis dataKey="name" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 12 }} />
-              <YAxis
-                {...CHART_THEME.axis}
-                tick={{ ...CHART_THEME.axis.tick }}
-                tickFormatter={(v: number) => `${v}%`}
-                domain={[0, 'auto']}
-              />
-              <ChartTooltip
-                valueFormatter={(v, name) =>
-                  name === '재활성화율' ? `${v}%` : `${v}명`
-                }
-              />
-              <Line
-                type="monotone"
-                dataKey="rate"
-                name="재활성화율"
-                stroke="#10b981"
-                strokeWidth={2}
-                dot={{ r: 4, fill: '#10b981' }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ChartContainer>
-        </div>
-      )}
-
-      {/* 이탈 위험 테이블 */}
-      {retention.churnRisk.length > 0 && (
-        <div className={styles.churnSection}>
-          <h4 className={styles.sectionTitle}>이탈 위험 후원자</h4>
-          <p className={styles.sectionDesc}>
-            2회 이상 참여 후 최근 불참 중인 후원자 (총 하트 기준 정렬)
-          </p>
-          <div className={styles.cohortTableWrapper}>
-            <table className={styles.churnTable}>
-              <thead>
-                <tr>
-                  <th>닉네임</th>
-                  <th>마지막 참여</th>
-                  <th>불참 회차</th>
-                  <th>총 하트</th>
-                  <th>위험도</th>
-                </tr>
-              </thead>
-              <tbody>
-                {retention.churnRisk.map((donor, idx) => (
-                  <tr key={`${donor.donor_name}-${idx}`}>
-                    <td className={styles.churnDonorName}>{donor.donor_name}</td>
-                    <td>{donor.last_episode}화</td>
-                    <td>{donor.episodes_missed}회</td>
-                    <td>{formatChartNumber(donor.total_hearts)}</td>
-                    <td>
-                      <span
-                        className={`${styles.riskBadge} ${
-                          donor.risk_level === 'high'
-                            ? styles.riskHigh
-                            : donor.risk_level === 'medium'
-                              ? styles.riskMedium
-                              : styles.riskLow
-                        }`}
-                      >
-                        {RISK_LABELS[donor.risk_level]}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
     </div>

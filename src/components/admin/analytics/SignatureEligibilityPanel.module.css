@@ -1,0 +1,407 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  gap: 12px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 종합 현황 카드 */
+.summaryRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.summaryCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.summaryCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.summaryCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summaryCardLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.summaryCardValue {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.summaryCardSub {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* 등급 카드 */
+.gradeRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.gradeCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.gradeCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.gradeHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gradeEmoji {
+  font-size: 18px;
+}
+
+.gradeCount {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.gradeValue {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.gradeUnit {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* 미반영 배너 */
+.unsyncedBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.unsyncedBanner svg {
+  flex-shrink: 0;
+  color: #f59e0b;
+}
+
+/* 회차별 아코디언 */
+.episodeSection {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.sectionDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.accordionItem {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.accordionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.accordionHeader:hover {
+  background: var(--bg-secondary);
+}
+
+.accordionLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.accordionStatus {
+  font-size: 14px;
+}
+
+.accordionCount {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.accordionEmptyLabel {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.accordionChevron {
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.accordionChevronOpen {
+  transform: rotate(180deg);
+}
+
+.accordionBody {
+  padding: 0;
+}
+
+.episodeTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.episodeTable th,
+.episodeTable td {
+  padding: 7px 10px;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.episodeTable th {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.episodeTable tbody tr {
+  transition: background 0.15s;
+}
+
+.episodeTable tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.donorName {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left !important;
+}
+
+.sigBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sigNew {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.sigComplete {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+}
+
+.sigNeeded {
+  background: rgba(107, 114, 128, 0.08);
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* 등급별 명예의 전당 */
+.hallSection {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.hallGroup {
+  margin-bottom: 16px;
+}
+
+.hallGroup:last-child {
+  margin-bottom: 0;
+}
+
+.hallGroupTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hallItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: background 0.15s;
+}
+
+.hallItem:hover {
+  background: var(--bg-tertiary);
+}
+
+.hallDonorName {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  min-width: 100px;
+}
+
+.hallPath {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hallStep {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.hallArrow {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.newBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+@media (max-width: 1024px) {
+  .summaryRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .gradeRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .summaryRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gradeRow {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryCardValue {
+    font-size: 20px;
+  }
+
+  .gradeValue {
+    font-size: 22px;
+  }
+
+  .hallItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

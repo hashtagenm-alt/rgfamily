@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
-import { Heart, Users, TrendingUp, Award, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Heart, Users, TrendingUp, Award, Loader2, ArrowUpRight, ArrowDownRight, ChevronDown } from 'lucide-react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts'
 import type { AnalyticsSummary, BjStats, EpisodeTrendData } from '@/lib/actions/analytics'
 import { ChartContainer, ChartTooltip, CHART_COLORS, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
@@ -37,7 +37,12 @@ function Sparkline({ data, color }: { data: { v: number }[]; color: string }) {
   )
 }
 
+const BJ_SHOW_COUNT = 5 // 기본 표시 BJ 수
+
+
 export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading }: AnalyticsSummaryCardProps) {
+  const [showAllBj, setShowAllBj] = useState(false)
+
   const deltas = useMemo(() => {
     if (episodeTrend.length < 2) return null
     const last = episodeTrend[episodeTrend.length - 1]
@@ -88,7 +93,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
   const sparkAvg = useMemo(() => episodeTrend.map(e => ({ v: e.avg_donation })), [episodeTrend])
 
   const bjBarData = useMemo(() =>
-    bjStats.slice(0, 10).map(b => ({ name: b.bj_name, hearts: b.total_hearts })), [bjStats])
+    bjStats.map(b => ({ name: b.bj_name, hearts: b.total_hearts })), [bjStats])
 
   if (isLoading) {
     return (
@@ -124,7 +129,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
           <div className={styles.cardContent}>
             <span className={styles.cardLabel}>총 후원 하트</span>
             <div className={styles.cardValueRow}>
-              <span className={styles.cardValue}>{formatNumber(summary.total_hearts)}</span>
+              <span className={styles.cardValue} style={{ color: '#fd68ba' }}>{formatNumber(summary.total_hearts)}</span>
               <DeltaBadge value={deltas?.heartsDelta} />
             </div>
             <span className={styles.cardDesc}>선택한 범위 내 전체 후원 하트 합계</span>
@@ -140,7 +145,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
           <div className={styles.cardContent}>
             <span className={styles.cardLabel}>총 후원 건수</span>
             <div className={styles.cardValueRow}>
-              <span className={styles.cardValue}>{formatNumber(summary.total_donations)}</span>
+              <span className={styles.cardValue} style={{ color: '#3b82f6' }}>{formatNumber(summary.total_donations)}</span>
             </div>
             <span className={styles.cardDesc}>개별 후원 횟수의 합계</span>
           </div>
@@ -156,7 +161,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
           <div className={styles.cardContent}>
             <span className={styles.cardLabel}>후원자 수</span>
             <div className={styles.cardValueRow}>
-              <span className={styles.cardValue}>{formatNumber(summary.unique_donors)}</span>
+              <span className={styles.cardValue} style={{ color: '#10b981' }}>{formatNumber(summary.unique_donors)}</span>
               <DeltaBadge value={deltas?.donorsDelta} />
             </div>
             <span className={styles.cardDesc}>중복 제거된 고유 후원자 수</span>
@@ -173,7 +178,7 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
           <div className={styles.cardContent}>
             <span className={styles.cardLabel}>평균 후원</span>
             <div className={styles.cardValueRow}>
-              <span className={styles.cardValue}>{formatNumber(summary.avg_donation)}</span>
+              <span className={styles.cardValue} style={{ color: '#f59e0b' }}>{formatNumber(summary.avg_donation)}</span>
               <DeltaBadge value={deltas?.avgDelta} />
             </div>
             <span className={styles.cardDesc}>후원 1건당 평균 하트</span>
@@ -208,22 +213,38 @@ export function AnalyticsSummaryCard({ summary, bjStats, episodeTrend, isLoading
         </div>
       )}
 
-      {/* BJ 후원 분포 - Recharts 수평 BarChart */}
-      {bjBarData.length > 0 && (
-        <ChartContainer title="BJ별 후원 분포 (전체 출연자)" height={Math.max(250, bjBarData.length * 36)}>
-          <BarChart data={bjBarData} layout="vertical" margin={{ top: 5, right: 60, left: 10, bottom: 5 }}>
-            <CartesianGrid {...CHART_THEME.grid} horizontal={false} />
-            <XAxis type="number" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={formatChartNumber} />
-            <YAxis type="category" dataKey="name" width={70} {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 13 }} />
-            <ChartTooltip valueFormatter={(v) => `${v.toLocaleString()} 하트`} />
-            <Bar dataKey="hearts" radius={[0, 4, 4, 0]} maxBarSize={28}>
-              {bjBarData.map((_, i) => (
-                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ChartContainer>
-      )}
+      {/* BJ 후원 분포 - 상위 N명 + 펼치기 */}
+      {bjBarData.length > 0 && (() => {
+        const visibleData = showAllBj ? bjBarData : bjBarData.slice(0, BJ_SHOW_COUNT)
+        const hasMore = bjBarData.length > BJ_SHOW_COUNT
+
+        return (
+          <div className={styles.section}>
+            <ChartContainer title={`BJ별 후원 분포 (${showAllBj ? '전체' : `상위 ${BJ_SHOW_COUNT}명`})`} height={Math.max(200, visibleData.length * 36)}>
+              <BarChart data={visibleData} layout="vertical" margin={{ top: 5, right: 60, left: 10, bottom: 5 }}>
+                <CartesianGrid {...CHART_THEME.grid} horizontal={false} />
+                <XAxis type="number" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={formatChartNumber} />
+                <YAxis type="category" dataKey="name" width={70} {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 13 }} />
+                <ChartTooltip valueFormatter={(v) => `${v.toLocaleString()} 하트`} />
+                <Bar dataKey="hearts" radius={[0, 4, 4, 0]} maxBarSize={28}>
+                  {visibleData.map((_, i) => (
+                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+            {hasMore && (
+              <button
+                className={styles.expandBtn}
+                onClick={() => setShowAllBj(!showAllBj)}
+              >
+                <ChevronDown size={14} style={{ transform: showAllBj ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                {showAllBj ? '접기' : `나머지 ${bjBarData.length - BJ_SHOW_COUNT}명 더보기`}
+              </button>
+            )}
+          </div>
+        )
+      })()}
     </div>
   )
 }

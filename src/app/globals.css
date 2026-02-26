@@ -309,6 +309,11 @@
   --text-tertiary: #a1a1aa;
   --text-muted: #71717a;
 
+  /* Analytics Dashboard Surfaces */
+  --bg-secondary: #141417;
+  --bg-tertiary: #1a1a1e;
+  --border-color: rgba(255, 255, 255, 0.1);
+
   /* Components */
   --card-bg: #141417;
   --card-border: rgba(255, 255, 255, 0.08); /* Subtle White Border */
@@ -529,6 +534,11 @@
   --text-secondary: #27272a;
   --text-tertiary: #52525b;
   --text-muted: #71717a;
+
+  /* Analytics Dashboard Surfaces */
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f4f4f5;
+  --border-color: rgba(0, 0, 0, 0.1);
 
   /* Components */
   --card-bg: #ffffff;

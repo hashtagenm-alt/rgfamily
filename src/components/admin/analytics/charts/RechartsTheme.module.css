@@ -1,12 +1,13 @@
 .chartContainer {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .chartHeader {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .chartTitle {
@@ -16,7 +17,7 @@
 }
 
 .chartSubtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   margin-top: 4px;
 }
@@ -26,34 +27,34 @@
   background: rgba(24, 24, 27, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: 12px 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 10px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .tooltipLabel {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 8px;
-  padding-bottom: 6px;
+  margin-bottom: 6px;
+  padding-bottom: 5px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .tooltipItems {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .tooltipItem {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
 }
 
 .tooltipDot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }

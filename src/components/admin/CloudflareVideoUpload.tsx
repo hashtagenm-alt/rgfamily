@@ -85,28 +85,49 @@ export default function CloudflareVideoUpload({
   const pollVideoStatus = async (uid: string): Promise<{ uid: string; duration: number }> => {
     const maxAttempts = 120 // 최대 10분 (5초 간격)
     let attempts = 0
+    let consecutiveErrors = 0
+    const MAX_CONSECUTIVE_ERRORS = 5
 
     while (attempts < maxAttempts) {
       await new Promise((resolve) => setTimeout(resolve, 5000))
       attempts++
 
-      const res = await fetch(`/api/cloudflare-stream/${uid}`)
-      if (!res.ok) continue
-
-      const data = await res.json()
-
-      if (data.status?.state === 'ready') {
-        return {
-          uid,
-          duration: data.duration || 0,
+      try {
+        const res = await fetch(`/api/cloudflare-stream/${uid}`)
+        if (!res.ok) {
+          consecutiveErrors++
+          if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+            throw new Error(`상태 확인 ${MAX_CONSECUTIVE_ERRORS}회 연속 실패 (HTTP ${res.status})`)
+          }
+          continue
         }
-      }
 
-      if (data.status?.state === 'error') {
-        throw new Error(data.status.errorReasonText || '영상 처리 중 오류가 발생했습니다.')
-      }
+        consecutiveErrors = 0
+        const data = await res.json()
 
-      setProcessingProgress(data.status?.pctComplete || '0')
+        if (data.status?.state === 'ready') {
+          return {
+            uid,
+            duration: data.duration || 0,
+          }
+        }
+
+        if (data.status?.state === 'error') {
+          throw new Error(data.status.errorReasonText || '영상 처리 중 오류가 발생했습니다.')
+        }
+
+        setProcessingProgress(data.status?.pctComplete || '0')
+      } catch (err) {
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          // 네트워크 에러 (fetch 자체 실패)
+          consecutiveErrors++
+          if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+            throw new Error('네트워크 연결을 확인해주세요. 영상은 이미 업로드되었을 수 있습니다.')
+          }
+          continue
+        }
+        throw err // 다른 에러는 그대로 전파
+      }
     }
 
     throw new Error('영상 처리 시간이 초과되었습니다. 나중에 다시 확인해주세요.')
@@ -156,12 +177,39 @@ export default function CloudflareVideoUpload({
     })
   }
 
+  // 재시도 헬퍼 (URL 발급 등 일회성 fetch에 사용)
+  const fetchWithRetry = async (
+    url: string,
+    options: RequestInit,
+    maxRetries = 3,
+  ): Promise<Response> => {
+    const delays = [0, 2000, 5000]
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const res = await fetch(url, options)
+        if (res.ok || attempt === maxRetries) return res
+        // 5xx 서버 에러만 재시도
+        if (res.status >= 500) {
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, delays[attempt] || 5000))
+            continue
+          }
+        }
+        return res // 4xx 등은 즉시 반환
+      } catch (err) {
+        if (attempt === maxRetries) throw err
+        await new Promise(r => setTimeout(r, delays[attempt] || 5000))
+      }
+    }
+    throw new Error('최대 재시도 횟수 초과')
+  }
+
   // TUS 업로드 (대용량 파일용 - 청크 업로드, 이어받기 지원)
   const uploadWithTus = async (file: File): Promise<string> => {
     setIsTusUpload(true)
 
-    // 1. TUS 업로드 URL 발급
-    const urlRes = await fetch('/api/cloudflare-stream/tus-upload', {
+    // 1. TUS 업로드 URL 발급 (재시도 포함)
+    const urlRes = await fetchWithRetry('/api/cloudflare-stream/tus-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -226,10 +274,10 @@ export default function CloudflareVideoUpload({
     })
   }
 
-  // 일반 업로드 (작은 파일용)
+  // 일반 업로드 (작은 파일용, 재시도 포함)
   const uploadWithXhr = async (file: File): Promise<string> => {
-    // 1. Direct Creator Upload URL 발급
-    const urlRes = await fetch('/api/cloudflare-stream/upload-url', {
+    // 1. Direct Creator Upload URL 발급 (재시도 포함)
+    const urlRes = await fetchWithRetry('/api/cloudflare-stream/upload-url', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: file.name }),
@@ -242,33 +290,52 @@ export default function CloudflareVideoUpload({
 
     const { uploadURL, uid } = await urlRes.json()
 
-    // 2. Cloudflare에 직접 업로드 (XHR로 진행률 추적)
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
-      const formData = new FormData()
-      formData.append('file', file)
+    // 2. Cloudflare에 직접 업로드 (XHR로 진행률 추적, 재시도 포함)
+    const MAX_XHR_RETRIES = 2
+    const XHR_TIMEOUT = 5 * 60 * 1000 // 5분 타임아웃
 
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const pct = Math.round((e.loaded / e.total) * 100)
-          setUploadProgress(pct)
-        }
-      })
+    for (let attempt = 0; attempt <= MAX_XHR_RETRIES; attempt++) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          const formData = new FormData()
+          formData.append('file', file)
 
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve()
-        } else {
-          reject(new Error(`업로드 실패 (${xhr.status})`))
-        }
-      })
+          xhr.timeout = XHR_TIMEOUT
 
-      xhr.addEventListener('error', () => reject(new Error('네트워크 오류')))
-      xhr.addEventListener('abort', () => reject(new Error('업로드 취소')))
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 100)
+              setUploadProgress(pct)
+            }
+          })
 
-      xhr.open('POST', uploadURL)
-      xhr.send(formData)
-    })
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve()
+            } else {
+              reject(new Error(`업로드 실패 (${xhr.status})`))
+            }
+          })
+
+          xhr.addEventListener('error', () => reject(new Error('네트워크 오류')))
+          xhr.addEventListener('timeout', () => reject(new Error('업로드 시간 초과')))
+          xhr.addEventListener('abort', () => reject(new Error('업로드 취소')))
+
+          xhr.open('POST', uploadURL)
+          xhr.send(formData)
+        })
+        return uid // 성공 시 즉시 반환
+      } catch (err) {
+        const message = err instanceof Error ? err.message : '알 수 없는 오류'
+        // 사용자 취소는 재시도하지 않음
+        if (message === '업로드 취소') throw err
+        if (attempt === MAX_XHR_RETRIES) throw err
+        // 재시도 전 대기
+        setUploadProgress(0)
+        await new Promise(r => setTimeout(r, 3000))
+      }
+    }
 
     return uid
   }
