@@ -13,6 +13,7 @@
  */
 
 import { getServiceClient } from './lib/supabase'
+import { nicknameAliases } from '../src/lib/utils/nickname-aliases'
 const supabase = getServiceClient()
 
 // 시그니처 획득 기준
@@ -68,15 +69,16 @@ async function getEpisodeDonorTotals(): Promise<EpisodeDonation[]> {
 
   const donations = allDonations
 
-  // 에피소드별 + 후원자별 집계
+  // 에피소드별 + 후원자별 집계 (닉네임 정규화 적용)
   const totals: Record<string, EpisodeDonation> = {}
   for (const d of donations || []) {
-    const key = `${d.episode_id}|${d.donor_name}`
+    const name = nicknameAliases[d.donor_name] || d.donor_name
+    const key = `${d.episode_id}|${name}`
     if (!totals[key]) {
       totals[key] = {
         episode_id: d.episode_id,
         episode_number: episodeMap.get(d.episode_id) || 0,
-        donor_name: d.donor_name,
+        donor_name: name,
         total: 0
       }
     }

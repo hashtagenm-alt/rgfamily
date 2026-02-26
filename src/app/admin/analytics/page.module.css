@@ -33,7 +33,7 @@
   border-radius: 8px;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 16px; /* CLAUDE.md: 최소 16px */
+  font-size: 16px;
   cursor: pointer;
   min-width: 150px;
   transition: border-color 0.2s;
@@ -59,7 +59,7 @@
 
 .tabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
@@ -69,13 +69,13 @@
 .tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid var(--border-color);
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
   border-radius: 8px;
-  background: var(--bg-secondary);
+  background: transparent;
   color: var(--text-secondary);
-  font-size: 16px; /* CLAUDE.md: 최소 16px */
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -84,21 +84,20 @@
 
 .tab:hover {
   background: var(--bg-tertiary);
-  color: var(--color-primary, #fd68ba); /* CLAUDE.md: 호버 시 핑크 */
-  border-color: var(--color-primary, #fd68ba);
+  color: var(--text-primary);
 }
 
 .tab.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
+  background: var(--bg-tertiary);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .content {
   min-height: 400px;
 }
 
-/* 반응형 */
 @media (max-width: 768px) {
   .container {
     padding: 16px;
@@ -127,8 +126,8 @@
   }
 
   .tab {
-    padding: 8px 12px;
-    font-size: 14px; /* 모바일에서도 14px 이상 유지 */
+    padding: 8px 10px;
+    font-size: 13px;
   }
 
   .tab span {

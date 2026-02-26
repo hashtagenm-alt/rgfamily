@@ -6,7 +6,7 @@ import type { EpisodeComparison } from '@/lib/actions/analytics'
 import styles from './EpisodeComparisonPanel.module.css'
 
 interface EpisodeComparisonPanelProps {
-  episodes: { id: number; title: string; season_id: number }[]
+  episodes: { id: number; title: string; description: string | null; season_id: number; episode_number: number }[]
   comparison: EpisodeComparison | null
   isLoading: boolean
   onCompare: (ep1Id: number, ep2Id: number) => Promise<void>
@@ -55,7 +55,7 @@ export function EpisodeComparisonPanel({
             <option value="">선택...</option>
             {episodes.map((ep) => (
               <option key={ep.id} value={ep.id} disabled={ep.id === ep2Id}>
-                {ep.title}
+                {ep.episode_number}화{ep.description ? ` - ${ep.description}` : ''}
               </option>
             ))}
           </select>
@@ -75,7 +75,7 @@ export function EpisodeComparisonPanel({
             <option value="">선택...</option>
             {episodes.map((ep) => (
               <option key={ep.id} value={ep.id} disabled={ep.id === ep1Id}>
-                {ep.title}
+                {ep.episode_number}화{ep.description ? ` - ${ep.description}` : ''}
               </option>
             ))}
           </select>

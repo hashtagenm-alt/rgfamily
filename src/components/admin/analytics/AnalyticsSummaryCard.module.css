@@ -1,7 +1,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .loading,
@@ -29,26 +29,28 @@
   opacity: 0.7;
 }
 
+/* KPI 카드 그리드 */
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 12px;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px;
+  gap: 10px;
+  padding: 16px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  transition: border-color 0.2s, transform 0.2s;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
-  border-color: var(--color-primary, #fd68ba);
-  transform: translateY(-2px);
+  border-color: var(--text-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .cardTop {
@@ -61,21 +63,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   flex-shrink: 0;
 }
 
 .sparkline {
   flex-shrink: 0;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .cardContent {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .cardLabel {
@@ -84,7 +86,7 @@
 }
 
 .cardDesc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-tertiary);
 }
 
@@ -106,79 +108,94 @@
   gap: 2px;
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .deltaUp {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.12);
   color: #10b981;
 }
 
 .deltaDown {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
 }
 
+/* 하이라이트 */
 .highlights {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 12px;
 }
 
 .highlightCard {
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(253, 104, 186, 0.1), rgba(253, 104, 186, 0.05));
-  border: 1px solid rgba(253, 104, 186, 0.2);
-  border-radius: 12px;
+  padding: 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   text-align: center;
 }
 
 .highlightTitle {
-  font-size: 14px; /* 라벨은 14px 허용 */
+  font-size: 14px;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .highlightValue {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 600;
-  color: var(--color-primary);
+  color: #fd68ba;
 }
 
+/* 섹션 래퍼 — 블록 구분 */
+.section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* 섹션 제목 */
 .sectionTitle {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
 }
 
+/* 인사이트 */
 .insightsSection {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .insightsList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .insightItem {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-primary);
+  line-height: 1.5;
 }
 
 .insightBullet {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: var(--color-primary);
+  background: #fd68ba;
   flex-shrink: 0;
 }
 
@@ -186,6 +203,30 @@
   .summaryGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.expandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expandBtn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
 }
 
 @media (max-width: 640px) {
@@ -198,7 +239,7 @@
   }
 
   .cardValue {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .barLabel {

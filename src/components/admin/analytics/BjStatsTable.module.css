@@ -1,52 +1,56 @@
+/* ── 컨테이너 ── */
 .container {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 
+/* ── 헤더 ── */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .headerDesc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-tertiary);
   margin-top: 4px;
 }
 
 .refreshBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 7px 14px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .refreshBtn:hover {
-  background: var(--bg-tertiary);
-  color: var(--color-primary, #fd68ba);
-  border-color: var(--color-primary, #fd68ba);
+  background: rgba(253, 104, 186, 0.06);
+  color: #fd68ba;
+  border-color: rgba(253, 104, 186, 0.3);
 }
 
 .refreshBtn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -59,13 +63,14 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── 로딩/빈 상태 ── */
 .loading,
 .empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 64px 20px;
   color: var(--text-secondary);
   gap: 12px;
 }
@@ -74,45 +79,62 @@
   animation: spin 1s linear infinite;
 }
 
-/* 신규 고액 후원자 알림 */
+/* ── 알림 카드 ── */
 .alertsRow {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 14px 24px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .alertCard {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.12);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-primary);
 }
 
-.chartsRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  padding: 16px 20px;
+/* ── 성장 인사이트 ── */
+.growthInsightsSection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.chartHalf {
-  border: none !important;
-  padding: 12px !important;
+.growthInsightCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 240px;
+  line-height: 1.6;
 }
 
-@media (max-width: 1024px) {
-  .chartsRow {
-    grid-template-columns: 1fr;
-  }
+.growthInsightText {
+  line-height: 1.6;
 }
 
+.consistencyTag {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* ── 테이블 ── */
 .tableWrapper {
   overflow-x: auto;
 }
@@ -120,58 +142,100 @@
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .table th,
 .table td {
-  padding: 12px 16px;
+  padding: 0 16px;
   text-align: left;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border-color);
-}
-
-.table th {
-  background: var(--bg-tertiary);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.table th {
+  height: 44px;
+  background: var(--bg-tertiary);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .table td {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-primary);
 }
 
 .table tbody tr {
-  transition: background 0.2s, border-color 0.2s;
+  height: 52px;
+  transition: background 0.15s;
 }
 
 .table tbody tr:hover {
-  background: rgba(253, 104, 186, 0.08);
+  background: var(--bg-tertiary);
 }
 
-.table tbody tr:hover td {
-  color: var(--text-primary);
+.table tbody tr:last-child td {
+  border-bottom: none;
 }
 
+/* ── 정렬 ── */
 .sortable {
   cursor: pointer;
   user-select: none;
+  transition: color 0.15s;
 }
 
 .sortable:hover {
-  color: var(--color-primary);
+  color: #fd68ba;
 }
 
 .sortable.active {
-  color: var(--color-primary);
+  color: #fd68ba;
 }
 
+/* ── 컬럼 너비 ── */
 .rankCol {
-  width: 50px;
+  width: 48px;
   text-align: center;
 }
 
+.bjCol {
+  width: 17%;
+}
+
+.heartsCol {
+  width: 15%;
+}
+
+.countCol {
+  width: 10%;
+}
+
+.donorsCol {
+  width: 10%;
+}
+
+.avgCol {
+  width: 12%;
+}
+
+.growthColHeader {
+  width: 10%;
+  text-align: center;
+}
+
+.expandCol {
+  width: 36px;
+  text-align: center;
+}
+
+/* ── 순위 뱃지 ── */
 .rank {
   display: inline-flex;
   align-items: center;
@@ -180,51 +244,50 @@
   height: 28px;
   border-radius: 50%;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   background: var(--bg-tertiary);
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
 .rank1 {
-  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  background: linear-gradient(135deg, #ffd700, #f0c000);
   color: #1a1a1a;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.25);
 }
 
 .rank2 {
-  background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+  background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
   color: #1a1a1a;
 }
 
 .rank3 {
-  background: linear-gradient(135deg, #cd7f32, #a0522d);
+  background: linear-gradient(135deg, #cd7f32, #b06c2a);
   color: #1a1a1a;
 }
 
+/* ── BJ 이름 ── */
 .bjName {
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-primary);
 }
 
 .newCount {
+  margin-left: 8px;
   font-size: 11px;
   color: #10b981;
   font-weight: 600;
 }
 
 .hearts {
-  color: var(--color-primary);
-  font-weight: 600;
+  color: #fd68ba;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.expandCol {
-  width: 40px;
-  text-align: center;
-}
-
+/* ── 확장 아이콘 ── */
 .expandIcon {
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   transition: transform 0.2s;
 }
 
@@ -232,9 +295,55 @@
   transform: rotate(90deg);
 }
 
-/* 확장 행 */
+/* ── 성장률 셀 ── */
+.growthCell {
+  text-align: center;
+}
+
+.growthCellInner {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.growthBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.growthBadgeUp {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.growthBadgeDown {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.growthBadgeNeutral {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+}
+
+.growthNA {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.consistencyDot {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* ── 확장 행 ── */
 .expandedRow {
-  background: rgba(253, 104, 186, 0.05) !important;
+  background: var(--bg-tertiary) !important;
 }
 
 .detailRow {
@@ -243,17 +352,19 @@
 
 .detailRow td {
   padding: 0 !important;
-  border-bottom: 2px solid var(--color-primary, #fd68ba);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .detailContent {
-  padding: 16px 20px;
+  padding: 20px 24px;
 }
 
 .detailTitle {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   margin-bottom: 12px;
 }
 
@@ -265,68 +376,246 @@
   color: var(--text-secondary);
 }
 
+/* ── BJ 에피소드 요약 카드 ── */
+.bjSummaryRow {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.bjSummaryStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.bjSummaryLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.bjSummaryValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.bjSummaryDesc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.growthUp { color: #10b981; }
+.growthDown { color: #ef4444; }
+.growthNeutralText { color: var(--text-tertiary); }
+
+/* ── 기여도 바 ── */
+.donorContributionRow {
+  margin-bottom: 20px;
+}
+
+.contributionBar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  margin-bottom: 8px;
+}
+
+.contributionFillNew {
+  height: 100%;
+  background: #10b981;
+  border-radius: 3px 0 0 3px;
+}
+
+.contributionFillExisting {
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 0 3px 3px 0;
+}
+
+.contributionLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ── 차트 ── */
+.bjEpChart {
+  margin-bottom: 20px;
+}
+
+/* ── Top 후원자 리스트 ── */
 .donorList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+}
+
+.donorRowWrapper {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.donorRowWrapper:hover {
+  border-color: rgba(253, 104, 186, 0.2);
 }
 
 .donorRow {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
   font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.donorRow:hover {
+  background: var(--bg-tertiary);
 }
 
 .donorName2 {
   min-width: 100px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .newBadge {
   display: inline-block;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
-  background: #10b981;
-  color: white;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .donorHearts {
   min-width: 80px;
-  color: var(--color-primary);
-  font-weight: 600;
+  color: #fd68ba;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .donorCount {
   min-width: 50px;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
+  font-size: 13px;
 }
 
-/* 미니 스파크라인 */
+.donorExpandIcon {
+  color: var(--text-tertiary);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── 후원자 상세 추이 ── */
+.donorDetail {
+  padding: 12px 14px;
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--border-color);
+}
+
+.donorEpList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.donorEpItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.donorEpNum {
+  min-width: 34px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.donorEpBar {
+  flex: 1;
+  height: 10px;
+  background: var(--bg-secondary);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.donorEpBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #fd68ba, #ff8fd8);
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.donorEpAmount {
+  min-width: 72px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.donorEpChange {
+  min-width: 48px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.donorEpSummary {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ── 미니 스파크라인 ── */
 .sparkline {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 28px;
+  height: 22px;
   margin-left: auto;
 }
 
 .sparkBar {
-  width: 6px;
-  min-height: 4px;
-  background: var(--color-primary, #fd68ba);
+  width: 4px;
+  min-height: 3px;
+  background: #fd68ba;
   border-radius: 2px 2px 0 0;
-  opacity: 0.7;
+  opacity: 0.5;
   transition: opacity 0.2s;
 }
 
@@ -334,18 +623,292 @@
   opacity: 1;
 }
 
+/* ── BJ Insights Section ── */
+.insightsSection {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Donor Health Bar */
+.donorHealthRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.donorHealthTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.donorHealthBar {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+}
+
+.healthGrowing { background: #10b981; }
+.healthStable { background: #3b82f6; }
+.healthDeclining { background: #f59e0b; }
+.healthAtRisk { background: #ef4444; }
+
+.donorHealthLegend {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.legendDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Insight Metrics Row */
+.insightMetricsRow {
+  display: flex;
+  gap: 12px;
+}
+
+.insightMetric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.insightMetricLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.insightMetricValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.insightMetricDesc {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* Actionable Insights */
+.actionInsightsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.actionInsightCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.actionInsightCard svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* BJ Affinity Section */
+.affinitySection {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.affinityTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.exclusiveInfo {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.affinityList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.affinityItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.affinityBj {
+  min-width: 80px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.affinityBarBg {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 150px;
+}
+
+.affinityBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.affinityPct {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 40px;
+  text-align: right;
+}
+
+.affinityCount {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  min-width: 35px;
+}
+
+.affinityItemBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.affinityItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.affinityHearts {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-left: auto;
+}
+
+.affinityDonorList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.affinityDonor {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.affinityDonorHearts {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 1200px) {
+  .bjSummaryRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .bjSummaryRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  .header {
+    padding: 16px;
+  }
+
+  .table {
+    table-layout: auto;
+  }
+
   .table th,
   .table td {
-    padding: 10px 12px;
-    font-size: 14px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .table tbody tr {
+    height: 48px;
+  }
+
+  .donorsCol,
+  .avgCol {
+    display: none;
+  }
+
+  .detailContent {
+    padding: 16px;
   }
 
   .donorRow {
     flex-wrap: wrap;
+    gap: 8px;
   }
 
   .sparkline {
     display: none;
+  }
+
+  .bjSummaryRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .growthInsightsSection {
+    padding: 12px 16px;
+  }
+
+  .alertsRow {
+    padding: 12px 16px;
   }
 }

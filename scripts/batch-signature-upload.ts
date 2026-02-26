@@ -66,6 +66,7 @@ interface CliOptions {
   minSig: number
   useLocal: boolean
   unit: 'excel' | 'crew'
+  force: boolean  // 이미 등록된 영상도 강제 재업로드
 }
 
 interface RcloneFile {
@@ -441,6 +442,7 @@ function parseArgs(): CliOptions {
     minSig: 10000,
     useLocal: false,
     unit: 'excel',
+    force: false,
   }
 
   for (let i = 0; i < args.length; i++) {
@@ -452,6 +454,7 @@ function parseArgs(): CliOptions {
       case '--min-sig': options.minSig = parseInt(args[++i], 10); break
       case '--use-local': options.useLocal = true; break
       case '--unit': options.unit = args[++i] as 'excel' | 'crew'; break
+      case '--force': options.force = true; break
       case '--help':
         printUsage()
         process.exit(0)
@@ -479,6 +482,7 @@ function printUsage() {
   --member <name>    특정 멤버만 처리
   --min-sig <num>    최소 sig_number (기본: 10000)
   --use-local        로컬 파일(downloaded-videos/) 우선 사용
+  --force            이미 등록된 영상도 강제 재업로드 (Cloudflare UID 갱신)
 
 쇼츠 옵션:
   --unit <unit>      excel 또는 crew (기본: excel)
@@ -544,7 +548,7 @@ async function buildSignatureTasks(
     if (!signatureId) continue
 
     const regKey = `${signatureId}|${memberId}`
-    if (registeredSet.has(regKey)) continue
+    if (!options.force && registeredSet.has(regKey)) continue
 
     let localPath: string | undefined
     if (options.useLocal) {
@@ -738,6 +742,7 @@ async function main() {
   } else {
     console.log(`Unit: ${options.unit}`)
   }
+  if (options.force) console.log(`강제 재업로드: ON (등록된 영상도 재업로드)`)
   if (options.limit) console.log(`최대 처리: ${options.limit}개`)
 
   // 태스크 빌드

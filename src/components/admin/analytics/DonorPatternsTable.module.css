@@ -1,7 +1,8 @@
 .container {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
 
@@ -20,7 +21,7 @@
 }
 
 .headerDesc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-tertiary);
   margin-top: 4px;
 }
@@ -29,20 +30,20 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 14px; /* 버튼 텍스트 14px */
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .refreshBtn:hover {
   background: var(--bg-tertiary);
-  color: var(--color-primary, #fd68ba); /* CLAUDE.md: 호버 시 핑크 */
-  border-color: var(--color-primary, #fd68ba);
+  color: #fd68ba;
+  border-color: #fd68ba;
 }
 
 .spinning {
@@ -69,11 +70,12 @@
   animation: spin 1s linear infinite;
 }
 
+/* 패턴 통계 카드 */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -82,7 +84,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   background: var(--bg-tertiary);
@@ -96,7 +98,7 @@
 
 .statCard.active {
   border-color: var(--pattern-color);
-  background: color-mix(in srgb, var(--pattern-color) 10%, transparent);
+  background: color-mix(in srgb, var(--pattern-color) 8%, transparent);
 }
 
 .statType {
@@ -106,17 +108,30 @@
 }
 
 .statCount {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .statDesc {
-  font-size: 12px; /* 최소 읽을 수 있는 크기로 증가 */
+  font-size: 12px;
   color: var(--text-secondary);
   text-align: center;
 }
 
+/* 상단 섹션: 도넛 + 통계 카드 */
+.topSection {
+  display: flex;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.donutWrapper {
+  flex: 0 0 300px;
+}
+
+/* 검색 */
 .searchWrapper {
   display: flex;
   align-items: center;
@@ -127,17 +142,17 @@
 
 .searchInput {
   flex: 1;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  font-size: 16px; /* CLAUDE.md: 최소 16px */
+  font-size: 15px;
   transition: border-color 0.2s;
 }
 
 .searchInput:focus {
-  border-color: var(--color-primary, #fd68ba);
+  border-color: #fd68ba;
   outline: none;
 }
 
@@ -149,8 +164,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  border-radius: 16px;
+  padding: 4px 10px;
+  border-radius: 14px;
   color: white;
   font-size: 12px;
   font-weight: 500;
@@ -166,6 +181,7 @@
   margin-left: 4px;
 }
 
+/* 테이블 */
 .tableWrapper {
   overflow-x: auto;
 }
@@ -184,28 +200,30 @@
 
 .table th {
   background: var(--bg-tertiary);
-  font-size: 14px; /* 헤더 14px */
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
+  padding: 10px 12px;
 }
 
 .table td {
-  font-size: 16px; /* CLAUDE.md: 본문 최소 16px */
+  font-size: 14px;
   color: var(--text-primary);
+  padding: 10px 12px;
 }
 
 .table tbody tr {
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
 
 .table tbody tr:hover {
-  background: rgba(253, 104, 186, 0.08); /* 핑크 틴트 */
+  background: var(--bg-tertiary);
 }
 
 .donorName {
   font-weight: 500;
-  max-width: 150px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -213,15 +231,15 @@
 
 .patternBadge {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: 10px;
   color: white;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .hearts {
-  color: var(--color-primary);
+  color: #fd68ba;
   font-weight: 600;
 }
 
@@ -230,18 +248,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* 상단 섹션: 도넛 + 통계 카드 */
-.topSection {
-  display: flex;
-  gap: 16px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.donutWrapper {
-  flex: 0 0 320px;
 }
 
 /* 트렌드 토글 */
@@ -253,11 +259,11 @@
 }
 
 .trendBtn {
-  padding: 6px 12px;
+  padding: 5px 10px;
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
@@ -268,13 +274,19 @@
 }
 
 .trendActive {
-  background: var(--color-primary);
+  background: #fd68ba;
   color: white;
+}
+
+.trendDesc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 /* 확장 행 */
 .expandedRow {
-  background: rgba(253, 104, 186, 0.05) !important;
+  background: var(--bg-tertiary) !important;
 }
 
 .detailRow {
@@ -283,7 +295,7 @@
 
 .detailRow td {
   padding: 0 !important;
-  border-bottom: 2px solid var(--color-primary, #fd68ba);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .expandCol {
@@ -302,21 +314,21 @@
 
 /* BJ별 분포 */
 .bjDistribution {
-  padding: 16px 20px;
+  padding: 14px 20px;
 }
 
 .bjDistTitle {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .bjDistBars {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .bjDistItem {
@@ -326,7 +338,7 @@
 }
 
 .bjDistName {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-primary);
   min-width: 80px;
   font-weight: 500;
@@ -334,7 +346,7 @@
 
 .bjDistBarBg {
   flex: 1;
-  height: 16px;
+  height: 14px;
   background: var(--bg-secondary);
   border-radius: 4px;
   overflow: hidden;
@@ -348,24 +360,334 @@
 }
 
 .bjDistPct {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   min-width: 40px;
   text-align: right;
 }
 
 .bjDistMeta {
-  margin-top: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.peakHours {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.peakIcon {
+  color: #fd68ba;
+  flex-shrink: 0;
+}
+
+.peakTop {
+  color: #fd68ba;
+  font-weight: 600;
+}
+
+.peakSub {
+  color: var(--text-secondary);
+}
+
+.peakCount {
+  font-weight: 400;
+  font-size: 11px;
+  opacity: 0.7;
+  margin-left: 1px;
+}
+
+.moreInfo {
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+}
+
+/* 후원자 상세 검색 */
+.detailSearchSection {
+  border-top: 1px solid var(--border-color);
+  padding: 16px 20px;
+}
+
+.detailSearchHeader {
+  margin-bottom: 14px;
+}
+
+.detailSearchTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detailSearchBox {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.detailSearchInput {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+.detailSearchInput:focus {
+  border-color: #fd68ba;
+  outline: none;
+}
+
+.detailSearchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.detailSearchBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  background: #fd68ba;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.detailSearchBtn:hover {
+  opacity: 0.9;
+}
+
+.detailSearchBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.detailLoading,
+.detailNoResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  gap: 12px;
+}
+
+.detailResult {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.detailProfile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.detailProfileLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detailAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fd68ba;
+  color: white;
+  flex-shrink: 0;
+}
+
+.detailName {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-right: 8px;
+}
+
+.detailStats {
+  display: flex;
+  gap: 20px;
+}
+
+.detailStatItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detailStatValue {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detailStatLabel {
   font-size: 13px;
   color: var(--text-secondary);
 }
 
-.moreInfo {
-  padding: 12px;
-  text-align: center;
+.detailCharts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* RFM cell */
+.rfmCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.rfmSegmentTag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid;
   font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rfmStars {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.starRow {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.starLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  min-width: 28px;
+  font-weight: 500;
+}
+
+.starFilled {
+  color: #fbbf24;
+}
+
+.starEmpty {
+  color: var(--border-color);
+}
+
+.rfmNA {
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+/* RFM segment badge (used in detail and search) */
+.rfmSegmentBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* CLV tier badges */
+.clvTier {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.clvTierPlatinum {
+  background: linear-gradient(135deg, rgba(168, 162, 158, 0.15), rgba(214, 211, 209, 0.15));
+  color: #a8a29e;
+}
+
+.clvTierGold {
+  background: rgba(255, 215, 0, 0.12);
+  color: #d4a800;
+}
+
+.clvTierSilver {
+  background: rgba(192, 192, 192, 0.12);
+  color: #8b8b8b;
+}
+
+.clvTierBronze {
+  background: rgba(205, 127, 50, 0.12);
+  color: #cd7f32;
+}
+
+/* CRM insights in expanded row */
+.crmInsights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.crmInsightItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.crmInsightLabel {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.crmInsightDesc {
+  font-size: 14px;
   color: var(--text-secondary);
-  background: var(--bg-tertiary);
+}
+
+/* Search CRM badges */
+.searchCrmBadges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
 }
 
 @media (max-width: 1024px) {
@@ -379,6 +701,10 @@
 
   .donutWrapper {
     flex: none;
+  }
+
+  .detailCharts {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -401,5 +727,10 @@
 
   .bjDistName {
     min-width: 60px;
+  }
+
+  .detailProfile {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

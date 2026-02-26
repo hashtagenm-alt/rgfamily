@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import {
-  ComposedChart, Area, Line, Bar,
+  ComposedChart, Area, Line,
   AreaChart,
-  LineChart,
   XAxis, YAxis, CartesianGrid, Legend,
 } from 'recharts'
 import type { EpisodeTrendData, BjEpisodeTrendData } from '@/lib/actions/analytics'
@@ -18,41 +17,11 @@ interface EpisodeTrendPanelProps {
   isLoading: boolean
 }
 
-function TrendIcon({ value }: { value: number }) {
-  if (value > 0) return <TrendingUp size={16} className={styles.trendUp} />
-  if (value < 0) return <TrendingDown size={16} className={styles.trendDown} />
-  return <Minus size={16} className={styles.trendNeutral} />
-}
 
 export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: EpisodeTrendPanelProps) {
   const [showHearts, setShowHearts] = useState(true)
   const [showDonors, setShowDonors] = useState(true)
   const [showAvg, setShowAvg] = useState(false)
-
-  // KPI 요약
-  const kpi = useMemo(() => {
-    if (episodeTrend.length < 2) return null
-    const last = episodeTrend[episodeTrend.length - 1]
-    const prev = episodeTrend[episodeTrend.length - 2]
-    const totalHearts = episodeTrend.reduce((s, e) => s + e.total_hearts, 0)
-    const avgHearts = Math.round(totalHearts / episodeTrend.length)
-
-    const heartChange = prev.total_hearts > 0
-      ? Math.round(((last.total_hearts - prev.total_hearts) / prev.total_hearts) * 100)
-      : 0
-    const donorChange = prev.donor_count > 0
-      ? Math.round(((last.donor_count - prev.donor_count) / prev.donor_count) * 100)
-      : 0
-
-    return {
-      lastHearts: last.total_hearts,
-      heartChange,
-      lastDonors: last.donor_count,
-      donorChange,
-      avgHearts,
-      totalEpisodes: episodeTrend.length,
-    }
-  }, [episodeTrend])
 
   // 메인 차트 데이터
   const mainChartData = useMemo(() =>
@@ -83,14 +52,7 @@ export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: E
 
   const bjNames = useMemo(() => bjEpisodeTrend.slice(0, 7).map(b => b.bj_name), [bjEpisodeTrend])
 
-  // 재참여율 추이
-  const retentionLineData = useMemo(() =>
-    episodeTrend.filter(e => e.donor_count > 0).map(e => ({
-      name: `${e.episode_number}화`,
-      rate: Math.round((e.returning_donors / e.donor_count) * 100),
-      newDonors: e.new_donors,
-      returning: e.returning_donors,
-    })), [episodeTrend])
+
 
   if (isLoading) {
     return (
@@ -111,44 +73,6 @@ export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: E
 
   return (
     <div className={styles.container}>
-      {/* KPI 요약 행 */}
-      {kpi && (
-        <div className={styles.kpiRow}>
-          <div className={styles.kpiCard}>
-            <span className={styles.kpiLabel}>최신 회차 하트</span>
-            <div className={styles.kpiValueRow}>
-              <span className={styles.kpiValue}>{kpi.lastHearts.toLocaleString()}</span>
-              <TrendIcon value={kpi.heartChange} />
-              <span className={`${styles.kpiDelta} ${kpi.heartChange >= 0 ? styles.deltaUp : styles.deltaDown}`}>
-                {kpi.heartChange > 0 ? '+' : ''}{kpi.heartChange}%
-              </span>
-            </div>
-            <span className={styles.kpiDesc}>가장 최근 에피소드의 총 후원 하트</span>
-          </div>
-          <div className={styles.kpiCard}>
-            <span className={styles.kpiLabel}>최신 회차 후원자</span>
-            <div className={styles.kpiValueRow}>
-              <span className={styles.kpiValue}>{kpi.lastDonors}</span>
-              <TrendIcon value={kpi.donorChange} />
-              <span className={`${styles.kpiDelta} ${kpi.donorChange >= 0 ? styles.deltaUp : styles.deltaDown}`}>
-                {kpi.donorChange > 0 ? '+' : ''}{kpi.donorChange}%
-              </span>
-            </div>
-            <span className={styles.kpiDesc}>최근 에피소드에 참여한 고유 후원자 수</span>
-          </div>
-          <div className={styles.kpiCard}>
-            <span className={styles.kpiLabel}>평균 하트/회차</span>
-            <span className={styles.kpiValue}>{kpi.avgHearts.toLocaleString()}</span>
-            <span className={styles.kpiDesc}>전체 회차의 평균 후원 하트</span>
-          </div>
-          <div className={styles.kpiCard}>
-            <span className={styles.kpiLabel}>총 회차</span>
-            <span className={styles.kpiValue}>{kpi.totalEpisodes}</span>
-            <span className={styles.kpiDesc}>분석 대상 에피소드 수 (확정된 회차만)</span>
-          </div>
-        </div>
-      )}
-
       {/* 메인 ComposedChart - 토글 가능 */}
       <div className={styles.toggleRow}>
         <label className={styles.toggleLabel}>
@@ -234,23 +158,10 @@ export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: E
         </ChartContainer>
       )}
 
-      {/* 후원자 재참여율 추이 */}
-      {retentionLineData.length > 1 && (
-        <ChartContainer title="후원자 재참여율 추이" height={250}>
-          <LineChart data={retentionLineData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
-            <CartesianGrid {...CHART_THEME.grid} />
-            <XAxis dataKey="name" {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick, fontSize: 11 }} />
-            <YAxis {...CHART_THEME.axis} tick={{ ...CHART_THEME.axis.tick }} tickFormatter={(v: number) => `${v}%`} domain={[0, 100]} />
-            <ChartTooltip valueFormatter={(v, name) => name === '재참여율' ? `${v}%` : `${v}명`} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line type="monotone" dataKey="rate" name="재참여율" stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 4 }} />
-            <Line type="monotone" dataKey="newDonors" name="신규" stroke={CHART_COLORS[4]} strokeWidth={1.5} strokeDasharray="4 4" />
-          </LineChart>
-        </ChartContainer>
-      )}
-
       {/* 에피소드 카드 그리드 */}
-      <div className={styles.episodeGrid}>
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>에피소드별 상세</div>
+        <div className={styles.episodeGrid}>
         {episodeTrend.map((ep, i) => {
           const prev = i > 0 ? episodeTrend[i - 1] : null
           const heartChange = prev && prev.total_hearts > 0
@@ -263,9 +174,12 @@ export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: E
                 <span className={styles.epNumber}>{ep.episode_number}화</span>
                 {ep.is_rank_battle && <span className={styles.rankBadge}>직급전</span>}
               </div>
+              {ep.description && (
+                <div className={styles.epDesc}>{ep.description}</div>
+              )}
               <div className={styles.epStat}>
                 <span className={styles.epStatLabel}>하트</span>
-                <span className={styles.epStatValue}>{ep.total_hearts.toLocaleString()}</span>
+                <span className={styles.epStatHeart}>{ep.total_hearts.toLocaleString()}</span>
                 {heartChange !== null && (
                   <span className={`${styles.epDelta} ${heartChange >= 0 ? styles.deltaUp : styles.deltaDown}`}>
                     {heartChange > 0 ? '+' : ''}{heartChange}%
@@ -278,11 +192,12 @@ export function EpisodeTrendPanel({ episodeTrend, bjEpisodeTrend, isLoading }: E
               </div>
               <div className={styles.epStat}>
                 <span className={styles.epStatLabel}>신규</span>
-                <span className={styles.epStatValue}>{ep.new_donors}명</span>
+                <span className={styles.epStatNew}>{ep.new_donors}명</span>
               </div>
             </div>
           )
         })}
+        </div>
       </div>
     </div>
   )

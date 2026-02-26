@@ -16,6 +16,7 @@ import {
   getBjEpisodeTrend,
   getBjDetailedStats,
   getTimePatternEnhanced,
+  getSignatureEligibility,
   type BjStats,
   type TimePatternData,
   type DonorBjRelation,
@@ -28,7 +29,18 @@ import {
   type BjEpisodeTrendData,
   type BjDetailedStats,
   type TimePatternEnhanced,
+  type SignatureEligibilityData,
 } from '@/lib/actions/analytics'
+import {
+  getAdvancedChurnPrediction,
+  getDonorRFMAnalysis,
+  getBjAffinityMatrix,
+  getBjActionableInsights,
+  type ChurnPredictionData,
+  type RFMData,
+  type BjAffinityData,
+  type BjInsightsData,
+} from '@/lib/actions/analytics-advanced'
 
 interface UseAnalyticsOptions {
   seasonId?: number
@@ -56,6 +68,11 @@ interface UseAnalyticsReturn {
   bjEpisodeTrend: BjEpisodeTrendData[]
   bjDetailedStats: BjDetailedStats[]
   timePatternEnhanced: TimePatternEnhanced | null
+  signatureEligibility: SignatureEligibilityData | null
+  churnPrediction: ChurnPredictionData | null
+  rfmAnalysis: RFMData | null
+  bjAffinity: BjAffinityData | null
+  bjInsights: BjInsightsData | null
 
   // 로딩 상태
   isLoading: boolean
@@ -70,13 +87,18 @@ interface UseAnalyticsReturn {
   isBjEpisodeTrendLoading: boolean
   isBjDetailedStatsLoading: boolean
   isTimePatternEnhancedLoading: boolean
+  isSignatureLoading: boolean
+  isChurnPredictionLoading: boolean
+  isRfmLoading: boolean
+  isBjAffinityLoading: boolean
+  isBjInsightsLoading: boolean
 
   // 에러
   error: string | null
 
   // 메타 데이터
   seasons: { id: number; name: string }[]
-  episodes: { id: number; title: string; season_id: number; episode_number: number; broadcast_date: string | null; is_finalized: boolean }[]
+  episodes: { id: number; title: string; description: string | null; season_id: number; episode_number: number; broadcast_date: string | null; is_finalized: boolean }[]
 
   // 액션
   loadSummary: () => Promise<void>
@@ -93,6 +115,11 @@ interface UseAnalyticsReturn {
   loadBjEpisodeTrend: () => Promise<void>
   loadBjDetailedStats: () => Promise<void>
   loadTimePatternEnhanced: () => Promise<void>
+  loadSignatureEligibility: () => Promise<void>
+  loadChurnPrediction: () => Promise<void>
+  loadRfmAnalysis: () => Promise<void>
+  loadBjAffinity: () => Promise<void>
+  loadBjInsights: () => Promise<void>
   refreshAll: () => Promise<void>
 }
 
@@ -119,10 +146,15 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const [bjEpisodeTrend, setBjEpisodeTrend] = useState<BjEpisodeTrendData[]>([])
   const [bjDetailedStats, setBjDetailedStats] = useState<BjDetailedStats[]>([])
   const [timePatternEnhanced, setTimePatternEnhanced] = useState<TimePatternEnhanced | null>(null)
+  const [signatureEligibility, setSignatureEligibility] = useState<SignatureEligibilityData | null>(null)
+  const [churnPrediction, setChurnPrediction] = useState<ChurnPredictionData | null>(null)
+  const [rfmAnalysis, setRfmAnalysis] = useState<RFMData | null>(null)
+  const [bjAffinity, setBjAffinity] = useState<BjAffinityData | null>(null)
+  const [bjInsights, setBjInsights] = useState<BjInsightsData | null>(null)
 
   // 메타 데이터
   const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([])
-  const [episodes, setEpisodes] = useState<{ id: number; title: string; season_id: number; episode_number: number; broadcast_date: string | null; is_finalized: boolean }[]>([])
+  const [episodes, setEpisodes] = useState<{ id: number; title: string; description: string | null; season_id: number; episode_number: number; broadcast_date: string | null; is_finalized: boolean }[]>([])
 
   // 로딩 상태
   const [isSummaryLoading, setIsSummaryLoading] = useState(false)
@@ -137,6 +169,11 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const [isBjEpisodeTrendLoading, setIsBjEpisodeTrendLoading] = useState(false)
   const [isBjDetailedStatsLoading, setIsBjDetailedStatsLoading] = useState(false)
   const [isTimePatternEnhancedLoading, setIsTimePatternEnhancedLoading] = useState(false)
+  const [isSignatureLoading, setIsSignatureLoading] = useState(false)
+  const [isChurnPredictionLoading, setIsChurnPredictionLoading] = useState(false)
+  const [isRfmLoading, setIsRfmLoading] = useState(false)
+  const [isBjAffinityLoading, setIsBjAffinityLoading] = useState(false)
+  const [isBjInsightsLoading, setIsBjInsightsLoading] = useState(false)
 
   // 에러
   const [error, setError] = useState<string | null>(null)
@@ -290,6 +327,66 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     setIsTimePatternEnhancedLoading(false)
   }, [seasonId, episodeId])
 
+  const loadSignatureEligibility = useCallback(async () => {
+    setIsSignatureLoading(true)
+    setError(null)
+    const result = await getSignatureEligibility(seasonId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setSignatureEligibility(result.data)
+    }
+    setIsSignatureLoading(false)
+  }, [seasonId])
+
+  const loadChurnPrediction = useCallback(async () => {
+    setIsChurnPredictionLoading(true)
+    setError(null)
+    const result = await getAdvancedChurnPrediction(seasonId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setChurnPrediction(result.data)
+    }
+    setIsChurnPredictionLoading(false)
+  }, [seasonId])
+
+  const loadRfmAnalysis = useCallback(async () => {
+    setIsRfmLoading(true)
+    setError(null)
+    const result = await getDonorRFMAnalysis(seasonId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setRfmAnalysis(result.data)
+    }
+    setIsRfmLoading(false)
+  }, [seasonId])
+
+  const loadBjAffinity = useCallback(async () => {
+    setIsBjAffinityLoading(true)
+    setError(null)
+    const result = await getBjAffinityMatrix(seasonId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setBjAffinity(result.data)
+    }
+    setIsBjAffinityLoading(false)
+  }, [seasonId])
+
+  const loadBjInsights = useCallback(async () => {
+    setIsBjInsightsLoading(true)
+    setError(null)
+    const result = await getBjActionableInsights(seasonId, episodeId)
+    if (result.error) {
+      setError(result.error)
+    } else if (result.data) {
+      setBjInsights(result.data)
+    }
+    setIsBjInsightsLoading(false)
+  }, [seasonId, episodeId])
+
   const loadSeasons = useCallback(async () => {
     const result = await getSeasonList()
     if (result.data) {
@@ -313,6 +410,11 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     setBjEpisodeTrend([])
     setBjDetailedStats([])
     setTimePatternEnhanced(null)
+    setSignatureEligibility(null)
+    setChurnPrediction(null)
+    setRfmAnalysis(null)
+    setBjAffinity(null)
+    setBjInsights(null)
   }, [])
 
   const refreshAll = useCallback(async () => {
@@ -360,7 +462,12 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     isDonorRetentionLoading ||
     isBjEpisodeTrendLoading ||
     isBjDetailedStatsLoading ||
-    isTimePatternEnhancedLoading
+    isTimePatternEnhancedLoading ||
+    isSignatureLoading ||
+    isChurnPredictionLoading ||
+    isRfmLoading ||
+    isBjAffinityLoading ||
+    isBjInsightsLoading
 
   return {
     // 필터
@@ -382,6 +489,11 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     bjEpisodeTrend,
     bjDetailedStats,
     timePatternEnhanced,
+    signatureEligibility,
+    churnPrediction,
+    rfmAnalysis,
+    bjAffinity,
+    bjInsights,
 
     // 로딩
     isLoading,
@@ -396,6 +508,11 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     isBjEpisodeTrendLoading,
     isBjDetailedStatsLoading,
     isTimePatternEnhancedLoading,
+    isSignatureLoading,
+    isChurnPredictionLoading,
+    isRfmLoading,
+    isBjAffinityLoading,
+    isBjInsightsLoading,
 
     // 에러
     error,
@@ -419,6 +536,11 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     loadBjEpisodeTrend,
     loadBjDetailedStats,
     loadTimePatternEnhanced,
+    loadSignatureEligibility,
+    loadChurnPrediction,
+    loadRfmAnalysis,
+    loadBjAffinity,
+    loadBjInsights,
     refreshAll,
   }
 }

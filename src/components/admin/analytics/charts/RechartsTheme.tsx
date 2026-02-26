@@ -59,7 +59,7 @@ interface ChartTooltipPayload {
 function TooltipContent({ active, payload, label, labelFormatter, valueFormatter }: any) {
   if (!active || !payload || payload.length === 0) return null
 
-  const displayLabel = labelFormatter ? labelFormatter(String(label)) : label
+  const displayLabel = labelFormatter ? labelFormatter(String(label), payload) : label
 
   return (
     <div className={styles.tooltip}>
@@ -82,7 +82,8 @@ function TooltipContent({ active, payload, label, labelFormatter, valueFormatter
 }
 
 interface ChartTooltipProps {
-  labelFormatter?: (label: string) => string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  labelFormatter?: (label: string, payload?: any[]) => string
   valueFormatter?: (value: number, name: string) => string
 }
 

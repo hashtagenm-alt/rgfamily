@@ -1,21 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BarChart3, TrendingUp, Users, Clock, Search, GitCompare, Activity, Repeat } from 'lucide-react'
+import { BarChart3, TrendingUp, Users, Clock, GitCompare, Activity, Repeat, Award } from 'lucide-react'
 import { useAnalytics } from '@/lib/hooks'
 import {
   AnalyticsSummaryCard,
   BjStatsTable,
   TimePatternChart,
   DonorPatternsTable,
-  DonorSearchPanel,
   EpisodeComparisonPanel,
   EpisodeTrendPanel,
   DonorRetentionPanel,
+  SignatureEligibilityPanel,
 } from '@/components/admin/analytics'
 import styles from './page.module.css'
 
-type TabType = 'overview' | 'trend' | 'bj' | 'retention' | 'time' | 'patterns' | 'compare' | 'search'
+type TabType = 'overview' | 'trend' | 'bj' | 'retention' | 'time' | 'patterns' | 'compare' | 'signature'
 
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
@@ -60,6 +60,21 @@ export default function AnalyticsPage() {
     loadBjEpisodeTrend,
     loadBjDetailedStats,
     loadTimePatternEnhanced,
+    signatureEligibility,
+    isSignatureLoading,
+    loadSignatureEligibility,
+    churnPrediction,
+    isChurnPredictionLoading,
+    loadChurnPrediction,
+    rfmAnalysis,
+    isRfmLoading,
+    loadRfmAnalysis,
+    bjAffinity,
+    isBjAffinityLoading,
+    loadBjAffinity,
+    bjInsights,
+    isBjInsightsLoading,
+    loadBjInsights,
   } = useAnalytics({ autoLoad: true })
 
   // Lazy loading: 탭 진입 시 해당 데이터만 로드 (초기에는 summary만 로드됨)
@@ -77,9 +92,12 @@ export default function AnalyticsPage() {
       if (bjStats.length === 0 && !isBjStatsLoading) loadBjStats()
       if (bjEpisodeTrend.length === 0 && !isBjEpisodeTrendLoading) loadBjEpisodeTrend()
       if (bjDetailedStats.length === 0 && !isBjDetailedStatsLoading) loadBjDetailedStats()
+      if (!bjInsights && !isBjInsightsLoading) loadBjInsights()
+      if (!bjAffinity && !isBjAffinityLoading) loadBjAffinity()
     }
-    if (activeTab === 'retention' && !donorRetention && !isDonorRetentionLoading) {
-      loadDonorRetention()
+    if (activeTab === 'retention') {
+      if (!donorRetention && !isDonorRetentionLoading) loadDonorRetention()
+      if (!churnPrediction && !isChurnPredictionLoading) loadChurnPrediction()
     }
     if (activeTab === 'time') {
       if (timePattern.length === 0 && !isTimePatternLoading) loadTimePattern()
@@ -87,8 +105,12 @@ export default function AnalyticsPage() {
     }
     if (activeTab === 'patterns') {
       if (donorPatterns.length === 0 && !isDonorPatternsLoading) loadDonorPatterns()
+      if (!rfmAnalysis && !isRfmLoading) loadRfmAnalysis()
     }
-  }, [activeTab, bjStats.length, isBjStatsLoading, loadBjStats, episodeTrend.length, isEpisodeTrendLoading, loadEpisodeTrend, bjEpisodeTrend.length, isBjEpisodeTrendLoading, loadBjEpisodeTrend, bjDetailedStats.length, isBjDetailedStatsLoading, loadBjDetailedStats, donorRetention, isDonorRetentionLoading, loadDonorRetention, timePattern.length, isTimePatternLoading, loadTimePattern, timePatternEnhanced, isTimePatternEnhancedLoading, loadTimePatternEnhanced, donorPatterns.length, isDonorPatternsLoading, loadDonorPatterns])
+    if (activeTab === 'signature' && !signatureEligibility && !isSignatureLoading) {
+      loadSignatureEligibility()
+    }
+  }, [activeTab, bjStats.length, isBjStatsLoading, loadBjStats, episodeTrend.length, isEpisodeTrendLoading, loadEpisodeTrend, bjEpisodeTrend.length, isBjEpisodeTrendLoading, loadBjEpisodeTrend, bjDetailedStats.length, isBjDetailedStatsLoading, loadBjDetailedStats, donorRetention, isDonorRetentionLoading, loadDonorRetention, timePattern.length, isTimePatternLoading, loadTimePattern, timePatternEnhanced, isTimePatternEnhancedLoading, loadTimePatternEnhanced, donorPatterns.length, isDonorPatternsLoading, loadDonorPatterns, signatureEligibility, isSignatureLoading, loadSignatureEligibility, churnPrediction, isChurnPredictionLoading, loadChurnPrediction, rfmAnalysis, isRfmLoading, loadRfmAnalysis, bjInsights, isBjInsightsLoading, loadBjInsights, bjAffinity, isBjAffinityLoading, loadBjAffinity])
 
   const tabs = [
     { id: 'overview', label: '요약', icon: BarChart3 },
@@ -97,8 +119,8 @@ export default function AnalyticsPage() {
     { id: 'retention', label: '후원자 리텐션', icon: Repeat },
     { id: 'time', label: '시간대 패턴', icon: Clock },
     { id: 'patterns', label: '후원자 패턴', icon: TrendingUp },
+    { id: 'signature', label: '시그니처', icon: Award },
     { id: 'compare', label: '회차별 비교', icon: GitCompare },
-    { id: 'search', label: '후원자 검색', icon: Search },
   ]
 
   return (
@@ -131,7 +153,7 @@ export default function AnalyticsPage() {
             {episodes
               .filter((e) => !seasonId || e.season_id === seasonId)
               .map((e) => (
-                <option key={e.id} value={e.id}>{e.title}</option>
+                <option key={e.id} value={e.id}>{e.episode_number}화{e.description ? ` - ${e.description}` : ''}</option>
               ))}
           </select>
         </div>
@@ -185,6 +207,9 @@ export default function AnalyticsPage() {
             isBjDetailedStatsLoading={isBjDetailedStatsLoading}
             isLoading={isBjStatsLoading}
             onRefresh={loadBjStats}
+            bjInsights={bjInsights}
+            bjAffinity={bjAffinity}
+            isBjInsightsLoading={isBjInsightsLoading}
           />
         )}
 
@@ -192,6 +217,8 @@ export default function AnalyticsPage() {
           <DonorRetentionPanel
             retention={donorRetention}
             isLoading={isDonorRetentionLoading}
+            churnPrediction={churnPrediction}
+            isChurnPredictionLoading={isChurnPredictionLoading}
           />
         )}
 
@@ -210,6 +237,18 @@ export default function AnalyticsPage() {
             patterns={donorPatterns}
             isLoading={isDonorPatternsLoading}
             onRefresh={loadDonorPatterns}
+            searchResult={donorSearchResult}
+            isSearchLoading={isSearchLoading}
+            onSearch={searchDonorByName}
+            rfmData={rfmAnalysis}
+            isRfmLoading={isRfmLoading}
+          />
+        )}
+
+        {activeTab === 'signature' && (
+          <SignatureEligibilityPanel
+            data={signatureEligibility}
+            isLoading={isSignatureLoading}
           />
         )}
 
@@ -222,13 +261,6 @@ export default function AnalyticsPage() {
           />
         )}
 
-        {activeTab === 'search' && (
-          <DonorSearchPanel
-            result={donorSearchResult}
-            isLoading={isSearchLoading}
-            onSearch={searchDonorByName}
-          />
-        )}
       </div>
     </div>
   )
