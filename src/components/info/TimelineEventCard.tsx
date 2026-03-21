@@ -23,9 +23,15 @@ const isFutureDate = (dateStr: string) => {
   return eventDate > today
 }
 
-export default function TimelineEventCard({ event, index, onSelect, onDoubleClick }: TimelineEventCardProps) {
+export default function TimelineEventCard({
+  event,
+  index,
+  onSelect,
+  onDoubleClick,
+}: TimelineEventCardProps) {
   const isLeft = index % 2 === 0
   const isUpcoming = isFutureDate(event.eventDate)
+  const categoryColor = getCategoryColor(event.category)
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -41,10 +47,7 @@ export default function TimelineEventCard({ event, index, onSelect, onDoubleClic
       transition={{ duration: 0.5, delay: 0.1 }}
     >
       {/* Dot */}
-      <div
-        className={styles.dot}
-        style={{ backgroundColor: getCategoryColor(event.category) }}
-      />
+      <div className={styles.dot} style={{ backgroundColor: categoryColor }} />
 
       {/* Content Card */}
       <div
@@ -74,8 +77,8 @@ export default function TimelineEventCard({ event, index, onSelect, onDoubleClic
           <span
             className={styles.categoryBadge}
             style={{
-              backgroundColor: `${getCategoryColor(event.category)}20`,
-              color: getCategoryColor(event.category),
+              backgroundColor: `${categoryColor}20`,
+              color: categoryColor,
             }}
           >
             {CATEGORY_LABELS[event.category] || event.category}
@@ -85,12 +88,7 @@ export default function TimelineEventCard({ event, index, onSelect, onDoubleClic
         {/* Image */}
         {event.imageUrl && (
           <div className={styles.imageWrapper}>
-            <Image
-              src={event.imageUrl}
-              alt={event.title}
-              fill
-              className={styles.image}
-            />
+            <Image src={event.imageUrl} alt={event.title} fill className={styles.image} />
           </div>
         )}
 

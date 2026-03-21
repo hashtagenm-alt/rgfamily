@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { logger } from '@/lib/utils/logger'
 
 interface UseImageUploadOptions {
   /** 저장 폴더 경로 (예: 'posts', 'notices') */
@@ -127,7 +128,7 @@ export function useImageUpload(options: UseImageUploadOptions): UseImageUploadRe
         return await uploadThroughServer(file)
       }
     } catch (err) {
-      console.error('이미지 업로드 오류:', err)
+      logger.error('이미지 업로드 오류', err)
       const message = err instanceof Error ? err.message : '이미지 업로드 중 오류가 발생했습니다.'
       setError(message)
       onError?.(message)

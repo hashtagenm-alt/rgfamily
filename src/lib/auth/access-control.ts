@@ -4,12 +4,6 @@
  * 페이지 및 기능 접근 권한 검사
  */
 
-import { USE_MOCK_DATA } from '@/lib/config'
-import {
-  hasHonorPageQualification,
-  getHallOfFameByUserId,
-} from '@/lib/mock/hall-of-fame'
-import { VIP_ROLES } from '@/lib/constants/roles'
 import type { Profile } from '@/types/database'
 
 export type AccessDeniedReason =
@@ -66,90 +60,13 @@ export function checkTributePageAccess(
     }
   }
 
-  // 4. 헌정 페이지 자격 확인 (시즌 TOP 3 또는 회차별 고액 후원자)
-  if (USE_MOCK_DATA) {
-    const hasQualification = hasHonorPageQualification(targetUserId)
-    if (!hasQualification) {
-      return {
-        hasAccess: false,
-        reason: 'not_qualified',
-        isOwner: true,
-      }
-    }
-  }
   // Supabase 자격 확인은 useTributeData에서 처리
-
-  // 5. 헌정 데이터가 존재하는지 확인
-  if (USE_MOCK_DATA) {
-    const hofData = getHallOfFameByUserId(targetUserId)
-    if (!hofData || hofData.length === 0) {
-      return {
-        hasAccess: false,
-        reason: 'page_not_found',
-        isOwner: true,
-      }
-    }
-  }
 
   return {
     hasAccess: true,
     isOwner: true,
     isAdmin: false,
   }
-}
-
-/**
- * VIP 라운지 접근 권한 확인 (Top 50)
- */
-export function checkVipLoungeAccess(
-  userRank: number | null,
-  profile: Profile | null
-): boolean {
-  // Admin은 항상 접근 가능
-  if (profile?.role === 'admin' || profile?.role === 'superadmin') {
-    return true
-  }
-
-  // Top 50 이내만 접근 가능
-  return userRank !== null && userRank <= 50
-}
-
-/**
- * VIP 글쓰기 권한 확인 (Role + Rank 기반)
- *
- * 조건:
- * 1. Role이 VIP_ROLES 중 하나 (vip, moderator, admin, superadmin)
- * 2. 또는 Rank가 50 이내
- */
-export function checkVipWriteAccess(
-  userRank: number | null,
-  profile: Profile | null
-): boolean {
-  // Role 기반 VIP 체크
-  if (profile?.role && VIP_ROLES.includes(profile.role as typeof VIP_ROLES[number])) {
-    return true
-  }
-
-  // Rank 기반 VIP 체크 (Top 50)
-  return userRank !== null && userRank <= 50
-}
-
-/**
- * Admin 페이지 접근 권한 확인
- * - superadmin: 최고 관리자
- * - admin: 일반 관리자
- * - moderator: 운영진 (제한적 Admin 접근)
- */
-export function checkAdminAccess(profile: Profile | null): boolean {
-  if (!profile) return false
-  return ['admin', 'superadmin', 'moderator'].includes(profile.role)
-}
-
-/**
- * 완전한 Admin 권한 확인 (admin/superadmin만)
- */
-export function checkFullAdminAccess(profile: Profile | null): boolean {
-  return profile?.role === 'admin' || profile?.role === 'superadmin'
 }
 
 /**

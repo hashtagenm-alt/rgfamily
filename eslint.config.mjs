@@ -14,11 +14,26 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Scripts folder uses CommonJS require() - exclude from ESLint
     "scripts/**",
+    // Data scripts use CommonJS require()
+    "data/**",
     // Python virtual environment - contains JS files that shouldn't be linted
     "python-live-scraper/**",
     // Claude Code hooks - auto-generated
     ".claude/**",
   ]),
+  // src/app/ 내 직접 supabase 호출 금지 (Server Action 사용 강제)
+  {
+    files: ["src/app/**/*.ts", "src/app/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "CallExpression[callee.property.name='from'][callee.object.name='supabase']",
+          message: "직접 supabase 호출 금지. Server Action을 사용하세요. (ADR-005)",
+        },
+      ],
+    },
+  },
   // Custom rule overrides
   {
     rules: {

@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Users, Heart, Calendar, FileText, TrendingUp, Clock, Radio, Eye, RefreshCw, Film, PenTool, MessageSquare } from 'lucide-react'
 import { StatsCard, DataTable, Column } from '@/components/admin'
-import { useSupabaseContext } from '@/lib/context'
 import { useLiveRoster } from '@/lib/hooks'
+import { getDashboardStats, type DashboardStatsData } from '@/lib/actions/analytics'
+import { logger } from '@/lib/utils/logger'
 import styles from './page.module.css'
 
 // Local helper functions
@@ -32,22 +33,6 @@ const formatDate = (dateStr: string, options?: FormatDateOptions): string => {
   return date.toLocaleDateString('ko-KR', options);
 };
 
-interface DashboardStats {
-  totalMembers: number
-  // 시즌 랭킹 통계
-  seasonDonorCount: number
-  seasonTotalAmount: number
-  // 전체 랭킹 통계
-  totalDonorCount: number
-  totalDonationAmount: number
-  activeSeasons: number
-  recentMembers: RecentMember[]
-  // Content stats
-  totalPosts: number
-  totalMedia: number
-  totalSignatures: number
-}
-
 interface RecentMember {
   id: string
   nickname: string
@@ -56,8 +41,7 @@ interface RecentMember {
 }
 
 export default function AdminDashboardPage() {
-  const supabase = useSupabaseContext()
-  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [stats, setStats] = useState<DashboardStatsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   // 실시간 라이브 상태
@@ -72,70 +56,18 @@ export default function AdminDashboardPage() {
     setIsLoading(true)
 
     try {
-      // 회원 수
-      const { count: memberCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-
-      // 시즌 랭킹 통계 (season_donation_rankings)
-      const { data: seasonRankings } = await supabase
-        .from('season_donation_rankings')
-        .select('total_amount, donation_count')
-
-      const seasonDonorCount = seasonRankings?.length || 0
-      const seasonTotalAmount = seasonRankings?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0
-
-      // 전체 랭킹 통계 (total_donation_rankings)
-      const { data: totalRankings } = await supabase
-        .from('total_donation_rankings')
-        .select('total_amount')
-
-      const totalDonorCount = totalRankings?.length || 0
-      const totalDonationAmount = totalRankings?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0
-
-      // 활성 시즌
-      const { count: activeSeasonCount } = await supabase
-        .from('seasons')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true)
-
-      // 최근 가입
-      const { data: recentMembers } = await supabase
-        .from('profiles')
-        .select('id, nickname, email, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      // 콘텐츠 통계 - 병렬 처리
-      const [postsCount, mediaCount, signaturesCount] = await Promise.all([
-        supabase.from('posts').select('*', { count: 'exact', head: true }),
-        supabase.from('media_content').select('*', { count: 'exact', head: true }),
-        supabase.from('signatures').select('*', { count: 'exact', head: true }),
-      ])
-
-      setStats({
-        totalMembers: memberCount || 0,
-        seasonDonorCount,
-        seasonTotalAmount,
-        totalDonorCount,
-        totalDonationAmount,
-        activeSeasons: activeSeasonCount || 0,
-        recentMembers: (recentMembers || []).map((m) => ({
-          id: m.id,
-          nickname: m.nickname,
-          email: m.email || '',
-          createdAt: m.created_at,
-        })),
-        totalPosts: postsCount.count || 0,
-        totalMedia: mediaCount.count || 0,
-        totalSignatures: signaturesCount.count || 0,
-      })
+      const result = await getDashboardStats()
+      if (result.data) {
+        setStats(result.data)
+      } else {
+        logger.error('대시보드 데이터 로드 실패', result.error)
+      }
     } catch (error) {
-      console.error('대시보드 데이터 로드 실패:', error)
+      logger.error('대시보드 데이터 로드 실패', error)
     }
 
     setIsLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchStats()

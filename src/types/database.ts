@@ -6,15 +6,6 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-// 대표BJ(RG_family) 합산 성적 타입
-export interface RepresentativeBjTotal {
-  hearts: number       // 받은 하트
-  count: number        // 후원 건수
-  score: number        // 하트점수
-  contribution: number // 기여도
-  result?: string      // 순위 결과 (예: "상금 300만원")
-}
-
 export type Database = {
   public: {
     Tables: {
@@ -186,7 +177,10 @@ export type Database = {
           description: string | null
           is_finalized: boolean
           finalized_at: string | null
-          representative_bj_total: RepresentativeBjTotal | null // 대표BJ(RG_family) 합산 성적
+          source_file: string | null
+          total_hearts: number
+          donor_count: number
+          unit: 'excel' | 'crew'
           created_at: string
         }
         Insert: {
@@ -199,7 +193,10 @@ export type Database = {
           description?: string | null
           is_finalized?: boolean
           finalized_at?: string | null
-          representative_bj_total?: RepresentativeBjTotal | null
+          source_file?: string | null
+          total_hearts?: number
+          donor_count?: number
+          unit?: 'excel' | 'crew'
           created_at?: string
         }
         Update: {
@@ -212,7 +209,10 @@ export type Database = {
           description?: string | null
           is_finalized?: boolean
           finalized_at?: string | null
-          representative_bj_total?: RepresentativeBjTotal | null
+          source_file?: string | null
+          total_hearts?: number
+          donor_count?: number
+          unit?: 'excel' | 'crew'
           created_at?: string
         }
         Relationships: [
@@ -233,9 +233,10 @@ export type Database = {
           season_id: number
           episode_id: number | null
           unit: 'excel' | 'crew' | null
-          message: string | null
           target_bj: string | null
           donated_at: string | null
+          member_name: string | null
+          heart_score: number | null
           created_at: string
         }
         Insert: {
@@ -246,9 +247,10 @@ export type Database = {
           season_id: number
           episode_id?: number | null
           unit?: 'excel' | 'crew' | null
-          message?: string | null
           target_bj?: string | null
           donated_at?: string | null
+          member_name?: string | null
+          heart_score?: number | null
           created_at?: string
         }
         Update: {
@@ -259,9 +261,10 @@ export type Database = {
           season_id?: number
           episode_id?: number | null
           unit?: 'excel' | 'crew' | null
-          message?: string | null
           target_bj?: string | null
           donated_at?: string | null
+          member_name?: string | null
+          heart_score?: number | null
           created_at?: string
         }
         Relationships: [
@@ -379,7 +382,6 @@ export type Database = {
           description: string | null
           thumbnail_url: string | null
           unit: 'excel' | 'crew'
-          is_group: boolean
           created_at: string
         }
         Insert: {
@@ -389,7 +391,6 @@ export type Database = {
           description?: string | null
           thumbnail_url?: string | null
           unit: 'excel' | 'crew'
-          is_group?: boolean
           created_at?: string
         }
         Update: {
@@ -399,7 +400,6 @@ export type Database = {
           description?: string | null
           thumbnail_url?: string | null
           unit?: 'excel' | 'crew'
-          is_group?: boolean
           created_at?: string
         }
         Relationships: []
@@ -1159,79 +1159,19 @@ export type Database = {
         ]
       }
       /**
-       * BJ별 에피소드 성적 기록
-       */
-      bj_episode_performances: {
-        Row: {
-          id: number
-          episode_id: number
-          bj_member_id: number
-          donation_hearts: number     // 받은 하트
-          donation_count: number      // 후원 건수
-          heart_score: number         // 하트점수
-          contribution: number        // 기여도
-          final_rank: number | null   // 최종 순위
-          rank_result: string | null  // 순위 결과 (예: "상금 300만원")
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          episode_id: number
-          bj_member_id: number
-          donation_hearts?: number
-          donation_count?: number
-          heart_score?: number
-          contribution?: number
-          final_rank?: number | null
-          rank_result?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          episode_id?: number
-          bj_member_id?: number
-          donation_hearts?: number
-          donation_count?: number
-          heart_score?: number
-          contribution?: number
-          final_rank?: number | null
-          rank_result?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'bj_episode_performances_episode_id_fkey'
-            columns: ['episode_id']
-            referencedRelation: 'episodes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'bj_episode_performances_bj_member_id_fkey'
-            columns: ['bj_member_id']
-            referencedRelation: 'organization'
-            referencedColumns: ['id']
-          }
-        ]
-      }
-      /**
        * 총 후원 랭킹 (역대 누적) - Top 50
-       * ⚠️ total_amount는 외부 노출 절대 금지! UI에서는 게이지로만 표현
        */
       total_donation_rankings: {
         Row: {
           id: number
           rank: number
-          donor_id: string | null // FK → profiles (연결된 프로필)
+          donor_id: string | null
           donor_name: string
-          total_amount: number // ⚠️ 외부 노출 금지! (viewer_score로 변환하여 노출)
+          total_amount: number
           donation_count: number
           top_bj: string | null
           is_permanent_vip: boolean
-          updated_at: string
-          created_at: string
+          avatar_url: string | null
         }
         Insert: {
           id?: number
@@ -1242,8 +1182,7 @@ export type Database = {
           donation_count?: number
           top_bj?: string | null
           is_permanent_vip?: boolean
-          updated_at?: string
-          created_at?: string
+          avatar_url?: string | null
         }
         Update: {
           id?: number
@@ -1254,8 +1193,7 @@ export type Database = {
           donation_count?: number
           top_bj?: string | null
           is_permanent_vip?: boolean
-          updated_at?: string
-          created_at?: string
+          avatar_url?: string | null
         }
         Relationships: [
           {
@@ -1275,12 +1213,13 @@ export type Database = {
           id: number
           season_id: number
           rank: number
-          donor_id: string | null // FK → profiles (연결된 프로필)
+          donor_id: string | null
           donor_name: string
-          total_amount: number // ⚠️ 외부 노출 금지! (viewer_score로 변환하여 노출)
+          total_amount: number
           donation_count: number
           top_bj: string | null
-          unit: 'excel' | 'crew' | null // 팬클럽 소속
+          unit: 'excel' | 'crew' | null
+          avatar_url: string | null
           updated_at: string
           created_at: string
         }
@@ -1294,6 +1233,7 @@ export type Database = {
           donation_count?: number
           top_bj?: string | null
           unit?: 'excel' | 'crew' | null
+          avatar_url?: string | null
           updated_at?: string
           created_at?: string
         }
@@ -1307,6 +1247,7 @@ export type Database = {
           donation_count?: number
           top_bj?: string | null
           unit?: 'excel' | 'crew' | null
+          avatar_url?: string | null
           updated_at?: string
           created_at?: string
         }
@@ -1320,39 +1261,116 @@ export type Database = {
         ]
       }
       /**
-       * 레거시 후원 총액 테이블
-       * 시즌1 이전 누적 후원 데이터를 저장
+       * 시그니처 자격 관리
+       * 당일 누적 10만/15만/20만 하트 달성 시 시그니처 획득
        */
-      legacy_donation_totals: {
+      signature_eligibility: {
         Row: {
           id: number
+          profile_id: string | null
           donor_name: string
-          total_amount: number
-          note: string | null
+          sig_number: number
+          episode_id: number | null
+          episode_number: number | null
+          daily_amount: number
+          threshold_amount: number
+          earned_at: string | null
+          is_claimed: boolean
+          claimed_at: string | null
+          notes: string | null
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: number
+          profile_id?: string | null
           donor_name: string
-          total_amount: number
-          note?: string | null
+          sig_number: number
+          episode_id?: number | null
+          episode_number?: number | null
+          daily_amount: number
+          threshold_amount: number
+          earned_at?: string | null
+          is_claimed?: boolean
+          claimed_at?: string | null
+          notes?: string | null
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: number
+          profile_id?: string | null
           donor_name?: string
-          total_amount?: number
-          note?: string | null
+          sig_number?: number
+          episode_id?: number | null
+          episode_number?: number | null
+          daily_amount?: number
+          threshold_amount?: number
+          earned_at?: string | null
+          is_claimed?: boolean
+          claimed_at?: string | null
+          notes?: string | null
           created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
       /**
-       * BJ 직급 마스터 테이블
-       * 12단계 직급 정의 (여왕~쌉노예)
+       * 시즌별 멤버 구성 관리
+       * organization = BJ 마스터 프로필 (전역)
+       * season_members = 시즌별/유닛별 소속
+       */
+      season_members: {
+        Row: {
+          id: number
+          season_id: number
+          member_id: number
+          unit: 'excel' | 'crew'
+          role: string
+          position_order: number
+          is_active: boolean
+          joined_at: string
+          left_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          season_id: number
+          member_id: number
+          unit: 'excel' | 'crew'
+          role?: string
+          position_order?: number
+          is_active?: boolean
+          joined_at?: string
+          left_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          season_id?: number
+          member_id?: number
+          unit?: 'excel' | 'crew'
+          role?: string
+          position_order?: number
+          is_active?: boolean
+          joined_at?: string
+          left_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'season_members_season_id_fkey'
+            columns: ['season_id']
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'season_members_member_id_fkey'
+            columns: ['member_id']
+            referencedRelation: 'organization'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      /**
+       * BJ 직급 마스터
        */
       bj_ranks: {
         Row: {
@@ -1361,8 +1379,6 @@ export type Database = {
           level: number
           display_order: number
           color: string | null
-          emoji: string | null
-          tier: 'royal' | 'noble' | 'servant' | 'slave' | null
           icon_url: string | null
           description: string | null
           created_at: string
@@ -1371,10 +1387,8 @@ export type Database = {
           id?: number
           name: string
           level: number
-          display_order: number
+          display_order?: number
           color?: string | null
-          emoji?: string | null
-          tier?: 'royal' | 'noble' | 'servant' | 'slave' | null
           icon_url?: string | null
           description?: string | null
           created_at?: string
@@ -1385,8 +1399,6 @@ export type Database = {
           level?: number
           display_order?: number
           color?: string | null
-          emoji?: string | null
-          tier?: 'royal' | 'noble' | 'servant' | 'slave' | null
           icon_url?: string | null
           description?: string | null
           created_at?: string
@@ -1394,45 +1406,138 @@ export type Database = {
         Relationships: []
       }
       /**
-       * 일정 이벤트 타입
-       * 캘린더 일정의 유형 (방송, 콜라보, 이벤트, 공지, 휴방)
+       * 기여도 변동 로그
        */
-      schedule_event_types: {
+      contribution_logs: {
         Row: {
           id: number
-          code: string
-          label: string
-          color: string | null
-          icon: string | null
-          display_order: number
-          is_active: boolean
+          bj_member_id: number
+          episode_id: number | null
+          season_id: number | null
+          amount: number
+          reason: string
+          balance_after: number
+          event_type: string | null
+          created_by: string | null
           created_at: string
         }
         Insert: {
           id?: number
-          code: string
-          label: string
-          color?: string | null
-          icon?: string | null
-          display_order?: number
-          is_active?: boolean
+          bj_member_id: number
+          episode_id?: number | null
+          season_id?: number | null
+          amount: number
+          reason: string
+          balance_after?: number
+          event_type?: string | null
+          created_by?: string | null
           created_at?: string
         }
         Update: {
           id?: number
-          code?: string
-          label?: string
-          color?: string | null
-          icon?: string | null
-          display_order?: number
-          is_active?: boolean
+          bj_member_id?: number
+          episode_id?: number | null
+          season_id?: number | null
+          amount?: number
+          reason?: string
+          balance_after?: number
+          event_type?: string | null
+          created_by?: string | null
           created_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'contribution_logs_bj_member_id_fkey'
+            columns: ['bj_member_id']
+            referencedRelation: 'organization'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'contribution_logs_episode_id_fkey'
+            columns: ['episode_id']
+            referencedRelation: 'episodes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'contribution_logs_season_id_fkey'
+            columns: ['season_id']
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      /**
+       * 상벌금 기록
+       */
+      prize_penalties: {
+        Row: {
+          id: number
+          bj_member_id: number
+          episode_id: number | null
+          season_id: number | null
+          type: 'prize' | 'penalty'
+          amount: number
+          description: string | null
+          is_paid: boolean
+          paid_at: string | null
+          payment_note: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          bj_member_id: number
+          episode_id?: number | null
+          season_id?: number | null
+          type: 'prize' | 'penalty'
+          amount: number
+          description?: string | null
+          is_paid?: boolean
+          paid_at?: string | null
+          payment_note?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          bj_member_id?: number
+          episode_id?: number | null
+          season_id?: number | null
+          type?: 'prize' | 'penalty'
+          amount?: number
+          description?: string | null
+          is_paid?: boolean
+          paid_at?: string | null
+          payment_note?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'prize_penalties_bj_member_id_fkey'
+            columns: ['bj_member_id']
+            referencedRelation: 'organization'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'prize_penalties_episode_id_fkey'
+            columns: ['episode_id']
+            referencedRelation: 'episodes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'prize_penalties_season_id_fkey'
+            columns: ['season_id']
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
+          }
+        ]
       }
       /**
        * BJ 직급 변동 이력
-       * 직급전 결과 및 모든 직급 변동 기록
        */
       bj_rank_history: {
         Row: {
@@ -1505,298 +1610,58 @@ export type Database = {
         ]
       }
       /**
-       * 기여도 변동 로그
-       * ⚠️ 관리자만 조회 가능 - 외부 노출 금지
+       * BJ 에피소드별 성적
        */
-      contribution_logs: {
+      bj_episode_performances: {
         Row: {
           id: number
+          episode_id: number
           bj_member_id: number
-          episode_id: number | null
-          season_id: number | null
-          amount: number
-          reason: string
-          balance_after: number
-          event_type: string | null
-          created_by: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: number
-          bj_member_id: number
-          episode_id?: number | null
-          season_id?: number | null
-          amount: number
-          reason: string
-          balance_after: number
-          event_type?: string | null
-          created_by?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: number
-          bj_member_id?: number
-          episode_id?: number | null
-          season_id?: number | null
-          amount?: number
-          reason?: string
-          balance_after?: number
-          event_type?: string | null
-          created_by?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'contribution_logs_bj_member_id_fkey'
-            columns: ['bj_member_id']
-            referencedRelation: 'organization'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'contribution_logs_episode_id_fkey'
-            columns: ['episode_id']
-            referencedRelation: 'episodes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'contribution_logs_season_id_fkey'
-            columns: ['season_id']
-            referencedRelation: 'seasons'
-            referencedColumns: ['id']
-          }
-        ]
-      }
-      /**
-       * 상벌금 기록
-       * ⚠️ 관리자만 조회 가능 - 실제 금액 외부 노출 금지
-       */
-      prize_penalties: {
-        Row: {
-          id: number
-          bj_member_id: number
-          episode_id: number | null
-          season_id: number | null
-          type: 'prize' | 'penalty'
-          amount: number
-          description: string | null
-          is_paid: boolean
-          paid_at: string | null
-          payment_note: string | null
-          created_by: string | null
+          donation_hearts: number
+          donation_count: number
+          heart_score: number
+          contribution: number
+          final_rank: number | null
+          rank_result: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: number
+          episode_id: number
           bj_member_id: number
-          episode_id?: number | null
-          season_id?: number | null
-          type: 'prize' | 'penalty'
-          amount: number
-          description?: string | null
-          is_paid?: boolean
-          paid_at?: string | null
-          payment_note?: string | null
-          created_by?: string | null
+          donation_hearts?: number
+          donation_count?: number
+          heart_score?: number
+          contribution?: number
+          final_rank?: number | null
+          rank_result?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: number
+          episode_id?: number
           bj_member_id?: number
-          episode_id?: number | null
-          season_id?: number | null
-          type?: 'prize' | 'penalty'
-          amount?: number
-          description?: string | null
-          is_paid?: boolean
-          paid_at?: string | null
-          payment_note?: string | null
-          created_by?: string | null
+          donation_hearts?: number
+          donation_count?: number
+          heart_score?: number
+          contribution?: number
+          final_rank?: number | null
+          rank_result?: string | null
           created_at?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'prize_penalties_bj_member_id_fkey'
+            foreignKeyName: 'bj_episode_performances_episode_id_fkey'
+            columns: ['episode_id']
+            referencedRelation: 'episodes'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'bj_episode_performances_bj_member_id_fkey'
             columns: ['bj_member_id']
-            referencedRelation: 'organization'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'prize_penalties_episode_id_fkey'
-            columns: ['episode_id']
-            referencedRelation: 'episodes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'prize_penalties_season_id_fkey'
-            columns: ['season_id']
-            referencedRelation: 'seasons'
-            referencedColumns: ['id']
-          }
-        ]
-      }
-      /**
-       * 에피소드별 팀 구성
-       */
-      episode_teams: {
-        Row: {
-          id: number
-          episode_id: number
-          team_name: string
-          team_type: 'major_minor' | 'queen_princess' | 'mercenary' | 'custom'
-          team_color: string | null
-          description: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: number
-          episode_id: number
-          team_name: string
-          team_type: 'major_minor' | 'queen_princess' | 'mercenary' | 'custom'
-          team_color?: string | null
-          description?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: number
-          episode_id?: number
-          team_name?: string
-          team_type?: 'major_minor' | 'queen_princess' | 'mercenary' | 'custom'
-          team_color?: string | null
-          description?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'episode_teams_episode_id_fkey'
-            columns: ['episode_id']
-            referencedRelation: 'episodes'
-            referencedColumns: ['id']
-          }
-        ]
-      }
-      /**
-       * 팀 멤버 구성
-       */
-      episode_team_members: {
-        Row: {
-          id: number
-          team_id: number
-          bj_member_id: number
-          role: 'leader' | 'member' | 'mercenary'
-          partner_bj_id: number | null
-          partner_name: string | null
-          stats: Record<string, unknown> | null
-          created_at: string
-        }
-        Insert: {
-          id?: number
-          team_id: number
-          bj_member_id: number
-          role?: 'leader' | 'member' | 'mercenary'
-          partner_bj_id?: number | null
-          partner_name?: string | null
-          stats?: Record<string, unknown> | null
-          created_at?: string
-        }
-        Update: {
-          id?: number
-          team_id?: number
-          bj_member_id?: number
-          role?: 'leader' | 'member' | 'mercenary'
-          partner_bj_id?: number | null
-          partner_name?: string | null
-          stats?: Record<string, unknown> | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'episode_team_members_team_id_fkey'
-            columns: ['team_id']
-            referencedRelation: 'episode_teams'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'episode_team_members_bj_member_id_fkey'
-            columns: ['bj_member_id']
-            referencedRelation: 'organization'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'episode_team_members_partner_bj_id_fkey'
-            columns: ['partner_bj_id']
-            referencedRelation: 'organization'
-            referencedColumns: ['id']
-          }
-        ]
-      }
-      /**
-       * 1vs1 매칭
-       */
-      episode_matchups: {
-        Row: {
-          id: number
-          episode_id: number
-          bj_member_1_id: number
-          bj_member_2_id: number
-          winner_id: number | null
-          match_type: '1vs1' | 'rival' | 'team_vs_team'
-          match_order: number
-          prize_type: string | null
-          prize_amount: number | null
-          match_result: Record<string, unknown> | null
-          created_at: string
-        }
-        Insert: {
-          id?: number
-          episode_id: number
-          bj_member_1_id: number
-          bj_member_2_id: number
-          winner_id?: number | null
-          match_type: '1vs1' | 'rival' | 'team_vs_team'
-          match_order?: number
-          prize_type?: string | null
-          prize_amount?: number | null
-          match_result?: Record<string, unknown> | null
-          created_at?: string
-        }
-        Update: {
-          id?: number
-          episode_id?: number
-          bj_member_1_id?: number
-          bj_member_2_id?: number
-          winner_id?: number | null
-          match_type?: '1vs1' | 'rival' | 'team_vs_team'
-          match_order?: number
-          prize_type?: string | null
-          prize_amount?: number | null
-          match_result?: Record<string, unknown> | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'episode_matchups_episode_id_fkey'
-            columns: ['episode_id']
-            referencedRelation: 'episodes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'episode_matchups_bj_member_1_id_fkey'
-            columns: ['bj_member_1_id']
-            referencedRelation: 'organization'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'episode_matchups_bj_member_2_id_fkey'
-            columns: ['bj_member_2_id']
-            referencedRelation: 'organization'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'episode_matchups_winner_id_fkey'
-            columns: ['winner_id']
             referencedRelation: 'organization'
             referencedColumns: ['id']
           }
@@ -1804,7 +1669,71 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      total_rankings_public: {
+        Row: {
+          id: number
+          rank: number
+          donor_name: string
+          viewer_score: number
+          donation_count: number | null
+          top_bj: string | null
+          profile_id: string | null
+          avatar_url: string | null
+          is_vip_clickable: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'total_donation_rankings_pkey'
+            columns: ['id']
+            isOneToOne: false
+            referencedRelation: 'total_donation_rankings'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      season_rankings_public: {
+        Row: {
+          id: number
+          season_id: number
+          rank: number
+          donor_name: string
+          viewer_score: number
+          donation_count: number | null
+          unit: string | null
+          top_bj: string | null
+          profile_id: string | null
+          avatar_url: string | null
+          is_vip_clickable: boolean
+          updated_at: string | null
+          created_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'season_donation_rankings_season_id_fkey'
+            columns: ['season_id']
+            isOneToOne: false
+            referencedRelation: 'seasons'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      vip_clickable_profiles: {
+        Row: {
+          profile_id: string
+          nickname: string
+          avatar_url: string
+          is_vip_clickable: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vip_clickable_profiles_profile_id'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Functions: {
       update_donation_total: {
@@ -1863,6 +1792,30 @@ export type Database = {
         Args: { user_id: string }
         Returns: number | null
       }
+      increment_post_view_count: {
+        Args: { p_post_id: number }
+        Returns: void
+      }
+      increment_post_like_count: {
+        Args: { p_post_id: number; p_delta: number }
+        Returns: number
+      }
+      increment_notice_view_count: {
+        Args: { p_notice_id: number }
+        Returns: void
+      }
+      atomic_replace_season_rankings: {
+        Args: { p_season_id: number; p_rankings: unknown }
+        Returns: number
+      }
+      atomic_replace_total_rankings: {
+        Args: { p_rankings: unknown }
+        Returns: number
+      }
+      set_active_season: {
+        Args: { p_season_id: number }
+        Returns: void
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1905,8 +1858,11 @@ export type VipMessageComment = Tables<'vip_message_comments'>
 export type RankBattleRecord = Tables<'rank_battle_records'>
 export type TotalDonationRanking = Tables<'total_donation_rankings'>
 export type SeasonDonationRanking = Tables<'season_donation_rankings'>
+export type ContributionLog = Tables<'contribution_logs'>
+export type PrizePenalty = Tables<'prize_penalties'>
+export type BjRankHistory = Tables<'bj_rank_history'>
 export type BjEpisodePerformance = Tables<'bj_episode_performances'>
-export type LegacyDonationTotal = Tables<'legacy_donation_totals'>
+export type SeasonMember = Tables<'season_members'>
 
 // BJ 감사 메시지 with JOIN data
 export interface BjThankYouMessageWithMember extends BjThankYouMessage {
@@ -1963,31 +1919,8 @@ export type Role = 'member' | 'bj' | 'vip' | 'moderator' | 'admin' | 'superadmin
 // ⚠️ 실제 금액/기여도는 관리자만 조회 가능
 // ============================================
 
-// 직급 마스터
-export interface BjRank {
-  id: number
-  name: string
-  level: number
-  display_order: number
-  color: string | null
-  icon_url: string | null
-  description: string | null
-  created_at: string
-}
-
-// 직급 변동 이력
-export interface BjRankHistory {
-  id: number
-  bj_member_id: number
-  episode_id: number | null
-  season_id: number | null
-  rank_id: number
-  previous_rank_id: number | null
-  change_reason: string | null
-  is_rank_battle: boolean
-  battle_number: number | null
-  created_at: string
-}
+// 직급 마스터 (Tables<> 기반)
+export type BjRank = Tables<'bj_ranks'>
 
 // 직급 변동 이력 with JOIN 데이터
 export interface BjRankHistoryWithDetails extends BjRankHistory {
@@ -1995,20 +1928,6 @@ export interface BjRankHistoryWithDetails extends BjRankHistory {
   rank?: BjRank
   previous_rank?: BjRank
   episode?: { episode_number: number; title: string }
-}
-
-// 기여도 변동 로그
-export interface ContributionLog {
-  id: number
-  bj_member_id: number
-  episode_id: number | null
-  season_id: number | null
-  amount: number
-  reason: string
-  balance_after: number
-  event_type: string | null
-  created_by: string | null
-  created_at: string
 }
 
 // 기여도 로그 with JOIN 데이터
@@ -2019,23 +1938,6 @@ export interface ContributionLogWithDetails extends ContributionLog {
 
 // 상벌금 타입
 export type PrizePenaltyType = 'prize' | 'penalty'
-
-// 상벌금 기록
-export interface PrizePenalty {
-  id: number
-  bj_member_id: number
-  episode_id: number | null
-  season_id: number | null
-  type: PrizePenaltyType
-  amount: number
-  description: string | null
-  is_paid: boolean
-  paid_at: string | null
-  payment_note: string | null
-  created_by: string | null
-  created_at: string
-  updated_at: string
-}
 
 // 상벌금 with JOIN 데이터
 export interface PrizePenaltyWithDetails extends PrizePenalty {

@@ -11,6 +11,7 @@
 
 import * as api from './pandatv'
 import * as scraper from './pandatv-scraper'
+import { logger } from '@/lib/utils/logger'
 
 export interface PandaTVLiveStatus {
   channelId: string
@@ -44,7 +45,7 @@ async function tryApiMethod(channelId: string): Promise<PandaTVLiveStatus | null
     // 에러가 있으면 실패로 간주
     if (result.error) {
       apiFailCount++
-      console.warn(`[PandaTV] API 방식 실패 (${apiFailCount}회): ${result.error}`)
+      logger.warn(`[PandaTV] API 방식 실패 (${apiFailCount}회): ${result.error}`)
       return null
     }
 
@@ -54,7 +55,7 @@ async function tryApiMethod(channelId: string): Promise<PandaTVLiveStatus | null
     return { ...result, source: 'api' }
   } catch (error) {
     apiFailCount++
-    console.warn(`[PandaTV] API 방식 예외 (${apiFailCount}회):`, error)
+    logger.warn(`[PandaTV] API 방식 예외 (${apiFailCount}회)`, { context: { error } })
     return null
   }
 }
@@ -69,7 +70,7 @@ async function tryScraperMethod(channelId: string): Promise<PandaTVLiveStatus | 
     // 에러가 있으면 실패로 간주
     if (result.error) {
       scraperFailCount++
-      console.warn(`[PandaTV] 스크래퍼 방식 실패 (${scraperFailCount}회): ${result.error}`)
+      logger.warn(`[PandaTV] 스크래퍼 방식 실패 (${scraperFailCount}회): ${result.error}`)
       return null
     }
 
@@ -79,7 +80,7 @@ async function tryScraperMethod(channelId: string): Promise<PandaTVLiveStatus | 
     return { ...result, source: 'scraper' }
   } catch (error) {
     scraperFailCount++
-    console.warn(`[PandaTV] 스크래퍼 방식 예외 (${scraperFailCount}회):`, error)
+    logger.warn(`[PandaTV] 스크래퍼 방식 예외 (${scraperFailCount}회)`, { context: { error } })
     return null
   }
 }
@@ -100,7 +101,7 @@ export async function checkChannelLiveStatus(channelId: string): Promise<PandaTV
 
     if (!result) {
       // API 실패 → 스크래퍼로 fallback
-      console.log(`[PandaTV] API 실패, 스크래퍼로 전환...`)
+      logger.info(`[PandaTV] API 실패, 스크래퍼로 전환...`)
       result = await tryScraperMethod(channelId)
     }
   } else if (shouldTryScraperFirst || lastSuccessfulMethod === 'scraper') {
@@ -109,14 +110,14 @@ export async function checkChannelLiveStatus(channelId: string): Promise<PandaTV
 
     if (!result) {
       // 스크래퍼 실패 → API로 fallback
-      console.log(`[PandaTV] 스크래퍼 실패, API로 전환...`)
+      logger.info(`[PandaTV] 스크래퍼 실패, API로 전환...`)
       result = await tryApiMethod(channelId)
     }
   }
 
   // 둘 다 실패한 경우
   if (!result) {
-    console.error(`[PandaTV] 모든 방식 실패: ${channelId}`)
+    logger.error(`[PandaTV] 모든 방식 실패: ${channelId}`)
     return {
       channelId,
       isLive: false,
@@ -149,12 +150,12 @@ export async function checkMultipleChannels(
       }
     } catch (error) {
       apiFailCount++
-      console.warn(`[PandaTV] API 다중 조회 실패:`, error)
+      logger.warn(`[PandaTV] API 다중 조회 실패`, { context: { error } })
     }
   }
 
   // API 실패 시 스크래퍼로 개별 조회 (느리지만 백업)
-  console.log(`[PandaTV] API 실패, 스크래퍼로 개별 조회 시작...`)
+  logger.info(`[PandaTV] API 실패, 스크래퍼로 개별 조회 시작...`)
 
   const results: PandaTVLiveStatus[] = []
   for (const channelId of channelIds) {
@@ -180,12 +181,12 @@ export async function getAllLiveBJs(): Promise<PandaTVLiveStatus[]> {
       }
     } catch (error) {
       apiFailCount++
-      console.warn(`[PandaTV] API 전체 목록 조회 실패:`, error)
+      logger.warn(`[PandaTV] API 전체 목록 조회 실패`, { context: { error } })
     }
   }
 
   // 스크래퍼로 라이브 목록 페이지 시도
-  console.log(`[PandaTV] API 실패, 스크래퍼로 라이브 목록 조회...`)
+  logger.info(`[PandaTV] API 실패, 스크래퍼로 라이브 목록 조회...`)
   try {
     const results = await scraper.scrapeLiveListPage()
     if (results.length > 0) {
@@ -195,10 +196,10 @@ export async function getAllLiveBJs(): Promise<PandaTVLiveStatus[]> {
     }
   } catch (error) {
     scraperFailCount++
-    console.warn(`[PandaTV] 스크래퍼 전체 목록 조회 실패:`, error)
+    logger.warn(`[PandaTV] 스크래퍼 전체 목록 조회 실패`, { context: { error } })
   }
 
-  console.error(`[PandaTV] 모든 방식으로 라이브 목록 조회 실패`)
+  logger.error(`[PandaTV] 모든 방식으로 라이브 목록 조회 실패`)
   return []
 }
 

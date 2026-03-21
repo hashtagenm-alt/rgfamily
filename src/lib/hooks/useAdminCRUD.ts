@@ -1,13 +1,20 @@
 'use client'
 
 import React, { useState, useCallback, useEffect } from 'react'
-import { useSupabaseContext } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
+import {
+  adminFetchItems,
+  adminCreateItem,
+  adminUpdateItem,
+  adminDeleteItem,
+  type AdminFetchOptions,
+} from '@/lib/actions/admin-crud'
 
 /**
  * useAdminCRUD - Admin 페이지 CRUD 보일러플레이트 제거를 위한 제네릭 훅
  *
  * 기능:
- * - Supabase CRUD 작업 (fetch, add, update, delete)
+ * - Server Action 기반 CRUD 작업 (fetch, add, update, delete)
  * - 모달 상태 관리 (isModalOpen, isNew, editingItem)
  * - 로딩 상태 관리
  * - camelCase ↔ snake_case 필드 매핑
@@ -36,8 +43,23 @@ import { useSupabaseContext } from '@/lib/context'
  * ```
  */
 
+/** Server Action 에러 문자열에서 구조화된 DB 에러 정보 파싱 */
+function parseStructuredError(errorStr: string): { message: string; code: string | null; details: string | null; hint: string | null } {
+  try {
+    const parsed = JSON.parse(errorStr)
+    return {
+      message: parsed.message || errorStr,
+      code: parsed.code || null,
+      details: parsed.details || null,
+      hint: parsed.hint || null,
+    }
+  } catch {
+    return { message: errorStr, code: null, details: null, hint: null }
+  }
+}
+
 // FK 제약 조건 에러를 친절한 메시지로 변환
-function getFriendlyErrorMessage(error: { message?: string; code?: string }, tableName: string): string {
+function getFriendlyErrorMessage(error: { message?: string; code?: string | null }, tableName: string): string {
   const message = error.message || ''
 
   // FK 제약 조건 위반 (23503)
@@ -194,8 +216,6 @@ export function useAdminCRUD<T extends { id?: number | string }>(
   const showWarning = alertHandler?.showWarning || ((msg: string) => alert(msg))
   const showConfirm = alertHandler?.showConfirm || ((msg: string) => Promise.resolve(confirm(msg)))
 
-  const supabase = useSupabaseContext()
-
   // State
   const [items, setItems] = useState<T[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -215,36 +235,29 @@ export function useAdminCRUD<T extends { id?: number | string }>(
     selectQueryRef.current = selectQuery
   }, [fromDbFormat, orderBy, selectQuery])
 
-  // Fetch items
+  // Fetch items via Server Action
   const refetch = useCallback(async () => {
     setIsLoading(true)
 
-    let query = supabase.from(tableName).select(selectQueryRef.current)
-
-    // 정렬 적용 (단일 또는 다중)
     const orderByConfig = orderByRef.current
-    if (orderByConfig) {
-      const orderByArray = Array.isArray(orderByConfig) ? orderByConfig : [orderByConfig]
-      for (const ob of orderByArray) {
-        query = query.order(ob.column, {
-          ascending: ob.ascending ?? true,
-          nullsFirst: ob.nullsFirst ?? false,
-        })
-      }
+    const fetchOptions: AdminFetchOptions = {
+      select: selectQueryRef.current,
     }
 
-    const { data, error } = await query
+    if (orderByConfig) {
+      fetchOptions.orderBy = Array.isArray(orderByConfig) ? orderByConfig : [orderByConfig]
+    }
 
-    if (error) {
-      console.error(`${tableName} 데이터 로드 실패:`, error)
-    } else if (data) {
-      // Type assertion for custom select queries
-      const rows = data as unknown as Record<string, unknown>[]
-      setItems(rows.map(fromDbFormatRef.current))
+    const result = await adminFetchItems(tableName, fetchOptions)
+
+    if (result.error) {
+      logger.error(`${tableName} 데이터 로드 실패`, result.error)
+    } else if (result.data) {
+      setItems(result.data.map(fromDbFormatRef.current))
     }
 
     setIsLoading(false)
-  }, [supabase, tableName])
+  }, [tableName])
 
   // Initial fetch
   useEffect(() => {
@@ -269,7 +282,7 @@ export function useAdminCRUD<T extends { id?: number | string }>(
     setEditingItem(null)
   }, [])
 
-  // Save handler
+  // Save handler via Server Action
   const handleSave = useCallback(async (): Promise<boolean> => {
     if (!editingItem) return false
 
@@ -287,7 +300,7 @@ export function useAdminCRUD<T extends { id?: number | string }>(
       try {
         await beforeSave(editingItem, isNew)
       } catch (err) {
-        console.error('beforeSave 실패:', err)
+        logger.error('beforeSave 실패', err)
         return false
       }
     }
@@ -295,26 +308,24 @@ export function useAdminCRUD<T extends { id?: number | string }>(
     const dbData = toDbFormat(editingItem)
 
     if (isNew) {
-      const { error } = await supabase.from(tableName).insert(dbData)
-      if (error) {
-        console.error(`${tableName} 등록 실패:`, error, 'code:', error.code, 'details:', error.details, 'hint:', error.hint)
+      const result = await adminCreateItem(tableName, dbData)
+      if (result.error) {
+        const parsed = parseStructuredError(result.error)
+        logger.error(`${tableName} 등록 실패`, new Error(parsed.message), { context: { code: parsed.code, details: parsed.details, hint: parsed.hint } })
         // FK 오류인 경우 친절한 메시지
-        if (error.code === '23503') {
+        if (parsed.code === '23503') {
           showError('선택한 항목이 존재하지 않습니다.\n데이터를 다시 확인해주세요.', '등록 실패')
-        } else if (error.code === '23505') {
+        } else if (parsed.code === '23505') {
           showError('이미 동일한 데이터가 존재합니다.', '중복 오류')
         } else {
-          showError(`등록에 실패했습니다: ${error.message || error.code}`, '오류')
+          showError(`등록에 실패했습니다: ${parsed.message || parsed.code}`, '오류')
         }
         return false
       }
     } else {
-      const { error } = await supabase
-        .from(tableName)
-        .update(dbData)
-        .eq('id', editingItem.id)
-      if (error) {
-        console.error(`${tableName} 수정 실패:`, error)
+      const result = await adminUpdateItem(tableName, editingItem.id!, dbData)
+      if (result.error) {
+        logger.error(`${tableName} 수정 실패`, result.error)
         showError('수정에 실패했습니다.', '오류')
         return false
       }
@@ -323,9 +334,9 @@ export function useAdminCRUD<T extends { id?: number | string }>(
     closeModal()
     await refetch()
     return true
-  }, [supabase, tableName, editingItem, isNew, toDbFormat, validate, beforeSave, closeModal, refetch])
+  }, [tableName, editingItem, isNew, toDbFormat, validate, beforeSave, closeModal, refetch, showError, showWarning])
 
-  // Delete handler
+  // Delete handler via Server Action
   const handleDelete = useCallback(async (item: T): Promise<boolean> => {
     const confirmed = await showConfirm(deleteConfirmMessage, {
       title: '삭제 확인',
@@ -340,28 +351,28 @@ export function useAdminCRUD<T extends { id?: number | string }>(
       try {
         await beforeDelete(item)
       } catch (err) {
-        console.error('beforeDelete 실패:', err)
+        logger.error('beforeDelete 실패', err)
         showError(`삭제 전처리에 실패했습니다: ${err instanceof Error ? err.message : '알 수 없는 오류'}`, '오류')
         return false
       }
     }
 
-    console.log(`[handleDelete] Deleting ${tableName} id: ${item.id}`)
-    const { error, status, statusText } = await supabase.from(tableName).delete().eq('id', item.id)
-    console.log(`[handleDelete] Result - status: ${status}, statusText: ${statusText}, error:`, error)
+    logger.debug(`[handleDelete] Deleting ${tableName} id: ${item.id}`)
+    const result = await adminDeleteItem(tableName, item.id!)
 
-    if (error) {
-      console.error(`${tableName} 삭제 실패:`, error, `code: ${error.code}, details: ${error.details}, hint: ${error.hint}`)
+    if (result.error) {
+      const parsed = parseStructuredError(result.error)
+      logger.error(`${tableName} 삭제 실패`, new Error(parsed.message), { context: { code: parsed.code, details: parsed.details, hint: parsed.hint } })
 
       // FK 제약 조건 에러 친절한 메시지로 변환
-      const friendlyMessage = getFriendlyErrorMessage(error, tableName)
+      const friendlyMessage = getFriendlyErrorMessage(parsed, tableName)
       showError(friendlyMessage, '삭제 불가')
       return false
     }
 
     await refetch()
     return true
-  }, [supabase, tableName, deleteConfirmMessage, beforeDelete, refetch, showConfirm, showError])
+  }, [tableName, deleteConfirmMessage, beforeDelete, refetch, showConfirm, showError])
 
   return {
     items,

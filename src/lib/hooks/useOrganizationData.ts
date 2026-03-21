@@ -11,8 +11,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useOrganization } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
 import { useSupabaseContext } from '@/lib/context'
-import { USE_MOCK_DATA } from '@/lib/config'
 import type { Organization } from '@/types/database'
 import type { UnitType, GroupableMember } from '@/types/organization'
 
@@ -79,7 +79,7 @@ export function useOrganizationData(
     } catch (err) {
       const message = err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다'
       setError(message)
-      console.error('Organization data fetch error:', err)
+      logger.error('Organization data fetch error', err)
     } finally {
       setIsLoading(false)
     }
@@ -89,8 +89,7 @@ export function useOrganizationData(
   useEffect(() => {
     fetchData()
 
-    // Mock 데이터 사용 시 실시간 구독 불필요
-    if (USE_MOCK_DATA || !realtime) return
+    if (!realtime) return
 
     // Supabase 실시간 구독
     const channel = supabase

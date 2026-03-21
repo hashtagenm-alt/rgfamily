@@ -1,9 +1,9 @@
-import type { NextConfig } from "next";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import { withSentryConfig } from "@sentry/nextjs";
+import type { NextConfig } from 'next'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+import { withSentryConfig } from '@sentry/nextjs'
 
-const projectRoot = dirname(fileURLToPath(import.meta.url));
+const projectRoot = dirname(fileURLToPath(import.meta.url))
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   // Disable Turbopack for production build due to Korean folder name issue
   experimental: {
     serverActions: {
-      bodySizeLimit: '100mb',
+      bodySizeLimit: '10mb',
     },
   },
   // 보안 HTTP 헤더 설정
@@ -121,7 +121,8 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/video/:path*',
-        destination: 'https://cdiptfmagemjfmsuphaj.supabase.co/storage/v1/object/public/videos/:path*',
+        destination:
+          'https://cdiptfmagemjfmsuphaj.supabase.co/storage/v1/object/public/videos/:path*',
       },
     ]
   },
@@ -199,7 +200,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-};
+}
 
 // Sentry configuration options
 const sentryWebpackPluginOptions = {
@@ -227,7 +228,7 @@ const sentryWebpackPluginOptions = {
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
   // side errors will fail.
-  tunnelRoute: "/monitoring",
+  tunnelRoute: '/monitoring',
 
   // Hides source maps from generated client bundles
   hideSourceMaps: true,
@@ -240,9 +241,9 @@ const sentryWebpackPluginOptions = {
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
   automaticVercelMonitors: true,
-};
+}
 
 // Export with Sentry configuration (only in production or when DSN is set)
 export default process.env.NEXT_PUBLIC_SENTRY_DSN
   ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
-  : nextConfig;
+  : nextConfig

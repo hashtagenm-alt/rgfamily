@@ -1,46 +1,30 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
-import {
-  getBjStats,
-  getTimePattern,
-  getDonorBjRelations,
-  getDonorPatterns,
-  compareEpisodes,
-  searchDonor,
-  getAnalyticsSummary,
-  getEpisodeList,
-  getSeasonList,
-  getEpisodeTrend,
-  getDonorRetention,
-  getBjEpisodeTrend,
-  getBjDetailedStats,
-  getTimePatternEnhanced,
-  getSignatureEligibility,
-  type BjStats,
-  type TimePatternData,
-  type DonorBjRelation,
-  type DonorPattern,
-  type EpisodeComparison,
-  type DonorSearch,
-  type AnalyticsSummary,
-  type EpisodeTrendData,
-  type DonorRetentionData,
-  type BjEpisodeTrendData,
-  type BjDetailedStats,
-  type TimePatternEnhanced,
-  type SignatureEligibilityData,
+import { useCallback, useMemo } from 'react'
+import { useAnalyticsSummary } from './useAnalyticsSummary'
+import { useAnalyticsDonors } from './useAnalyticsDonors'
+import { useAnalyticsBj } from './useAnalyticsBj'
+import { useAnalyticsAdvanced } from './useAnalyticsAdvanced'
+
+import type {
+  AnalyticsSummary,
+  BjStats,
+  TimePatternData,
+  DonorBjRelation,
+  DonorPattern,
+  EpisodeComparison,
+  DonorSearch,
+  EpisodeTrendData,
+  DonorRetentionData,
+  BjEpisodeTrendData,
+  BjDetailedStats,
+  TimePatternEnhanced,
+  SignatureEligibilityData,
+  ChurnPredictionData,
+  RFMData,
+  BjAffinityData,
+  BjInsightsData,
 } from '@/lib/actions/analytics'
-import {
-  getAdvancedChurnPrediction,
-  getDonorRFMAnalysis,
-  getBjAffinityMatrix,
-  getBjActionableInsights,
-  type ChurnPredictionData,
-  type RFMData,
-  type BjAffinityData,
-  type BjInsightsData,
-} from '@/lib/actions/analytics-advanced'
 
 interface UseAnalyticsOptions {
   seasonId?: number
@@ -123,424 +107,135 @@ interface UseAnalyticsReturn {
   refreshAll: () => Promise<void>
 }
 
+/**
+ * Composition root for all analytics hooks.
+ * Delegates to domain-specific sub-hooks while preserving the original API surface.
+ *
+ * For new code, prefer importing the sub-hooks directly:
+ * - useAnalyticsSummary: filter state, summary, seasons/episodes
+ * - useAnalyticsDonors: donor patterns, search, retention, time patterns
+ * - useAnalyticsBj: BJ stats, episode trends, detailed stats, signature eligibility
+ * - useAnalyticsAdvanced: churn prediction, RFM, BJ affinity/insights, episode comparison
+ */
 export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsReturn {
-  const { autoLoad = true } = options
+  // Core: filter state, summary, seasons/episodes, autoLoad lifecycle
+  const summaryHook = useAnalyticsSummary(options)
 
-  // 초기 자동 선택 여부 추적 (최초 1회만)
-  const hasAutoSelectedSeason = useRef(!!options.seasonId)
+  // Sub-hooks receive filter state from summaryHook
+  const filterOptions = useMemo(
+    () => ({ seasonId: summaryHook.seasonId, episodeId: summaryHook.episodeId }),
+    [summaryHook.seasonId, summaryHook.episodeId]
+  )
 
-  // 필터 상태
-  const [seasonId, setSeasonId] = useState<number | undefined>(options.seasonId)
-  const [episodeId, setEpisodeId] = useState<number | undefined>(options.episodeId)
+  const donorsHook = useAnalyticsDonors(filterOptions)
+  const bjHook = useAnalyticsBj(filterOptions)
+  const advancedHook = useAnalyticsAdvanced(filterOptions)
 
-  // 데이터 상태
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
-  const [bjStats, setBjStats] = useState<BjStats[]>([])
-  const [timePattern, setTimePattern] = useState<TimePatternData[]>([])
-  const [donorBjRelations, setDonorBjRelations] = useState<DonorBjRelation[]>([])
-  const [donorPatterns, setDonorPatterns] = useState<DonorPattern[]>([])
-  const [episodeComparison, setEpisodeComparison] = useState<EpisodeComparison | null>(null)
-  const [donorSearchResult, setDonorSearchResult] = useState<DonorSearch | null>(null)
-  const [episodeTrend, setEpisodeTrend] = useState<EpisodeTrendData[]>([])
-  const [donorRetention, setDonorRetention] = useState<DonorRetentionData | null>(null)
-  const [bjEpisodeTrend, setBjEpisodeTrend] = useState<BjEpisodeTrendData[]>([])
-  const [bjDetailedStats, setBjDetailedStats] = useState<BjDetailedStats[]>([])
-  const [timePatternEnhanced, setTimePatternEnhanced] = useState<TimePatternEnhanced | null>(null)
-  const [signatureEligibility, setSignatureEligibility] = useState<SignatureEligibilityData | null>(null)
-  const [churnPrediction, setChurnPrediction] = useState<ChurnPredictionData | null>(null)
-  const [rfmAnalysis, setRfmAnalysis] = useState<RFMData | null>(null)
-  const [bjAffinity, setBjAffinity] = useState<BjAffinityData | null>(null)
-  const [bjInsights, setBjInsights] = useState<BjInsightsData | null>(null)
+  // Aggregate loading
+  const isLoading =
+    summaryHook.isSummaryLoading ||
+    summaryHook.isEpisodeTrendLoading ||
+    bjHook.isBjStatsLoading ||
+    donorsHook.isTimePatternLoading ||
+    donorsHook.isDonorPatternsLoading ||
+    advancedHook.isComparisonLoading ||
+    donorsHook.isSearchLoading ||
+    donorsHook.isDonorRetentionLoading ||
+    bjHook.isBjEpisodeTrendLoading ||
+    bjHook.isBjDetailedStatsLoading ||
+    donorsHook.isTimePatternEnhancedLoading ||
+    bjHook.isSignatureLoading ||
+    advancedHook.isChurnPredictionLoading ||
+    advancedHook.isRfmLoading ||
+    advancedHook.isBjAffinityLoading ||
+    advancedHook.isBjInsightsLoading
 
-  // 메타 데이터
-  const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([])
-  const [episodes, setEpisodes] = useState<{ id: number; title: string; description: string | null; season_id: number; episode_number: number; broadcast_date: string | null; is_finalized: boolean }[]>([])
-
-  // 로딩 상태
-  const [isSummaryLoading, setIsSummaryLoading] = useState(false)
-  const [isBjStatsLoading, setIsBjStatsLoading] = useState(false)
-  const [isTimePatternLoading, setIsTimePatternLoading] = useState(false)
-  const [isDonorPatternsLoading, setIsDonorPatternsLoading] = useState(false)
-  const [isComparisonLoading, setIsComparisonLoading] = useState(false)
-  const [isSearchLoading, setIsSearchLoading] = useState(false)
-  const [isRelationsLoading, setIsRelationsLoading] = useState(false)
-  const [isEpisodeTrendLoading, setIsEpisodeTrendLoading] = useState(false)
-  const [isDonorRetentionLoading, setIsDonorRetentionLoading] = useState(false)
-  const [isBjEpisodeTrendLoading, setIsBjEpisodeTrendLoading] = useState(false)
-  const [isBjDetailedStatsLoading, setIsBjDetailedStatsLoading] = useState(false)
-  const [isTimePatternEnhancedLoading, setIsTimePatternEnhancedLoading] = useState(false)
-  const [isSignatureLoading, setIsSignatureLoading] = useState(false)
-  const [isChurnPredictionLoading, setIsChurnPredictionLoading] = useState(false)
-  const [isRfmLoading, setIsRfmLoading] = useState(false)
-  const [isBjAffinityLoading, setIsBjAffinityLoading] = useState(false)
-  const [isBjInsightsLoading, setIsBjInsightsLoading] = useState(false)
-
-  // 에러
-  const [error, setError] = useState<string | null>(null)
-
-  // 로드 함수들
-  const loadSummary = useCallback(async () => {
-    setIsSummaryLoading(true)
-    setError(null)
-    const result = await getAnalyticsSummary(seasonId, episodeId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setSummary(result.data)
-    }
-    setIsSummaryLoading(false)
-  }, [seasonId, episodeId])
-
-  const loadBjStats = useCallback(async () => {
-    setIsBjStatsLoading(true)
-    setError(null)
-    const result = await getBjStats(seasonId, episodeId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setBjStats(result.data)
-    }
-    setIsBjStatsLoading(false)
-  }, [seasonId, episodeId])
-
-  const loadTimePattern = useCallback(async () => {
-    setIsTimePatternLoading(true)
-    setError(null)
-    const result = await getTimePattern(seasonId, episodeId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setTimePattern(result.data)
-    }
-    setIsTimePatternLoading(false)
-  }, [seasonId, episodeId])
-
-  const loadDonorBjRelations = useCallback(async (limit: number = 100) => {
-    setIsRelationsLoading(true)
-    setError(null)
-    const result = await getDonorBjRelations(seasonId, episodeId, limit)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setDonorBjRelations(result.data)
-    }
-    setIsRelationsLoading(false)
-  }, [seasonId, episodeId])
-
-  const loadDonorPatterns = useCallback(async () => {
-    setIsDonorPatternsLoading(true)
-    setError(null)
-    const result = await getDonorPatterns(seasonId, episodeId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setDonorPatterns(result.data)
-    }
-    setIsDonorPatternsLoading(false)
-  }, [seasonId, episodeId])
-
-  const loadEpisodeComparison = useCallback(async (ep1Id: number, ep2Id: number) => {
-    setIsComparisonLoading(true)
-    setError(null)
-    const result = await compareEpisodes(ep1Id, ep2Id)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setEpisodeComparison(result.data)
-    }
-    setIsComparisonLoading(false)
-  }, [])
-
-  const searchDonorByName = useCallback(async (name: string) => {
-    if (!name.trim()) {
-      setDonorSearchResult(null)
-      return
-    }
-    setIsSearchLoading(true)
-    setError(null)
-    const result = await searchDonor(name, seasonId)
-    if (result.error) {
-      setError(result.error)
-    } else {
-      setDonorSearchResult(result.data)
-    }
-    setIsSearchLoading(false)
-  }, [seasonId])
-
-  const loadEpisodeTrend = useCallback(async () => {
-    setIsEpisodeTrendLoading(true)
-    setError(null)
-    const result = await getEpisodeTrend(seasonId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setEpisodeTrend(result.data)
-    }
-    setIsEpisodeTrendLoading(false)
-  }, [seasonId])
-
-  const loadDonorRetention = useCallback(async () => {
-    setIsDonorRetentionLoading(true)
-    setError(null)
-    const result = await getDonorRetention(seasonId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setDonorRetention(result.data)
-    }
-    setIsDonorRetentionLoading(false)
-  }, [seasonId])
-
-  const loadBjEpisodeTrend = useCallback(async () => {
-    setIsBjEpisodeTrendLoading(true)
-    setError(null)
-    const result = await getBjEpisodeTrend(seasonId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setBjEpisodeTrend(result.data)
-    }
-    setIsBjEpisodeTrendLoading(false)
-  }, [seasonId])
-
-  const loadBjDetailedStats = useCallback(async () => {
-    setIsBjDetailedStatsLoading(true)
-    setError(null)
-    const result = await getBjDetailedStats(seasonId, episodeId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setBjDetailedStats(result.data)
-    }
-    setIsBjDetailedStatsLoading(false)
-  }, [seasonId, episodeId])
-
-  const loadTimePatternEnhanced = useCallback(async () => {
-    setIsTimePatternEnhancedLoading(true)
-    setError(null)
-    const result = await getTimePatternEnhanced(seasonId, episodeId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setTimePatternEnhanced(result.data)
-    }
-    setIsTimePatternEnhancedLoading(false)
-  }, [seasonId, episodeId])
-
-  const loadSignatureEligibility = useCallback(async () => {
-    setIsSignatureLoading(true)
-    setError(null)
-    const result = await getSignatureEligibility(seasonId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setSignatureEligibility(result.data)
-    }
-    setIsSignatureLoading(false)
-  }, [seasonId])
-
-  const loadChurnPrediction = useCallback(async () => {
-    setIsChurnPredictionLoading(true)
-    setError(null)
-    const result = await getAdvancedChurnPrediction(seasonId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setChurnPrediction(result.data)
-    }
-    setIsChurnPredictionLoading(false)
-  }, [seasonId])
-
-  const loadRfmAnalysis = useCallback(async () => {
-    setIsRfmLoading(true)
-    setError(null)
-    const result = await getDonorRFMAnalysis(seasonId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setRfmAnalysis(result.data)
-    }
-    setIsRfmLoading(false)
-  }, [seasonId])
-
-  const loadBjAffinity = useCallback(async () => {
-    setIsBjAffinityLoading(true)
-    setError(null)
-    const result = await getBjAffinityMatrix(seasonId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setBjAffinity(result.data)
-    }
-    setIsBjAffinityLoading(false)
-  }, [seasonId])
-
-  const loadBjInsights = useCallback(async () => {
-    setIsBjInsightsLoading(true)
-    setError(null)
-    const result = await getBjActionableInsights(seasonId, episodeId)
-    if (result.error) {
-      setError(result.error)
-    } else if (result.data) {
-      setBjInsights(result.data)
-    }
-    setIsBjInsightsLoading(false)
-  }, [seasonId, episodeId])
-
-  const loadSeasons = useCallback(async () => {
-    const result = await getSeasonList()
-    if (result.data) {
-      setSeasons(result.data)
-    }
-  }, [])
-
-  const loadEpisodes = useCallback(async () => {
-    const result = await getEpisodeList(seasonId)
-    if (result.data) {
-      setEpisodes(result.data)
-    }
-  }, [seasonId])
-
-  const resetAllData = useCallback(() => {
-    setBjStats([])
-    setTimePattern([])
-    setDonorPatterns([])
-    setEpisodeTrend([])
-    setDonorRetention(null)
-    setBjEpisodeTrend([])
-    setBjDetailedStats([])
-    setTimePatternEnhanced(null)
-    setSignatureEligibility(null)
-    setChurnPrediction(null)
-    setRfmAnalysis(null)
-    setBjAffinity(null)
-    setBjInsights(null)
-  }, [])
+  // Aggregate error (first non-null error)
+  const error =
+    summaryHook.error ||
+    donorsHook.error ||
+    bjHook.error ||
+    advancedHook.error
 
   const refreshAll = useCallback(async () => {
-    resetAllData()
-    await loadSummary()
-  }, [resetAllData, loadSummary])
-
-  // 초기 로드
-  useEffect(() => {
-    loadSeasons()
-  }, [loadSeasons])
-
-  useEffect(() => {
-    loadEpisodes()
-  }, [loadEpisodes])
-
-  // 시즌 자동 선택: 시즌 목록 로드 후 가장 최신 시즌 선택 (최초 1회)
-  useEffect(() => {
-    if (!hasAutoSelectedSeason.current && seasons.length > 0) {
-      hasAutoSelectedSeason.current = true
-      const latestSeason = seasons[seasons.length - 1]
-      setSeasonId(latestSeason.id)
-    }
-  }, [seasons])
-
-  // 에피소드 자동 선택: "전체 에피소드"(undefined) 기본값
-  // 서버 액션이 is_finalized 필터를 처리하므로 특정 회차 선택 불필요
-  // 사용자가 필요 시 드롭다운에서 특정 회차 선택 가능
-
-  useEffect(() => {
-    if (autoLoad) {
-      refreshAll()
-    }
-  }, [autoLoad, seasonId, episodeId, refreshAll])
-
-  const isLoading =
-    isSummaryLoading ||
-    isBjStatsLoading ||
-    isTimePatternLoading ||
-    isDonorPatternsLoading ||
-    isComparisonLoading ||
-    isSearchLoading ||
-    isRelationsLoading ||
-    isEpisodeTrendLoading ||
-    isDonorRetentionLoading ||
-    isBjEpisodeTrendLoading ||
-    isBjDetailedStatsLoading ||
-    isTimePatternEnhancedLoading ||
-    isSignatureLoading ||
-    isChurnPredictionLoading ||
-    isRfmLoading ||
-    isBjAffinityLoading ||
-    isBjInsightsLoading
+    donorsHook.resetDonorData()
+    bjHook.resetBjData()
+    advancedHook.resetAdvancedData()
+    await summaryHook.refreshAll()
+  }, [donorsHook, bjHook, advancedHook, summaryHook])
 
   return {
     // 필터
-    seasonId,
-    episodeId,
-    setSeasonId,
-    setEpisodeId,
+    seasonId: summaryHook.seasonId,
+    episodeId: summaryHook.episodeId,
+    setSeasonId: summaryHook.setSeasonId,
+    setEpisodeId: summaryHook.setEpisodeId,
 
     // 데이터
-    summary,
-    bjStats,
-    timePattern,
-    donorBjRelations,
-    donorPatterns,
-    episodeComparison,
-    donorSearchResult,
-    episodeTrend,
-    donorRetention,
-    bjEpisodeTrend,
-    bjDetailedStats,
-    timePatternEnhanced,
-    signatureEligibility,
-    churnPrediction,
-    rfmAnalysis,
-    bjAffinity,
-    bjInsights,
+    summary: summaryHook.summary,
+    bjStats: bjHook.bjStats,
+    timePattern: donorsHook.timePattern,
+    donorBjRelations: donorsHook.donorBjRelations,
+    donorPatterns: donorsHook.donorPatterns,
+    episodeComparison: advancedHook.episodeComparison,
+    donorSearchResult: donorsHook.donorSearchResult,
+    episodeTrend: summaryHook.episodeTrend,
+    donorRetention: donorsHook.donorRetention,
+    bjEpisodeTrend: bjHook.bjEpisodeTrend,
+    bjDetailedStats: bjHook.bjDetailedStats,
+    timePatternEnhanced: donorsHook.timePatternEnhanced,
+    signatureEligibility: bjHook.signatureEligibility,
+    churnPrediction: advancedHook.churnPrediction,
+    rfmAnalysis: advancedHook.rfmAnalysis,
+    bjAffinity: advancedHook.bjAffinity,
+    bjInsights: advancedHook.bjInsights,
 
     // 로딩
     isLoading,
-    isSummaryLoading,
-    isBjStatsLoading,
-    isTimePatternLoading,
-    isDonorPatternsLoading,
-    isComparisonLoading,
-    isSearchLoading,
-    isEpisodeTrendLoading,
-    isDonorRetentionLoading,
-    isBjEpisodeTrendLoading,
-    isBjDetailedStatsLoading,
-    isTimePatternEnhancedLoading,
-    isSignatureLoading,
-    isChurnPredictionLoading,
-    isRfmLoading,
-    isBjAffinityLoading,
-    isBjInsightsLoading,
+    isSummaryLoading: summaryHook.isSummaryLoading,
+    isBjStatsLoading: bjHook.isBjStatsLoading,
+    isTimePatternLoading: donorsHook.isTimePatternLoading,
+    isDonorPatternsLoading: donorsHook.isDonorPatternsLoading,
+    isComparisonLoading: advancedHook.isComparisonLoading,
+    isSearchLoading: donorsHook.isSearchLoading,
+    isEpisodeTrendLoading: summaryHook.isEpisodeTrendLoading,
+    isDonorRetentionLoading: donorsHook.isDonorRetentionLoading,
+    isBjEpisodeTrendLoading: bjHook.isBjEpisodeTrendLoading,
+    isBjDetailedStatsLoading: bjHook.isBjDetailedStatsLoading,
+    isTimePatternEnhancedLoading: donorsHook.isTimePatternEnhancedLoading,
+    isSignatureLoading: bjHook.isSignatureLoading,
+    isChurnPredictionLoading: advancedHook.isChurnPredictionLoading,
+    isRfmLoading: advancedHook.isRfmLoading,
+    isBjAffinityLoading: advancedHook.isBjAffinityLoading,
+    isBjInsightsLoading: advancedHook.isBjInsightsLoading,
 
     // 에러
     error,
 
     // 메타
-    seasons,
-    episodes,
+    seasons: summaryHook.seasons,
+    episodes: summaryHook.episodes,
 
     // 액션
-    loadSummary,
-    loadBjStats,
-    loadTimePattern,
-    loadDonorBjRelations,
-    loadDonorPatterns,
-    loadEpisodeComparison,
-    searchDonorByName,
-    loadSeasons,
-    loadEpisodes,
-    loadEpisodeTrend,
-    loadDonorRetention,
-    loadBjEpisodeTrend,
-    loadBjDetailedStats,
-    loadTimePatternEnhanced,
-    loadSignatureEligibility,
-    loadChurnPrediction,
-    loadRfmAnalysis,
-    loadBjAffinity,
-    loadBjInsights,
+    loadSummary: summaryHook.loadSummary,
+    loadBjStats: bjHook.loadBjStats,
+    loadTimePattern: donorsHook.loadTimePattern,
+    loadDonorBjRelations: donorsHook.loadDonorBjRelations,
+    loadDonorPatterns: donorsHook.loadDonorPatterns,
+    loadEpisodeComparison: advancedHook.loadEpisodeComparison,
+    searchDonorByName: donorsHook.searchDonorByName,
+    loadSeasons: summaryHook.loadSeasons,
+    loadEpisodes: summaryHook.loadEpisodes,
+    loadEpisodeTrend: summaryHook.loadEpisodeTrend,
+    loadDonorRetention: donorsHook.loadDonorRetention,
+    loadBjEpisodeTrend: bjHook.loadBjEpisodeTrend,
+    loadBjDetailedStats: bjHook.loadBjDetailedStats,
+    loadTimePatternEnhanced: donorsHook.loadTimePatternEnhanced,
+    loadSignatureEligibility: bjHook.loadSignatureEligibility,
+    loadChurnPrediction: advancedHook.loadChurnPrediction,
+    loadRfmAnalysis: advancedHook.loadRfmAnalysis,
+    loadBjAffinity: advancedHook.loadBjAffinity,
+    loadBjInsights: advancedHook.loadBjInsights,
     refreshAll,
   }
 }

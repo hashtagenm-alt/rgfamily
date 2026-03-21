@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
-import { USE_MOCK_DATA, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY } from '@/lib/config'
+import { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY } from '@/lib/config'
 
 /**
  * Mock Supabase 서버 프록시
@@ -52,8 +52,8 @@ function createMockServerProxy(): SupabaseClient<Database> {
 }
 
 export async function createServerSupabaseClient(): Promise<SupabaseClient<Database>> {
-  // Mock 모드이거나 Supabase 자격 증명이 없으면 Mock 프록시 반환
-  if (USE_MOCK_DATA || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  // Supabase 자격 증명이 없으면 빈 프록시 반환 (CI 환경 등)
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return createMockServerProxy()
   }
 

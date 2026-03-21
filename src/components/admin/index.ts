@@ -1,6 +1,6 @@
 export { default as Sidebar } from './Sidebar'
 export { default as DataTable } from './DataTable'
-export type { Column, BulkAction } from './DataTable'
+export type { Column, BulkAction, EditableType, SelectOption, DataTableProps, ThProps, SortableRowProps } from './types'
 export { default as StatsCard } from './StatsCard'
 export { default as CsvUploader } from './CsvUploader'
 export type { DuplicateHandling } from './CsvUploader'

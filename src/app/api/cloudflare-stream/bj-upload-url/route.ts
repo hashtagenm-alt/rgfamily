@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN } from '@/lib/cloudflare'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * BJ 멤버 및 관리자용 영상 업로드 URL 발급 API
@@ -58,12 +59,7 @@ export async function POST(request: NextRequest) {
     const isBjMember = !!bjMember
 
     if (!hasRolePermission && !isBjMember) {
-      console.error('BJ upload permission denied:', {
-        userId: user.id,
-        userEmail: user.email,
-        profileRole: profile?.role,
-        bjMemberFound: !!bjMember,
-      })
+      logger.warn(`BJ upload permission denied: userId=${user.id}, role=${profile?.role}, bjMember=${!!bjMember}`)
       return NextResponse.json({
         error: 'BJ 멤버 또는 관리자 권한이 필요합니다',
         _v: '2.0.2',
@@ -121,7 +117,7 @@ export async function POST(request: NextRequest) {
       useTus: false,
     })
   } catch (error) {
-    console.error('BJ video upload URL error:', error)
+    logger.apiError('/api/cloudflare-stream/bj-upload-url', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '업로드 URL 발급 실패' },
       { status: 500 }

@@ -4,6 +4,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { randomUUID } from 'crypto'
+import { logger } from '@/lib/utils/logger'
 
 // App Router용 설정
 export const maxDuration = 60
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
       key,
     })
   } catch (error) {
-    console.error('Presigned URL error:', error)
+    logger.apiError('/api/upload [GET]', error)
     return NextResponse.json(
       { error: '업로드 URL 발급에 실패했습니다' },
       { status: 500 }
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
-      console.error('R2 configuration missing')
+      logger.error('R2 configuration missing')
       return NextResponse.json(
         { error: '서버 설정 오류: 이미지 업로드 서비스가 구성되지 않았습니다.' },
         { status: 500 }
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
       key: key,
     })
   } catch (error) {
-    console.error('Upload error:', error)
+    logger.apiError('/api/upload [POST]', error)
     const err = error as { message?: string; code?: string }
 
     return NextResponse.json(

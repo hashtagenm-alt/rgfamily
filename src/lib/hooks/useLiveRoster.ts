@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useSupabaseContext } from '@/lib/context'
-import { USE_MOCK_DATA } from '@/lib/config'
-import { mockOrganization, mockLiveStatus } from '@/lib/mock'
+import { logger } from '@/lib/utils/logger'
 import type { JoinedProfile } from '@/types/common'
 import type { OrganizationRecord, SocialLinks, ProfileInfo } from '@/types/organization'
 import type { LiveStatus } from '@/types/database'
@@ -50,50 +49,6 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
     setIsLoading(true)
     setError(null)
 
-    if (USE_MOCK_DATA) {
-      const mockStatusEntries: LiveStatusEntry[] = mockLiveStatus.map((status) => ({
-        memberId: status.member_id,
-        platform: status.platform,
-        streamUrl: status.stream_url,
-        thumbnailUrl: status.thumbnail_url,
-        isLive: status.is_live,
-        viewerCount: status.viewer_count,
-        lastChecked: status.last_checked,
-      }))
-      const liveMap = buildLiveStatusMap(mockStatusEntries)
-      const mappedMembers: OrganizationRecord[] = mockOrganization.map((member) => {
-        const liveEntries = liveMap[member.id] || []
-        const isLive = liveEntries.some((entry) => entry.isLive)
-        return {
-          id: member.id,
-          profile_id: null,
-          name: member.name,
-          role: member.role,
-          unit: member.unit,
-          position_order: member.position_order,
-          parent_id: member.parent_id,
-          image_url: member.image_url,
-          social_links: (member.social_links as SocialLinks | null) || null,
-          profile_info: (member.profile_info as ProfileInfo | null) || null,
-          is_live: isLive,
-          is_active: true,
-          current_rank: member.current_rank || null,
-          current_rank_id: member.current_rank_id || null,
-          total_contribution: member.total_contribution || 0,
-          season_contribution: member.season_contribution || 0,
-          total_prize: member.total_prize || 0,
-          total_penalty: member.total_penalty || 0,
-          prize_balance: member.prize_balance || 0,
-          created_at: '',
-        }
-      })
-
-      setMembers(mappedMembers)
-      setLiveStatusByMemberId(liveMap)
-      setIsLoading(false)
-      return
-    }
-
     // 단일 쿼리로 organization + profiles + live_status 조인
     const { data: orgData, error: orgError } = await supabase
       .from('organization')
@@ -106,7 +61,7 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
       .order('position_order')
 
     if (orgError) {
-      console.error('조직도 데이터 로드 실패:', orgError)
+      logger.error('조직도 데이터 로드 실패', orgError)
       setError('라이브 멤버 데이터를 불러오는데 실패했습니다.')
       setIsLoading(false)
       return
@@ -179,7 +134,7 @@ export function useLiveRoster(options: UseLiveRosterOptions = {}): UseLiveRoster
   useEffect(() => {
     fetchRoster()
 
-    if (USE_MOCK_DATA || !realtime) return
+    if (!realtime) return
 
     // Realtime: 변경된 레코드만 선택적 업데이트
     const channel = supabase

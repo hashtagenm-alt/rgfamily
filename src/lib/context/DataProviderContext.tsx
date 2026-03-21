@@ -1,12 +1,15 @@
 'use client'
 
 /**
- * DataProvider Context
+ * DataProvider Context - Repository Pattern convenience hooks
  *
- * 전역 데이터 접근 계층
- * - Repository Pattern 적용
- * - Mock/Supabase 자동 전환
- * - 타입 안전한 데이터 접근
+ * 이 컨텍스트의 hook들은 Repository 패턴을 통해 데이터에 접근합니다.
+ *
+ * ⚠️ ADR-005 준수: src/app/ 페이지에서 직접 supabase.from() 호출 금지.
+ *    대신 src/lib/actions/ 의 Server Action 또는 이 컨텍스트의 hook을 사용하세요.
+ *
+ * 활성 hooks: useRankings, useSeasons, useOrganization, useNotices,
+ *            useTimeline, useSchedules, useSignatures
  */
 
 import { createContext, useContext, useMemo, ReactNode } from 'react'
@@ -27,16 +30,9 @@ export function DataProviderProvider({ children }: { children: ReactNode }) {
     return createDataProvider(supabase)
   }, [supabase])
 
-  const value: DataProviderContextType = {
-    provider,
-    isReady: true,
-  }
+  const value = useMemo<DataProviderContextType>(() => ({ provider, isReady: true }), [provider])
 
-  return (
-    <DataProviderContext.Provider value={value}>
-      {children}
-    </DataProviderContext.Provider>
-  )
+  return <DataProviderContext.Provider value={value}>{children}</DataProviderContext.Provider>
 }
 
 export function useDataProviderContext() {
@@ -49,6 +45,12 @@ export function useDataProviderContext() {
 
 /**
  * Convenience hooks for specific repositories
+ *
+ * Active hooks (7): useRankings, useSeasons, useOrganization,
+ * useNotices, useTimeline, useSchedules, useSignatures
+ *
+ * Removed dead hooks (9): useProfiles, usePosts, useComments,
+ * useVipRewards, useVipImages, useMedia, useBanners, useLiveStatus, useGuestbook
  */
 export function useRankings() {
   const { provider } = useDataProviderContext()
@@ -58,11 +60,6 @@ export function useRankings() {
 export function useSeasons() {
   const { provider } = useDataProviderContext()
   return provider.seasons
-}
-
-export function useProfiles() {
-  const { provider } = useDataProviderContext()
-  return provider.profiles
 }
 
 export function useOrganization() {
@@ -75,11 +72,6 @@ export function useNotices() {
   return provider.notices
 }
 
-export function usePosts() {
-  const { provider } = useDataProviderContext()
-  return provider.posts
-}
-
 export function useTimeline() {
   const { provider } = useDataProviderContext()
   return provider.timeline
@@ -90,42 +82,7 @@ export function useSchedules() {
   return provider.schedules
 }
 
-export function useComments() {
-  const { provider } = useDataProviderContext()
-  return provider.comments
-}
-
 export function useSignatures() {
   const { provider } = useDataProviderContext()
   return provider.signatures
-}
-
-export function useVipRewards() {
-  const { provider } = useDataProviderContext()
-  return provider.vipRewards
-}
-
-export function useVipImages() {
-  const { provider } = useDataProviderContext()
-  return provider.vipImages
-}
-
-export function useMedia() {
-  const { provider } = useDataProviderContext()
-  return provider.media
-}
-
-export function useBanners() {
-  const { provider } = useDataProviderContext()
-  return provider.banners
-}
-
-export function useLiveStatus() {
-  const { provider } = useDataProviderContext()
-  return provider.liveStatus
-}
-
-export function useGuestbook() {
-  const { provider } = useDataProviderContext()
-  return provider.guestbook
 }

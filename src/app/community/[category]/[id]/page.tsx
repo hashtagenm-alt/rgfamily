@@ -5,11 +5,11 @@ import { useRouter, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Eye, Calendar, User, MessageSquare, Send, Trash2, Edit, Heart } from 'lucide-react'
-import { deletePost, deleteComment } from '@/lib/actions/posts'
-import { useSupabaseContext, useAuthContext } from '@/lib/context'
+import { deletePost, deleteComment, getPostDetail, getPostComments, checkUserLike, addComment, toggleLike } from '@/lib/actions/posts'
+import { useAuthContext } from '@/lib/context'
 import { formatDate } from '@/lib/utils/format'
 import { renderContent } from '@/lib/utils/htmlContent'
-import type { JoinedProfile } from '@/types/common'
+import { logger } from '@/lib/utils/logger'
 import styles from './page.module.css'
 
 interface PostDetail {
@@ -53,7 +53,6 @@ export default function PostDetailPage({
   if (!['free', 'vip'].includes(category)) {
     notFound()
   }
-  const supabase = useSupabaseContext()
   const { user, profile } = useAuthContext()
   const isAdmin = ['admin', 'superadmin', 'moderator'].includes(profile?.role ?? '')
   const [post, setPost] = useState<PostDetail | null>(null)
@@ -73,77 +72,57 @@ export default function PostDetailPage({
   const fetchPost = useCallback(async () => {
     setIsLoading(true)
 
-    // 게시글 조회
-    const { data: postData, error: postError } = await supabase
-      .from('posts')
-      .select('*, profiles!author_id(id, nickname, avatar_url)')
-      .eq('id', postId)
-      .single()
+    // 게시글 조회 (서버 액션)
+    const postResult = await getPostDetail(postId)
 
-    if (postError || !postData) {
-      console.error('게시글 로드 실패:', postError)
+    if (postResult.error || !postResult.data) {
+      logger.error('게시글 로드 실패:', postResult.error)
       setIsLoading(false)
       return
     }
 
-    // 조회수 증가
-    await supabase
-      .from('posts')
-      .update({ view_count: (postData.view_count || 0) + 1 })
-      .eq('id', postId)
-
-    const postProfile = postData.profiles as JoinedProfile | null
-    const isAnonymous = Boolean(postData.is_anonymous)
-    const realNickname = postProfile?.nickname || '알 수 없음'
+    const postData = postResult.data
+    const isAnonymous = postData.isAnonymous
+    const realNickname = postData.authorNickname
     setPost({
       id: postData.id,
       title: postData.title,
-      content: postData.content || '',
-      authorId: postData.author_id,
+      content: postData.content,
+      authorId: postData.authorId,
       authorName: isAnonymous ? '익명' : realNickname,
       authorRealName: isAnonymous ? realNickname : undefined,
-      authorAvatar: !isAnonymous || isAdmin ? (postProfile?.avatar_url || null) : null,
-      viewCount: (postData.view_count || 0) + 1,
-      likeCount: postData.like_count || 0,
-      createdAt: postData.created_at,
+      authorAvatar: !isAnonymous || isAdmin ? postData.authorAvatar : null,
+      viewCount: postData.viewCount,
+      likeCount: postData.likeCount,
+      createdAt: postData.createdAt,
       isAnonymous,
     })
-    setLikeCount(postData.like_count || 0)
+    setLikeCount(postData.likeCount)
 
-    // 현재 유저의 좋아요 여부 확인
+    // 현재 유저의 좋아요 여부 확인 (서버 액션)
     if (user) {
-      const { data: likeData } = await supabase
-        .from('post_likes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .maybeSingle()
-      setIsLiked(!!likeData)
+      const likeResult = await checkUserLike(postId)
+      if (!likeResult.error) {
+        setIsLiked(!!likeResult.data)
+      }
     }
 
-    // 댓글 조회
-    const { data: commentsData } = await supabase
-      .from('comments')
-      .select('*, profiles!author_id(id, nickname, avatar_url)')
-      .eq('post_id', postId)
-      .order('created_at', { ascending: true })
+    // 댓글 조회 (서버 액션)
+    const commentsResult = await getPostComments(postId)
 
     setComments(
-      (commentsData || []).map((c) => {
-        const commentProfile = c.profiles as JoinedProfile | null
-        return {
-          id: c.id,
-          content: c.content,
-          authorId: c.author_id,
-          authorName: commentProfile?.nickname || '익명',
-          authorAvatar: commentProfile?.avatar_url || null,
-          createdAt: c.created_at,
-        }
-      })
+      (commentsResult.data || []).map((c) => ({
+        id: c.id,
+        content: c.content,
+        authorId: c.authorId,
+        authorName: c.authorName,
+        authorAvatar: c.authorAvatar,
+        createdAt: c.createdAt,
+      }))
     )
 
     setIsLoading(false)
-  }, [supabase, postId, user, isAdmin])
+  }, [postId, user, isAdmin])
 
   useEffect(() => {
     fetchPost()
@@ -155,14 +134,10 @@ export default function PostDetailPage({
 
     setIsSubmitting(true)
 
-    const { error } = await supabase.from('comments').insert({
-      post_id: postId,
-      author_id: user.id,
-      content: newComment.trim(),
-    })
+    const result = await addComment(postId, newComment.trim())
 
-    if (error) {
-      console.error('댓글 작성 실패:', error)
+    if (result.error) {
+      logger.error('댓글 작성 실패:', result.error)
       alert('댓글 작성에 실패했습니다.')
     } else {
       setNewComment('')
@@ -181,26 +156,16 @@ export default function PostDetailPage({
     setIsLiked(!wasLiked)
     setLikeCount((prev) => wasLiked ? prev - 1 : prev + 1)
 
-    if (wasLiked) {
-      const { error } = await supabase
-        .from('post_likes')
-        .delete()
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-      if (error) {
-        // Rollback
-        setIsLiked(true)
-        setLikeCount((prev) => prev + 1)
-      }
-    } else {
-      const { error } = await supabase
-        .from('post_likes')
-        .insert({ post_id: postId, user_id: user.id })
-      if (error) {
-        // Rollback
-        setIsLiked(false)
-        setLikeCount((prev) => prev - 1)
-      }
+    const result = await toggleLike(postId)
+
+    if (result.error) {
+      // Rollback
+      setIsLiked(wasLiked)
+      setLikeCount((prev) => wasLiked ? prev + 1 : prev - 1)
+    } else if (result.data) {
+      // Sync with server state
+      setIsLiked(result.data.liked)
+      setLikeCount(result.data.likeCount)
     }
   }
 

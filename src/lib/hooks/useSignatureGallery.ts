@@ -12,6 +12,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useSignatures, useSupabaseContext } from '@/lib/context'
 import { withRetry } from '@/lib/utils/fetch-with-retry'
+import { logger } from '@/lib/utils/logger'
 
 // 시그니처 영상 타입
 export interface SignatureVideo {
@@ -44,7 +45,7 @@ type RangeFilter = 'all' | '1000-1999' | '2000-4999' | '5000-9999' | '10000-2999
 
 // 번호 범위 정의
 const RANGE_CONFIG: Record<RangeFilter, { min: number; max: number }> = {
-  'all': { min: 0, max: Infinity },
+  all: { min: 0, max: Infinity },
   '1000-1999': { min: 1, max: 1999 },
   '2000-4999': { min: 2000, max: 4999 },
   '5000-9999': { min: 5000, max: 9999 },
@@ -86,9 +87,10 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
 
     try {
       // Repository를 통해 시그니처 조회
-      let sigData = unitFilter === 'all'
-        ? await signaturesRepo.findAll()
-        : await signaturesRepo.findByUnit(unitFilter as 'excel' | 'crew')
+      let sigData =
+        unitFilter === 'all'
+          ? await signaturesRepo.findAll()
+          : await signaturesRepo.findByUnit(unitFilter as 'excel' | 'crew')
 
       // 신규 필터: 최근 10개만
       if (categoryFilter === 'new') {
@@ -100,15 +102,19 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
       // Range 필터
       if (rangeFilter !== 'all') {
         const range = RANGE_CONFIG[rangeFilter]
-        sigData = sigData.filter(sig => sig.sig_number >= range.min && sig.sig_number <= range.max)
+        sigData = sigData.filter(
+          (sig) => sig.sig_number >= range.min && sig.sig_number <= range.max
+        )
       }
 
       // 각 시그니처의 영상 목록 조회
       const sigIds = sigData.map((s) => s.id)
-      const { data: videoData } = await withRetry(async () =>
-        await supabase
-          .from('signature_videos')
-          .select(`
+      const { data: videoData } = await withRetry(
+        async () =>
+          await supabase
+            .from('signature_videos')
+            .select(
+              `
             id,
             signature_id,
             member_id,
@@ -116,10 +122,11 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
             cloudflare_uid,
             created_at,
             organization!member_id(id, name, image_url)
-          `)
-          .in('signature_id', sigIds)
-          .eq('is_published', true)
-          .order('created_at', { ascending: false })
+          `
+            )
+            .in('signature_id', sigIds)
+            .eq('is_published', true)
+            .order('created_at', { ascending: false })
       )
 
       // 시그니처별 영상 매핑
@@ -149,7 +156,7 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
         description: row.description || '',
         thumbnailUrl: row.thumbnail_url || '',
         unit: row.unit,
-        isGroup: row.is_group || false,
+        isGroup: ((row as unknown as Record<string, unknown>).is_group as boolean) ?? false,
         videos: videosBySignature[row.id] || [],
         createdAt: row.created_at,
       }))
@@ -157,10 +164,11 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
       // 검색 필터 적용
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
-        converted = converted.filter(sig =>
-          sig.title.toLowerCase().includes(query) ||
-          sig.sigNumber.toString().includes(query) ||
-          sig.videos.some(v => v.memberName.toLowerCase().includes(query))
+        converted = converted.filter(
+          (sig) =>
+            sig.title.toLowerCase().includes(query) ||
+            sig.sigNumber.toString().includes(query) ||
+            sig.videos.some((v) => v.memberName.toLowerCase().includes(query))
         )
       }
 
@@ -169,7 +177,7 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
 
       setSignatures(converted)
     } catch (err) {
-      console.error('시그니처 로드 실패:', err)
+      logger.error('시그니처 로드 실패', err)
       setError(err instanceof Error ? err.message : '시그니처를 불러오는데 실패했습니다.')
       setSignatures([])
     } finally {

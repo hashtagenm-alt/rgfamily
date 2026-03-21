@@ -2,64 +2,26 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import {
-  Trophy,
-  Plus,
-  Edit2,
-  Trash2,
-  Save,
-  X,
-  ChevronRight,
-  History,
-  Crown,
-} from 'lucide-react'
-import { useSupabaseContext } from '@/lib/context'
+import { Trophy, Edit2, Save, X, ChevronRight, History, Crown } from 'lucide-react'
 import { useAlert } from '@/lib/hooks/useAlert'
+import {
+  getBjRanks,
+  getBjMembersForRank,
+  getRankHistory,
+  updateBjRank,
+  saveRankAssignments,
+  type BjMemberForRank,
+} from '@/lib/actions/ranks'
+import type { BjRank, BjRankHistoryWithDetails } from '@/types/database'
+import { logger } from '@/lib/utils/logger'
 import styles from './page.module.css'
 
-// 직급 타입
-interface BjRank {
-  id: number
-  name: string
-  level: number
-  display_order: number
-  color: string | null
-  icon_url: string | null
-  description: string | null
-}
-
-// BJ 멤버 타입
-interface BjMember {
-  id: number
-  name: string
-  image_url: string | null
-  unit: 'excel' | 'crew'
-  current_rank_id: number | null
-  current_rank?: BjRank | null
-}
-
-// 직급 변동 이력 타입
-interface RankHistory {
-  id: number
-  bj_member_id: number
-  bj_member?: { name: string }
-  rank_id: number
-  rank?: BjRank
-  previous_rank_id: number | null
-  previous_rank?: BjRank | null
-  change_reason: string | null
-  is_rank_battle: boolean
-  battle_number: number | null
-  created_at: string
-}
-
 export default function RanksPage() {
-  const supabase = useSupabaseContext()
   const { showError, showSuccess } = useAlert()
 
   const [ranks, setRanks] = useState<BjRank[]>([])
-  const [bjMembers, setBjMembers] = useState<BjMember[]>([])
-  const [rankHistory, setRankHistory] = useState<RankHistory[]>([])
+  const [bjMembers, setBjMembers] = useState<BjMemberForRank[]>([])
+  const [rankHistory, setRankHistory] = useState<BjRankHistoryWithDetails[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // 편집 모드
@@ -78,65 +40,34 @@ export default function RanksPage() {
     setIsLoading(true)
 
     try {
-      // 직급 목록
-      const { data: ranksData, error: ranksError } = await supabase
-        .from('bj_ranks')
-        .select('*')
-        .order('level', { ascending: true })
+      const [ranksResult, bjResult, historyResult] = await Promise.all([
+        getBjRanks(),
+        getBjMembersForRank(),
+        getRankHistory(),
+      ])
 
-      if (ranksError) {
-        console.error('직급 로드 실패:', ranksError)
+      if (ranksResult.error) {
+        logger.dbError('select', 'bj_ranks', ranksResult.error)
         setRanks([])
       } else {
-        setRanks(ranksData || [])
+        setRanks(ranksResult.data || [])
       }
 
-      // BJ 멤버 목록
-      const { data: bjData, error: bjError } = await supabase
-        .from('organization')
-        .select('id, name, image_url, unit, current_rank_id')
-        .neq('role', '대표')
-        .eq('is_active', true)
-        .order('position_order', { ascending: true })
-
-      if (bjError) throw bjError
-
-      // 직급 정보 매핑
-      const bjWithRanks = (bjData || []).map(bj => ({
-        ...bj,
-        current_rank: ranksData?.find(r => r.id === bj.current_rank_id) || null,
-      })) as BjMember[]
-
-      setBjMembers(bjWithRanks)
-
-      // 직급 변동 이력
-      const { data: historyData } = await supabase
-        .from('bj_rank_history')
-        .select(`
-          *,
-          organization:bj_member_id(name),
-          bj_ranks:rank_id(id, name, color),
-          previous:previous_rank_id(id, name, color)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50)
-
-      if (historyData) {
-        setRankHistory(historyData.map(h => ({
-          ...h,
-          bj_member: h.organization as { name: string } | undefined,
-          rank: h.bj_ranks as BjRank | undefined,
-          previous_rank: h.previous as BjRank | undefined,
-        })))
+      if (bjResult.error) {
+        throw new Error(bjResult.error)
       }
+      setBjMembers(bjResult.data || [])
 
+      if (historyResult.data) {
+        setRankHistory(historyResult.data)
+      }
     } catch (err) {
-      console.error('데이터 로드 실패:', err)
+      logger.error('데이터 로드 실패', err)
       showError('데이터 로드에 실패했습니다.')
     }
 
     setIsLoading(false)
-  }, [supabase, showError])
+  }, [showError])
 
   useEffect(() => {
     fetchData()
@@ -147,23 +78,20 @@ export default function RanksPage() {
     if (!editingRank || !editForm.name) return
 
     try {
-      const { error } = await supabase
-        .from('bj_ranks')
-        .update({
-          name: editForm.name,
-          color: editForm.color,
-          description: editForm.description,
-        })
-        .eq('id', editingRank.id)
+      const result = await updateBjRank(editingRank.id, {
+        name: editForm.name!,
+        color: editForm.color ?? null,
+        description: editForm.description ?? null,
+      })
 
-      if (error) throw error
+      if (result.error) throw new Error(result.error)
 
       showSuccess('직급이 수정되었습니다.')
       setEditingRank(null)
       setEditForm({})
       fetchData()
     } catch (err) {
-      console.error('직급 수정 실패:', err)
+      logger.dbError('update', 'bj_ranks', err)
       showError('직급 수정에 실패했습니다.')
     }
   }
@@ -171,7 +99,7 @@ export default function RanksPage() {
   // 직급 배정 시작
   const handleStartAssign = () => {
     const currentAssignments = new Map<number, number>()
-    bjMembers.forEach(bj => {
+    bjMembers.forEach((bj) => {
       if (bj.current_rank_id) {
         currentAssignments.set(bj.id, bj.current_rank_id)
       }
@@ -194,53 +122,22 @@ export default function RanksPage() {
   // 직급 배정 저장
   const handleSaveAssignments = async () => {
     try {
-      // 현재 시즌 조회
-      const { data: seasonData } = await supabase
-        .from('seasons')
-        .select('id')
-        .eq('is_active', true)
-        .single()
+      // 변경된 BJ만 추출
+      const assignments = bjMembers.map((bj) => ({
+        bjId: bj.id,
+        newRankId: assignedRanks.get(bj.id) || null,
+        oldRankId: bj.current_rank_id,
+      }))
 
-      const seasonId = seasonData?.id
+      const result = await saveRankAssignments(assignments, ranks)
 
-      // 변경된 BJ만 업데이트
-      for (const bj of bjMembers) {
-        const newRankId = assignedRanks.get(bj.id)
-        const oldRankId = bj.current_rank_id
-
-        if (newRankId !== oldRankId) {
-          // 새 직급명 조회 (current_rank 문자열 동기화용)
-          const newRank = ranks.find(r => r.id === newRankId)
-          const rankName = newRank?.name || null
-
-          // organization 테이블 업데이트 (current_rank_id + current_rank 모두)
-          await supabase
-            .from('organization')
-            .update({
-              current_rank_id: newRankId || null,
-              current_rank: rankName,  // 문자열 필드도 동기화
-            })
-            .eq('id', bj.id)
-
-          // 직급 변동 이력 추가
-          if (newRankId) {
-            await supabase.from('bj_rank_history').insert({
-              bj_member_id: bj.id,
-              season_id: seasonId,
-              rank_id: newRankId,
-              previous_rank_id: oldRankId,
-              change_reason: '관리자 직급 배정',
-              is_rank_battle: false,
-            })
-          }
-        }
-      }
+      if (result.error) throw new Error(result.error)
 
       showSuccess('직급 배정이 저장되었습니다.')
       setAssignMode(false)
       fetchData()
     } catch (err) {
-      console.error('직급 배정 저장 실패:', err)
+      logger.dbError('update', 'bj_ranks', err)
       showError('직급 배정 저장에 실패했습니다.')
     }
   }
@@ -332,7 +229,13 @@ export default function RanksPage() {
                       <button onClick={handleSaveRank} className={styles.saveBtn}>
                         <Save size={14} />
                       </button>
-                      <button onClick={() => { setEditingRank(null); setEditForm({}) }} className={styles.cancelBtn}>
+                      <button
+                        onClick={() => {
+                          setEditingRank(null)
+                          setEditForm({})
+                        }}
+                        className={styles.cancelBtn}
+                      >
                         <X size={14} />
                       </button>
                     </div>
@@ -355,7 +258,11 @@ export default function RanksPage() {
                     <button
                       onClick={() => {
                         setEditingRank(rank)
-                        setEditForm({ name: rank.name, color: rank.color || '#666666', description: rank.description || '' })
+                        setEditForm({
+                          name: rank.name,
+                          color: rank.color || '#666666',
+                          description: rank.description || '',
+                        })
                       }}
                       className={styles.editBtn}
                     >
@@ -408,7 +315,9 @@ export default function RanksPage() {
               <div key={bj.id} className={styles.assignCard}>
                 <div className={styles.bjInfo}>
                   <span className={styles.bjName}>{bj.name}</span>
-                  <span className={`${styles.unitBadge} ${bj.unit === 'excel' ? styles.excel : styles.crew}`}>
+                  <span
+                    className={`${styles.unitBadge} ${bj.unit === 'excel' ? styles.excel : styles.crew}`}
+                  >
                     {bj.unit === 'excel' ? 'EXCEL' : 'CREW'}
                   </span>
                 </div>

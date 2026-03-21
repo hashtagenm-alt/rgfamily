@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSupabaseContext } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
 
 // DB에서 가져온 직급 타입
 export interface BjRank {
@@ -78,7 +79,7 @@ export function useBjRanks(): UseBjRanksReturn {
     } catch (err) {
       const message = err instanceof Error ? err.message : '직급 데이터를 불러오는데 실패했습니다'
       setError(message)
-      console.error('bj_ranks 로드 실패:', err)
+      logger.dbError('select', 'bj_ranks', err)
     } finally {
       setIsLoading(false)
     }

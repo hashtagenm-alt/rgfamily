@@ -2,157 +2,91 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
-import {
-  ArrowLeft,
-  Video,
-  Plus,
-  X,
-  Save,
-  ExternalLink,
-  User,
-  Play,
-  Image as ImageIcon,
-  Eye,
-  EyeOff,
-} from 'lucide-react'
-import { DataTable, Column, AdminModal, VideoUpload, CloudflareVideoUpload } from '@/components/admin'
-import { useSupabaseContext } from '@/lib/context'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { useAlert } from '@/lib/hooks'
+import {
+  getSignatureDetail,
+  getSignatureVideosAdmin,
+  getBjMembersByUnit,
+  createSignatureVideo,
+  updateSignatureVideo,
+  deleteSignatureVideo as deleteSignatureVideoAction,
+  toggleSignatureVideoPublished,
+} from '@/lib/actions/signatures'
+import { logger } from '@/lib/utils/logger'
 import styles from '../../shared.module.css'
-
-interface Signature {
-  id: number
-  sigNumber: number
-  title: string
-  description: string
-  thumbnailUrl: string
-  unit: 'excel' | 'crew'
-}
-
-interface SignatureVideo {
-  id: number
-  signatureId: number
-  memberId: number
-  memberName: string
-  memberImageUrl: string | null
-  videoUrl: string
-  cloudflareUid: string | null
-  isPublished: boolean
-  createdAt: string
-}
-
-interface OrgMember {
-  id: number
-  name: string
-  imageUrl: string | null
-  unit: 'excel' | 'crew'
-}
+import {
+  SignatureInfoCard,
+  VideoTable,
+  VideoFormModal,
+  VideoPreviewModal,
+} from './_components'
+import type { SignatureInfo, SignatureVideoWithMember, OrgMemberItem } from './_components'
 
 export default function SignatureDetailPage() {
   const router = useRouter()
   const params = useParams()
   const signatureId = Number(params.id)
-  const supabase = useSupabaseContext()
   const { showConfirm, showError, showSuccess } = useAlert()
 
-  const [signature, setSignature] = useState<Signature | null>(null)
-  const [videos, setVideos] = useState<SignatureVideo[]>([])
-  const [members, setMembers] = useState<OrgMember[]>([])
+  const [signature, setSignature] = useState<SignatureInfo | null>(null)
+  const [videos, setVideos] = useState<SignatureVideoWithMember[]>([])
+  const [members, setMembers] = useState<OrgMemberItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isNew, setIsNew] = useState(true)
-  const [editingVideo, setEditingVideo] = useState<Partial<SignatureVideo> | null>(null)
+  const [editingVideo, setEditingVideo] = useState<Partial<SignatureVideoWithMember> | null>(null)
 
-  // Video preview modal
+  // Video preview
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-
-  // Upload mode: 'url', 'upload', or 'cloudflare'
-  const [uploadMode, setUploadMode] = useState<'url' | 'upload' | 'cloudflare'>('url')
 
   // Fetch signature details
   const fetchSignature = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('signatures')
-      .select('*')
-      .eq('id', signatureId)
-      .single()
+    const result = await getSignatureDetail(signatureId)
 
-    if (error) {
-      console.error('시그니처 정보 로드 실패:', error)
+    if (result.error || !result.data) {
       showError('시그니처 정보를 불러올 수 없습니다.')
       router.push('/admin/signatures')
       return
     }
 
     setSignature({
-      id: data.id,
-      sigNumber: data.sig_number,
-      title: data.title,
-      description: data.description || '',
-      thumbnailUrl: data.thumbnail_url || '',
-      unit: data.unit,
+      id: result.data.id,
+      sigNumber: result.data.sig_number,
+      title: result.data.title,
+      description: result.data.description || '',
+      thumbnailUrl: result.data.thumbnail_url || '',
+      unit: result.data.unit,
     })
-  }, [supabase, signatureId, router, showError])
+  }, [signatureId, router, showError])
 
   // Fetch videos
   const fetchVideos = useCallback(async () => {
     setIsLoading(true)
 
-    const { data, error } = await supabase
-      .from('signature_videos')
-      .select('*, organization!member_id(name, image_url)')
-      .eq('signature_id', signatureId)
-      .order('created_at', { ascending: true })
+    const result = await getSignatureVideosAdmin(signatureId)
 
-    if (error) {
-      console.error('영상 목록 로드 실패:', error)
-    } else {
-      setVideos(
-        (data || []).map((v) => {
-          const member = v.organization as { name: string; image_url: string | null } | null
-          return {
-            id: v.id,
-            signatureId: v.signature_id,
-            memberId: v.member_id,
-            memberName: member?.name || '알 수 없음',
-            memberImageUrl: member?.image_url || null,
-            videoUrl: v.video_url,
-            cloudflareUid: v.cloudflare_uid || null,
-            isPublished: v.is_published ?? true,
-            createdAt: v.created_at,
-          }
-        })
-      )
+    if (result.error) {
+      logger.dbError('select', 'signature_videos', result.error)
+    } else if (result.data) {
+      setVideos(result.data)
     }
 
     setIsLoading(false)
-  }, [supabase, signatureId])
+  }, [signatureId])
 
   // Fetch organization members for dropdown
   const fetchMembers = useCallback(async () => {
     if (!signature) return
 
-    const { data, error } = await supabase
-      .from('organization')
-      .select('id, name, image_url, unit')
-      .eq('unit', signature.unit)
-      .order('name')
+    const result = await getBjMembersByUnit(signature.unit)
 
-    if (!error && data) {
-      setMembers(
-        data.map((m) => ({
-          id: m.id,
-          name: m.name,
-          imageUrl: m.image_url,
-          unit: m.unit,
-        }))
-      )
+    if (!result.error && result.data) {
+      setMembers(result.data)
     }
-  }, [supabase, signature])
+  }, [signature])
 
   useEffect(() => {
     fetchSignature()
@@ -178,7 +112,7 @@ export default function SignatureDetailPage() {
   }
 
   // Open edit modal
-  const openEditModal = (video: SignatureVideo) => {
+  const openEditModal = (video: SignatureVideoWithMember) => {
     setIsNew(false)
     setEditingVideo({
       id: video.id,
@@ -213,32 +147,27 @@ export default function SignatureDetailPage() {
     }
 
     if (isNew) {
-      const { error } = await supabase.from('signature_videos').insert({
+      const result = await createSignatureVideo({
         signature_id: signatureId,
         member_id: editingVideo.memberId,
         video_url: editingVideo.videoUrl,
         cloudflare_uid: editingVideo.cloudflareUid || null,
       })
 
-      if (error) {
-        console.error('영상 등록 실패:', error)
-        showError('등록에 실패했습니다.')
+      if (result.error) {
+        showError(result.error)
         return
       }
       showSuccess('영상이 등록되었습니다.')
     } else {
-      const { error } = await supabase
-        .from('signature_videos')
-        .update({
-          member_id: editingVideo.memberId,
-          video_url: editingVideo.videoUrl,
-          cloudflare_uid: editingVideo.cloudflareUid || null,
-        })
-        .eq('id', editingVideo.id)
+      const result = await updateSignatureVideo(editingVideo.id!, {
+        member_id: editingVideo.memberId,
+        video_url: editingVideo.videoUrl,
+        cloudflare_uid: editingVideo.cloudflareUid || null,
+      })
 
-      if (error) {
-        console.error('영상 수정 실패:', error)
-        showError('수정에 실패했습니다.')
+      if (result.error) {
+        showError(result.error)
         return
       }
       showSuccess('영상이 수정되었습니다.')
@@ -249,7 +178,7 @@ export default function SignatureDetailPage() {
   }
 
   // Delete video
-  const handleDelete = async (video: SignatureVideo) => {
+  const handleDelete = async (video: SignatureVideoWithMember) => {
     const confirmed = await showConfirm(`${video.memberName}님의 영상을 삭제하시겠습니까?`, {
       title: '영상 삭제',
       variant: 'danger',
@@ -258,11 +187,10 @@ export default function SignatureDetailPage() {
     })
     if (!confirmed) return
 
-    const { error } = await supabase.from('signature_videos').delete().eq('id', video.id)
+    const result = await deleteSignatureVideoAction(video.id)
 
-    if (error) {
-      console.error('영상 삭제 실패:', error)
-      showError('삭제에 실패했습니다.')
+    if (result.error) {
+      showError(result.error)
     } else {
       showSuccess('영상이 삭제되었습니다.')
       fetchVideos()
@@ -270,48 +198,17 @@ export default function SignatureDetailPage() {
   }
 
   // Toggle published
-  const handleTogglePublished = async (video: SignatureVideo) => {
+  const handleTogglePublished = async (video: SignatureVideoWithMember) => {
     const newPublished = !video.isPublished
-    const { error } = await supabase
-      .from('signature_videos')
-      .update({ is_published: newPublished })
-      .eq('id', video.id)
+    const result = await toggleSignatureVideoPublished(video.id, newPublished)
 
-    if (error) {
-      console.error('공개 상태 변경 실패:', error)
-      showError('변경에 실패했습니다.')
+    if (result.error) {
+      showError(result.error)
       return
     }
 
     showSuccess(newPublished ? '공개로 전환되었습니다.' : '비공개로 전환되었습니다.')
     setVideos(prev => prev.map(v => v.id === video.id ? { ...v, isPublished: newPublished } : v))
-  }
-
-  // Handle video preview
-  const handleView = (video: SignatureVideo) => {
-    setPreviewUrl(video.videoUrl)
-  }
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-
-  // Convert URL to embed URL (supports YouTube and Cloudflare)
-  const getEmbedUrl = (url: string, cloudflareUid?: string | null) => {
-    // Cloudflare Stream
-    if (cloudflareUid) {
-      return `https://iframe.videodelivery.net/${cloudflareUid}`
-    }
-    // YouTube
-    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
-    if (youtubeMatch) {
-      return `https://www.youtube.com/embed/${youtubeMatch[1]}`
-    }
-    return url
   }
 
   // Get cloudflare uid for preview
@@ -320,159 +217,6 @@ export default function SignatureDetailPage() {
     const video = videos.find((v) => v.videoUrl === previewUrl)
     return video?.cloudflareUid || null
   }
-
-  const columns: Column<SignatureVideo>[] = [
-    {
-      key: 'memberImageUrl',
-      header: '',
-      width: '60px',
-      render: (item) => (
-        <div
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            background: 'var(--surface)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid var(--card-border)',
-          }}
-        >
-          {item.memberImageUrl ? (
-            <Image
-              src={item.memberImageUrl}
-              alt={item.memberName}
-              width={40}
-              height={40}
-              style={{ objectFit: 'cover' }}
-            />
-          ) : (
-            <User size={20} style={{ color: 'var(--text-tertiary)' }} />
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'memberName',
-      header: '멤버',
-      width: '150px',
-      render: (item) => (
-        <span style={{ fontWeight: 600 }}>{item.memberName}</span>
-      ),
-    },
-    {
-      key: 'videoUrl',
-      header: '영상 URL',
-      render: (item) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {item.cloudflareUid && (
-            <span
-              style={{
-                padding: '2px 6px',
-                background: '#f38020',
-                color: 'white',
-                borderRadius: '4px',
-                fontSize: '0.625rem',
-                fontWeight: 600,
-                flexShrink: 0,
-              }}
-            >
-              CF
-            </span>
-          )}
-          <span
-            style={{
-              maxWidth: item.cloudflareUid ? '260px' : '300px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              color: 'var(--text-tertiary)',
-              fontSize: '0.8125rem',
-            }}
-          >
-            {item.cloudflareUid ? `stream:${item.cloudflareUid.slice(0, 8)}...` : item.videoUrl}
-          </span>
-          <a
-            href={item.cloudflareUid ? `https://iframe.videodelivery.net/${item.cloudflareUid}` : item.videoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'var(--primary)', flexShrink: 0 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink size={14} />
-          </a>
-        </div>
-      ),
-    },
-    {
-      key: 'isPublished',
-      header: '공개',
-      width: '80px',
-      render: (item) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            handleTogglePublished(item)
-          }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            background: item.isPublished ? 'var(--primary)' : 'transparent',
-            border: item.isPublished ? 'none' : '1px solid var(--card-border)',
-            borderRadius: '6px',
-            cursor: 'pointer',
-          }}
-          title={item.isPublished ? '비공개로 전환' : '공개로 전환'}
-        >
-          {item.isPublished ? (
-            <Eye size={16} style={{ color: 'white' }} />
-          ) : (
-            <EyeOff size={16} style={{ color: 'var(--text-tertiary)' }} />
-          )}
-        </button>
-      ),
-    },
-    {
-      key: 'id',
-      header: '미리보기',
-      width: '100px',
-      render: (item) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            handleView(item)
-          }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '4px 10px',
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
-        >
-          <Play size={12} />
-          재생
-        </button>
-      ),
-    },
-    {
-      key: 'createdAt',
-      header: '등록일',
-      width: '120px',
-      render: (item) => formatDate(item.createdAt),
-    },
-  ]
 
   if (!signature) {
     return (
@@ -520,253 +264,33 @@ export default function SignatureDetailPage() {
         </button>
       </header>
 
-      {/* Signature Info Card */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '1.5rem',
-          padding: '1.5rem',
-          background: 'var(--card-bg)',
-          border: '1px solid var(--card-border)',
-          borderRadius: '12px',
-        }}
-      >
-        <div
-          style={{
-            width: '160px',
-            height: '90px',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            background: 'var(--surface)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          {signature.thumbnailUrl ? (
-            <Image
-              src={signature.thumbnailUrl}
-              alt={signature.title}
-              width={160}
-              height={90}
-              style={{ objectFit: 'cover' }}
-            />
-          ) : (
-            <ImageIcon size={32} style={{ color: 'var(--text-tertiary)' }} />
-          )}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '0.5rem',
-            }}
-          >
-            <span
-              className={`${styles.badge} ${signature.unit === 'excel' ? styles.badgeExcel : styles.badgeCrew}`}
-            >
-              {signature.unit === 'excel' ? '엑셀부' : '크루부'}
-            </span>
-            <span style={{ fontWeight: 600, color: 'var(--primary)' }}>
-              #{signature.sigNumber}
-            </span>
-          </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-            {signature.title}
-          </h2>
-          {signature.description && (
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
-              {signature.description}
-            </p>
-          )}
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: 'var(--text-tertiary)',
-          }}
-        >
-          <Video size={20} />
-          <span style={{ fontWeight: 600, fontSize: '1.25rem' }}>{videos.length}</span>
-          <span style={{ fontSize: '0.875rem' }}>영상</span>
-        </div>
-      </div>
+      <SignatureInfoCard signature={signature} videoCount={videos.length} />
 
-      {/* Videos Table */}
-      <DataTable
-        data={videos}
-        columns={columns}
+      <VideoTable
+        videos={videos}
+        isLoading={isLoading}
         onEdit={openEditModal}
         onDelete={handleDelete}
-        searchPlaceholder="멤버 이름으로 검색..."
-        isLoading={isLoading}
+        onTogglePublished={handleTogglePublished}
+        onPreview={(video) => setPreviewUrl(video.videoUrl)}
       />
 
-      {/* Add/Edit Modal */}
-      <AdminModal
+      <VideoFormModal
         isOpen={isModalOpen}
-        title={isNew ? '영상 추가' : '영상 수정'}
+        isNew={isNew}
+        editingVideo={editingVideo}
+        members={members}
         onClose={closeModal}
         onSave={handleSave}
-        saveLabel={isNew ? '추가' : '저장'}
-      >
-        <div className={styles.formGroup}>
-          <label>멤버 선택</label>
-          <select
-            value={editingVideo?.memberId || ''}
-            onChange={(e) =>
-              setEditingVideo((prev) =>
-                prev ? { ...prev, memberId: parseInt(e.target.value) || 0 } : null
-              )
-            }
-            className={styles.select}
-          >
-            <option value="">멤버를 선택하세요</option>
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        onEditingVideoChange={setEditingVideo}
+        onError={showError}
+      />
 
-        <div className={styles.formGroup}>
-          <label>영상</label>
-          <div className={styles.typeSelector} style={{ marginBottom: '12px' }}>
-            <button
-              type="button"
-              onClick={() => setUploadMode('url')}
-              className={`${styles.typeButton} ${uploadMode === 'url' ? styles.active : ''}`}
-            >
-              URL 입력
-            </button>
-            <button
-              type="button"
-              onClick={() => setUploadMode('upload')}
-              className={`${styles.typeButton} ${uploadMode === 'upload' ? styles.active : ''}`}
-            >
-              Supabase 업로드
-            </button>
-            <button
-              type="button"
-              onClick={() => setUploadMode('cloudflare')}
-              className={`${styles.typeButton} ${uploadMode === 'cloudflare' ? styles.active : ''}`}
-              style={{ background: uploadMode === 'cloudflare' ? '#f38020' : undefined }}
-            >
-              Cloudflare 업로드
-            </button>
-          </div>
-
-          {uploadMode === 'url' ? (
-            <>
-              <input
-                type="text"
-                value={editingVideo?.videoUrl || ''}
-                onChange={(e) =>
-                  setEditingVideo((prev) => (prev ? { ...prev, videoUrl: e.target.value, cloudflareUid: null } : null))
-                }
-                className={styles.input}
-                placeholder="https://youtube.com/watch?v=..."
-              />
-              <span className={styles.helperText} style={{ color: 'var(--text-tertiary)' }}>
-                YouTube, 트위치 클립 등 영상 URL을 입력하세요
-              </span>
-            </>
-          ) : uploadMode === 'upload' ? (
-            <VideoUpload
-              onUploadComplete={(url) => {
-                setEditingVideo((prev) => (prev ? { ...prev, videoUrl: url, cloudflareUid: null } : null))
-              }}
-              onError={(error) => showError(error)}
-              bucketName="videos"
-              folderPath="signature-videos"
-            />
-          ) : (
-            <CloudflareVideoUpload
-              onUploadComplete={(result) => {
-                // Cloudflare 업로드 완료: UID와 player URL 설정
-                setEditingVideo((prev) =>
-                  prev
-                    ? {
-                        ...prev,
-                        videoUrl: `https://customer-${process.env.NEXT_PUBLIC_CLOUDFLARE_CUSTOMER_SUBDOMAIN || 'stream'}.cloudflarestream.com/${result.uid}/manifest/video.m3u8`,
-                        cloudflareUid: result.uid,
-                      }
-                    : null
-                )
-              }}
-              onError={(error) => showError(error)}
-            />
-          )}
-
-          {editingVideo?.videoUrl && uploadMode === 'upload' && (
-            <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
-              업로드 완료: {editingVideo.videoUrl.split('/').pop()}
-            </div>
-          )}
-
-          {editingVideo?.cloudflareUid && uploadMode === 'cloudflare' && (
-            <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--success)' }}>
-              Cloudflare UID: {editingVideo.cloudflareUid}
-            </div>
-          )}
-        </div>
-      </AdminModal>
-
-      {/* Video Preview Modal */}
-      <AnimatePresence>
-        {previewUrl && (
-          <motion.div
-            className={styles.modalOverlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setPreviewUrl(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: '100%',
-                maxWidth: '800px',
-                background: 'var(--card-bg)',
-                border: '1px solid var(--card-border)',
-                borderRadius: '16px',
-                overflow: 'hidden',
-              }}
-            >
-              <div className={styles.modalHeader}>
-                <h2>영상 미리보기</h2>
-                <button onClick={() => setPreviewUrl(null)} className={styles.closeButton}>
-                  <X size={20} />
-                </button>
-              </div>
-              <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
-                <iframe
-                  src={getEmbedUrl(previewUrl, getPreviewCloudflareUid())}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                  }}
-                  allowFullScreen
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <VideoPreviewModal
+        previewUrl={previewUrl}
+        cloudflareUid={getPreviewCloudflareUid()}
+        onClose={() => setPreviewUrl(null)}
+      />
     </div>
   )
 }

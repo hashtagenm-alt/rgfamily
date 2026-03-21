@@ -133,3 +133,40 @@ export async function checkOwnerOrAdminPermission(
 export function throwPermissionError(action: '수정' | '삭제' | '접근'): never {
   throw new Error(`${action} 권한이 없습니다.`)
 }
+
+// ==================== 메시지 콘텐츠 접근 제어 ====================
+
+/**
+ * 메시지 콘텐츠 접근 권한 체크
+ *
+ * VIP 본인, 작성자, 관리자만 비공개 콘텐츠 열람 가능
+ */
+export function canViewMessageContent(params: {
+  userRole: string | null
+  userId: string | null
+  ownerId: string | null
+  authorId: string | null
+}): boolean {
+  const { userRole, userId, ownerId, authorId } = params
+  const hasAdminRole = isAdmin(userRole)
+  const isOwner = !!userId && !!ownerId && userId === ownerId
+  const isAuthor = !!userId && !!authorId && userId === authorId
+  return hasAdminRole || isOwner || isAuthor
+}
+
+/**
+ * 메시지 콘텐츠 필터링 (비공개 보호)
+ *
+ * - 열람 권한 있으면 원본 그대로 반환
+ * - 없으면 텍스트 제거, 영상은 썸네일용 URL만 유지
+ */
+export function filterMessageContent<
+  T extends { content_text?: string | null; content_url?: string | null; message_type?: string | null },
+>(msg: T, canView: boolean): T {
+  if (canView) return msg
+  return {
+    ...msg,
+    content_text: null,
+    content_url: msg.message_type === 'video' ? msg.content_url : null,
+  }
+}

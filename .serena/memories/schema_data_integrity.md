@@ -1,6 +1,9 @@
 # RG Family Supabase 스키마 및 데이터 정합성 분석
 
-## 최종 업데이트: 2026-02-03
+## 최종 업데이트: 2026-03-08
+
+### 변경 이력
+- 2026-03-08: DB 백업 스크립트 추가 (`npm run db:backup`, `npm run db:schema`), ADR 체계 구축 (docs/adr/)
 
 ---
 
@@ -10,10 +13,11 @@
 |--------|----------|------|
 | profiles | 144 | 사용자 프로필 (닉네임, 역할, 아바타) |
 | seasons | 1 | 시즌 정보 (현재 시즌 1 활성) |
-| episodes | 15 | 에피소드/방송 회차 (EP1~EP15) |
-| donations | 2,959 | 개별 후원 내역 |
-| season_donation_rankings | 50 | 시즌 후원 랭킹 Top 50 |
-| total_donation_rankings | 50 | 총 후원 랭킹 Top 50 (레거시 포함) |
+| episodes | 15+ | 에피소드/방송 회차 (엑셀부 EP1~EP15 + 크루부) — `unit` 컬럼 추가 (2026-03-20) |
+| donations | 3,363+ | 개별 후원 내역 (엑셀 2,959 + 크루 404) — `unit` 컬럼 포함 |
+| season_donation_rankings | 50+ | 시즌 후원 랭킹 (unit별 분리: excel/crew) |
+| total_donation_rankings | 50 | 총 후원 랭킹 Top 50 (엑셀+크루 합산, 레거시 포함) |
+| season_members | NEW | 시즌별 멤버 소속 (season_id, profile_id, unit) |
 | vip_rewards | 11 | VIP 리워드/프로필 페이지 (11명 VIP 전용) |
 | vip_images | 11 | VIP 시그니처 이미지 |
 | organization | 14 | 조직도 멤버 |
@@ -30,7 +34,8 @@
 - 시즌별 후원 랭킹 (레거시 + EP 데이터 합산)
 - **데이터 출처**: CSV import (EP 이전 레거시 포함)
 - donations 테이블은 EP1-6만 포함, 레거시는 별도
-- 컬럼: id, season_id, rank, donor_name, total_amount, created_at, updated_at
+- 컬럼: id, season_id, rank, donor_name, total_amount, **unit**, created_at, updated_at
+- **unit 컬럼** (2026-03-20 추가): 'excel' | 'crew' — 시즌 랭킹은 unit별 완전 분리
 
 ### total_donation_rankings
 - 역대 누적 총 후원 랭킹 (레거시 데이터 포함)
@@ -198,3 +203,16 @@ npx tsx scripts/update-season-rankings.ts --season=1 --files="./data/ep1.csv"
 1. RPC 함수 설치 (Supabase Dashboard에서 SQL 실행)
 2. legacy_donation_totals 테이블 생성 및 마이그레이션
 3. `[Another]젖문가` 동일인물 여부 확인 필요
+
+## 8. 크루부/엑셀부 unit 분리 (2026-03-20)
+
+### DB 변경
+- `episodes.unit`: TEXT DEFAULT 'excel' CHECK ('excel'|'crew')
+- UNIQUE 제약: (season_id, episode_number, unit) — 같은 시즌/회차에 엑셀+크루 각각 존재 가능
+- `season_members`: 시즌별 멤버 소속 관리 테이블 (NEW)
+- `organization`: 크루부 6명 추가 (총 20명)
+- `donations`: 크루부 404건 추가
+
+### 코드 필터링 현황 (PR #44, 16개 파일)
+- analytics-helpers, analytics/* 4개, donations, episodes, useEpisodes, prizes, contributions, data-sync, manage-signature-eligibility, donation-rankings, ranking/page.tsx, admin/episodes/page.tsx
+- 상세: Serena 메모리 `unit_filter_architecture` 참조

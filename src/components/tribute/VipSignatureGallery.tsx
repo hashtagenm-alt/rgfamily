@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, X, Lock, Sparkles, Crown, Star } from 'lucide-react'
-import type { HallOfFameHonor } from '@/lib/mock'
+import type { HallOfFameHonor } from '@/types/tribute'
 import styles from './VipSignatureGallery.module.css'
 
 interface VipSignatureGalleryProps {

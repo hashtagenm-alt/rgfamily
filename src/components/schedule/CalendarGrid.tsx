@@ -14,7 +14,7 @@ const EVENT_COLORS: Record<string, string> = {
   collab: '#8a94a6',
   event: '#c89b6b',
   notice: '#b8a07a',
-  '休': '#8b94a5',
+  休: '#8b94a5',
   excel: '#7f9b88',
   crew: '#8a94a6',
 }
@@ -44,92 +44,81 @@ export default function CalendarGrid({ days, selectedDate, onSelectDate }: Calen
 
   return (
     <div className="grid grid-cols-7 gap-0.5 bg-(--divider)">
-        {days.map((day, index) => {
-          const isSelected = isSameDay(day.date, selectedDate)
-          const hasEvents = day.events.length > 0
-          const cellBackground = hasEvents ? getCellBackground(day) : undefined
+      {days.map((day, index) => {
+        const isSelected = isSameDay(day.date, selectedDate)
+        const hasEvents = day.events.length > 0
+        const cellBackground = hasEvents ? getCellBackground(day) : undefined
 
-          return (
-            <motion.button
-              key={index}
-              onClick={() => onSelectDate(day.date)}
-              className={`
-                min-h-[140px] md:min-h-[130px] sm:min-h-[100px] flex flex-col p-3
-                bg-(--card-bg) border-none cursor-pointer relative text-left
-                transition-all duration-200
-                hover:bg-(--surface)
-                ${!day.isCurrentMonth ? 'opacity-40' : ''}
-                ${day.isToday ? 'bg-(--overlay-medium)' : ''}
-                ${isSelected ? 'bg-(--surface) shadow-[inset_0_0_0_2px_var(--text-primary)]' : ''}
-              `}
-              style={hasEvents && !isSelected && !day.isToday ? { background: cellBackground } : undefined}
-              whileHover={{ scale: 1.005 }}
-              whileTap={{ scale: 0.995 }}
-            >
-              <div className="flex flex-col items-start gap-0.5 mb-2">
-                <span
-                  className={`
-                    text-lg font-bold inline-flex items-center justify-center
-                    min-w-[38px] min-h-[38px] rounded-full
-                    ${day.isToday ? 'bg-(--text-primary) text-(--background)! font-bold shadow-md' : ''}
-                    ${!day.isToday && day.isHoliday ? 'text-[#ef4444]' : 'text-(--text-primary)'}
-                  `}
-                >
-                  {day.date.getDate()}
+        return (
+          <motion.button
+            key={index}
+            onClick={() => onSelectDate(day.date)}
+            className={`relative flex min-h-[80px] cursor-pointer flex-col border-none bg-(--card-bg) p-1.5 text-left transition-all duration-200 hover:bg-(--surface) sm:min-h-[100px] sm:p-2 md:min-h-[130px] md:p-3 ${!day.isCurrentMonth ? 'opacity-40' : ''} ${day.isToday ? 'bg-(--overlay-medium)' : ''} ${isSelected ? 'bg-(--surface) shadow-[inset_0_0_0_2px_var(--text-primary)]' : ''} `}
+            style={
+              hasEvents && !isSelected && !day.isToday ? { background: cellBackground } : undefined
+            }
+            whileHover={{ scale: 1.005 }}
+            whileTap={{ scale: 0.995 }}
+          >
+            <div className="mb-2 flex w-full flex-col items-center gap-0.5">
+              <span
+                className={`inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-full text-sm font-bold sm:min-h-[38px] sm:min-w-[38px] sm:text-lg ${day.isToday ? 'bg-(--text-primary) font-bold text-(--background)! shadow-md' : ''} ${!day.isToday && day.isHoliday ? 'text-[#ef4444]' : 'text-(--text-primary)'} `}
+              >
+                {day.date.getDate()}
+              </span>
+              {day.holidayName && (
+                <span className="max-w-full overflow-hidden px-1 text-center text-[10px] font-semibold text-ellipsis whitespace-nowrap text-[#ef4444]">
+                  {day.holidayName}
                 </span>
-                {day.holidayName && (
-                  <span className="text-[10px] font-semibold text-[#ef4444] whitespace-nowrap overflow-hidden text-ellipsis max-w-full px-1">
-                    {day.holidayName}
+              )}
+            </div>
+
+            {/* Event Text List (Desktop) - 크기 및 시인성 개선 */}
+            {day.events.length > 0 && (
+              <div className="mt-1 hidden flex-1 flex-col gap-1.5 overflow-hidden md:flex">
+                {day.events.slice(0, 3).map((event, eventIndex) => (
+                  <div
+                    key={eventIndex}
+                    className="overflow-hidden rounded-md px-2 py-1 text-xs font-semibold text-ellipsis whitespace-nowrap transition-all"
+                    style={{
+                      backgroundColor: `${getEventColor(event)}18`,
+                      border: `1px solid ${getEventColor(event)}30`,
+                      color: getEventColor(event),
+                    }}
+                  >
+                    {event.title}
+                  </div>
+                ))}
+                {day.events.length > 3 && (
+                  <span className="pl-1 text-sm font-semibold text-(--text-secondary)">
+                    +{day.events.length - 3}개 더보기
                   </span>
                 )}
               </div>
+            )}
 
-              {/* Event Text List (Desktop) - 크기 및 시인성 개선 */}
-              {day.events.length > 0 && (
-                <div className="hidden md:flex flex-col gap-1.5 flex-1 overflow-hidden mt-1">
-                  {day.events.slice(0, 3).map((event, eventIndex) => (
-                    <div
-                      key={eventIndex}
-                      className="px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis transition-all"
-                      style={{
-                        backgroundColor: `${getEventColor(event)}18`,
-                        border: `1px solid ${getEventColor(event)}30`,
-                        color: getEventColor(event),
-                      }}
-                    >
-                      {event.title}
-                    </div>
-                  ))}
-                  {day.events.length > 3 && (
-                    <span className="text-sm text-(--text-secondary) font-semibold pl-1">
-                      +{day.events.length - 3}개 더보기
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Event Dots (Mobile) - 크기 확대 */}
-              {day.events.length > 0 && (
-                <div className="flex md:hidden gap-2 flex-wrap mt-auto">
-                  {day.events.slice(0, 4).map((event, eventIndex) => (
-                    <span
-                      key={eventIndex}
-                      className="w-3 h-3 rounded-full"
-                      style={{
-                        backgroundColor: getEventColor(event),
-                      }}
-                    />
-                  ))}
-                  {day.events.length > 4 && (
-                    <span className="text-sm text-(--text-secondary) font-bold">
-                      +{day.events.length - 4}
-                    </span>
-                  )}
-                </div>
-              )}
-            </motion.button>
-          )
-        })}
+            {/* Event Dots (Mobile) - 크기 확대 */}
+            {day.events.length > 0 && (
+              <div className="mt-auto flex flex-wrap gap-2 md:hidden">
+                {day.events.slice(0, 4).map((event, eventIndex) => (
+                  <span
+                    key={eventIndex}
+                    className="h-3 w-3 rounded-full"
+                    style={{
+                      backgroundColor: getEventColor(event),
+                    }}
+                  />
+                ))}
+                {day.events.length > 4 && (
+                  <span className="text-sm font-bold text-(--text-secondary)">
+                    +{day.events.length - 4}
+                  </span>
+                )}
+              </div>
+            )}
+          </motion.button>
+        )
+      })}
     </div>
   )
 }

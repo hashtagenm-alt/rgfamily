@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createDirectUpload } from '@/lib/cloudflare'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * VIP 사용자용 Cloudflare Stream 업로드 URL 발급
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
       uid: result.uid,
     })
   } catch (error) {
-    console.error('VIP video upload URL error:', error)
+    logger.apiError('/api/vip/video-upload-url', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '업로드 URL 발급 실패' },
       { status: 500 }

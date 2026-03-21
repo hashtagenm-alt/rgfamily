@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTimeline, useSeasons } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
 import type { TimelineItem } from '@/types/common'
 import type { Season } from '@/types/database'
 
@@ -20,6 +21,7 @@ export interface GroupedEvents {
 }
 
 export const CATEGORY_LABELS: Record<string, string> = {
+  broadcast: '방송',
   founding: '창단',
   milestone: '마일스톤',
   event: '이벤트',
@@ -27,6 +29,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export const CATEGORY_COLORS: Record<string, string> = {
+  broadcast: '#fd68ba',
   founding: '#71717a',
   milestone: '#6b7280',
   event: '#52525b',
@@ -129,9 +132,7 @@ export function useTimelineData(options?: UseTimelineDataOptions): UseTimelineDa
       const seasonEvents = seasonMap.get(seasonId) || []
 
       // 각 시즌 내 이벤트도 날짜 오름차순 정렬 (오래된 이벤트 먼저)
-      seasonEvents.sort((a, b) =>
-        new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
-      )
+      seasonEvents.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
 
       groups.push({ season, events: seasonEvents })
     })
@@ -155,9 +156,6 @@ export function useTimelineData(options?: UseTimelineDataOptions): UseTimelineDa
     const nextPage = currentPage + 1
     const endIndex = nextPage * pageSize
     const nextEvents = allFilteredEvents.slice(0, endIndex)
-
-    // 약간의 딜레이로 UX 개선
-    await new Promise((resolve) => setTimeout(resolve, 300))
 
     setEvents(nextEvents)
     setCurrentPage(nextPage)
@@ -206,11 +204,19 @@ export function useTimelineData(options?: UseTimelineDataOptions): UseTimelineDa
         setEvents(filteredEvents)
       }
     } catch (err) {
-      console.error('타임라인 로드 실패:', err)
+      logger.error('타임라인 로드 실패', err)
     } finally {
       setIsLoading(false)
     }
-  }, [timelineRepo, seasonsRepo, selectedSeasonId, selectedCategory, selectedTimeFilter, infiniteScroll, pageSize])
+  }, [
+    timelineRepo,
+    seasonsRepo,
+    selectedSeasonId,
+    selectedCategory,
+    selectedTimeFilter,
+    infiniteScroll,
+    pageSize,
+  ])
 
   // 초기 로드 및 필터 변경 시 refetch
   useEffect(() => {

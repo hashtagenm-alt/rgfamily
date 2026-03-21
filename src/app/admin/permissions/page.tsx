@@ -17,7 +17,9 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import DataTable, { type Column } from '@/components/admin/DataTable'
-import { useSupabaseContext, useAuthContext } from '@/lib/context'
+import { useAuthContext } from '@/lib/context'
+import { getUsersForPermissions, updateUserRoleBySuperadmin } from '@/lib/actions/profiles'
+import { logger } from '@/lib/utils/logger'
 import styles from './page.module.css'
 import sharedStyles from '../shared.module.css'
 
@@ -49,7 +51,6 @@ const ROLE_COLORS: Record<string, string> = {
 }
 
 export default function AdminPermissionsPage() {
-  const supabase = useSupabaseContext()
   const { profile: currentProfile } = useAuthContext()
   const [users, setUsers] = useState<UserPermission[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -68,14 +69,10 @@ export default function AdminPermissionsPage() {
     setError(null)
 
     try {
-      const { data, error: fetchError } = await supabase
-        .from('profiles')
-        .select('id, nickname, email, role, total_donation')
-        .order('total_donation', { ascending: false })
+      const result = await getUsersForPermissions()
+      if (result.error) throw new Error(result.error)
 
-      if (fetchError) throw fetchError
-
-      const usersData: UserPermission[] = (data || []).map((p) => ({
+      const usersData: UserPermission[] = (result.data || []).map((p) => ({
         id: p.id,
         nickname: p.nickname,
         email: p.email || null,
@@ -85,12 +82,12 @@ export default function AdminPermissionsPage() {
       }))
       setUsers(usersData)
     } catch (err) {
-      console.error('회원 로드 실패:', err)
+      logger.dbError('select', 'profiles', err)
       setError('회원 정보를 불러오는데 실패했습니다.')
     } finally {
       setIsLoading(false)
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     void fetchUsers()
@@ -125,12 +122,8 @@ export default function AdminPermissionsPage() {
     setIsSaving(true)
 
     try {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ role: selectedRole })
-        .eq('id', editingUser.id)
-
-      if (updateError) throw updateError
+      const result = await updateUserRoleBySuperadmin(editingUser.id, selectedRole as 'member' | 'bj' | 'vip' | 'moderator' | 'admin' | 'superadmin')
+      if (result.error) throw new Error(result.error)
 
       // 로컬 상태 업데이트
       setUsers((prev) =>
@@ -142,7 +135,7 @@ export default function AdminPermissionsPage() {
       )
       setEditingUser(null)
     } catch (err) {
-      console.error('권한 업데이트 실패:', err)
+      logger.dbError('update', 'profiles', err)
       alert('권한 업데이트에 실패했습니다.')
     } finally {
       setIsSaving(false)

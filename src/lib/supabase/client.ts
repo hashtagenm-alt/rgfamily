@@ -1,7 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
-import { USE_MOCK_DATA, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/config'
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/config'
 
 /**
  * Mock Supabase 프록시
@@ -68,8 +68,8 @@ function createMockSupabaseProxy(): SupabaseClient<Database> {
 }
 
 export function createClient(): SupabaseClient<Database> {
-  // Mock 모드이거나 Supabase 자격 증명이 없으면 Mock 프록시 반환
-  if (USE_MOCK_DATA || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  // Supabase 자격 증명이 없으면 빈 프록시 반환 (CI 환경 등)
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return createMockSupabaseProxy()
   }
 

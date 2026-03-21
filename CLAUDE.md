@@ -1,7 +1,7 @@
  # RG Family - 개발 가이드 (Claude Code용)
  
 > 이 문서는 AI가 개발할 때 참고하는 지침서야. 모든 규칙에는 "왜?"가 있어.
-> **마지막 업데이트: 2026-02-03** 
+> **마지막 업데이트: 2026-03-08**
   
 ---  
   
@@ -27,6 +27,7 @@
 18. [Supabase 작업 방법 (CLI 스크립트 우선)](#18-supabase-작업-방법-cli-스크립트-우선)
 19. [CI 실패 시 해결 가이드](#19-ci-실패-시-해결-가이드)
 20. [영상 업로드 정책 (Google Drive → Cloudflare Stream)](#20-영상-업로드-정책-google-drive--cloudflare-stream)
+21. [재해 복구(DR) 및 백업](#21-재해-복구dr-및-백업)
 
 ---
 
@@ -527,19 +528,38 @@ SUPABASE_SERVICE_ROLE_KEY=sb_secret_...  # 관리자 스크립트용
 ```
 src/
 ├── app/                    # 페이지 (App Router)
-│   ├── page.tsx           # 메인 페이지
-│   ├── rg/org/page.tsx    # 조직도
-│   ├── ranking/page.tsx   # 랭킹
-│   ├── schedule/page.tsx  # 일정
-│   └── globals.css        # 전역 CSS 변수
+│   ├── admin/             # 관리자 페이지 (20개)
+│   ├── api/               # API 라우트
+│   ├── (auth)/            # 인증 (login, signup 등)
+│   ├── community/         # 커뮤니티
+│   ├── ranking/           # 랭킹
+│   └── ...
 ├── components/            # 재사용 컴포넌트
+│   ├── admin/             # 관리자 컴포넌트 (DataTable 등)
+│   ├── vip/               # VIP 컴포넌트
+│   ├── ranking/           # 랭킹 컴포넌트
+│   ├── ui/                # shadcn/ui 기본 컴포넌트
+│   └── ...
 ├── lib/
-│   ├── actions/           # Server Actions
+│   ├── actions/           # Server Actions (도메인별 분할)
+│   │   ├── analytics/     # 분석 (7파일 도메인별)
+│   │   ├── posts-crud.ts  # 게시판 CRUD
+│   │   ├── admin-crud.ts  # 제네릭 Admin CRUD
+│   │   └── ...
+│   ├── hooks/             # Custom Hooks (29개)
+│   ├── utils/             # 유틸리티 (logger, format 등)
+│   ├── repositories/      # Repository 패턴
 │   ├── supabase/          # Supabase 클라이언트
-│   └── mock/              # ⚠️ 사용 금지
+│   ├── context/           # React Context
+│   ├── auth/              # 접근 제어
+│   ├── api/               # API 헬퍼
+│   └── constants/         # 상수 (roles 등)
 └── types/
     ├── database.ts        # Supabase 스키마 타입
-    └── ranking.ts         # 랭킹 관련 타입
+    ├── common.ts          # 공통 타입
+    ├── organization.ts    # 조직 타입
+    ├── ranking.ts         # 랭킹 타입
+    └── tribute.ts         # 헌정 타입
 ```
 
 ---
@@ -616,9 +636,12 @@ src/
 | 경로 | 기능 | 권한 |
 |------|------|------|
 | /admin | 대시보드 | admin+ |
+| /admin/dashboard | 상세 대시보드 | admin+ |
 | /admin/seasons | 시즌 관리 | admin+ |
 | /admin/episodes | 에피소드/직급전 | admin+ |
-| /admin/donations | 후원 데이터 | admin+ |
+| /admin/donation-rankings | 후원 랭킹 관리 | admin+ |
+| /admin/contributions | 후원 분석 CRM | admin+ |
+| /admin/donor-links | 후원자-프로필 연결 | admin+ |
 | /admin/organization | 조직도 | admin+ |
 | /admin/members | 회원 관리 | admin+ |
 | /admin/permissions | 권한 관리 | superadmin |
@@ -630,6 +653,9 @@ src/
 | /admin/vip-rewards | VIP 리워드 | admin+ |
 | /admin/posts | 게시글 | moderator+ |
 | /admin/media | 미디어 | admin+ |
+| /admin/prizes | 상벌금 | admin+ |
+| /admin/ranks | 직급 관리 | admin+ |
+| /admin/data-sync | 데이터 동기화 | admin+ |
 
 권한 레벨 설명:
 - superadmin: 최고 관리자 (모든 권한)
@@ -651,15 +677,15 @@ src/
 ### 데이터 조회 (SELECT)
 
 # View 조회 (보안 View 사용)
-npx tsx scripts/run-sql.ts --view season_rankings_public
-npx tsx scripts/run-sql.ts --view total_rankings_public
+npx tsx scripts/db/run-sql.ts --view season_rankings_public
+npx tsx scripts/db/run-sql.ts --view total_rankings_public
 
 # 테이블 조회
-npx tsx scripts/run-sql.ts --table profiles
-npx tsx scripts/run-sql.ts --table season_donation_rankings
+npx tsx scripts/db/run-sql.ts --table profiles
+npx tsx scripts/db/run-sql.ts --table season_donation_rankings
 
 # 도움말
-npx tsx scripts/run-sql.ts
+npx tsx scripts/db/run-sql.ts
 
 ### DDL 실행 (CREATE, ALTER, DROP)
 
@@ -672,16 +698,16 @@ supabase db execute --file scripts/sql/my-migration.sql
 ### 기존 스크립트 활용
 
 scripts/ 폴더에 다양한 데이터 관리 스크립트 존재:
-- scripts/update-season-rankings.ts  # 시즌 랭킹 업데이트
-- scripts/update-total-rankings.ts   # 총 후원 랭킹 업데이트
-- scripts/check-db-schema.ts         # 스키마 검증
-- scripts/check-season-rankings.ts   # 시즌 랭킹 확인
+- scripts/data/update-season-rankings.ts  # 시즌 랭킹 업데이트
+- scripts/data/update-total-rankings.ts   # 총 후원 랭킹 업데이트
+- scripts/check/check-db-schema.ts        # 스키마 검증
+- scripts/check/check-season-rankings.ts  # 시즌 랭킹 확인
 
 ### 작업별 권장 방법
 
 | 작업 | 권장 방법 |
 |------|----------|
-| 데이터 조회 | `npx tsx scripts/run-sql.ts --table/--view` |
+| 데이터 조회 | `npx tsx scripts/db/run-sql.ts --table/--view` |
 | 데이터 수정 | 기존 스크립트 또는 새 스크립트 작성 |
 | DDL 실행 | Supabase Dashboard SQL Editor |
 | 마이그레이션 | `supabase db execute` 또는 Dashboard |
@@ -770,13 +796,13 @@ main이 업데이트된 경우 기존 PR 브랜치 리베이스 필요:
 ### 원본 화질(4K) 업로드 원칙
 
 ✅ 원본 화질이 유지되는 스크립트 (사용 권장):
-- scripts/batch-signature-upload.ts    → 시그니처 일괄 업로드 (Google Drive API)
-- scripts/gdrive-shorts-upload.ts      → 쇼츠 업로드 (Google Drive)
-- scripts/upload-shorts-videos.ts      → 쇼츠 TUS 업로드
-- scripts/upload-fancam-videos.ts      → 직캠 업로드
+- scripts/upload/batch-signature-upload.ts    → 시그니처 일괄 업로드 (Google Drive API)
+- scripts/upload/gdrive-shorts-upload.ts      → 쇼츠 업로드 (Google Drive)
+- scripts/upload/upload-shorts-videos.ts      → 쇼츠 TUS 업로드
+- scripts/upload/upload-fancam-videos.ts      → 직캠 업로드
 
 ❌ 원본 화질이 손실되는 스크립트 (4K 업로드 시 사용 금지):
-- scripts/upload-shorts-transcoded.ts  → FFmpeg 1080p 트랜스코딩 (8Mbps 제한)
+- scripts/upload/upload-shorts-transcoded.ts  → FFmpeg 1080p 트랜스코딩 (8Mbps 제한)
 
 업로드 방식:
 - ≤200MB: FormData 직접 업로드 (원본 바이너리 그대로)
@@ -787,4 +813,33 @@ main이 업데이트된 경우 기존 PR 브랜치 리베이스 필요:
 - FFmpeg, sharp 등 트랜스코딩/리사이즈 도구 사용 금지
 - 파일을 읽어서 그대로 Cloudflare API에 전송해야 함
 - Google Drive API(서비스 계정) 방식 사용 (Puppeteer/fetch 직접 다운로드 불가)
+```
+
+---
+
+## 21. 재해 복구(DR) 및 백업
+
+```
+왜? DB 데이터 유실 시 레거시 하드코딩 데이터(시즌1 1~3화)는 복구 불가.
+
+### 백업 정책
+- 주 1회: `npm run db:backup` 실행 (주요 테이블 JSON export)
+- 마이그레이션 변경 시: `npm run db:schema` 실행 (스키마 스냅샷)
+- backups/ 폴더는 .gitignore 처리, 로컬 보관
+- --dry-run 옵션으로 대상 테이블 확인 가능
+
+### 복구 순서
+1. Supabase Dashboard → Database → Backups 확인 (자동 백업)
+2. 최신 backups/ JSON 파일 확인
+3. scripts/db/run-sql.ts로 데이터 복원
+
+### 레거시 데이터 위치
+- 20260125_fix_ranking_architecture.sql 내 INSERT 문 (시즌1 Top 50)
+- 마이그레이션 순차 실행으로 자동 복원됨
+- ⚠️ 이 마이그레이션 파일 절대 삭제 금지!
+
+### ADR (Architecture Decision Records)
+- 위치: docs/adr/
+- 주요 아키텍처 결정 10건 기록 (ADR-001 ~ ADR-010)
+- 새 결정 추가 시 docs/adr/TEMPLATE.md 사용
 ```

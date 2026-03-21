@@ -1,13 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuthContext, useSupabaseContext } from '@/lib/context'
-import { USE_MOCK_DATA } from '@/lib/config'
-import { hasHonorPageQualification } from '@/lib/mock'
+import { logger } from '@/lib/utils/logger'
 
 interface HonorQualificationResult {
   isQualified: boolean
   isLoading: boolean
+  rank: number | null
+  seasonId: number | null
+}
+
+interface CachedResult {
+  userId: string
+  role: string | null
+  isQualified: boolean
   rank: number | null
   seasonId: number | null
 }
@@ -19,10 +26,10 @@ export function useHonorQualification(): HonorQualificationResult {
   const [rank, setRank] = useState<number | null>(null)
   const [seasonId, setSeasonId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const cacheRef = useRef<CachedResult | null>(null)
 
   useEffect(() => {
     const fetchQualification = async () => {
-      setIsLoading(true)
       if (authLoading) return
 
       if (!user) {
@@ -30,19 +37,31 @@ export function useHonorQualification(): HonorQualificationResult {
         setRank(null)
         setSeasonId(null)
         setIsLoading(false)
+        cacheRef.current = null
         return
       }
 
-      if (profile?.role === 'admin' || profile?.role === 'superadmin') {
-        setIsQualified(true)
-        setRank(null)
-        setSeasonId(null)
+      // 캐시 히트: 동일 user + 동일 role이면 DB 쿼리 스킵
+      const cached = cacheRef.current
+      if (cached && cached.userId === user.id && cached.role === (profile?.role ?? null)) {
+        setIsQualified(cached.isQualified)
+        setRank(cached.rank)
+        setSeasonId(cached.seasonId)
         setIsLoading(false)
         return
       }
 
-      if (USE_MOCK_DATA) {
-        setIsQualified(hasHonorPageQualification(user.id))
+      setIsLoading(true)
+
+      if (profile?.role === 'admin' || profile?.role === 'superadmin') {
+        cacheRef.current = {
+          userId: user.id,
+          role: profile.role,
+          isQualified: true,
+          rank: null,
+          seasonId: null,
+        }
+        setIsQualified(true)
         setRank(null)
         setSeasonId(null)
         setIsLoading(false)
@@ -58,7 +77,7 @@ export function useHonorQualification(): HonorQualificationResult {
         .limit(1)
 
       if (error) {
-        console.error('헌정 자격 조회 실패:', error)
+        logger.error('헌정 자격 조회 실패', error)
         setIsQualified(false)
         setRank(null)
         setSeasonId(null)
@@ -68,9 +87,20 @@ export function useHonorQualification(): HonorQualificationResult {
 
       const reward = Array.isArray(data) ? data[0] : null
       const rewardRank = reward?.rank ?? null
+      const rewardSeasonId = reward?.season_id ?? null
+      const qualified = rewardRank !== null && rewardRank <= 3
+
+      cacheRef.current = {
+        userId: user.id,
+        role: profile?.role ?? null,
+        isQualified: qualified,
+        rank: rewardRank,
+        seasonId: rewardSeasonId,
+      }
+
       setRank(rewardRank)
-      setSeasonId(reward?.season_id ?? null)
-      setIsQualified(rewardRank !== null && rewardRank <= 3)
+      setSeasonId(rewardSeasonId)
+      setIsQualified(qualified)
       setIsLoading(false)
     }
 

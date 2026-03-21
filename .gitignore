@@ -58,6 +58,7 @@ __pycache__/
 # sensitive data (accounts, passwords)
 /data/*.csv
 /data/*.xlsx
+vip-accounts.csv
 
 # Bulk upload generated CSVs
 scripts/bulk-upload-signature-videos/*.csv
@@ -68,3 +69,13 @@ scripts/downloaded-videos/
 scripts/thumbnails/
 scripts/data/
 download-log.txt
+
+# DB backups
+backups/
+/data/db-export-*/
+
+# Video downloads (incomplete/temp)
+시즌1/
+
+# Vercel local tokens
+.env.vercel.local

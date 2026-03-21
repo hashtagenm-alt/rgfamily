@@ -1,6 +1,6 @@
 'use client'
 
-import type { HallOfFameHonor } from '@/lib/mock'
+import type { HallOfFameHonor } from '@/types/tribute'
 import VipSignatureGallery from '../VipSignatureGallery'
 
 interface TributeSignaturesSectionProps {

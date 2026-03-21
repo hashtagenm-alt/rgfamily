@@ -6,6 +6,8 @@
  * - 채널 URL: https://www.pandalive.co.kr/channel/[channel_id]
  */
 
+import { logger } from '@/lib/utils/logger'
+
 export interface PandaTVLiveStatus {
   channelId: string
   isLive: boolean
@@ -75,7 +77,7 @@ async function fetchLiveList(): Promise<PandaTVAPILiveItem[]> {
     })
 
     if (!response.ok) {
-      console.error(`PandaTV API error: HTTP ${response.status}`)
+      logger.apiError('PandaTV', new Error(`HTTP ${response.status}`))
       return liveListCache?.data || []
     }
 
@@ -87,7 +89,7 @@ async function fetchLiveList(): Promise<PandaTVAPILiveItem[]> {
 
     return list
   } catch (error) {
-    console.error('PandaTV API fetch error:', error)
+    logger.apiError('PandaTV', error)
     return liveListCache?.data || []
   }
 }
@@ -200,7 +202,7 @@ export async function getAllLiveBJs(): Promise<PandaTVLiveStatus[]> {
       userNick: bj.userNick,
     }))
   } catch (error) {
-    console.error('getAllLiveBJs error:', error)
+    logger.apiError('PandaTV/getAllLiveBJs', error)
     return []
   }
 }

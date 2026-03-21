@@ -17,11 +17,10 @@
     "url": "https://github.com/your-username/rg-family.git"
   },
   "scripts": {
-    "rg": "tsx scripts/rg-cli.ts",
-    "dashboard": "tsx scripts/rg-dashboard.ts",
+    "rg": "tsx scripts/tools/rg-cli.ts",
+    "dashboard": "tsx scripts/tools/rg-dashboard.ts",
     "dev": "next dev",
-    "dev:watch": "tsx scripts/dev-server-monitor.ts",
-    "dev:fast": "DEV_PREWARM=false tsx scripts/dev-server-monitor.ts",
+    "dev:turbo": "next dev --turbopack",
     "dev:mem": "NODE_OPTIONS='--max-old-space-size=2048' next dev",
     "build": "next build",
     "start": "next start",
@@ -35,9 +34,10 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
-    "db:seed": "npx tsx scripts/seed-database.ts",
     "db:migrate": "bash scripts/run-migrations.sh",
-    "db:test": "node -e \"const{createClient}=require('@supabase/supabase-js');const s=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);s.from('seasons').select('count').then(r=>console.log(r.error?'Error: '+r.error.message:'Connected!'))\""
+    "db:test": "node -e \"const{createClient}=require('@supabase/supabase-js');const s=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);s.from('seasons').select('count').then(r=>console.log(r.error?'Error: '+r.error.message:'Connected!'))\"",
+    "db:backup": "tsx scripts/db/db-backup.ts",
+    "db:schema": "tsx scripts/db/dump-schema.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.980.0",

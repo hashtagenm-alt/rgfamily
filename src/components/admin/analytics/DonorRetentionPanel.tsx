@@ -24,8 +24,7 @@ import {
   ReferenceLine,
   BarChart,
 } from 'recharts'
-import type { DonorRetentionData } from '@/lib/actions/analytics'
-import type { ChurnPredictionData } from '@/lib/actions/analytics-advanced'
+import type { DonorRetentionData, ChurnPredictionData } from '@/lib/actions/analytics'
 import { ChartContainer, ChartTooltip, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './DonorRetentionPanel.module.css'
 

@@ -45,10 +45,7 @@ export async function POST(request: Request) {
   }
 
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    return NextResponse.json(
-      { error: 'Missing Supabase configuration' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Missing Supabase configuration' }, { status: 500 })
   }
 
   let body: { updates: LiveStatusUpdate[] }
@@ -60,10 +57,7 @@ export async function POST(request: Request) {
 
   const { updates } = body
   if (!Array.isArray(updates) || updates.length === 0) {
-    return NextResponse.json(
-      { error: 'updates array is required' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'updates array is required' }, { status: 400 })
   }
 
   const supabase = createClient<Database>(SUPABASE_URL, SERVICE_ROLE_KEY)
@@ -79,10 +73,7 @@ export async function POST(request: Request) {
     }
 
     // organization 테이블의 is_live 업데이트
-    const { error } = await supabase
-      .from('organization')
-      .update({ is_live })
-      .eq('id', member_id)
+    const { error } = await supabase.from('organization').update({ is_live }).eq('id', member_id)
 
     if (error) {
       results.push({ member_id, success: false, error: error.message })
@@ -91,8 +82,8 @@ export async function POST(request: Request) {
     }
   }
 
-  const successCount = results.filter(r => r.success).length
-  const failCount = results.filter(r => !r.success).length
+  const successCount = results.filter((r) => r.success).length
+  const failCount = results.filter((r) => !r.success).length
 
   return NextResponse.json({
     success: true,
@@ -103,29 +94,35 @@ export async function POST(request: Request) {
   })
 }
 
-// GET: 현재 라이브 상태 조회
+// GET: 현재 라이브 상태 조회 (API 키 필수)
 export async function GET(request: Request) {
+  if (!API_SECRET) {
+    return NextResponse.json({ error: 'API secret not configured' }, { status: 500 })
+  }
+
+  const provided = request.headers.get('x-api-key')
+  if (!provided || provided !== API_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    return NextResponse.json(
-      { error: 'Missing Supabase configuration' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Missing Supabase configuration' }, { status: 500 })
   }
 
   const supabase = createClient<Database>(SUPABASE_URL, SERVICE_ROLE_KEY)
 
   const { data, error } = await supabase
     .from('organization')
-    .select('id, name, unit, role, social_links, is_live')
+    .select('id, name, unit, is_live')
     .eq('is_active', true)
     .order('unit')
     .order('position_order')
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 
-  const liveMembers = data?.filter(m => m.is_live) || []
+  const liveMembers = data?.filter((m) => m.is_live) || []
 
   return NextResponse.json({
     total: data?.length || 0,

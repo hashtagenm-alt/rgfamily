@@ -5,6 +5,34 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { nicknameAliases } from '@/lib/utils/nickname-aliases'
 
+// ==================== 서버 사이드 TTL 캐시 ====================
+// 여러 서버 액션이 동시에 호출될 때 DB 중복 조회 방지
+// (예: BJ 탭에서 5개 액션이 1-2초 내 동시 실행)
+
+interface CacheEntry<T> {
+  data: T
+  timestamp: number
+  promise?: Promise<T> // 진행 중인 요청 재사용 (request dedup)
+}
+
+const CACHE_TTL_MS = 15_000 // 15초 TTL
+const donationCache = new Map<string, CacheEntry<ExtendedDonation[]>>()
+const episodeIdCache = new Map<string, CacheEntry<number[]>>()
+
+function getCacheKey(seasonId?: number, episodeId?: number): string {
+  return `s:${seasonId ?? 'all'}_e:${episodeId ?? 'all'}`
+}
+
+function isValid<T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<T> {
+  return !!entry && Date.now() - entry.timestamp < CACHE_TTL_MS
+}
+
+/** 캐시 수동 무효화 (시즌/에피소드 변경 시 호출) */
+export function invalidateDonationCache(): void {
+  donationCache.clear()
+  episodeIdCache.clear()
+}
+
 /** 최소 제곱법 선형 회귀: y = slope * x + intercept */
 export function linearRegression(points: { x: number; y: number }[]): {
   slope: number
@@ -14,7 +42,10 @@ export function linearRegression(points: { x: number; y: number }[]): {
   const n = points.length
   if (n < 2) return { slope: 0, intercept: 0, r_squared: 0 }
 
-  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0
+  let sumX = 0,
+    sumY = 0,
+    sumXY = 0,
+    sumX2 = 0
   for (const p of points) {
     sumX += p.x
     sumY += p.y
@@ -30,7 +61,8 @@ export function linearRegression(points: { x: number; y: number }[]): {
 
   // R² 계산
   const meanY = sumY / n
-  let ssTot = 0, ssRes = 0
+  let ssTot = 0,
+    ssRes = 0
   for (const p of points) {
     ssTot += (p.y - meanY) ** 2
     const predicted = slope * p.x + intercept
@@ -55,12 +87,14 @@ export interface ExtendedDonation {
 
 export async function fetchFinalizedEpisodeIds(
   supabase: SupabaseClient,
-  seasonId?: number
+  seasonId?: number,
+  unitFilter: 'excel' | 'crew' = 'excel'
 ): Promise<number[]> {
-  let query = supabase
-    .from('episodes')
-    .select('id')
-    .eq('is_finalized', true)
+  const key = `epIds:${seasonId ?? 'all'}:${unitFilter}`
+  const cached = episodeIdCache.get(key)
+  if (isValid(cached)) return cached.data
+
+  let query = supabase.from('episodes').select('id').eq('is_finalized', true).eq('unit', unitFilter)
 
   if (seasonId) {
     query = query.eq('season_id', seasonId)
@@ -68,57 +102,82 @@ export async function fetchFinalizedEpisodeIds(
 
   const { data, error } = await query
   if (error || !data) return []
-  return (data as { id: number }[]).map(e => e.id)
+  const ids = (data as { id: number }[]).map((e) => e.id)
+  episodeIdCache.set(key, { data: ids, timestamp: Date.now() })
+  return ids
 }
 
 export async function fetchAllDonationsExtended(
   supabase: SupabaseClient,
   seasonId?: number,
-  episodeId?: number,
+  episodeId?: number
 ): Promise<ExtendedDonation[]> {
-  // 특정 회차 미지정 시 확정된 회차의 donation만 조회
-  let finalizedIds: number[] | null = null
-  if (!episodeId) {
-    finalizedIds = await fetchFinalizedEpisodeIds(supabase, seasonId)
-    if (finalizedIds.length === 0) return []
+  const key = getCacheKey(seasonId, episodeId)
+  const entry = donationCache.get(key)
+
+  if (entry) {
+    // 1) 캐시 히트 (TTL 이내) → 즉시 반환
+    if (Date.now() - entry.timestamp < CACHE_TTL_MS) return entry.data
+    // 2) 동일 요청 진행 중 → promise 재사용 (request dedup)
+    if (entry.promise) return entry.promise
   }
 
-  const allData: ExtendedDonation[] = []
-  let page = 0
-  const pageSize = 1000
-
-  while (true) {
-    let query = supabase
-      .from('donations')
-      .select('donor_name, target_bj, amount, episode_id, donated_at')
-      .range(page * pageSize, (page + 1) * pageSize - 1)
-
-    if (episodeId) {
-      query = query.eq('episode_id', episodeId)
-    } else {
-      query = query.in('episode_id', finalizedIds!)
+  // 3) 실제 DB 조회
+  const fetchPromise = (async () => {
+    let finalizedIds: number[] | null = null
+    if (!episodeId) {
+      finalizedIds = await fetchFinalizedEpisodeIds(supabase, seasonId)
+      if (finalizedIds.length === 0) return []
     }
 
-    const { data, error } = await query
-    if (error) throw new Error(error.message)
-    if (!data || data.length === 0) break
-    allData.push(...(data as ExtendedDonation[]))
-    if (data.length < pageSize) break
-    page++
-  }
+    const allData: ExtendedDonation[] = []
+    let page = 0
+    const pageSize = 1000
 
-  return allData
+    while (true) {
+      let query = supabase
+        .from('donations')
+        .select('donor_name, target_bj, amount, episode_id, donated_at')
+        .range(page * pageSize, (page + 1) * pageSize - 1)
+
+      if (episodeId) {
+        query = query.eq('episode_id', episodeId)
+      } else {
+        query = query.in('episode_id', finalizedIds!)
+      }
+
+      const { data, error } = await query
+      if (error) throw new Error(error.message)
+      if (!data || data.length === 0) break
+      allData.push(...(data as ExtendedDonation[]))
+      if (data.length < pageSize) break
+      page++
+    }
+
+    // 캐시 저장 (promise 제거)
+    donationCache.set(key, { data: allData, timestamp: Date.now() })
+    return allData
+  })()
+
+  // 진행 중 표시 (다른 동시 호출이 이 promise를 재사용)
+  donationCache.set(key, { data: [], timestamp: 0, promise: fetchPromise })
+
+  return fetchPromise
 }
 
 /** 확정 에피소드 메타데이터 (id, episode_number, is_rank_battle, description) */
 export async function fetchFinalizedEpisodes(
   supabase: SupabaseClient,
-  seasonId?: number
-): Promise<{ id: number; episode_number: number; is_rank_battle: boolean; description: string | null }[]> {
+  seasonId?: number,
+  unitFilter: 'excel' | 'crew' = 'excel'
+): Promise<
+  { id: number; episode_number: number; is_rank_battle: boolean; description: string | null }[]
+> {
   let query = supabase
     .from('episodes')
     .select('id, episode_number, is_rank_battle, description')
     .eq('is_finalized', true)
+    .eq('unit', unitFilter)
     .order('episode_number', { ascending: true })
 
   if (seasonId) {
@@ -127,7 +186,12 @@ export async function fetchFinalizedEpisodes(
 
   const { data, error } = await query
   if (error || !data) return []
-  return data as { id: number; episode_number: number; is_rank_battle: boolean; description: string | null }[]
+  return data as {
+    id: number
+    episode_number: number
+    is_rank_battle: boolean
+    description: string | null
+  }[]
 }
 
 /** 닉네임 정규화 */

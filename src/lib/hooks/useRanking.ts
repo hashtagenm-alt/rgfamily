@@ -12,6 +12,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRankings, useSeasons } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
 import type { Season } from '@/types/database'
 import type { RankingItem, UnitFilter } from '@/types/common'
 
@@ -47,6 +48,7 @@ export function useRanking(options: UseRankingOptions = {}): UseRankingReturn {
   const [unitFilter, setUnitFilter] = useState<UnitFilter>('all')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [seasonsLoaded, setSeasonsLoaded] = useState(false)
 
   // 시즌 목록 로드
   const fetchSeasons = useCallback(async () => {
@@ -57,7 +59,9 @@ export function useRanking(options: UseRankingOptions = {}): UseRankingReturn {
       const active = await seasonsRepo.findActive()
       setCurrentSeason(active)
     } catch (err) {
-      console.error('시즌 로드 실패:', err)
+      logger.error('시즌 로드 실패', err)
+    } finally {
+      setSeasonsLoaded(true)
     }
   }, [seasonsRepo])
 
@@ -79,14 +83,17 @@ export function useRanking(options: UseRankingOptions = {}): UseRankingReturn {
     }
   }, [rankingsRepo, selectedSeasonId, unitFilter])
 
-  // 초기 로드
+  // 초기 로드: 시즌 먼저, 시즌 로드 완료 후 랭킹
   useEffect(() => {
     fetchSeasons()
   }, [fetchSeasons])
 
   useEffect(() => {
-    fetchRankings()
-  }, [fetchRankings])
+    // initialSeasonId가 있으면 즉시 조회, 없으면 시즌 로드 완료 후 조회
+    if (initialSeasonId != null || seasonsLoaded) {
+      fetchRankings()
+    }
+  }, [fetchRankings, seasonsLoaded, initialSeasonId])
 
   return {
     rankings,

@@ -13,6 +13,8 @@
  * - API 방식(pandatv.ts)이 더 안정적임
  */
 
+import { logger } from '@/lib/utils/logger'
+
 export interface PandaTVLiveStatusScraper {
   channelId: string
   isLive: boolean
@@ -62,13 +64,13 @@ async function fetchChannelPageHTML(channelId: string): Promise<string | null> {
     })
 
     if (!response.ok) {
-      console.error(`Scraper: HTTP ${response.status} for channel ${channelId}`)
+      logger.apiError(`PandaTV/scraper/channel/${channelId}`, new Error(`HTTP ${response.status}`))
       return null
     }
 
     return await response.text()
   } catch (error) {
-    console.error(`Scraper: fetch error for channel ${channelId}:`, error)
+    logger.apiError(`PandaTV/scraper/channel/${channelId}`, error)
     return null
   }
 }
@@ -181,7 +183,7 @@ export async function scrapeLiveListPage(): Promise<PandaTVLiveStatusScraper[]> 
     })
 
     if (!response.ok) {
-      console.error(`Scraper: HTTP ${response.status} for live list`)
+      logger.apiError('PandaTV/scraper/live-list', new Error(`HTTP ${response.status}`))
       return []
     }
 
@@ -204,13 +206,13 @@ export async function scrapeLiveListPage(): Promise<PandaTVLiveStatusScraper[]> 
           }))
         }
       } catch {
-        console.error('Scraper: Failed to parse initial state JSON')
+        logger.error('Scraper: Failed to parse initial state JSON')
       }
     }
 
     return []
   } catch (error) {
-    console.error('Scraper: live list page error:', error)
+    logger.apiError('PandaTV/scraper/live-list', error)
     return []
   }
 }

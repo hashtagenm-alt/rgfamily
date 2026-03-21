@@ -18,7 +18,7 @@ import {
   createTimelineEvent,
   updateTimelineEvent,
   deleteTimelineEvent,
-} from '@/lib/actions/timeline-actions'
+} from '@/lib/actions/timeline'
 import type { TimelineEvent } from '@/types/database'
 
 interface TimelineEditModalProps {

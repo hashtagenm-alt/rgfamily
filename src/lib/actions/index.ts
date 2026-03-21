@@ -4,6 +4,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/utils/logger'
+import { ADMIN_ROLES, MODERATOR_ROLES } from '@/lib/constants/roles'
 
 export type ActionResult<T> = {
   data: T | null
@@ -42,7 +44,7 @@ export async function adminAction<T>(
       return { data: null, error: '프로필을 찾을 수 없습니다.' }
     }
 
-    if (!['admin', 'superadmin'].includes(profile.role)) {
+    if (!(ADMIN_ROLES as readonly string[]).includes(profile.role)) {
       return { data: null, error: '관리자 권한이 필요합니다.' }
     }
 
@@ -56,7 +58,7 @@ export async function adminAction<T>(
 
     return { data: result, error: null }
   } catch (err) {
-    console.error('Admin Action Error:', err)
+    logger.error('Admin Action Error', err)
     return {
       data: null,
       error: err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'
@@ -98,7 +100,7 @@ export async function moderatorAction<T>(
       return { data: null, error: '프로필을 찾을 수 없습니다.' }
     }
 
-    if (!['moderator', 'admin', 'superadmin'].includes(profile.role)) {
+    if (!(MODERATOR_ROLES as readonly string[]).includes(profile.role)) {
       return { data: null, error: '운영진 권한이 필요합니다.' }
     }
 
@@ -112,7 +114,7 @@ export async function moderatorAction<T>(
 
     return { data: result, error: null }
   } catch (err) {
-    console.error('Moderator Action Error:', err)
+    logger.error('Moderator Action Error', err)
     return {
       data: null,
       error: err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'
@@ -168,7 +170,7 @@ export async function superadminAction<T>(
 
     return { data: result, error: null }
   } catch (err) {
-    console.error('Superadmin Action Error:', err)
+    logger.error('Superadmin Action Error', err)
     return {
       data: null,
       error: err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'
@@ -206,7 +208,7 @@ export async function authAction<T>(
 
     return { data: result, error: null }
   } catch (err) {
-    console.error('Auth Action Error:', err)
+    logger.error('Auth Action Error', err)
     return {
       data: null,
       error: err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'
@@ -226,7 +228,7 @@ export async function publicAction<T>(
     const result = await action(supabase)
     return { data: result, error: null }
   } catch (err) {
-    console.error('Public Action Error:', err)
+    logger.error('Public Action Error', err)
     return {
       data: null,
       error: err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'

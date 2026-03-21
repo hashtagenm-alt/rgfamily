@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getVideoStatus, deleteVideo } from '@/lib/cloudflare'
+import { logger } from '@/lib/utils/logger'
 
 interface AuthResult {
   user: { id: string } | null
@@ -76,7 +77,7 @@ export async function GET(
       playback: video.playback,
     })
   } catch (error) {
-    console.error('Cloudflare Stream status error:', error)
+    logger.apiError('/api/cloudflare-stream/[uid] [GET]', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '상태 조회 실패' },
       { status: 500 }
@@ -100,7 +101,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Cloudflare Stream delete error:', error)
+    logger.apiError('/api/cloudflare-stream/[uid] [DELETE]', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '삭제 실패' },
       { status: 500 }

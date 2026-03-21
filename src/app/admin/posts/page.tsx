@@ -5,9 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Eye, Plus, X, Save, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { DataTable, Column, AdminModal } from '@/components/admin'
 import { RichEditor } from '@/components/ui'
-import { useSupabaseContext } from '@/lib/context'
 import { useAlert, useImageUpload } from '@/lib/hooks'
-import type { JoinedProfile } from '@/types/common'
+import {
+  getAdminPosts,
+  getAdminComments,
+  createAdminPost,
+  updateAdminPost,
+  deleteAdminPost,
+  deleteAdminComment,
+} from '@/lib/actions/posts'
 import styles from '../shared.module.css'
 
 interface Post {
@@ -31,7 +37,6 @@ interface Comment {
 }
 
 export default function PostsPage() {
-  const supabase = useSupabaseContext()
   const { showConfirm, showError, showSuccess } = useAlert()
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -56,44 +61,18 @@ export default function PostsPage() {
   const fetchPosts = useCallback(async () => {
     setIsLoading(true)
 
-    let query = supabase
-      .from('posts')
-      .select('*, profiles!author_id(nickname), comments(id)')
-      .eq('is_deleted', false)
-      .order('created_at', { ascending: false })
-      .limit(500) // 성능을 위해 최대 500개만 로드
+    const result = await getAdminPosts(
+      activeCategory !== 'all' ? { boardType: activeCategory } : undefined
+    )
 
-    if (activeCategory !== 'all') {
-      query = query.eq('board_type', activeCategory)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('게시글 데이터 로드 실패:', error)
+    if (result.error) {
+      showError(result.error)
     } else {
-      setPosts(
-        (data || []).map((p) => {
-          const profile = p.profiles as JoinedProfile | null
-          const commentsArr = p.comments as unknown[] | null
-          return {
-            id: p.id,
-            title: p.title,
-            content: p.content,
-            authorId: p.author_id,
-            authorName: profile?.nickname || '익명',
-            boardType: p.board_type,
-            viewCount: p.view_count || 0,
-            commentCount: commentsArr?.length || 0,
-            isAnonymous: p.is_anonymous || false,
-            createdAt: p.created_at,
-          }
-        })
-      )
+      setPosts(result.data || [])
     }
 
     setIsLoading(false)
-  }, [supabase, activeCategory])
+  }, [activeCategory])
 
   useEffect(() => {
     fetchPosts()
@@ -102,30 +81,17 @@ export default function PostsPage() {
   // Fetch comments for a post
   const fetchComments = useCallback(async (postId: number) => {
     setLoadingComments(true)
-    const { data, error } = await supabase
-      .from('comments')
-      .select('*, profiles!author_id(nickname)')
-      .eq('post_id', postId)
-      .eq('is_deleted', false)
-      .order('created_at', { ascending: true })
 
-    if (error) {
-      console.error('댓글 로드 실패:', error)
+    const result = await getAdminComments(postId)
+
+    if (result.error) {
+      showError(result.error)
     } else {
-      setComments(
-        (data || []).map((c) => {
-          const profile = c.profiles as JoinedProfile | null
-          return {
-            id: c.id,
-            content: c.content,
-            authorName: c.is_anonymous ? '익명' : (profile?.nickname || '익명'),
-            createdAt: c.created_at,
-          }
-        })
-      )
+      setComments(result.data || [])
     }
+
     setLoadingComments(false)
-  }, [supabase])
+  }, [])
 
   // Toggle comments accordion
   const toggleComments = (postId: number) => {
@@ -177,41 +143,28 @@ export default function PostsPage() {
     }
 
     if (isNew) {
-      // Admin creates post - need to get current user
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        showError('로그인이 필요합니다.')
-        return
-      }
-
-      const { error } = await supabase.from('posts').insert({
+      const result = await createAdminPost({
         title: editingPost.title,
         content: editingPost.content,
-        board_type: editingPost.boardType,
-        author_id: user.id,
+        board_type: editingPost.boardType || 'free',
         is_anonymous: editingPost.isAnonymous || false,
       })
 
-      if (error) {
-        console.error('게시글 등록 실패:', error)
-        showError('등록에 실패했습니다.')
+      if (result.error) {
+        showError(result.error)
         return
       }
       showSuccess('게시글이 등록되었습니다.')
     } else {
-      const { error } = await supabase
-        .from('posts')
-        .update({
-          title: editingPost.title,
-          content: editingPost.content,
-          board_type: editingPost.boardType,
-          is_anonymous: editingPost.isAnonymous || false,
-        })
-        .eq('id', editingPost.id)
+      const result = await updateAdminPost(editingPost.id!, {
+        title: editingPost.title,
+        content: editingPost.content,
+        board_type: editingPost.boardType || 'free',
+        is_anonymous: editingPost.isAnonymous || false,
+      })
 
-      if (error) {
-        console.error('게시글 수정 실패:', error)
-        showError('수정에 실패했습니다.')
+      if (result.error) {
+        showError(result.error)
         return
       }
       showSuccess('게시글이 수정되었습니다.')
@@ -230,15 +183,10 @@ export default function PostsPage() {
     })
     if (!confirmed) return
 
-    // Soft delete
-    const { error } = await supabase
-      .from('posts')
-      .update({ is_deleted: true })
-      .eq('id', post.id)
+    const result = await deleteAdminPost(post.id)
 
-    if (error) {
-      console.error('게시글 삭제 실패:', error)
-      showError('삭제에 실패했습니다.')
+    if (result.error) {
+      showError(result.error)
     } else {
       showSuccess('게시글이 삭제되었습니다.')
       if (expandedPostId === post.id) {
@@ -259,14 +207,10 @@ export default function PostsPage() {
     })
     if (!confirmed) return
 
-    const { error } = await supabase
-      .from('comments')
-      .update({ is_deleted: true })
-      .eq('id', commentId)
+    const result = await deleteAdminComment(commentId)
 
-    if (error) {
-      console.error('댓글 삭제 실패:', error)
-      showError('삭제에 실패했습니다.')
+    if (result.error) {
+      showError(result.error)
     } else {
       showSuccess('댓글이 삭제되었습니다.')
       if (expandedPostId) {
