@@ -39,15 +39,23 @@ export default function LiveMembers() {
     )
   }
 
-  const members: LiveMember[] = rosterMembers
-    .map((member) => ({
+  // 엑셀부 우선 dedupe: 같은 이름이 엑셀+크루 양쪽에 있으면 엑셀부만 표시
+  const seen = new Map<string, LiveMember>()
+  for (const member of rosterMembers) {
+    const mapped: LiveMember = {
       id: member.id,
       nickname: member.name,
       avatarUrl: member.image_url,
       isLive: Boolean(member.is_live),
       unit: member.unit,
       pandatvId: member.social_links?.pandatv || null,
-    }))
+    }
+    const existing = seen.get(mapped.nickname)
+    if (!existing || (existing.unit === 'crew' && mapped.unit === 'excel')) {
+      seen.set(mapped.nickname, mapped)
+    }
+  }
+  const members = Array.from(seen.values())
     // 라이브 중인 멤버 먼저 정렬
     .sort((a, b) => (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0))
 
@@ -63,7 +71,7 @@ export default function LiveMembers() {
     )
   }
 
-  const liveCount = members.filter(m => m.isLive).length
+  const liveCount = members.filter((m) => m.isLive).length
   const displayMembers = members.slice(0, MAX_DISPLAY_COUNT)
   const hasMore = members.length > MAX_DISPLAY_COUNT
 
@@ -91,12 +99,10 @@ export default function LiveMembers() {
           const memberContent = (
             <>
               <div className={`${styles.avatarWrapper} ${member.isLive ? styles.isLive : ''}`}>
-                {member.isLive && (
-                  <span className={styles.liveBadge}>
-                    LIVE
-                  </span>
-                )}
-                <div className={`${styles.avatar} ${member.isLive ? styles.avatarLive : ''} ${member.unit === 'crew' ? styles.crew : ''}`}>
+                {member.isLive && <span className={styles.liveBadge}>LIVE</span>}
+                <div
+                  className={`${styles.avatar} ${member.isLive ? styles.avatarLive : ''} ${member.unit === 'crew' ? styles.crew : ''}`}
+                >
                   {member.avatarUrl ? (
                     <Image
                       src={member.avatarUrl}
@@ -105,9 +111,7 @@ export default function LiveMembers() {
                       className={styles.avatarImage}
                     />
                   ) : (
-                    <div className={styles.avatarPlaceholder}>
-                      {member.nickname.charAt(0)}
-                    </div>
+                    <div className={styles.avatarPlaceholder}>{member.nickname.charAt(0)}</div>
                   )}
                 </div>
               </div>
