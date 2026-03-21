@@ -3,8 +3,7 @@
 import { useState, useMemo, Fragment } from 'react'
 import { RefreshCw, Loader2, Filter, TrendingUp, TrendingDown, Minus, ChevronRight, Search, User, Heart, BarChart as BarChartIcon, Clock } from 'lucide-react'
 import { BarChart, Bar, PieChart, Pie, XAxis, YAxis, CartesianGrid, Cell } from 'recharts'
-import type { DonorPattern, DonorSearch } from '@/lib/actions/analytics'
-import type { RFMData, RFMEntry } from '@/lib/actions/analytics-advanced'
+import type { DonorPattern, DonorSearch, RFMData, RFMEntry } from '@/lib/actions/analytics'
 import { ChartContainer, ChartTooltip, CHART_COLORS, CHART_THEME, formatChartNumber } from './charts/RechartsTheme'
 import styles from './DonorPatternsTable.module.css'
 

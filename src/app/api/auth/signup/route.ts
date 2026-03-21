@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/utils/logger'
 
 // Service Role Key로 Admin 클라이언트 생성 (이메일 인증 우회 가능)
 const supabaseAdmin = createClient(
@@ -14,24 +15,15 @@ export async function POST(request: NextRequest) {
 
     // 유효성 검사
     if (!email || !password || !nickname) {
-      return NextResponse.json(
-        { error: '모든 필드를 입력해주세요' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '모든 필드를 입력해주세요' }, { status: 400 })
     }
 
     if (password.length < 6) {
-      return NextResponse.json(
-        { error: '비밀번호는 6자 이상이어야 합니다' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '비밀번호는 6자 이상이어야 합니다' }, { status: 400 })
     }
 
     if (nickname.length < 2) {
-      return NextResponse.json(
-        { error: '닉네임은 2자 이상이어야 합니다' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '닉네임은 2자 이상이어야 합니다' }, { status: 400 })
     }
 
     // 닉네임 중복 체크
@@ -42,10 +34,7 @@ export async function POST(request: NextRequest) {
       .limit(1)
 
     if (existingNickname && existingNickname.length > 0) {
-      return NextResponse.json(
-        { error: '이미 사용 중인 닉네임입니다' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '이미 사용 중인 닉네임입니다' }, { status: 400 })
     }
 
     // Admin API로 사용자 생성 (이메일 인증 우회)
@@ -57,48 +46,36 @@ export async function POST(request: NextRequest) {
     })
 
     if (authError) {
-      console.error('Auth error:', authError)
+      logger.apiError('/api/auth/signup', authError)
 
       if (authError.message.includes('already been registered')) {
-        return NextResponse.json(
-          { error: '이미 등록된 이메일입니다' },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: '이미 등록된 이메일입니다' }, { status: 400 })
       }
 
-      return NextResponse.json(
-        { error: authError.message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
     // 프로필 생성/업데이트
     if (authData.user) {
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
-          email: email,
-          nickname: nickname,
-          role: 'member',
-        })
+      const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
+        id: authData.user.id,
+        email: email,
+        nickname: nickname,
+        role: 'member',
+      })
 
       if (profileError) {
-        console.error('Profile error:', profileError)
+        logger.dbError('upsert', 'profiles', profileError)
       }
     }
 
     return NextResponse.json({
       success: true,
       message: '회원가입이 완료되었습니다',
-      user: authData.user,
+      user: { id: authData.user?.id, email: authData.user?.email },
     })
-
   } catch (error) {
-    console.error('Signup error:', error)
-    return NextResponse.json(
-      { error: '회원가입 중 오류가 발생했습니다' },
-      { status: 500 }
-    )
+    logger.apiError('/api/auth/signup', error)
+    return NextResponse.json({ error: '회원가입 중 오류가 발생했습니다' }, { status: 500 })
   }
 }

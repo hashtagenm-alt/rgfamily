@@ -7,6 +7,8 @@
  * - 연결 에러 핸들링
  */
 
+import { logger } from '@/lib/utils/logger'
+
 export interface FetchWithRetryOptions {
   /** 타임아웃 (ms) - 기본 10초 */
   timeout?: number
@@ -94,9 +96,9 @@ export async function withRetry<T>(
 
       // 지수 백오프 대기
       const delay = opts.initialDelay * Math.pow(2, attempt)
-      console.warn(
+      logger.warn(
         `[Retry] Attempt ${attempt + 1}/${opts.maxRetries} failed, retrying in ${delay}ms...`,
-        error instanceof Error ? error.message : error
+        { context: { error: error instanceof Error ? error.message : error } }
       )
       await sleep(delay)
     }

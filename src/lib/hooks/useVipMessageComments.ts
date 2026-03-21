@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAuthContext } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
 import {
   getVipMessageComments,
   createVipMessageComment,
@@ -106,7 +107,7 @@ export function useVipMessageComments(
           setHasMore(result.data.hasMore)
         }
       } catch (err) {
-        console.error('댓글 조회 실패:', err)
+        logger.error('댓글 조회 실패', err)
         setComments([])
         setError(null)
       } finally {

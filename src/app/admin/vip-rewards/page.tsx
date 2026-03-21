@@ -2,15 +2,25 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Crown, Plus, X, Save, Upload, Trash2, GripVertical, Image as ImageIcon } from 'lucide-react'
+import { Crown, Plus, X, Save, Upload, Trash2, Image as ImageIcon } from 'lucide-react'
 import Image from 'next/image'
 import { DataTable, Column } from '@/components/admin'
-import { useAdminCRUD, useAlert } from '@/lib/hooks'
-import { useSupabaseContext } from '@/lib/context'
-import type { JoinedProfile, JoinedSeason } from '@/types/common'
+import { useAlert } from '@/lib/hooks'
+import { getSeasons } from '@/lib/actions/seasons'
+import {
+  getVipRewardsWithJoins,
+  getVipProfiles,
+  getVipImageCounts,
+  getVipImagesByRewardId,
+  createVipReward,
+  updateVipReward,
+  deleteVipReward,
+  createVipImage,
+  deleteVipImage as deleteVipImageAction,
+} from '@/lib/actions/vip-rewards'
 import styles from '../shared.module.css'
 
-interface VipImage {
+interface VipImageLocal {
   id: number
   rewardId: number
   imageUrl: string
@@ -18,7 +28,7 @@ interface VipImage {
   orderIndex: number
 }
 
-interface VipReward {
+interface VipRewardLocal {
   id: number
   profileId: string
   nickname: string
@@ -28,8 +38,6 @@ interface VipReward {
   personalMessage: string
   dedicationVideoUrl: string
   createdAt: string
-  images?: VipImage[]
-  imageCount?: number
 }
 
 interface Season {
@@ -43,77 +51,77 @@ interface Profile {
 }
 
 export default function VipRewardsPage() {
-  const supabase = useSupabaseContext()
   const alertHandler = useAlert()
+  const [rewards, setRewards] = useState<VipRewardLocal[]>([])
   const [seasons, setSeasons] = useState<Season[]>([])
   const [profiles, setProfiles] = useState<Profile[]>([])
-  const [galleryImages, setGalleryImages] = useState<VipImage[]>([])
+  const [galleryImages, setGalleryImages] = useState<VipImageLocal[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
   const [imageCounts, setImageCounts] = useState<Record<number, number>>({})
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isNew, setIsNew] = useState(false)
+  const [editingReward, setEditingReward] = useState<Partial<VipRewardLocal> | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch related data
+  // Fetch rewards list
+  const fetchRewards = useCallback(async () => {
+    setIsLoading(true)
+    const result = await getVipRewardsWithJoins()
+    if (result.error) {
+      alertHandler.showError(result.error)
+    } else {
+      setRewards(result.data || [])
+    }
+    setIsLoading(false)
+  }, [alertHandler])
+
+  // Fetch related data (seasons + profiles)
   const fetchRelatedData = useCallback(async () => {
     const [seasonsRes, profilesRes] = await Promise.all([
-      supabase.from('seasons').select('id, name').order('start_date', { ascending: false }),
-      // VIP 역할 또는 총 후원 상위 100명 조회
-      supabase
-        .from('profiles')
-        .select('id, nickname, role, total_donation')
-        .or('role.eq.vip,total_donation.gt.0')
-        .order('total_donation', { ascending: false })
-        .limit(100),
+      getSeasons(),
+      getVipProfiles(),
     ])
-    setSeasons(seasonsRes.data || [])
-    // VIP 우선 정렬, 그 외는 총 후원 순
-    const sortedProfiles = (profilesRes.data || []).sort((a, b) => {
-      if (a.role === 'vip' && b.role !== 'vip') return -1
-      if (a.role !== 'vip' && b.role === 'vip') return 1
-      return (b.total_donation || 0) - (a.total_donation || 0)
-    })
-    setProfiles(sortedProfiles.map(p => ({ id: p.id, nickname: p.nickname })))
-  }, [supabase])
+    if (seasonsRes.data) {
+      setSeasons(seasonsRes.data.map((s) => ({ id: s.id, name: s.name })))
+    }
+    if (profilesRes.data) {
+      setProfiles(profilesRes.data)
+    }
+  }, [])
 
   useEffect(() => {
+    fetchRewards()
     fetchRelatedData()
-  }, [fetchRelatedData])
+  }, [fetchRewards, fetchRelatedData])
 
-  // Fetch image counts for all rewards
-  const fetchImageCounts = useCallback(async (rewardIds: number[]) => {
-    if (rewardIds.length === 0) return
-
-    const { data } = await supabase
-      .from('vip_images')
-      .select('reward_id')
-      .in('reward_id', rewardIds)
-
-    // Count images per reward
-    const counts: Record<number, number> = {}
-    rewardIds.forEach((id) => (counts[id] = 0))
-    ;(data || []).forEach((img) => {
-      counts[img.reward_id] = (counts[img.reward_id] || 0) + 1
-    })
-    setImageCounts(counts)
-  }, [supabase])
+  // Fetch image counts when rewards are loaded
+  useEffect(() => {
+    if (rewards.length > 0) {
+      const rewardIds = rewards.map((r) => r.id)
+      getVipImageCounts(rewardIds).then((result) => {
+        if (result.data) {
+          setImageCounts(result.data)
+        }
+      })
+    }
+  }, [rewards])
 
   // Fetch gallery images for a reward
   const fetchGalleryImages = useCallback(async (rewardId: number) => {
-    const { data } = await supabase
-      .from('vip_images')
-      .select('id, reward_id, image_url, title, order_index')
-      .eq('reward_id', rewardId)
-      .order('order_index', { ascending: true })
-
-    setGalleryImages(
-      (data || []).map((img) => ({
-        id: img.id,
-        rewardId: img.reward_id,
-        imageUrl: img.image_url,
-        title: img.title || '',
-        orderIndex: img.order_index,
-      }))
-    )
-  }, [supabase])
+    const result = await getVipImagesByRewardId(rewardId)
+    if (result.data) {
+      setGalleryImages(
+        result.data.map((img) => ({
+          id: img.id,
+          rewardId: img.reward_id,
+          imageUrl: img.image_url,
+          title: img.title || '',
+          orderIndex: img.order_index,
+        }))
+      )
+    }
+  }, [])
 
   // Upload image
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, rewardId: number) => {
@@ -138,15 +146,15 @@ export default function VipRewardsPage() {
 
       const { url } = await res.json()
 
-      // Save to database
-      const { error } = await supabase.from('vip_images').insert({
+      // Save to database via server action
+      const result = await createVipImage({
         reward_id: rewardId,
         image_url: url,
         title: file.name.replace(/\.[^/.]+$/, ''),
         order_index: galleryImages.length,
       })
 
-      if (error) throw error
+      if (result.error) throw new Error(result.error)
 
       alertHandler.showSuccess('이미지가 업로드되었습니다')
       fetchGalleryImages(rewardId)
@@ -164,8 +172,8 @@ export default function VipRewardsPage() {
   const handleImageDelete = async (imageId: number, rewardId: number) => {
     if (!confirm('이미지를 삭제하시겠습니까?')) return
 
-    const { error } = await supabase.from('vip_images').delete().eq('id', imageId)
-    if (error) {
+    const result = await deleteVipImageAction(imageId)
+    if (result.error) {
       alertHandler.showError('삭제 실패')
       return
     }
@@ -175,94 +183,96 @@ export default function VipRewardsPage() {
     setImageCounts((prev) => ({ ...prev, [rewardId]: Math.max(0, (prev[rewardId] || 0) - 1) }))
   }
 
-  const {
-    items: rewards,
-    isLoading,
-    isModalOpen,
-    isNew,
-    editingItem: editingReward,
-    setEditingItem: setEditingReward,
-    openAddModal: baseOpenAddModal,
-    openEditModal,
-    closeModal,
-    handleSave,
-    handleDelete,
-  } = useAdminCRUD<VipReward>({
-    tableName: 'vip_rewards',
-    defaultItem: {
+  // Modal handlers
+  const openAddModal = () => {
+    setEditingReward({
       profileId: '',
       seasonId: seasons[0]?.id || 0,
       rank: 1,
       personalMessage: '',
       dedicationVideoUrl: '',
-    },
-    orderBy: { column: 'rank', ascending: true },
-    selectQuery: `
-      id,
-      profile_id,
-      season_id,
-      rank,
-      personal_message,
-      dedication_video_url,
-      created_at,
-      profiles:profile_id (nickname),
-      seasons:season_id (name)
-    `,
-    fromDbFormat: (row) => {
-      const profile = row.profiles as JoinedProfile | JoinedProfile[] | null
-      const season = row.seasons as JoinedSeason | JoinedSeason[] | null
-      // Supabase는 배열 또는 객체로 반환할 수 있음
-      const profileData = Array.isArray(profile) ? profile[0] : profile
-      const seasonData = Array.isArray(season) ? season[0] : season
-      return {
-        id: row.id as number,
-        profileId: row.profile_id as string,
-        nickname: profileData?.nickname || '',
-        seasonId: row.season_id as number,
-        seasonName: seasonData?.name || '',
-        rank: row.rank as number,
-        personalMessage: (row.personal_message as string) || '',
-        dedicationVideoUrl: (row.dedication_video_url as string) || '',
-        createdAt: row.created_at as string,
-      }
-    },
-    toDbFormat: (item) => ({
-      profile_id: item.profileId,
-      season_id: item.seasonId,
-      rank: item.rank,
-      personal_message: item.personalMessage,
-      dedication_video_url: item.dedicationVideoUrl,
-    }),
-    validate: (item) => {
-      if (!item.profileId) return 'VIP 회원을 선택해주세요.'
-      if (!item.seasonId || item.seasonId <= 0) return '시즌을 선택해주세요.'
-      if (!item.rank || item.rank < 1) return '순위를 입력해주세요.'
-      return null
-    },
-    alertHandler,
-  })
-
-  // Fetch image counts when rewards are loaded
-  useEffect(() => {
-    if (rewards.length > 0) {
-      const rewardIds = rewards.map((r) => r.id)
-      fetchImageCounts(rewardIds)
-    }
-  }, [rewards, fetchImageCounts])
-
-  const openAddModal = () => {
-    baseOpenAddModal()
+    })
+    setIsNew(true)
+    setIsModalOpen(true)
     setGalleryImages([])
-    setEditingReward((prev) => prev ? { ...prev, seasonId: seasons[0]?.id || 0 } : null)
   }
 
-  // Override openEditModal to fetch images
-  const handleOpenEditModal = (reward: VipReward) => {
-    openEditModal(reward)
+  const handleOpenEditModal = (reward: VipRewardLocal) => {
+    setEditingReward({ ...reward })
+    setIsNew(false)
+    setIsModalOpen(true)
     fetchGalleryImages(reward.id)
   }
 
-  const handleView = (reward: VipReward) => {
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setEditingReward(null)
+  }
+
+  // Save (create or update)
+  const handleSave = async () => {
+    if (!editingReward) return
+
+    // Validation
+    if (!editingReward.profileId) {
+      alertHandler.showWarning('VIP 회원을 선택해주세요.', '입력 오류')
+      return
+    }
+    if (!editingReward.seasonId || editingReward.seasonId <= 0) {
+      alertHandler.showWarning('시즌을 선택해주세요.', '입력 오류')
+      return
+    }
+    if (!editingReward.rank || editingReward.rank < 1) {
+      alertHandler.showWarning('순위를 입력해주세요.', '입력 오류')
+      return
+    }
+
+    const dbData = {
+      profile_id: editingReward.profileId,
+      season_id: editingReward.seasonId,
+      rank: editingReward.rank,
+      personal_message: editingReward.personalMessage || null,
+      dedication_video_url: editingReward.dedicationVideoUrl || null,
+    }
+
+    if (isNew) {
+      const result = await createVipReward(dbData)
+      if (result.error) {
+        alertHandler.showError(`등록에 실패했습니다: ${result.error}`, '오류')
+        return
+      }
+    } else {
+      const result = await updateVipReward(editingReward.id as number, dbData)
+      if (result.error) {
+        alertHandler.showError(`수정에 실패했습니다: ${result.error}`, '오류')
+        return
+      }
+    }
+
+    closeModal()
+    await fetchRewards()
+  }
+
+  // Delete
+  const handleDelete = async (reward: VipRewardLocal) => {
+    const confirmed = await alertHandler.showConfirm('정말 삭제하시겠습니까?', {
+      title: '삭제 확인',
+      variant: 'danger',
+      confirmText: '삭제',
+      cancelText: '취소',
+    })
+    if (!confirmed) return
+
+    const result = await deleteVipReward(reward.id)
+    if (result.error) {
+      alertHandler.showError(`삭제에 실패했습니다: ${result.error}`, '삭제 불가')
+      return
+    }
+
+    await fetchRewards()
+  }
+
+  const handleView = (_reward: VipRewardLocal) => {
     window.open(`/ranking`, '_blank')
   }
 
@@ -273,7 +283,7 @@ export default function VipRewardsPage() {
     return { background: 'var(--color-background)', color: 'var(--color-text-secondary)' }
   }
 
-  const columns: Column<VipReward>[] = [
+  const columns: Column<VipRewardLocal>[] = [
     {
       key: 'rank',
       header: '순위',

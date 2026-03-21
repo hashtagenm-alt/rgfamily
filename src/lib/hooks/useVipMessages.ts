@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAuthContext } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
 import {
   getVipMessagesByVipId,
   getVipMessagesPaginated,
@@ -146,7 +147,7 @@ export function useVipMessages(
         setHasMore(false)
       }
     } catch (err) {
-      console.error('VIP 메시지 조회 실패:', err)
+      logger.error('VIP 메시지 조회 실패', err)
       setMessages([])
       setError(null)
     } finally {

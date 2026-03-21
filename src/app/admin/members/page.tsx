@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
-import { useSupabaseContext } from '@/lib/context'
+import { updateUserRole } from '@/lib/actions/profiles'
 import { formatAmount } from '@/lib/utils/format'
 import styles from '../shared.module.css'
 
@@ -48,7 +48,6 @@ const formatShortDate = (dateStr: string): string => {
 }
 
 export default function MembersPage() {
-  const supabase = useSupabaseContext()
   const alertHandler = useAlert()
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [sortBy, setSortBy] = useState<SortOption>('created_at')
@@ -106,12 +105,8 @@ export default function MembersPage() {
   const handleQuickRoleChange = useCallback(async (memberId: string, newRole: Member['role']) => {
     setIsQuickChanging(memberId)
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', memberId)
-
-      if (error) throw error
+      const result = await updateUserRole(memberId, newRole)
+      if (result.error) throw new Error(result.error)
       alertHandler.showSuccess(`역할이 ${ROLE_LABELS[newRole]}(으)로 변경되었습니다`)
       refetch()
     } catch (err) {
@@ -119,7 +114,7 @@ export default function MembersPage() {
     } finally {
       setIsQuickChanging(null)
     }
-  }, [supabase, alertHandler, refetch])
+  }, [alertHandler, refetch])
 
   const getRoleBadge = (role: string) => {
     const roleStyles: Record<string, string> = {

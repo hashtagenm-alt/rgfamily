@@ -2,16 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSupabaseContext, useAuthContext } from '@/lib/context'
-import { USE_MOCK_DATA } from '@/lib/config'
+import { logger } from '@/lib/utils/logger'
+import type { HallOfFameHonor } from '@/types/tribute'
 import {
-  mockProfiles,
-  mockVipRewards,
-  getVipRewardByProfileId,
-  getHallOfFameByUserId,
-  type HallOfFameHonor,
-} from '@/lib/mock'
-import {
-  checkTributePageAccess,
   type AccessDeniedReason,
 } from '@/lib/auth/access-control'
 
@@ -71,42 +64,6 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
 
     setIsLoading(true)
 
-    // Mock 데이터 모드
-    if (USE_MOCK_DATA) {
-      // 명예의 전당 데이터 확인 (시즌 TOP 3 + 회차별 고액 후원자)
-      const hofData = getHallOfFameByUserId(userId)
-      if (hofData && hofData.length > 0) {
-        setHallOfFameData(hofData)
-        setIsLoading(false)
-        return
-      }
-
-      // 일반 VIP 데이터 (fallback)
-      const mockProfile = mockProfiles.find(p => p.id === userId) || mockProfiles[0]
-      const mockReward = getVipRewardByProfileId(userId) || mockVipRewards[0]
-
-      // 일반 VIP도 HallOfFame 형식으로 변환
-      const fallbackHofData: HallOfFameHonor[] = [{
-        id: `fallback-${mockProfile.id}`,
-        donorId: mockProfile.id,
-        donorName: mockProfile.nickname,
-        donorAvatar: mockProfile.avatar_url || '',
-        honorType: 'season_top3',
-        rank: mockReward?.rank || 1,
-        seasonId: 4,
-        seasonName: '시즌 4',
-        amount: mockProfile.total_donation,
-        unit: mockProfile.unit as 'excel' | 'crew' | null,
-        tributeMessage: mockReward?.personalMessage ?? undefined,
-        tributeVideoUrl: mockReward?.dedicationVideoUrl ?? undefined,
-        tributeImageUrl: mockReward?.giftImages?.[0]?.url,
-        createdAt: new Date().toISOString(),
-      }]
-      setHallOfFameData(fallbackHofData)
-      setIsLoading(false)
-      return
-    }
-
     // Supabase 모드
     try {
       const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
@@ -144,12 +101,12 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
 
       if (rewardsError) {
         // 테이블이 없거나 권한 문제 시 Supabase profiles에서 직접 조회
-        console.warn('VIP 보상 테이블 조회 실패, profiles에서 직접 조회:', rewardsError.message || rewardsError)
+        logger.warn('VIP 보상 테이블 조회 실패, profiles에서 직접 조회', { context: { error: rewardsError.message || rewardsError } })
       }
 
       // vip_rewards에 데이터가 없으면 profiles에서 직접 조회 (Fallback)
       if (!rewardsData || rewardsData.length === 0) {
-        console.log('[Tribute] vip_rewards 비어있음, profiles에서 조회 시도. userId:', userId)
+        logger.debug('[Tribute] vip_rewards 비어있음, profiles에서 조회 시도', { context: { userId } })
 
         // 프로필 조회
         const { data: profileData, error: profileError } = await supabase
@@ -158,10 +115,10 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
           .eq('id', userId)
           .single()
 
-        console.log('[Tribute] profiles 조회 결과:', { profileData, profileError })
+        logger.debug('[Tribute] profiles 조회 결과', { context: { profileData, profileError } })
 
         if (!profileData) {
-          console.warn('[Tribute] 프로필 없음 - accessDenied 설정')
+          logger.warn('[Tribute] 프로필 없음 - accessDenied 설정')
           setAccessDenied(isAdmin ? 'page_not_found' : 'not_qualified')
           setIsLoading(false)
           return
@@ -187,11 +144,11 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
           rank = foundIndex >= 0 ? foundIndex + 1 : 0
         }
 
-        console.log('[Tribute] 계산된 랭킹 (profiles 기반):', rank, '/ total_donation:', profileData.total_donation)
+        logger.debug('[Tribute] 계산된 랭킹 (profiles 기반)', { context: { rank, total_donation: profileData.total_donation } })
 
         // Top 50 이내가 아니면 접근 거부
         if (rank === 0 || rank > 50) {
-          console.warn('[Tribute] Top 50 이내가 아님 - accessDenied 설정. rank:', rank)
+          logger.warn('[Tribute] Top 50 이내가 아님 - accessDenied 설정', { context: { rank } })
           setAccessDenied(isAdmin ? 'page_not_found' : 'not_qualified')
           setIsLoading(false)
           return
@@ -258,7 +215,7 @@ export function useTributeData({ userId }: UseTributeDataOptions): UseTributeDat
       setHallOfFameData(hofData)
       setIsLoading(false)
     } catch (error) {
-      console.error('Tribute 데이터 로드 실패:', error)
+      logger.error('Tribute 데이터 로드 실패', error)
       setIsLoading(false)
     }
   }, [supabase, userId, accessDenied, profile])

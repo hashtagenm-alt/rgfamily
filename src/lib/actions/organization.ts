@@ -128,6 +128,48 @@ export async function getOrganizationMembers(options?: {
 }
 
 /**
+ * 프로필 목록 조회 (멤버 연결용)
+ */
+export async function getProfilesForLinking(): Promise<ActionResult<{ id: string; nickname: string }[]>> {
+  return adminAction(async (supabase) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, nickname')
+      .order('nickname')
+
+    if (error) throw new Error(error.message)
+    return data || []
+  })
+}
+
+/**
+ * 조직 멤버 삭제 전처리 (자식 parent_id null + live_status 삭제)
+ */
+export async function prepareOrgMemberDelete(
+  memberId: number
+): Promise<ActionResult<null>> {
+  return adminAction(async (supabase) => {
+    // 1. 자식 멤버들의 parent_id를 null로 변경 (self-referencing FK)
+    const { error: parentError } = await supabase
+      .from('organization')
+      .update({ parent_id: null })
+      .eq('parent_id', memberId)
+
+    if (parentError) throw new Error(`parent_id 업데이트 실패: ${parentError.message}`)
+
+    // 2. 연관된 live_status 레코드 삭제 (FK 제약 조건)
+    const { error: liveError } = await supabase
+      .from('live_status')
+      .delete()
+      .eq('member_id', memberId)
+
+    if (liveError) throw new Error(`live_status 삭제 실패: ${liveError.message}`)
+
+    return null
+  })
+}
+
+/**
  * 라이브 멤버 조회 (공개)
  */
 export async function getLiveMembers(): Promise<ActionResult<Organization[]>> {

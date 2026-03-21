@@ -2,6 +2,7 @@
 
 import { adminAction, publicAction, type ActionResult } from './index'
 import { deleteVideo } from '@/lib/cloudflare'
+import { logger } from '@/lib/utils/logger'
 import type { InsertTables, UpdateTables, MediaContent } from '@/types/database'
 
 type MediaInsert = InsertTables<'media_content'>
@@ -65,7 +66,7 @@ export async function deleteMediaContent(
       try {
         await deleteVideo(existing.cloudflare_uid)
       } catch (e) {
-        console.error('Cloudflare Stream 영상 삭제 실패:', e)
+        logger.error('Cloudflare Stream 영상 삭제 실패', e)
       }
     }
 
@@ -288,4 +289,183 @@ export async function getAllMediaContent(options?: {
     if (error) throw new Error(error.message)
     return { data: data || [], count: count || 0 }
   })
+}
+
+/**
+ * beforeSave: 멀티파트 VOD의 total_parts 변경 시 자식 파트도 일괄 업데이트
+ */
+export async function updateChildPartsTotalParts(
+  parentId: number,
+  totalParts: number
+): Promise<ActionResult<null>> {
+  return adminAction(async (supabase) => {
+    await supabase
+      .from('media_content')
+      .update({ total_parts: totalParts })
+      .eq('parent_id', parentId)
+
+    return null
+  })
+}
+
+/**
+ * 삭제 전: 멀티파트 VOD 자식 조회 (cloudflare_uid 포함)
+ */
+export async function getMediaChildren(
+  parentId: number
+): Promise<ActionResult<Array<{ id: number; cloudflare_uid: string | null }>>> {
+  return adminAction(async (supabase) => {
+    const { data, error } = await supabase
+      .from('media_content')
+      .select('id, cloudflare_uid')
+      .eq('parent_id', parentId)
+
+    if (error) throw new Error(error.message)
+    return data || []
+  })
+}
+
+/**
+ * 멀티파트 VOD 자식 일괄 삭제 (DB 레코드)
+ */
+export async function deleteMediaChildren(
+  parentId: number
+): Promise<ActionResult<null>> {
+  return adminAction(async (supabase) => {
+    const { error } = await supabase
+      .from('media_content')
+      .delete()
+      .eq('parent_id', parentId)
+
+    if (error) throw new Error(error.message)
+    return null
+  })
+}
+
+/**
+ * 인라인 편집 (단일 필드 업데이트)
+ */
+export async function inlineEditMedia(
+  id: number,
+  field: string,
+  value: unknown
+): Promise<ActionResult<null>> {
+  return adminAction(async (supabase) => {
+    const { error } = await supabase
+      .from('media_content')
+      .update({ [field]: value })
+      .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    return null
+  })
+}
+
+/**
+ * 썸네일 업데이트
+ */
+export async function updateMediaThumbnail(
+  id: number,
+  thumbnailUrl: string
+): Promise<ActionResult<null>> {
+  return adminAction(async (supabase) => {
+    const { error } = await supabase
+      .from('media_content')
+      .update({ thumbnail_url: thumbnailUrl })
+      .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    return null
+  })
+}
+
+/**
+ * VOD 파트 조회 (Admin용, is_published 필터 없음)
+ */
+export async function getAdminVodParts(
+  parentId: number
+): Promise<ActionResult<MediaContent[]>> {
+  return adminAction(async (supabase) => {
+    const { data, error } = await supabase
+      .from('media_content')
+      .select('*')
+      .or(`id.eq.${parentId},parent_id.eq.${parentId}`)
+      .order('part_number', { ascending: true })
+
+    if (error) throw new Error(error.message)
+    return data || []
+  })
+}
+
+/**
+ * 파트 추가 시 다음 part_number 조회
+ */
+export async function getNextPartNumber(
+  parentId: number
+): Promise<ActionResult<number>> {
+  return adminAction(async (supabase) => {
+    const { data, error } = await supabase
+      .from('media_content')
+      .select('part_number')
+      .or(`id.eq.${parentId},parent_id.eq.${parentId}`)
+      .order('part_number', { ascending: false })
+      .limit(1)
+
+    if (error) throw new Error(error.message)
+    return (data?.[0]?.part_number || 1) + 1
+  })
+}
+
+/**
+ * 새 파트 삽입 + 부모/형제 total_parts 업데이트
+ */
+export async function addVodPart(params: {
+  parentId: number
+  title: string
+  description: string
+  cloudflareUid: string
+  thumbnailUrl: string
+  unit: 'excel' | 'crew' | null
+  isPublished: boolean
+  partNumber: number
+  currentTotalParts: number
+  duration: number | null
+}): Promise<ActionResult<null>> {
+  return adminAction(async (supabase) => {
+    const { error: insertError } = await supabase
+      .from('media_content')
+      .insert({
+        title: params.title,
+        description: params.description,
+        content_type: 'vod',
+        video_url: `https://iframe.videodelivery.net/${params.cloudflareUid}`,
+        thumbnail_url: params.thumbnailUrl,
+        cloudflare_uid: params.cloudflareUid,
+        unit: params.unit,
+        is_featured: false,
+        is_published: params.isPublished,
+        parent_id: params.parentId,
+        part_number: params.partNumber,
+        total_parts: params.currentTotalParts,
+        duration: params.duration,
+      })
+
+    if (insertError) throw new Error(insertError.message)
+
+    // 부모의 total_parts가 partNumber보다 작으면 업데이트
+    if (params.partNumber > params.currentTotalParts) {
+      const newTotal = params.partNumber
+      await supabase
+        .from('media_content')
+        .update({ total_parts: newTotal })
+        .eq('id', params.parentId)
+      // 기존 자식 파트들도 total_parts 업데이트
+      await supabase
+        .from('media_content')
+        .update({ total_parts: newTotal })
+        .eq('parent_id', params.parentId)
+    }
+
+    return null
+  }, ['/admin/media'])
 }

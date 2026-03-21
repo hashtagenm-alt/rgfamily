@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Crown, Star, User } from 'lucide-react'
 import Link from 'next/link'
-import type { HallOfFameHonor } from '@/lib/mock'
+import type { HallOfFameHonor } from '@/types/tribute'
 import styles from './TributePageHero.module.css'
 
 interface TributePageHeroProps {

@@ -11,6 +11,7 @@
 
 import { useCallback } from 'react'
 import { useSupabaseContext } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
 import type { Episode } from '@/types/database'
 
 interface EpisodeRankingItem {
@@ -21,8 +22,8 @@ interface EpisodeRankingItem {
 }
 
 interface IEpisodeRepository {
-  findBySeason: (seasonId: number) => Promise<Episode[]>
-  findRankBattles: (seasonId: number) => Promise<Episode[]>
+  findBySeason: (seasonId: number, unit?: 'excel' | 'crew') => Promise<Episode[]>
+  findRankBattles: (seasonId: number, unit?: 'excel' | 'crew') => Promise<Episode[]>
   getEpisodeRankings: (episodeId: number, limit?: number) => Promise<EpisodeRankingItem[]>
   isVipForEpisode: (userId: string, episodeId: number) => Promise<boolean>
   isVipForRankBattles: (userId: string, seasonId: number) => Promise<boolean>
@@ -36,37 +37,55 @@ export function useEpisodes(): IEpisodeRepository {
   const supabase = useSupabaseContext()
 
   // 시즌별 전체 회차 조회
-  const findBySeason = useCallback(async (seasonId: number): Promise<Episode[]> => {
-    const { data, error } = await supabase
-      .from('episodes')
-      .select('*')
-      .eq('season_id', seasonId)
-      .order('episode_number', { ascending: true })
+  const findBySeason = useCallback(
+    async (seasonId: number, unit?: 'excel' | 'crew'): Promise<Episode[]> => {
+      let query = supabase
+        .from('episodes')
+        .select('*')
+        .eq('season_id', seasonId)
+        .order('episode_number', { ascending: true })
 
-    if (error) {
-      console.error('useEpisodes.findBySeason error:', error)
-      return []
-    }
+      if (unit) {
+        query = query.eq('unit', unit)
+      }
 
-    return data || []
-  }, [supabase])
+      const { data, error } = await query
+
+      if (error) {
+        logger.dbError('findBySeason', 'episodes', error)
+        return []
+      }
+
+      return data || []
+    },
+    [supabase]
+  )
 
   // 직급전 회차만 조회
-  const findRankBattles = useCallback(async (seasonId: number): Promise<Episode[]> => {
-    const { data, error } = await supabase
-      .from('episodes')
-      .select('*')
-      .eq('season_id', seasonId)
-      .eq('is_rank_battle', true)
-      .order('episode_number', { ascending: true })
+  const findRankBattles = useCallback(
+    async (seasonId: number, unit?: 'excel' | 'crew'): Promise<Episode[]> => {
+      let query = supabase
+        .from('episodes')
+        .select('*')
+        .eq('season_id', seasonId)
+        .eq('is_rank_battle', true)
+        .order('episode_number', { ascending: true })
 
-    if (error) {
-      console.error('useEpisodes.findRankBattles error:', error)
-      return []
-    }
+      if (unit) {
+        query = query.eq('unit', unit)
+      }
 
-    return data || []
-  }, [supabase])
+      const { data, error } = await query
+
+      if (error) {
+        logger.dbError('findRankBattles', 'episodes', error)
+        return []
+      }
+
+      return data || []
+    },
+    [supabase]
+  )
 
   // 회차별 랭킹 조회 (RPC 함수 사용)
   const getEpisodeRankings = useCallback(
@@ -77,17 +96,24 @@ export function useEpisodes(): IEpisodeRepository {
       })
 
       if (error) {
-        console.error('useEpisodes.getEpisodeRankings error:', error)
+        logger.dbError('getEpisodeRankings', 'episodes', error)
         return []
       }
 
       // snake_case → camelCase 변환
-      return (data || []).map((item: { rank: number; donor_id: string | null; donor_name: string; total_amount: number }) => ({
-        rank: item.rank,
-        donorId: item.donor_id,
-        donorName: item.donor_name,
-        totalAmount: item.total_amount,
-      }))
+      return (data || []).map(
+        (item: {
+          rank: number
+          donor_id: string | null
+          donor_name: string
+          total_amount: number
+        }) => ({
+          rank: item.rank,
+          donorId: item.donor_id,
+          donorName: item.donor_name,
+          totalAmount: item.total_amount,
+        })
+      )
     },
     [supabase]
   )
@@ -101,7 +127,7 @@ export function useEpisodes(): IEpisodeRepository {
       })
 
       if (error) {
-        console.error('useEpisodes.isVipForEpisode error:', error)
+        logger.dbError('isVipForEpisode', 'episodes', error)
         return false
       }
 
@@ -119,7 +145,7 @@ export function useEpisodes(): IEpisodeRepository {
       })
 
       if (error) {
-        console.error('useEpisodes.isVipForRankBattles error:', error)
+        logger.dbError('isVipForRankBattles', 'episodes', error)
         return false
       }
 

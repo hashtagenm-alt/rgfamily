@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/utils/logger'
 
 // 10분 캐싱 (ISR)
 export const revalidate = 600
@@ -42,7 +43,7 @@ export async function GET() {
     })
 
     if (!response.ok) {
-      console.error('PandaLive API error:', response.status, response.statusText)
+      logger.apiError('/api/panda-notice', `PandaLive API error: ${response.status} ${response.statusText}`)
       return NextResponse.json(
         { error: 'Failed to fetch notices', notices: [] },
         { status: 502 }
@@ -69,7 +70,7 @@ export async function GET() {
       fetchedAt: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('PandaLive notice fetch error:', error)
+    logger.apiError('/api/panda-notice', error)
     return NextResponse.json(
       { error: 'Internal server error', notices: [] },
       { status: 500 }

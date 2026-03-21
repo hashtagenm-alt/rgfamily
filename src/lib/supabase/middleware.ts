@@ -16,54 +16,52 @@ export async function updateSession(request: NextRequest) {
     return response
   }
 
-  const supabase = createServerClient<Database>(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get(name: string) {
+        return request.cookies.get(name)?.value
       },
-    }
-  )
+      set(name: string, value: string, options: CookieOptions) {
+        request.cookies.set({
+          name,
+          value,
+          ...options,
+        })
+        response = NextResponse.next({
+          request: {
+            headers: request.headers,
+          },
+        })
+        response.cookies.set({
+          name,
+          value,
+          ...options,
+        })
+      },
+      remove(name: string, options: CookieOptions) {
+        request.cookies.set({
+          name,
+          value: '',
+          ...options,
+        })
+        response = NextResponse.next({
+          request: {
+            headers: request.headers,
+          },
+        })
+        response.cookies.set({
+          name,
+          value: '',
+          ...options,
+        })
+      },
+    },
+  })
 
   // 세션 갱신
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // 관리자 페이지 보호
   if (request.nextUrl.pathname.startsWith('/admin')) {
@@ -78,7 +76,7 @@ export async function updateSession(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['admin', 'superadmin', 'moderator'].includes(profile.role)) {
+    if (!profile || !['admin', 'superadmin', 'moderator', 'bj'].includes(profile.role)) {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }

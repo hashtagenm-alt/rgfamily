@@ -289,3 +289,37 @@
     display: none;
   }
 }
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .header {
+    padding: 3rem 1rem 1.5rem;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .header p {
+    font-size: 0.8rem;
+  }
+
+  .postTitle {
+    font-size: 0.9rem;
+    word-break: keep-all;
+  }
+
+  .postAuthor,
+  .postDate,
+  .postViews {
+    font-size: 0.75rem;
+  }
+
+  .writeBtn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+}

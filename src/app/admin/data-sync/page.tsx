@@ -1,18 +1,20 @@
 'use client'
 
-import { useCallback, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Upload,
-  FileText,
   CheckCircle,
   XCircle,
   AlertTriangle,
   RefreshCw,
-  Download,
   Trash2,
 } from 'lucide-react'
-import { useSupabaseContext } from '@/lib/context'
+import {
+  getDataSyncMetadata,
+  getEpisodesForSeason,
+  bulkInsertContributions,
+  bulkInsertPrizePenalties,
+} from '@/lib/actions/data-sync'
 import styles from './page.module.css'
 
 type UploadType = 'contribution' | 'prize_penalty'
@@ -35,8 +37,12 @@ interface UploadResult {
   errors: string[]
 }
 
+interface BjMember {
+  id: number
+  name: string
+}
+
 export default function DataSyncPage() {
-  const supabase = useSupabaseContext()
   const [uploadType, setUploadType] = useState<UploadType>('contribution')
   const [status, setStatus] = useState<UploadStatus>('idle')
   const [parsedData, setParsedData] = useState<ParsedRow[]>([])
@@ -46,65 +52,41 @@ export default function DataSyncPage() {
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null)
   const [episodes, setEpisodes] = useState<Array<{ id: number; episode_number: number; title: string }>>([])
   const [seasons, setSeasons] = useState<Array<{ id: number; name: string; is_active: boolean }>>([])
+  const [bjMembers, setBjMembers] = useState<BjMember[]>([])
   const [isDragging, setIsDragging] = useState(false)
 
-  // 시즌/에피소드 데이터 로드
+  // 시즌/에피소드/BJ멤버 데이터 로드
   const loadMetadata = useCallback(async () => {
-    const { data: seasonsData } = await supabase
-      .from('seasons')
-      .select('id, name, is_active')
-      .order('id', { ascending: false })
+    const { data, error } = await getDataSyncMetadata()
+    if (error || !data) return
 
-    if (seasonsData) {
-      setSeasons(seasonsData)
-      const activeSeason = seasonsData.find(s => s.is_active)
-      if (activeSeason) {
-        setSelectedSeasonId(activeSeason.id)
-
-        const { data: episodesData } = await supabase
-          .from('episodes')
-          .select('id, episode_number, title')
-          .eq('season_id', activeSeason.id)
-          .order('episode_number', { ascending: false })
-
-        if (episodesData) {
-          setEpisodes(episodesData)
-        }
-      }
+    setSeasons(data.seasons)
+    setEpisodes(data.episodes)
+    setBjMembers(data.bjMembers)
+    if (data.activeSeasonId) {
+      setSelectedSeasonId(data.activeSeasonId)
     }
-  }, [supabase])
+  }, [])
 
   // 시즌 변경 시 에피소드 로드
   const handleSeasonChange = async (seasonId: number) => {
     setSelectedSeasonId(seasonId)
     setSelectedEpisodeId(null)
 
-    const { data: episodesData } = await supabase
-      .from('episodes')
-      .select('id, episode_number, title')
-      .eq('season_id', seasonId)
-      .order('episode_number', { ascending: false })
-
-    if (episodesData) {
-      setEpisodes(episodesData)
+    const { data, error } = await getEpisodesForSeason(seasonId)
+    if (!error && data) {
+      setEpisodes(data)
     }
   }
 
-  // CSV 파싱
-  const parseCSV = useCallback(async (content: string): Promise<ParsedRow[]> => {
+  // CSV 파싱 (클라이언트 사이드 - BJ 매칭은 로컬 메모리의 bjMembers 사용)
+  const parseCSV = useCallback((content: string): ParsedRow[] => {
     const lines = content.trim().split('\n')
     if (lines.length < 2) {
       throw new Error('CSV 파일에 데이터가 없습니다.')
     }
 
-    // BJ 멤버 목록 조회
-    const { data: bjMembers } = await supabase
-      .from('organization')
-      .select('id, name')
-      .neq('role', '대표')
-      .eq('is_active', true)
-
-    const bjMap = new Map(bjMembers?.map(bj => [bj.name.toLowerCase(), bj.id]) || [])
+    const bjMap = new Map(bjMembers.map(bj => [bj.name.toLowerCase(), bj.id]))
 
     const header = lines[0].split(',').map(h => h.trim().toLowerCase())
     const rows: ParsedRow[] = []
@@ -127,17 +109,17 @@ export default function DataSyncPage() {
       const bjMemberId = bjMap.get(bjName.toLowerCase())
 
       let isValid = true
-      let errorMessage = ''
+      let rowError = ''
 
       if (!bjName) {
         isValid = false
-        errorMessage = 'BJ 이름이 비어있습니다.'
+        rowError = 'BJ 이름이 비어있습니다.'
       } else if (!bjMemberId) {
         isValid = false
-        errorMessage = `BJ "${bjName}"를 찾을 수 없습니다.`
+        rowError = `BJ "${bjName}"를 찾을 수 없습니다.`
       } else if (isNaN(amount)) {
         isValid = false
-        errorMessage = '금액이 올바르지 않습니다.'
+        rowError = '금액이 올바르지 않습니다.'
       }
 
       let type: 'prize' | 'penalty' | undefined
@@ -159,13 +141,13 @@ export default function DataSyncPage() {
         reason,
         type,
         isValid,
-        errorMessage,
+        errorMessage: rowError,
         bjMemberId,
       })
     }
 
     return rows
-  }, [supabase, uploadType])
+  }, [bjMembers, uploadType])
 
   // 파일 드롭 처리
   const handleDrop = useCallback(async (e: React.DragEvent) => {
@@ -186,7 +168,7 @@ export default function DataSyncPage() {
 
     try {
       const content = await file.text()
-      const parsed = await parseCSV(content)
+      const parsed = parseCSV(content)
       setParsedData(parsed)
       setStatus('preview')
     } catch (err) {
@@ -211,7 +193,7 @@ export default function DataSyncPage() {
 
     try {
       const content = await file.text()
-      const parsed = await parseCSV(content)
+      const parsed = parseCSV(content)
       setParsedData(parsed)
       setStatus('preview')
     } catch (err) {
@@ -229,57 +211,50 @@ export default function DataSyncPage() {
     }
 
     setStatus('uploading')
-    const uploadResult: UploadResult = { total: validRows.length, success: 0, failed: 0, errors: [] }
 
-    for (const row of validRows) {
-      try {
-        if (uploadType === 'contribution') {
-          // 현재 잔액 조회
-          const { data: currentBj } = await supabase
-            .from('organization')
-            .select('total_contribution, season_contribution')
-            .eq('id', row.bjMemberId)
-            .single()
+    if (uploadType === 'contribution') {
+      const { data, error } = await bulkInsertContributions(
+        validRows.map(row => ({
+          bjMemberId: row.bjMemberId!,
+          bjName: row.bjName,
+          amount: row.amount,
+          reason: row.reason,
+        })),
+        selectedSeasonId,
+        selectedEpisodeId
+      )
 
-          const balanceAfter = (currentBj?.season_contribution || 0) + row.amount
-
-          // 기여도 로그 추가
-          const { error } = await supabase.from('contribution_logs').insert({
-            bj_member_id: row.bjMemberId!,
-            episode_id: selectedEpisodeId,
-            season_id: selectedSeasonId,
-            amount: row.amount,
-            reason: row.reason || 'CSV 일괄 업로드',
-            balance_after: balanceAfter,
-            event_type: 'csv_upload',
-          })
-
-          if (error) throw error
-        } else {
-          // 상벌금 추가
-          const { error } = await supabase.from('prize_penalties').insert({
-            bj_member_id: row.bjMemberId!,
-            episode_id: selectedEpisodeId,
-            season_id: selectedSeasonId,
-            type: row.type!,
-            amount: row.amount,
-            description: row.reason || 'CSV 일괄 업로드',
-            is_paid: false,
-          })
-
-          if (error) throw error
-        }
-
-        uploadResult.success++
-      } catch (err) {
-        uploadResult.failed++
-        uploadResult.errors.push(`${row.bjName}: ${err instanceof Error ? err.message : '알 수 없는 오류'}`)
+      if (error) {
+        setErrorMessage(error)
+        setStatus('error')
+        return
       }
+
+      setResult(data)
+    } else {
+      const { data, error } = await bulkInsertPrizePenalties(
+        validRows.map(row => ({
+          bjMemberId: row.bjMemberId!,
+          bjName: row.bjName,
+          amount: row.amount,
+          type: row.type!,
+          reason: row.reason,
+        })),
+        selectedSeasonId,
+        selectedEpisodeId
+      )
+
+      if (error) {
+        setErrorMessage(error)
+        setStatus('error')
+        return
+      }
+
+      setResult(data)
     }
 
-    setResult(uploadResult)
     setStatus('success')
-  }, [parsedData, uploadType, selectedEpisodeId, selectedSeasonId, supabase])
+  }, [parsedData, uploadType, selectedEpisodeId, selectedSeasonId])
 
   // 초기화
   const handleReset = () => {
@@ -290,9 +265,9 @@ export default function DataSyncPage() {
   }
 
   // 초기 로드
-  useState(() => {
+  useEffect(() => {
     loadMetadata()
-  })
+  }, [loadMetadata])
 
   return (
     <div className={styles.page}>

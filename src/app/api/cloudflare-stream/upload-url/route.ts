@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createDirectUpload } from '@/lib/cloudflare'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       uid: result.uid,
     })
   } catch (error) {
-    console.error('Cloudflare Stream upload URL error:', error)
+    logger.apiError('/api/cloudflare-stream/upload-url', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '업로드 URL 발급 실패' },
       { status: 500 }

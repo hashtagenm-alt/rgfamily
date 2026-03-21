@@ -15,70 +15,63 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { DataTable, Column } from '@/components/admin'
-import { useSupabaseContext } from '@/lib/context'
+import {
+  getAllBanners,
+  createBanner,
+  updateBanner,
+  deleteBanner as deleteBannerAction,
+  toggleBannerActive,
+} from '@/lib/actions/banners'
+import type { Banner } from '@/types/database'
 import { useAlert } from '@/lib/hooks'
+import { logger } from '@/lib/utils/logger'
 import styles from '../shared.module.css'
 import bannerStyles from './page.module.css'
 
-interface Banner {
-  id: number
+interface BannerFormData {
+  id?: number
   title: string
-  imageUrl: string
-  linkUrl: string | null
-  displayOrder: number
-  isActive: boolean
-  createdAt: string
+  image_url: string
+  link_url: string | null
+  display_order: number
+  is_active: boolean
 }
 
 export default function BannersPage() {
-  const supabase = useSupabaseContext()
   const { showConfirm, showError } = useAlert()
   const [banners, setBanners] = useState<Banner[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingBanner, setEditingBanner] = useState<Partial<Banner> | null>(null)
+  const [editingBanner, setEditingBanner] = useState<BannerFormData | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const fetchBanners = useCallback(async () => {
     setIsLoading(true)
 
-    const { data, error } = await supabase
-      .from('banners')
-      .select('*')
-      .order('display_order', { ascending: true })
+    const result = await getAllBanners()
 
-    if (error) {
-      console.error('배너 데이터 로드 실패:', error)
+    if (result.error) {
+      logger.dbError('select', 'banners', result.error)
     } else {
-      setBanners(
-        (data || []).map((b) => ({
-          id: b.id,
-          title: b.title || '',
-          imageUrl: b.image_url,
-          linkUrl: b.link_url,
-          displayOrder: b.display_order,
-          isActive: b.is_active,
-          createdAt: b.created_at,
-        }))
-      )
+      setBanners(result.data || [])
     }
 
     setIsLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchBanners()
   }, [fetchBanners])
 
   const handleAdd = () => {
-    const maxOrder = Math.max(0, ...banners.map(b => b.displayOrder))
+    const maxOrder = Math.max(0, ...banners.map(b => b.display_order))
     setEditingBanner({
       title: '',
-      imageUrl: '',
-      linkUrl: '',
-      displayOrder: maxOrder + 1,
-      isActive: true,
+      image_url: '',
+      link_url: '',
+      display_order: maxOrder + 1,
+      is_active: true,
     })
     setIsNew(true)
     setPreviewUrl(null)
@@ -86,9 +79,16 @@ export default function BannersPage() {
   }
 
   const handleEdit = (banner: Banner) => {
-    setEditingBanner(banner)
+    setEditingBanner({
+      id: banner.id,
+      title: banner.title || '',
+      image_url: banner.image_url,
+      link_url: banner.link_url,
+      display_order: banner.display_order,
+      is_active: banner.is_active,
+    })
     setIsNew(false)
-    setPreviewUrl(banner.imageUrl)
+    setPreviewUrl(banner.image_url)
     setIsModalOpen(true)
   }
 
@@ -101,10 +101,10 @@ export default function BannersPage() {
     })
     if (!confirmed) return
 
-    const { error } = await supabase.from('banners').delete().eq('id', banner.id)
+    const result = await deleteBannerAction(banner.id)
 
-    if (error) {
-      console.error('배너 삭제 실패:', error)
+    if (result.error) {
+      logger.dbError('delete', 'banners', result.error)
       showError('삭제에 실패했습니다.')
     } else {
       fetchBanners()
@@ -112,13 +112,10 @@ export default function BannersPage() {
   }
 
   const handleToggleActive = async (banner: Banner) => {
-    const { error } = await supabase
-      .from('banners')
-      .update({ is_active: !banner.isActive })
-      .eq('id', banner.id)
+    const result = await toggleBannerActive(banner.id, !banner.is_active)
 
-    if (error) {
-      console.error('배너 상태 변경 실패:', error)
+    if (result.error) {
+      logger.dbError('update', 'banners', result.error)
       showError('상태 변경에 실패했습니다.')
     } else {
       fetchBanners()
@@ -126,39 +123,36 @@ export default function BannersPage() {
   }
 
   const handleSave = async () => {
-    if (!editingBanner || !editingBanner.imageUrl) {
+    if (!editingBanner || !editingBanner.image_url) {
       showError('이미지 URL을 입력해주세요.', '입력 오류')
       return
     }
 
     if (isNew) {
-      const { error } = await supabase.from('banners').insert({
+      const result = await createBanner({
         title: editingBanner.title || null,
-        image_url: editingBanner.imageUrl,
-        link_url: editingBanner.linkUrl || null,
-        display_order: editingBanner.displayOrder,
-        is_active: editingBanner.isActive ?? true,
+        image_url: editingBanner.image_url,
+        link_url: editingBanner.link_url || null,
+        display_order: editingBanner.display_order,
+        is_active: editingBanner.is_active ?? true,
       })
 
-      if (error) {
-        console.error('배너 등록 실패:', error)
+      if (result.error) {
+        logger.dbError('insert', 'banners', result.error)
         showError('등록에 실패했습니다.')
         return
       }
     } else {
-      const { error } = await supabase
-        .from('banners')
-        .update({
-          title: editingBanner.title || null,
-          image_url: editingBanner.imageUrl,
-          link_url: editingBanner.linkUrl || null,
-          display_order: editingBanner.displayOrder,
-          is_active: editingBanner.isActive,
-        })
-        .eq('id', editingBanner.id!)
+      const result = await updateBanner(editingBanner.id!, {
+        title: editingBanner.title || null,
+        image_url: editingBanner.image_url,
+        link_url: editingBanner.link_url || null,
+        display_order: editingBanner.display_order,
+        is_active: editingBanner.is_active,
+      })
 
-      if (error) {
-        console.error('배너 수정 실패:', error)
+      if (result.error) {
+        logger.dbError('update', 'banners', result.error)
         showError('수정에 실패했습니다.')
         return
       }
@@ -171,31 +165,31 @@ export default function BannersPage() {
   }
 
   const handleImageUrlChange = (url: string) => {
-    setEditingBanner(prev => ({ ...prev, imageUrl: url }))
+    setEditingBanner(prev => prev ? { ...prev, image_url: url } : null)
     setPreviewUrl(url)
   }
 
   const columns: Column<Banner>[] = [
     {
-      key: 'displayOrder',
+      key: 'display_order',
       header: '순서',
       width: '60px',
       render: (banner) => (
         <div className={bannerStyles.orderCell}>
           <GripVertical size={14} />
-          <span>{banner.displayOrder}</span>
+          <span>{banner.display_order}</span>
         </div>
       ),
     },
     {
-      key: 'imageUrl',
+      key: 'image_url',
       header: '미리보기',
       width: '120px',
       render: (banner) => (
         <div className={bannerStyles.previewCell}>
-          {banner.imageUrl ? (
+          {banner.image_url ? (
             <Image
-              src={banner.imageUrl}
+              src={banner.image_url}
               alt={banner.title || '배너'}
               width={100}
               height={50}
@@ -215,25 +209,25 @@ export default function BannersPage() {
       render: (banner) => banner.title || '-',
     },
     {
-      key: 'linkUrl',
+      key: 'link_url',
       header: '링크',
       render: (banner) =>
-        banner.linkUrl ? (
+        banner.link_url ? (
           <a
-            href={banner.linkUrl}
+            href={banner.link_url}
             target="_blank"
             rel="noopener noreferrer"
             className={bannerStyles.link}
           >
             <LinkIcon size={14} />
-            <span>{banner.linkUrl.length > 30 ? `${banner.linkUrl.slice(0, 30)}...` : banner.linkUrl}</span>
+            <span>{banner.link_url.length > 30 ? `${banner.link_url.slice(0, 30)}...` : banner.link_url}</span>
           </a>
         ) : (
           '-'
         ),
     },
     {
-      key: 'isActive',
+      key: 'is_active',
       header: '상태',
       width: '80px',
       render: (banner) => (
@@ -242,10 +236,10 @@ export default function BannersPage() {
             e.stopPropagation()
             handleToggleActive(banner)
           }}
-          className={`${bannerStyles.statusButton} ${banner.isActive ? bannerStyles.active : bannerStyles.inactive}`}
+          className={`${bannerStyles.statusButton} ${banner.is_active ? bannerStyles.active : bannerStyles.inactive}`}
         >
-          {banner.isActive ? <Eye size={14} /> : <EyeOff size={14} />}
-          <span>{banner.isActive ? '활성' : '비활성'}</span>
+          {banner.is_active ? <Eye size={14} /> : <EyeOff size={14} />}
+          <span>{banner.is_active ? '활성' : '비활성'}</span>
         </button>
       ),
     },
@@ -343,7 +337,7 @@ export default function BannersPage() {
                   </label>
                   <input
                     type="url"
-                    value={editingBanner.imageUrl || ''}
+                    value={editingBanner.image_url || ''}
                     onChange={(e) => handleImageUrlChange(e.target.value)}
                     placeholder="https://example.com/banner.jpg"
                     className={styles.input}
@@ -367,9 +361,9 @@ export default function BannersPage() {
                   <label className={styles.label}>링크 URL (선택)</label>
                   <input
                     type="url"
-                    value={editingBanner.linkUrl || ''}
+                    value={editingBanner.link_url || ''}
                     onChange={(e) =>
-                      setEditingBanner({ ...editingBanner, linkUrl: e.target.value })
+                      setEditingBanner({ ...editingBanner, link_url: e.target.value })
                     }
                     placeholder="https://example.com"
                     className={styles.input}
@@ -380,11 +374,11 @@ export default function BannersPage() {
                   <label className={styles.label}>표시 순서</label>
                   <input
                     type="number"
-                    value={editingBanner.displayOrder || 0}
+                    value={editingBanner.display_order || 0}
                     onChange={(e) =>
                       setEditingBanner({
                         ...editingBanner,
-                        displayOrder: parseInt(e.target.value) || 0,
+                        display_order: parseInt(e.target.value) || 0,
                       })
                     }
                     min="0"
@@ -397,11 +391,11 @@ export default function BannersPage() {
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
-                      checked={editingBanner.isActive ?? true}
+                      checked={editingBanner.is_active ?? true}
                       onChange={(e) =>
                         setEditingBanner({
                           ...editingBanner,
-                          isActive: e.target.checked,
+                          is_active: e.target.checked,
                         })
                       }
                       className={styles.checkbox}

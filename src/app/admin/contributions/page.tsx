@@ -8,50 +8,24 @@ import {
   Minus,
   RefreshCw,
   Search,
-  Filter,
   History,
 } from 'lucide-react'
-import { useSupabaseContext } from '@/lib/context'
 import { useAlert } from '@/lib/hooks/useAlert'
+import {
+  getContributionOverview,
+  adjustContribution,
+  type BjMember,
+  type ContributionLog,
+  type ContributionEpisode,
+} from '@/lib/actions/contributions'
 import styles from './page.module.css'
 
-// BJ 멤버 타입
-interface BjMember {
-  id: number
-  name: string
-  unit: 'excel' | 'crew'
-  total_contribution: number
-  season_contribution: number
-}
-
-// 기여도 로그 타입
-interface ContributionLog {
-  id: number
-  bj_member_id: number
-  bj_member?: { name: string }
-  episode_id: number | null
-  episode?: { episode_number: number; title: string }
-  amount: number
-  reason: string
-  balance_after: number
-  event_type: string | null
-  created_at: string
-}
-
-// 에피소드 타입
-interface Episode {
-  id: number
-  episode_number: number
-  title: string
-}
-
 export default function ContributionsPage() {
-  const supabase = useSupabaseContext()
   const { showError, showSuccess } = useAlert()
 
   const [bjMembers, setBjMembers] = useState<BjMember[]>([])
   const [logs, setLogs] = useState<ContributionLog[]>([])
-  const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [episodes, setEpisodes] = useState<ContributionEpisode[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // 필터
@@ -70,67 +44,18 @@ export default function ContributionsPage() {
   const fetchData = useCallback(async () => {
     setIsLoading(true)
 
-    try {
-      // BJ 멤버 목록
-      const { data: bjData, error: bjError } = await supabase
-        .from('organization')
-        .select('id, name, unit, total_contribution, season_contribution')
-        .neq('role', '대표')
-        .eq('is_active', true)
-        .order('season_contribution', { ascending: false })
+    const result = await getContributionOverview()
 
-      if (bjError) throw bjError
-      setBjMembers((bjData || []).map(bj => ({
-        ...bj,
-        total_contribution: bj.total_contribution || 0,
-        season_contribution: bj.season_contribution || 0,
-      })))
-
-      // 기여도 로그
-      const { data: logsData } = await supabase
-        .from('contribution_logs')
-        .select(`
-          *,
-          organization:bj_member_id(name),
-          episodes:episode_id(episode_number, title)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100)
-
-      if (logsData) {
-        setLogs(logsData.map(log => ({
-          ...log,
-          bj_member: log.organization as { name: string } | undefined,
-          episode: log.episodes as Episode | undefined,
-        })))
-      }
-
-      // 에피소드 목록
-      const { data: seasonData } = await supabase
-        .from('seasons')
-        .select('id')
-        .eq('is_active', true)
-        .single()
-
-      if (seasonData) {
-        const { data: episodesData } = await supabase
-          .from('episodes')
-          .select('id, episode_number, title')
-          .eq('season_id', seasonData.id)
-          .order('episode_number', { ascending: false })
-
-        if (episodesData) {
-          setEpisodes(episodesData)
-        }
-      }
-
-    } catch (err) {
-      console.error('데이터 로드 실패:', err)
-      showError('데이터 로드에 실패했습니다.')
+    if (result.error) {
+      showError(result.error)
+    } else if (result.data) {
+      setBjMembers(result.data.bjMembers)
+      setLogs(result.data.logs)
+      setEpisodes(result.data.episodes)
     }
 
     setIsLoading(false)
-  }, [supabase, showError])
+  }, [showError])
 
   useEffect(() => {
     fetchData()
@@ -143,35 +68,20 @@ export default function ContributionsPage() {
       return
     }
 
-    try {
-      const actualAmount = editModal.isAdding ? editModal.amount : -editModal.amount
-      const newBalance = editModal.bj.season_contribution + actualAmount
+    const actualAmount = editModal.isAdding ? editModal.amount : -editModal.amount
 
-      // 현재 시즌 조회
-      const { data: seasonData } = await supabase
-        .from('seasons')
-        .select('id')
-        .eq('is_active', true)
-        .single()
+    const result = await adjustContribution(
+      editModal.bj.id,
+      actualAmount,
+      editModal.reason
+    )
 
-      // 기여도 로그 추가
-      const { error: logError } = await supabase.from('contribution_logs').insert({
-        bj_member_id: editModal.bj.id,
-        season_id: seasonData?.id,
-        amount: actualAmount,
-        reason: editModal.reason,
-        balance_after: newBalance,
-        event_type: 'manual',
-      })
-
-      if (logError) throw logError
-
+    if (result.error) {
+      showError(result.error)
+    } else {
       showSuccess(`${editModal.bj.name}의 기여도가 ${editModal.isAdding ? '추가' : '차감'}되었습니다.`)
       setEditModal({ bj: null, amount: 0, reason: '', isAdding: true })
       fetchData()
-    } catch (err) {
-      console.error('기여도 수정 실패:', err)
-      showError('기여도 수정에 실패했습니다.')
     }
   }
 

@@ -37,37 +37,38 @@ export async function updateSeasonRanking(
     donation_count?: number
   }
 ): Promise<ActionResult<SeasonDonationRanking>> {
-  return adminAction(async (supabase) => {
-    const { data: ranking, error } = await supabase
-      .from('season_donation_rankings')
-      .update({
-        ...data,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .select()
-      .single()
+  return adminAction(
+    async (supabase) => {
+      const { data: ranking, error } = await supabase
+        .from('season_donation_rankings')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single()
 
-    if (error) throw new Error(error.message)
-    return ranking
-  }, ['/admin/donation-rankings', '/ranking'])
+      if (error) throw new Error(error.message)
+      return ranking
+    },
+    ['/admin/donation-rankings', '/ranking']
+  )
 }
 
 /**
  * 시즌 랭킹 삭제
  */
-export async function deleteSeasonRanking(
-  id: number
-): Promise<ActionResult<null>> {
-  return adminAction(async (supabase) => {
-    const { error } = await supabase
-      .from('season_donation_rankings')
-      .delete()
-      .eq('id', id)
+export async function deleteSeasonRanking(id: number): Promise<ActionResult<null>> {
+  return adminAction(
+    async (supabase) => {
+      const { error } = await supabase.from('season_donation_rankings').delete().eq('id', id)
 
-    if (error) throw new Error(error.message)
-    return null
-  }, ['/admin/donation-rankings', '/ranking'])
+      if (error) throw new Error(error.message)
+      return null
+    },
+    ['/admin/donation-rankings', '/ranking']
+  )
 }
 
 /**
@@ -83,32 +84,25 @@ export async function bulkReplaceSeasonRankings(
     donation_count?: number
   }>
 ): Promise<ActionResult<{ insertedCount: number }>> {
-  return adminAction(async (supabase) => {
-    // 1. 기존 시즌 랭킹 삭제
-    const { error: deleteError } = await supabase
-      .from('season_donation_rankings')
-      .delete()
-      .eq('season_id', seasonId)
+  return adminAction(
+    async (supabase) => {
+      // 원자적 DELETE + INSERT (트랜잭션 보장, 데이터 유실 방지)
+      const { data: insertedCount, error } = await supabase.rpc('atomic_replace_season_rankings', {
+        p_season_id: seasonId,
+        p_rankings: rankings.map((r) => ({
+          rank: r.rank,
+          donor_name: r.donor_name,
+          total_amount: r.total_amount,
+          donation_count: r.donation_count || 0,
+        })),
+      })
 
-    if (deleteError) throw new Error(`삭제 실패: ${deleteError.message}`)
+      if (error) throw new Error(`랭킹 교체 실패: ${error.message}`)
 
-    // 2. 새 랭킹 삽입
-    const dataToInsert = rankings.map((r) => ({
-      season_id: seasonId,
-      rank: r.rank,
-      donor_name: r.donor_name,
-      total_amount: r.total_amount,
-      donation_count: r.donation_count || 0,
-    }))
-
-    const { error: insertError } = await supabase
-      .from('season_donation_rankings')
-      .insert(dataToInsert)
-
-    if (insertError) throw new Error(`삽입 실패: ${insertError.message}`)
-
-    return { insertedCount: rankings.length }
-  }, ['/admin/donation-rankings', '/ranking'])
+      return { insertedCount: insertedCount ?? rankings.length }
+    },
+    ['/admin/donation-rankings', '/ranking']
+  )
 }
 
 // ===========================================
@@ -142,37 +136,38 @@ export async function updateTotalRanking(
     is_permanent_vip?: boolean
   }
 ): Promise<ActionResult<TotalDonationRanking>> {
-  return adminAction(async (supabase) => {
-    const { data: ranking, error } = await supabase
-      .from('total_donation_rankings')
-      .update({
-        ...data,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .select()
-      .single()
+  return adminAction(
+    async (supabase) => {
+      const { data: ranking, error } = await supabase
+        .from('total_donation_rankings')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single()
 
-    if (error) throw new Error(error.message)
-    return ranking
-  }, ['/admin/donation-rankings', '/ranking'])
+      if (error) throw new Error(error.message)
+      return ranking
+    },
+    ['/admin/donation-rankings', '/ranking']
+  )
 }
 
 /**
  * 종합 랭킹 삭제
  */
-export async function deleteTotalRanking(
-  id: number
-): Promise<ActionResult<null>> {
-  return adminAction(async (supabase) => {
-    const { error } = await supabase
-      .from('total_donation_rankings')
-      .delete()
-      .eq('id', id)
+export async function deleteTotalRanking(id: number): Promise<ActionResult<null>> {
+  return adminAction(
+    async (supabase) => {
+      const { error } = await supabase.from('total_donation_rankings').delete().eq('id', id)
 
-    if (error) throw new Error(error.message)
-    return null
-  }, ['/admin/donation-rankings', '/ranking'])
+      if (error) throw new Error(error.message)
+      return null
+    },
+    ['/admin/donation-rankings', '/ranking']
+  )
 }
 
 /**
@@ -186,31 +181,91 @@ export async function bulkReplaceTotalRankings(
     is_permanent_vip?: boolean
   }>
 ): Promise<ActionResult<{ insertedCount: number }>> {
-  return adminAction(async (supabase) => {
-    // 1. 기존 종합 랭킹 전체 삭제
-    const { error: deleteError } = await supabase
-      .from('total_donation_rankings')
-      .delete()
-      .neq('id', 0) // 모든 행 삭제
+  return adminAction(
+    async (supabase) => {
+      // 원자적 DELETE + INSERT (트랜잭션 보장, 데이터 유실 방지)
+      const { data: insertedCount, error } = await supabase.rpc('atomic_replace_total_rankings', {
+        p_rankings: rankings.map((r) => ({
+          rank: r.rank,
+          donor_name: r.donor_name,
+          total_amount: r.total_amount,
+          is_permanent_vip: r.is_permanent_vip || false,
+        })),
+      })
 
-    if (deleteError) throw new Error(`삭제 실패: ${deleteError.message}`)
+      if (error) throw new Error(`랭킹 교체 실패: ${error.message}`)
 
-    // 2. 새 랭킹 삽입
-    const dataToInsert = rankings.map((r) => ({
-      rank: r.rank,
-      donor_name: r.donor_name,
-      total_amount: r.total_amount,
-      is_permanent_vip: r.is_permanent_vip || false,
-    }))
+      return { insertedCount: insertedCount ?? rankings.length }
+    },
+    ['/admin/donation-rankings', '/ranking']
+  )
+}
 
-    const { error: insertError } = await supabase
-      .from('total_donation_rankings')
-      .insert(dataToInsert)
+// ===========================================
+// 공개 랭킹 조회 Actions (인증 불필요)
+// ===========================================
 
-    if (insertError) throw new Error(`삽입 실패: ${insertError.message}`)
+export interface PublicTotalRankingItem {
+  rank: number
+  donor_name: string
+  viewer_score: number
+  donation_count: number
+  top_bj: string | null
+  profile_id: string | null
+  avatar_url: string | null
+  is_vip_clickable: boolean
+}
 
-    return { insertedCount: rankings.length }
-  }, ['/admin/donation-rankings', '/ranking'])
+/**
+ * 총 후원 랭킹 공개 조회 (total_rankings_public View)
+ * 보안: total_amount 미노출, viewer_score만 제공
+ */
+export async function getPublicTotalRankings(
+  limit: number = 60
+): Promise<ActionResult<PublicTotalRankingItem[]>> {
+  return publicAction(async (supabase) => {
+    const { data, error } = await supabase
+      .from('total_rankings_public')
+      .select(
+        'rank, donor_name, viewer_score, donation_count, top_bj, profile_id, avatar_url, is_vip_clickable'
+      )
+      .order('rank', { ascending: true })
+      .limit(limit)
+
+    if (error) throw new Error(error.message)
+    return (data || []) as PublicTotalRankingItem[]
+  })
+}
+
+export interface PublicSeasonRankingItem {
+  rank: number
+  donor_name: string
+}
+
+/**
+ * 시즌 랭킹 공개 조회 (season_rankings_public View)
+ * 랭킹 페이지에서 듀얼 랭킹 표시용
+ */
+export async function getPublicSeasonRankings(
+  seasonId: number,
+  limit: number = 50,
+  unit?: 'excel' | 'crew'
+): Promise<ActionResult<PublicSeasonRankingItem[]>> {
+  return publicAction(async (supabase) => {
+    let query = supabase
+      .from('season_rankings_public')
+      .select('rank, donor_name')
+      .eq('season_id', seasonId)
+
+    if (unit) {
+      query = query.eq('unit', unit)
+    }
+
+    const { data, error } = await query.order('rank', { ascending: true }).limit(limit)
+
+    if (error) throw new Error(error.message)
+    return (data || []) as PublicSeasonRankingItem[]
+  })
 }
 
 // ===========================================

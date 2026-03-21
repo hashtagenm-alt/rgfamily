@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSupabaseContext } from '@/lib/context'
+import { logger } from '@/lib/utils/logger'
 
 // DB에서 가져온 이벤트 타입
 export interface ScheduleEventType {
@@ -70,7 +71,7 @@ export function useScheduleEventTypes(): UseScheduleEventTypesReturn {
     } catch (err) {
       const message = err instanceof Error ? err.message : '이벤트 타입을 불러오는데 실패했습니다'
       setError(message)
-      console.error('schedule_event_types 로드 실패:', err)
+      logger.dbError('select', 'schedule_event_types', err)
     } finally {
       setIsLoading(false)
     }

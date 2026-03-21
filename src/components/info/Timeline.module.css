@@ -80,11 +80,7 @@
 }
 
 .seasonButton.active {
-  background: linear-gradient(
-    135deg,
-    rgba(212, 175, 55, 0.15) 0%,
-    rgba(212, 175, 55, 0.05) 100%
-  );
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
   border-color: var(--metallic-gold-border);
   color: var(--metallic-gold);
   box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
@@ -117,7 +113,8 @@
   );
   border-color: var(--category-color, var(--color-primary));
   color: var(--category-color, var(--text-primary));
-  box-shadow: 0 4px 15px color-mix(in srgb, var(--category-color, var(--color-primary)) 20%, transparent);
+  box-shadow: 0 4px 15px
+    color-mix(in srgb, var(--category-color, var(--color-primary)) 20%, transparent);
 }
 
 /* Time Filter Buttons */
@@ -146,18 +143,18 @@
   box-shadow: var(--shadow-sm);
 }
 
-:global([data-theme="light"]) .timeButton {
+:global([data-theme='light']) .timeButton {
   border-color: rgba(0, 0, 0, 0.1);
   color: #666666;
 }
 
-:global([data-theme="light"]) .timeButton:hover {
+:global([data-theme='light']) .timeButton:hover {
   border-color: #71717a;
   color: #71717a;
   background: var(--overlay-subtle);
 }
 
-:global([data-theme="light"]) .timeButton.active {
+:global([data-theme='light']) .timeButton.active {
   background: var(--overlay-medium);
   border-color: #71717a;
   color: #71717a;
@@ -183,7 +180,8 @@
   padding: 1.5rem 2rem;
   margin: 2rem auto 3rem;
   max-width: 600px;
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     color-mix(in srgb, var(--season-color) 15%, transparent),
     color-mix(in srgb, var(--season-color) 5%, transparent)
   );
@@ -201,7 +199,9 @@
   border-radius: 20px;
   padding: 1px;
   background: linear-gradient(135deg, var(--season-color), transparent);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   mask-composite: exclude;
   pointer-events: none;
 }
@@ -213,7 +213,11 @@
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--season-color), color-mix(in srgb, var(--season-color) 70%, transparent));
+  background: linear-gradient(
+    135deg,
+    var(--season-color),
+    color-mix(in srgb, var(--season-color) 70%, transparent)
+  );
   color: white;
   flex-shrink: 0;
   box-shadow: 0 8px 24px color-mix(in srgb, var(--season-color) 40%, transparent);
@@ -311,13 +315,17 @@
   border-radius: 50%;
   top: 0;
   border: 3px solid var(--background);
-  box-shadow: 0 0 0 3px var(--glass-border), var(--shadow-md);
+  box-shadow:
+    0 0 0 3px var(--glass-border),
+    var(--shadow-md);
   z-index: 1;
   transition: all 0.3s ease;
 }
 
 .event:hover .dot {
-  box-shadow: 0 0 0 4px var(--card-border), var(--shadow-lg);
+  box-shadow:
+    0 0 0 4px var(--card-border),
+    var(--shadow-lg);
   transform: scale(1.2);
 }
 
@@ -419,7 +427,8 @@
 }
 
 @keyframes upcomingPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.3);
   }
   50% {
@@ -427,7 +436,7 @@
   }
 }
 
-:global([data-theme="light"]) .upcomingBadge {
+:global([data-theme='light']) .upcomingBadge {
   background: var(--overlay-medium);
   border-color: rgba(59, 130, 246, 0.3);
   color: #2563eb;
@@ -559,15 +568,15 @@
   font-weight: 500;
 }
 
-:global([data-theme="light"]) .loadingMore {
+:global([data-theme='light']) .loadingMore {
   color: #666666;
 }
 
-:global([data-theme="light"]) .spinnerIcon {
+:global([data-theme='light']) .spinnerIcon {
   color: var(--color-primary);
 }
 
-:global([data-theme="light"]) .endText {
+:global([data-theme='light']) .endText {
   color: #888888;
 }
 
@@ -644,97 +653,147 @@
   }
 }
 
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.75rem 2rem;
+  }
+
+  .filterSection {
+    padding: var(--space-3);
+    gap: var(--space-3);
+    border-radius: var(--radius-lg);
+  }
+
+  .filterRow {
+    gap: var(--space-2);
+  }
+
+  .filterLabel {
+    font-size: var(--text-xs);
+    min-width: auto;
+  }
+
+  .seasonButton,
+  .timeButton,
+  .categoryButton {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .seasonHeader {
+    padding: 1rem;
+    margin: 1rem 0 1.5rem;
+  }
+
+  .seasonName {
+    font-size: 1rem;
+  }
+
+  .timeline {
+    padding-left: 1.5rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .description {
+    font-size: var(--text-xs);
+  }
+
+  .date {
+    font-size: var(--text-xs);
+  }
+}
+
 /* =======================================
    Light Mode Overrides
    ======================================= */
-:global([data-theme="light"]) .filterSection {
+:global([data-theme='light']) .filterSection {
   background: #ffffff;
   border-color: rgba(184, 134, 11, 0.2);
 }
 
-:global([data-theme="light"]) .filterSection::before {
+:global([data-theme='light']) .filterSection::before {
   background: linear-gradient(90deg, transparent, rgba(184, 134, 11, 0.5), transparent);
 }
 
-:global([data-theme="light"]) .filterLabel {
+:global([data-theme='light']) .filterLabel {
   color: #8b6914;
 }
 
-:global([data-theme="light"]) .seasonButton {
+:global([data-theme='light']) .seasonButton {
   border-color: rgba(0, 0, 0, 0.1);
   color: #666666;
 }
 
-:global([data-theme="light"]) .seasonButton:hover {
+:global([data-theme='light']) .seasonButton:hover {
   border-color: rgba(184, 134, 11, 0.3);
   color: #8b6914;
   background: rgba(184, 134, 11, 0.05);
 }
 
-:global([data-theme="light"]) .seasonButton.active {
-  background: linear-gradient(
-    135deg,
-    rgba(184, 134, 11, 0.1) 0%,
-    rgba(184, 134, 11, 0.05) 100%
-  );
+:global([data-theme='light']) .seasonButton.active {
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.1) 0%, rgba(184, 134, 11, 0.05) 100%);
   border-color: rgba(184, 134, 11, 0.4);
   color: #8b6914;
   box-shadow: 0 4px 20px rgba(184, 134, 11, 0.1);
 }
 
-:global([data-theme="light"]) .seasonHeader {
-  background: linear-gradient(135deg,
-    rgba(184, 134, 11, 0.08),
-    rgba(184, 134, 11, 0.03)
-  );
+:global([data-theme='light']) .seasonHeader {
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.08), rgba(184, 134, 11, 0.03));
   border-color: rgba(184, 134, 11, 0.2);
 }
 
-:global([data-theme="light"]) .seasonName {
+:global([data-theme='light']) .seasonName {
   color: #1a1a1a;
 }
 
-:global([data-theme="light"]) .seasonPeriod {
+:global([data-theme='light']) .seasonPeriod {
   color: #666666;
 }
 
-:global([data-theme="light"]) .line {
+:global([data-theme='light']) .line {
   background: rgba(184, 134, 11, 0.15);
 }
 
-:global([data-theme="light"]) .dot {
+:global([data-theme='light']) .dot {
   box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2);
 }
 
-:global([data-theme="light"]) .card {
+:global([data-theme='light']) .card {
   background: #ffffff;
   border-color: rgba(0, 0, 0, 0.08);
 }
 
-:global([data-theme="light"]) .card::before {
+:global([data-theme='light']) .card::before {
   background: linear-gradient(90deg, transparent, rgba(184, 134, 11, 0.4), transparent);
 }
 
-:global([data-theme="light"]) .card:hover {
+:global([data-theme='light']) .card:hover {
   border-color: var(--color-pink);
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.08),
     0 0 30px rgba(253, 104, 186, 0.25);
 }
 
-:global([data-theme="light"]) .title {
+:global([data-theme='light']) .title {
   color: #1a1a1a;
 }
 
-:global([data-theme="light"]) .description {
+:global([data-theme='light']) .description {
   color: #666666;
 }
 
-:global([data-theme="light"]) .date {
+:global([data-theme='light']) .date {
   color: #888888;
 }
 
-:global([data-theme="light"]) .spinner {
+:global([data-theme='light']) .spinner {
   border-color: rgba(0, 0, 0, 0.1);
   border-top-color: #b8860b;
 }
@@ -768,11 +827,11 @@
   color: var(--color-pink);
 }
 
-:global([data-theme="light"]) .viewMore {
+:global([data-theme='light']) .viewMore {
   border-top-color: rgba(0, 0, 0, 0.08);
 }
 
-:global([data-theme="light"]) .card:hover .viewMore {
+:global([data-theme='light']) .card:hover .viewMore {
   color: var(--color-pink);
 }
 
@@ -800,7 +859,9 @@
   background: var(--card-bg);
   border: 1px solid var(--metallic-gold-border);
   border-radius: var(--radius-2xl);
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(212, 175, 55, 0.1);
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(212, 175, 55, 0.1);
 }
 
 .modalClose {
@@ -891,35 +952,35 @@
 }
 
 /* Modal Light Mode */
-:global([data-theme="light"]) .modalOverlay {
+:global([data-theme='light']) .modalOverlay {
   background: rgba(0, 0, 0, 0.6);
 }
 
-:global([data-theme="light"]) .modalContent {
+:global([data-theme='light']) .modalContent {
   background: #ffffff;
   border-color: rgba(184, 134, 11, 0.3);
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
 }
 
-:global([data-theme="light"]) .modalClose {
+:global([data-theme='light']) .modalClose {
   background: rgba(0, 0, 0, 0.7);
 }
 
-:global([data-theme="light"]) .modalDate {
+:global([data-theme='light']) .modalDate {
   color: #666666;
 }
 
-:global([data-theme="light"]) .modalSeason {
+:global([data-theme='light']) .modalSeason {
   background: rgba(184, 134, 11, 0.1);
   border-color: rgba(184, 134, 11, 0.3);
   color: #8b6914;
 }
 
-:global([data-theme="light"]) .modalTitle {
+:global([data-theme='light']) .modalTitle {
   color: #1a1a1a;
 }
 
-:global([data-theme="light"]) .modalDescription {
+:global([data-theme='light']) .modalDescription {
   color: #52525b;
 }
 

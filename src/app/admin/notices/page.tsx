@@ -6,7 +6,8 @@ import { Megaphone, Plus, X, Save, Pin, GripVertical } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
 import { RichEditor } from '@/components/ui'
 import { useAdminCRUD, useAlert, useImageUpload } from '@/lib/hooks'
-import { useSupabaseContext } from '@/lib/context'
+import { updateNoticesOrder } from '@/lib/actions/notices'
+import { logger } from '@/lib/utils/logger'
 import styles from '../shared.module.css'
 
 interface Notice {
@@ -21,7 +22,6 @@ interface Notice {
 
 export default function NoticesPage() {
   const alertHandler = useAlert()
-  const supabase = useSupabaseContext()
   const [isReordering, setIsReordering] = useState(false)
 
   // 이미지 업로드 훅
@@ -89,20 +89,14 @@ export default function NoticesPage() {
         display_order: index + 1,
       }))
 
-      // 일괄 업데이트
-      for (const update of updates) {
-        const { error } = await supabase
-          .from('notices')
-          .update({ display_order: update.display_order })
-          .eq('id', update.id)
-
-        if (error) throw error
-      }
+      // 일괄 업데이트 (서버 액션)
+      const result = await updateNoticesOrder(updates)
+      if (result.error) throw new Error(result.error)
 
       alertHandler.showSuccess('순서가 저장되었습니다.')
       refetch()
     } catch (error) {
-      console.error('순서 저장 실패:', error)
+      logger.dbError('update', 'notices', error)
       alertHandler.showError('순서 저장에 실패했습니다.')
       refetch() // 원래 순서로 복원
     } finally {

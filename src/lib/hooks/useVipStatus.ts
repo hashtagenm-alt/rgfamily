@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAuthContext, useSupabaseContext } from '@/lib/context'
-import { USE_MOCK_DATA } from '@/lib/config'
 import { logger } from '@/lib/utils/logger'
 import type { Role } from '@/types/database'
 
@@ -39,14 +38,6 @@ export function useVipStatus(): VipStatusResult {
     if (!user) {
       setIsVip(false)
       setRank(null)
-      setTotalAmount(null)
-      setIsLoading(false)
-      return
-    }
-
-    if (USE_MOCK_DATA) {
-      setIsVip(true)
-      setRank(5)
       setTotalAmount(null)
       setIsLoading(false)
       return

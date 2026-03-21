@@ -12,49 +12,27 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react'
-import { useSupabaseContext } from '@/lib/context'
 import { useAlert } from '@/lib/hooks/useAlert'
+import {
+  getPrizePenalties,
+  getBjContributionStats,
+  getCurrentSeasonEpisodes,
+  createPrizePenalty,
+  markPrizePenaltyPaid,
+  deletePrizePenalty,
+  type PrizePenaltyRecord,
+  type BjContributionStat,
+  type EpisodeInfo,
+} from '@/lib/actions/prizes'
+import { logger } from '@/lib/utils/logger'
 import styles from './page.module.css'
 
-// 상벌금 기록 타입
-interface PrizePenalty {
-  id: number
-  bj_member_id: number
-  bj_member?: { name: string }
-  episode_id: number | null
-  episode?: { episode_number: number; title: string }
-  type: 'prize' | 'penalty'
-  amount: number
-  description: string | null
-  is_paid: boolean
-  paid_at: string | null
-  created_at: string
-}
-
-// BJ 멤버 타입
-interface BjMember {
-  id: number
-  name: string
-  unit: 'excel' | 'crew'
-  total_prize: number
-  total_penalty: number
-  prize_balance: number
-}
-
-// 에피소드 타입
-interface Episode {
-  id: number
-  episode_number: number
-  title: string
-}
-
 export default function PrizesPage() {
-  const supabase = useSupabaseContext()
   const { showError, showSuccess } = useAlert()
 
-  const [records, setRecords] = useState<PrizePenalty[]>([])
-  const [bjMembers, setBjMembers] = useState<BjMember[]>([])
-  const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [records, setRecords] = useState<PrizePenaltyRecord[]>([])
+  const [bjMembers, setBjMembers] = useState<BjContributionStat[]>([])
+  const [episodes, setEpisodes] = useState<EpisodeInfo[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // 필터
@@ -76,70 +54,36 @@ export default function PrizesPage() {
     setIsLoading(true)
 
     try {
-      // 상벌금 기록
-      const { data: recordsData, error: recordsError } = await supabase
-        .from('prize_penalties')
-        .select(`
-          *,
-          organization:bj_member_id(name),
-          episodes:episode_id(episode_number, title)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100)
+      const [recordsResult, bjResult, episodesResult] = await Promise.all([
+        getPrizePenalties(),
+        getBjContributionStats(),
+        getCurrentSeasonEpisodes(),
+      ])
 
-      if (recordsError) {
-        console.error('상벌금 로드 실패:', recordsError)
+      if (recordsResult.error) {
+        logger.dbError('select', 'prize_penalties', recordsResult.error)
         setRecords([])
       } else {
-        setRecords((recordsData || []).map(r => ({
-          ...r,
-          bj_member: r.organization as { name: string } | undefined,
-          episode: r.episodes as Episode | undefined,
-        })))
+        setRecords(recordsResult.data || [])
       }
 
-      // BJ 멤버
-      const { data: bjData } = await supabase
-        .from('organization')
-        .select('id, name, unit, total_prize, total_penalty, prize_balance')
-        .neq('role', '대표')
-        .eq('is_active', true)
-        .order('prize_balance', { ascending: false })
-
-      if (bjData) {
-        setBjMembers(bjData.map(bj => ({
-          ...bj,
-          total_prize: bj.total_prize || 0,
-          total_penalty: bj.total_penalty || 0,
-          prize_balance: bj.prize_balance || 0,
-        })))
+      if (bjResult.error) {
+        logger.dbError('select', 'organization', bjResult.error)
+      } else {
+        setBjMembers(bjResult.data || [])
       }
 
-      // 에피소드
-      const { data: seasonData } = await supabase
-        .from('seasons')
-        .select('id')
-        .eq('is_active', true)
-        .single()
-
-      if (seasonData) {
-        const { data: episodesData } = await supabase
-          .from('episodes')
-          .select('id, episode_number, title')
-          .eq('season_id', seasonData.id)
-          .order('episode_number', { ascending: false })
-
-        if (episodesData) {
-          setEpisodes(episodesData)
-        }
+      if (episodesResult.error) {
+        logger.dbError('select', 'episodes', episodesResult.error)
+      } else {
+        setEpisodes(episodesResult.data || [])
       }
-
     } catch (err) {
-      console.error('데이터 로드 실패:', err)
+      logger.error('데이터 로드 실패', err)
     }
 
     setIsLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchData()
@@ -153,29 +97,21 @@ export default function PrizesPage() {
     }
 
     try {
-      const { data: seasonData } = await supabase
-        .from('seasons')
-        .select('id')
-        .eq('is_active', true)
-        .single()
-
-      const { error } = await supabase.from('prize_penalties').insert({
-        bj_member_id: addModal.bjId,
-        season_id: seasonData?.id,
-        episode_id: addModal.episodeId,
+      const result = await createPrizePenalty({
+        bjId: addModal.bjId,
         type: addModal.type,
         amount: addModal.amount,
         description: addModal.description || null,
-        is_paid: false,
+        episodeId: addModal.episodeId,
       })
 
-      if (error) throw error
+      if (result.error) throw new Error(result.error)
 
       showSuccess(`${addModal.type === 'prize' ? '상금' : '벌금'}이 등록되었습니다.`)
       setAddModal({ open: false, bjId: null, type: 'prize', amount: 0, description: '', episodeId: null })
       fetchData()
     } catch (err) {
-      console.error('등록 실패:', err)
+      logger.dbError('insert', 'prize_penalties', err)
       showError('등록에 실패했습니다.')
     }
   }
@@ -183,17 +119,14 @@ export default function PrizesPage() {
   // 지급 완료 처리
   const handleMarkPaid = async (id: number) => {
     try {
-      const { error } = await supabase
-        .from('prize_penalties')
-        .update({ is_paid: true, paid_at: new Date().toISOString() })
-        .eq('id', id)
+      const result = await markPrizePenaltyPaid(id)
 
-      if (error) throw error
+      if (result.error) throw new Error(result.error)
 
       showSuccess('지급 완료 처리되었습니다.')
       fetchData()
     } catch (err) {
-      console.error('처리 실패:', err)
+      logger.dbError('update', 'prize_penalties', err)
       showError('처리에 실패했습니다.')
     }
   }
@@ -203,17 +136,14 @@ export default function PrizesPage() {
     if (!confirm('정말 삭제하시겠습니까?')) return
 
     try {
-      const { error } = await supabase
-        .from('prize_penalties')
-        .delete()
-        .eq('id', id)
+      const result = await deletePrizePenalty(id)
 
-      if (error) throw error
+      if (result.error) throw new Error(result.error)
 
       showSuccess('삭제되었습니다.')
       fetchData()
     } catch (err) {
-      console.error('삭제 실패:', err)
+      logger.dbError('delete', 'prize_penalties', err)
       showError('삭제에 실패했습니다.')
     }
   }

@@ -1,7 +1,12 @@
 'use server'
 
 import { authAction, adminAction, type ActionResult } from './index'
-import { checkOwnerOrAdminPermission, throwPermissionError } from './permissions'
+import {
+  checkOwnerOrAdminPermission,
+  throwPermissionError,
+  canViewMessageContent,
+  filterMessageContent,
+} from './permissions'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import type { VipPersonalMessage, VipPersonalMessageWithAuthor } from '@/types/database'
 
@@ -49,8 +54,7 @@ export async function getVipMessagesByVipId(
       .eq('id', userId)
       .single()
 
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-    const isOwner = userId === vipProfileId
+    const userRole = profile?.role || null
 
     // 메시지 조회 (작성자 정보 포함)
     const { data, error } = await supabase
@@ -75,28 +79,25 @@ export async function getVipMessagesByVipId(
       const authorInfo = msg.profiles
       const author = Array.isArray(authorInfo) ? authorInfo[0] : authorInfo
 
-      // 비공개 메시지 열람 권한 체크
-      const isAuthor = msg.author_id === userId
-      const canViewPrivateContent = isAdmin || isOwner || isAuthor
+      // 콘텐츠 열람 권한 결정
+      const canViewPrivate = canViewMessageContent({
+        userRole,
+        userId,
+        ownerId: vipProfileId,
+        authorId: msg.author_id,
+      })
+      const canViewContent = msg.is_public || canViewPrivate
 
-      // 공개 메시지는 모두 열람 가능, 비공개는 권한 체크
-      const canViewContent = msg.is_public || canViewPrivateContent
-
-      // 비공개 + 권한 없음인 경우 콘텐츠 제거
-      const safeContentText = canViewContent ? msg.content_text : null
-      const safeContentUrl = canViewContent
-        ? msg.content_url
-        : msg.message_type === 'video'
-          ? msg.content_url
-          : null
+      // 콘텐츠 필터링 (비공개 보호)
+      const filtered = filterMessageContent(msg, canViewContent)
 
       messages.push({
         id: msg.id,
         vip_profile_id: msg.vip_profile_id,
         author_id: msg.author_id,
         message_type: msg.message_type as 'text' | 'image' | 'video',
-        content_text: safeContentText,
-        content_url: safeContentUrl,
+        content_text: filtered.content_text,
+        content_url: filtered.content_url,
         is_public: msg.is_public,
         is_deleted: msg.is_deleted,
         created_at: msg.created_at,
@@ -136,8 +137,7 @@ export async function getVipMessagesPaginated(
       .eq('id', userId)
       .single()
 
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-    const isOwner = userId === vipProfileId
+    const userRole = profile?.role || null
 
     // 메시지 조회 (작성자 정보 포함)
     const { data, error, count } = await supabase
@@ -182,24 +182,25 @@ export async function getVipMessagesPaginated(
       const authorInfo = msg.profiles
       const author = Array.isArray(authorInfo) ? authorInfo[0] : authorInfo
 
-      const isAuthor = msg.author_id === userId
-      const canViewPrivateContent = isAdmin || isOwner || isAuthor
-      const canViewContent = msg.is_public || canViewPrivateContent
+      // 콘텐츠 열람 권한 결정
+      const canViewPrivate = canViewMessageContent({
+        userRole,
+        userId,
+        ownerId: vipProfileId,
+        authorId: msg.author_id,
+      })
+      const canViewContent = msg.is_public || canViewPrivate
 
-      const safeContentText = canViewContent ? msg.content_text : null
-      const safeContentUrl = canViewContent
-        ? msg.content_url
-        : msg.message_type === 'video'
-          ? msg.content_url
-          : null
+      // 콘텐츠 필터링 (비공개 보호)
+      const filtered = filterMessageContent(msg, canViewContent)
 
       messages.push({
         id: msg.id,
         vip_profile_id: msg.vip_profile_id,
         author_id: msg.author_id,
         message_type: msg.message_type as 'text' | 'image' | 'video',
-        content_text: safeContentText,
-        content_url: safeContentUrl,
+        content_text: filtered.content_text,
+        content_url: filtered.content_url,
         is_public: msg.is_public,
         is_deleted: msg.is_deleted,
         created_at: msg.created_at,

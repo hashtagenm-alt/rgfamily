@@ -1,13 +1,14 @@
 'use server'
 
-import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { authAction, adminAction, publicAction, type ActionResult } from './index'
-import { checkOwnerOrAdminPermission, throwPermissionError } from './permissions'
+import {
+  checkOwnerOrAdminPermission,
+  throwPermissionError,
+  canViewMessageContent,
+  filterMessageContent,
+} from './permissions'
 import type { InsertTables, UpdateTables, BjThankYouMessage } from '@/types/database'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
-import { USE_MOCK_DATA } from '@/lib/config'
-import { getBjMessagesByVipId as getMockBjMessages } from '@/lib/mock/bj-messages'
 
 type BjMessageInsert = InsertTables<'bj_thank_you_messages'>
 type BjMessageUpdate = UpdateTables<'bj_thank_you_messages'>
@@ -75,34 +76,20 @@ export async function checkBjMemberStatus(): Promise<
  * 권한 구조:
  * - VIP 본인: 모든 미디어(사진/영상) 전체 접근 가능
  * - 그 외 (비로그인, 일반 로그인 유저):
- *   - 공개 메시지: 텍스트만 보임, 사진은 ❌, 영상은 썸네일만
+ *   - 공개 메시지: 텍스트만 보임, 사진은 X, 영상은 썸네일만
  *   - 비공개 메시지: 메시지 자체가 안 보임
  * - 작성자 BJ/관리자: 비공개 메시지도 접근 가능, 미디어 전체 접근
  */
 export async function getBjMessagesByVipId(
   vipProfileId: string
 ): Promise<ActionResult<BjMessageWithMember[]>> {
-  // Mock 모드: Mock 데이터 사용
-  if (USE_MOCK_DATA) {
-    const mockMessages = getMockBjMessages(vipProfileId)
-    // Mock 모드에서는 canViewContent를 false로 설정하여 플레이스홀더 테스트 가능
-    // VIP 개인 페이지에서는 hasFullAccess로 제어
-    const messagesWithAccess: BjMessageWithMember[] = mockMessages.map(msg => ({
-      ...msg,
-      // Mock에서는 일반 사용자 시점으로 콘텐츠 접근 제한 (테스트용)
-      canViewContent: false,
-    }))
-    return { data: messagesWithAccess, error: null }
-  }
-
   return publicAction(async (supabase) => {
     // 현재 로그인 사용자 확인 (없을 수 있음)
     const { data: { user } } = await supabase.auth.getUser()
     const userId = user?.id || null
 
     // 로그인한 경우에만 추가 정보 조회
-    let isAdmin = false
-    let isOwner = false
+    let userRole: string | null = null
     let userBjMemberId: number | null = null
 
     if (userId) {
@@ -122,8 +109,7 @@ export async function getBjMessagesByVipId(
         .eq('is_active', true)
         .single()
 
-      isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-      isOwner = userId === vipProfileId
+      userRole = profile?.role || null
       userBjMemberId = orgData?.id || null
     }
 
@@ -150,32 +136,28 @@ export async function getBjMessagesByVipId(
       const orgInfo = msg.organization
       const org = Array.isArray(orgInfo) ? orgInfo[0] : orgInfo
 
-      // 권한 체크
-      const isAuthor = userBjMemberId === msg.bj_member_id
-
-      // 비공개 메시지 접근 권한 (VIP 본인, 작성자 BJ, 관리자)
-      const canViewPrivateMessage = isAdmin || isOwner || isAuthor
+      // BJ 작성자 여부: bj_member_id 비교 (BJ는 profile_id가 아닌 org ID로 연결)
+      const authorProfileId = userBjMemberId === msg.bj_member_id ? userId : null
 
       // 콘텐츠 열람 권한 결정
-      // - 공개 메시지: 모두 열람 가능
-      // - 비공개 메시지: 권한자만 열람 가능 (목록에는 모두 보임)
-      const canViewContent = msg.is_public || canViewPrivateMessage
+      const canViewPrivate = canViewMessageContent({
+        userRole,
+        userId,
+        ownerId: vipProfileId,
+        authorId: authorProfileId,
+      })
+      const canViewContent = msg.is_public || canViewPrivate
 
-      // 콘텐츠 처리
-      // - 열람 권한 있으면 전체 콘텐츠 제공
-      // - 없으면 텍스트는 null, 영상은 썸네일용 URL만 유지
-      const safeContentText = canViewContent ? msg.content_text : null
-      const safeContentUrl = canViewContent
-        ? msg.content_url
-        : (msg.message_type === 'video' ? msg.content_url : null) // 영상은 썸네일용 URL 유지
+      // 콘텐츠 필터링 (비공개 보호)
+      const filtered = filterMessageContent(msg, canViewContent)
 
       messages.push({
         id: msg.id,
         vip_profile_id: msg.vip_profile_id,
         bj_member_id: msg.bj_member_id,
         message_type: msg.message_type as 'text' | 'image' | 'video',
-        content_text: safeContentText,
-        content_url: safeContentUrl,
+        content_text: filtered.content_text,
+        content_url: filtered.content_url,
         is_public: msg.is_public,
         is_deleted: msg.is_deleted,
         created_at: msg.created_at,
@@ -186,9 +168,7 @@ export async function getBjMessagesByVipId(
               image_url: org.image_url,
             }
           : undefined,
-        // 비공개 메시지임을 UI에서 표시하기 위한 플래그
         is_private_for_viewer: !msg.is_public,
-        // 콘텐츠 열람 가능 여부
         canViewContent,
       })
     }

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Play, Video } from 'lucide-react'
-import type { HallOfFameHonor } from '@/lib/mock'
+import type { HallOfFameHonor } from '@/types/tribute'
 import styles from '../TributeSections.module.css'
 
 interface TributeMemberVideosSectionProps {

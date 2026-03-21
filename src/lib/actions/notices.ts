@@ -2,6 +2,7 @@
 
 import { moderatorAction, publicAction, type ActionResult } from './index'
 import type { InsertTables, UpdateTables, Notice, NoticeWithAttachments, NoticeAttachment } from '@/types/database'
+import { logger } from '@/lib/utils/logger'
 
 type NoticeInsert = InsertTables<'notices'>
 type NoticeUpdate = UpdateTables<'notices'>
@@ -52,7 +53,7 @@ export async function createNotice(
         .insert(attachmentsToInsert)
 
       if (attError) {
-        console.error('Failed to save attachments:', attError)
+        logger.dbError('insert', 'notice_attachments', attError)
         // 첨부파일 저장 실패해도 공지사항은 성공으로 처리
       }
     }
@@ -103,7 +104,7 @@ export async function updateNotice(
           .insert(attachmentsToInsert)
 
         if (attError) {
-          console.error('Failed to save attachments:', attError)
+          logger.dbError('insert', 'notice_attachments', attError)
         }
       }
     }
@@ -146,6 +147,30 @@ export async function toggleNoticePinned(
 
     if (error) throw new Error(error.message)
     return notice
+  }, ['/admin/notices', '/notice'])
+}
+
+/**
+ * 공지사항 순서 일괄 업데이트
+ */
+export async function updateNoticesOrder(
+  updates: { id: number; display_order: number }[]
+): Promise<ActionResult<null>> {
+  return moderatorAction(async (supabase) => {
+    // N+1 방지: 개별 UPDATE 대신 Promise.all로 병렬 실행
+    const results = await Promise.all(
+      updates.map(update =>
+        supabase
+          .from('notices')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id)
+      )
+    )
+
+    const firstError = results.find(r => r.error)
+    if (firstError?.error) throw new Error(firstError.error.message)
+
+    return null
   }, ['/admin/notices', '/notice'])
 }
 
@@ -193,16 +218,9 @@ export async function getNoticeById(
 
     if (error) throw new Error(error.message)
 
-    // 조회수 증가 (별도 업데이트)
+    // 조회수 원자적 증가 (Race Condition 방지)
     if (data) {
-      try {
-        await supabase
-          .from('notices')
-          .update({ view_count: (data.view_count || 0) + 1 })
-          .eq('id', id)
-      } catch {
-        // 조회수 증가 실패해도 무시
-      }
+      try { await supabase.rpc('increment_notice_view_count', { p_notice_id: id }) } catch (e) { logger.debug('RPC 카운터 증가 실패', { context: { error: e } }) }
     }
 
     return data
@@ -236,15 +254,8 @@ export async function getNoticeWithAttachments(
       .eq('notice_id', id)
       .order('display_order', { ascending: true })
 
-    // 조회수 증가
-    try {
-      await supabase
-        .from('notices')
-        .update({ view_count: (notice.view_count || 0) + 1 })
-        .eq('id', id)
-    } catch {
-      // 무시
-    }
+    // 조회수 원자적 증가 (Race Condition 방지)
+    try { await supabase.rpc('increment_notice_view_count', { p_notice_id: id }) } catch (e) { logger.debug('RPC 카운터 증가 실패', { context: { error: e } }) }
 
     return {
       ...notice,

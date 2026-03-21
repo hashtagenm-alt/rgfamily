@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN } from '@/lib/cloudflare'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     if (!tusRes.ok) {
       const errorText = await tusRes.text()
-      console.error('Cloudflare TUS init error:', tusRes.status, errorText)
+      logger.apiError('/api/cloudflare-stream/tus-upload', `Cloudflare TUS init error: ${tusRes.status} ${errorText}`)
 
       // Cloudflare 에러 상세를 파싱하여 클라이언트에 전달
       let detail = ''
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       uid: streamMediaId || location.split('/').pop(),
     })
   } catch (error) {
-    console.error('TUS upload init error:', error)
+    logger.apiError('/api/cloudflare-stream/tus-upload', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'TUS 업로드 초기화 실패' },
       { status: 500 }

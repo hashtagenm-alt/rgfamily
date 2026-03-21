@@ -11,6 +11,7 @@ import { useAuthContext } from '@/lib/context/AuthContext'
 import { deleteNotice } from '@/lib/actions/notices'
 import { formatDate } from '@/lib/utils/format'
 import { renderContent } from '@/lib/utils/htmlContent'
+import { logger } from '@/lib/utils/logger'
 import styles from './page.module.css'
 
 interface Attachment {
@@ -70,7 +71,7 @@ export default function NoticeDetailPage({ params }: { params: Promise<{ id: str
       .single()
 
     if (error) {
-      console.error('공지사항 로드 실패:', error)
+      logger.error('공지사항 로드 실패:', error)
     } else if (data) {
       // 첨부파일 조회
       const { data: attachmentsData } = await supabase

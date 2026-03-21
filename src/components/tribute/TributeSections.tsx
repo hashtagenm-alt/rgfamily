@@ -18,7 +18,7 @@ import {
   User,
   Loader2,
 } from 'lucide-react'
-import type { HallOfFameHonor } from '@/lib/mock'
+import type { HallOfFameHonor } from '@/types/tribute'
 import { useGuestbook } from '@/lib/hooks'
 import { useAuthContext } from '@/lib/context'
 import VipSignatureGallery from './VipSignatureGallery'

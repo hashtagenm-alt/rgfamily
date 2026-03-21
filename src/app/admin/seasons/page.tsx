@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, Plus, X, Save } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
-import { useSupabaseContext } from '@/lib/context'
+import { deactivateOtherSeasons } from '@/lib/actions/seasons'
 import styles from '../shared.module.css'
 
 interface Season {
@@ -17,7 +17,6 @@ interface Season {
 }
 
 export default function SeasonsPage() {
-  const supabase = useSupabaseContext()
   const alertHandler = useAlert()
 
   const {
@@ -62,10 +61,8 @@ export default function SeasonsPage() {
     beforeSave: async (item, _isNew) => {
       // 활성화 시 다른 시즌 비활성화
       if (item.isActive) {
-        await supabase
-          .from('seasons')
-          .update({ is_active: false })
-          .neq('id', item.id || 0)
+        const result = await deactivateOtherSeasons(item.id || 0)
+        if (result.error) throw new Error(result.error)
       }
     },
     deleteConfirmMessage: '정말 삭제하시겠습니까?\n\n관련된 모든 데이터가 함께 삭제됩니다.',

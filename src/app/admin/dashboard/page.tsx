@@ -8,8 +8,8 @@ import {
   RefreshCw,
   AlertCircle,
 } from 'lucide-react'
-import { useSupabaseContext } from '@/lib/context'
-import type { Organization } from '@/types/database'
+import { getDashboardData } from '@/lib/actions/dashboard'
+import { logger } from '@/lib/utils/logger'
 import styles from './page.module.css'
 
 // BJ 직급 정보 타입
@@ -40,7 +40,6 @@ interface SeasonStats {
 }
 
 export default function BjDashboardPage() {
-  const supabase = useSupabaseContext()
   const [bjList, setBjList] = useState<BjStatus[]>([])
   const [ranks, setRanks] = useState<BjRank[]>([])
   const [seasonStats, setSeasonStats] = useState<SeasonStats | null>(null)
@@ -54,77 +53,25 @@ export default function BjDashboardPage() {
     setError(null)
 
     try {
-      // 1. 직급 마스터 데이터 조회
-      const { data: ranksData, error: ranksError } = await supabase
-        .from('bj_ranks')
-        .select('*')
-        .order('level', { ascending: true })
+      const result = await getDashboardData()
 
-      if (ranksError) {
-        console.error('직급 데이터 로드 실패:', ranksError)
-        // 직급 테이블이 없으면 빈 배열로 처리
-        setRanks([])
-      } else {
-        setRanks(ranksData || [])
+      if (result.error) {
+        setError(result.error)
+        return
       }
 
-      // 2. BJ 멤버 목록 조회 (organization 테이블에서 대표 제외, 비활성 멤버도 포함)
-      const { data: bjData, error: bjError } = await supabase
-        .from('organization')
-        .select('*')
-        .neq('role', '대표')
-        .order('position_order', { ascending: true })
-
-      if (bjError) throw bjError
-
-      // 직급 정보 매핑
-      const bjWithRanks = (bjData || []).map((bj) => ({
-        id: bj.id,
-        name: bj.name,
-        image_url: bj.image_url,
-        unit: bj.unit,
-        role: bj.role,
-        is_active: bj.is_active ?? true,
-        current_rank_id: bj.current_rank_id,
-        current_rank: ranksData?.find((r) => r.id === bj.current_rank_id) || null,
-      })) as BjStatus[]
-
-      setBjList(bjWithRanks)
-
-      // 3. 시즌 통계 계산
-      const { data: activeSeasonData } = await supabase
-        .from('seasons')
-        .select('id')
-        .eq('is_active', true)
-        .single()
-
-      if (activeSeasonData) {
-        const { count: episodeCount } = await supabase
-          .from('episodes')
-          .select('*', { count: 'exact', head: true })
-          .eq('season_id', activeSeasonData.id)
-
-        const { data: latestEpisode } = await supabase
-          .from('episodes')
-          .select('episode_number')
-          .eq('season_id', activeSeasonData.id)
-          .order('episode_number', { ascending: false })
-          .limit(1)
-          .single()
-
-        setSeasonStats({
-          currentEpisode: latestEpisode?.episode_number || 0,
-          totalEpisodes: episodeCount || 0,
-          activeBjCount: bjWithRanks.length,
-        })
+      if (result.data) {
+        setRanks(result.data.ranks)
+        setBjList(result.data.bjList)
+        setSeasonStats(result.data.seasonStats)
       }
     } catch (err) {
-      console.error('데이터 로드 실패:', err)
+      logger.error('데이터 로드 실패', err)
       setError('데이터를 불러오는데 실패했습니다.')
     }
 
     setIsLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchData()

@@ -1,7 +1,14 @@
 # RG Family 프로젝트 종합 분석 보고서
 
-> 분석일: 2026-02-05
+> 분석일: 2026-02-05 (갱신: 2026-03-20)
 > 분석 범위: 전체 프로젝트 구조, 스크립트, 아키텍처
+>
+> ### 2026-03-08 갱신사항
+> - ADR 체계 구축: docs/adr/ (ADR-001 ~ ADR-007, 7개 아키텍처 결정 기록)
+> - DB 백업 스크립트: scripts/db-backup.ts, scripts/dump-schema.ts
+> - 문서 정리: docs/ 18개 → 8개 유지 + adr/ + archive/
+> - Serena 메모리 정리: 14개 → 8개 (중복 6개 삭제)
+> - CLAUDE.md §21 재해 복구(DR) 섹션 추가
 
 ---
 
@@ -327,9 +334,10 @@ const supabase = getServiceClient()
 ### 7.4 🟢 양호: Server Actions 구조
 
 **강점**:
-- 기능별 잘 분리됨 (20개 파일)
+- 기능별 잘 분리됨 (20+ 파일, analytics/ 하위 5개 포함)
 - 타입 정의 완벽 (database.ts 61KB)
 - 권한 체크 일관됨 (permissions.ts)
+- 크루부/엑셀부 unit 필터 16개 파일에 일관 적용 (2026-03-20, PR #44)
 
 ---
 

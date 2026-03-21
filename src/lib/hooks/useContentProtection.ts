@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useCallback } from 'react'
+import { logger } from '@/lib/utils/logger'
 
 interface ContentProtectionOptions {
   /** 우클릭 방지 활성화 (기본: true) */
@@ -128,14 +129,7 @@ export function useContentProtection(options: ContentProtectionOptions = {}) {
   useEffect(() => {
     // 콘솔 경고 메시지
     if (mergedOptions.showConsoleWarning) {
-      console.log(
-        '%c⚠️ 경고',
-        'color: red; font-size: 40px; font-weight: bold;'
-      )
-      console.log(
-        '%c이 페이지의 콘텐츠는 저작권으로 보호됩니다.\n무단 복제 및 배포는 법적 처벌의 대상이 됩니다.',
-        'color: #ff6b6b; font-size: 14px;'
-      )
+      logger.warn('이 페이지의 콘텐츠는 저작권으로 보호됩니다. 무단 복제 및 배포는 법적 처벌의 대상이 됩니다.')
     }
 
     // 이벤트 리스너 등록

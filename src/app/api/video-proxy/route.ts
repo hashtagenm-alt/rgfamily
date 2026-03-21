@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Video Proxy API
@@ -12,9 +13,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'URL parameter required' }, { status: 400 })
   }
 
-  // Supabase Storage URL만 허용
-  if (!url.includes('supabase.co/storage')) {
-    return NextResponse.json({ error: 'Invalid video URL' }, { status: 403 })
+  // Supabase Storage URL만 허용 (hostname 검증)
+  try {
+    const parsed = new URL(url)
+    if (!parsed.hostname.endsWith('.supabase.co') || !parsed.pathname.includes('/storage/')) {
+      return NextResponse.json({ error: 'Invalid video URL' }, { status: 403 })
+    }
+  } catch {
+    return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 })
   }
 
   try {
@@ -64,10 +70,7 @@ export async function GET(request: NextRequest) {
       headers,
     })
   } catch (error) {
-    console.error('Video proxy error:', error)
-    return NextResponse.json(
-      { error: 'Failed to proxy video' },
-      { status: 500 }
-    )
+    logger.apiError('/api/video-proxy', error)
+    return NextResponse.json({ error: 'Failed to proxy video' }, { status: 500 })
   }
 }
