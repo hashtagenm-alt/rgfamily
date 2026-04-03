@@ -131,6 +131,15 @@ function saveMapping(mapping: MappingFile): void {
 async function getCloudflareDownloadUrl(uid: string): Promise<string> {
   const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/${uid}/downloads`
 
+  // 영상 존재 여부 먼저 확인
+  const checkRes = await fetchJson(
+    `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/${uid}`,
+    { method: 'GET', headers: { Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}` } }
+  )
+  if (!checkRes.success) {
+    throw new Error(`CF_NOT_FOUND: uid=${uid}`)
+  }
+
   // MP4 생성 요청 (이미 있으면 무시)
   await fetchJson(url, {
     method: 'POST',
