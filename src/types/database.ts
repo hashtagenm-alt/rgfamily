@@ -411,6 +411,7 @@ export type Database = {
           member_id: number
           video_url: string
           cloudflare_uid: string | null
+          vimeo_id: string | null
           is_published: boolean
           created_at: string
         }
@@ -420,6 +421,7 @@ export type Database = {
           member_id: number
           video_url: string
           cloudflare_uid?: string | null
+          vimeo_id?: string | null
           is_published?: boolean
           created_at?: string
         }
@@ -429,6 +431,7 @@ export type Database = {
           member_id?: number
           video_url?: string
           cloudflare_uid?: string | null
+          vimeo_id?: string | null
           is_published?: boolean
           created_at?: string
         }
@@ -775,6 +778,7 @@ export type Database = {
           thumbnail_url: string | null
           video_url: string
           cloudflare_uid: string | null
+          vimeo_id: string | null
           unit: 'excel' | 'crew' | null
           duration: number | null
           view_count: number
@@ -794,6 +798,7 @@ export type Database = {
           thumbnail_url?: string | null
           video_url: string
           cloudflare_uid?: string | null
+          vimeo_id?: string | null
           unit?: 'excel' | 'crew' | null
           duration?: number | null
           view_count?: number
@@ -812,6 +817,7 @@ export type Database = {
           thumbnail_url?: string | null
           video_url?: string
           cloudflare_uid?: string | null
+          vimeo_id?: string | null
           unit?: 'excel' | 'crew' | null
           duration?: number | null
           view_count?: number

@@ -280,6 +280,7 @@ export interface SignatureVideoWithMember {
   memberImageUrl: string | null
   videoUrl: string
   cloudflareUid: string | null
+  vimeoId: string | null
   isPublished: boolean
   createdAt: string
 }
@@ -306,6 +307,7 @@ export async function getSignatureVideosAdmin(
         memberImageUrl: member?.image_url || null,
         videoUrl: v.video_url,
         cloudflareUid: v.cloudflare_uid || null,
+        vimeoId: v.vimeo_id || null,
         isPublished: v.is_published ?? true,
         createdAt: v.created_at,
       }

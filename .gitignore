@@ -79,3 +79,4 @@ backups/
 
 # Vercel local tokens
 .env.vercel.local
+_docs

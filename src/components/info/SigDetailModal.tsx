@@ -6,6 +6,7 @@ import { X, Play, ChevronLeft, ChevronRight, Calendar, User, Film, Volume2, Exte
 import Image from 'next/image'
 import type { SignatureData } from './SigGallery'
 import { formatShortDate } from '@/lib/utils/format'
+import VimeoPlayer from '@/components/common/VimeoPlayer'
 import styles from './SigDetailModal.module.css'
 
 interface SigDetailModalProps {
@@ -13,18 +14,8 @@ interface SigDetailModalProps {
   onClose: () => void
 }
 
-// Cloudflare Stream UID를 embed URL로 변환
-function getCloudflareEmbedUrl(cloudflareUid: string): string {
-  return `https://iframe.videodelivery.net/${cloudflareUid}`
-}
-
 // YouTube URL을 embed URL로 변환
-function getEmbedUrl(url: string, cloudflareUid?: string | null): string {
-  // Cloudflare Stream UID가 있으면 우선 사용
-  if (cloudflareUid) {
-    return getCloudflareEmbedUrl(cloudflareUid)
-  }
-
+function getEmbedUrl(url: string): string {
   if (!url) return ''
 
   // YouTube URL 패턴들
@@ -59,13 +50,8 @@ function getEmbedUrl(url: string, cloudflareUid?: string | null): string {
   return url
 }
 
-function getEmbedUrlWithParams(url: string, cloudflareUid?: string | null): string {
-  const embedUrl = getEmbedUrl(url, cloudflareUid)
-
-  // Cloudflare Stream
-  if (embedUrl.includes('videodelivery.net/')) {
-    return `${embedUrl}?autoplay=true&muted=false`
-  }
+function getEmbedUrlWithParams(url: string): string {
+  const embedUrl = getEmbedUrl(url)
 
   if (embedUrl.includes('youtube.com/embed/')) {
     return `${embedUrl}?autoplay=1&modestbranding=1&rel=0`
@@ -360,7 +346,13 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                           exit={{ opacity: 0 }}
                           className={styles.videoWrapper}
                         >
-                          {isDirectVideoUrl(currentVideo.videoUrl) ? (
+                          {currentVideo.vimeoId ? (
+                            <VimeoPlayer
+                              vimeoId={currentVideo.vimeoId}
+                              className={styles.video}
+                              autoplay
+                            />
+                          ) : isDirectVideoUrl(currentVideo.videoUrl) ? (
                             <video
                               src={getProxiedVideoUrl(currentVideo.videoUrl)}
                               className={styles.video}
@@ -372,7 +364,7 @@ export default function SigDetailModal({ signature, onClose }: SigDetailModalPro
                             />
                           ) : (
                             <iframe
-                              src={getEmbedUrlWithParams(currentVideo.videoUrl, currentVideo.cloudflareUid)}
+                              src={getEmbedUrlWithParams(currentVideo.videoUrl)}
                               className={styles.video}
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
