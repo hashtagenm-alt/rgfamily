@@ -211,11 +211,11 @@ export default function SignatureDetailPage() {
     setVideos(prev => prev.map(v => v.id === video.id ? { ...v, isPublished: newPublished } : v))
   }
 
-  // Get cloudflare uid for preview
-  const getPreviewCloudflareUid = (): string | null => {
+  // Get vimeo id for preview
+  const getPreviewVimeoId = (): string | null => {
     if (!previewUrl) return null
     const video = videos.find((v) => v.videoUrl === previewUrl)
-    return video?.cloudflareUid || null
+    return video?.vimeoId || null
   }
 
   if (!signature) {
@@ -288,7 +288,7 @@ export default function SignatureDetailPage() {
 
       <VideoPreviewModal
         previewUrl={previewUrl}
-        cloudflareUid={getPreviewCloudflareUid()}
+        vimeoId={getPreviewVimeoId()}
         onClose={() => setPreviewUrl(null)}
       />
     </div>

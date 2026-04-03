@@ -3,9 +3,11 @@
 import { useEffect, useRef } from "react"
 import Hls from "hls.js"
 import { getStreamHlsUrl } from "@/lib/cloudflare"
+import VimeoPlayer from "@/components/common/VimeoPlayer"
 
 interface HlsPlayerProps {
-  cloudflareUid: string
+  cloudflareUid?: string
+  vimeoId?: string
   className?: string
   autoPlay?: boolean
   controls?: boolean
@@ -19,12 +21,14 @@ interface HlsPlayerProps {
 
 /**
  * Cloudflare Stream HLS 플레이어
+ * - cloudflareUid가 없고 vimeoId가 있으면 VimeoPlayer로 폴백
  * - Safari: 네이티브 HLS 지원
  * - 기타 브라우저: hls.js 사용
  * - clientBandwidthHint로 1080p 고화질 강제
  */
 export default function HlsPlayer({
   cloudflareUid,
+  vimeoId,
   className,
   autoPlay = false,
   controls = true,
@@ -39,6 +43,7 @@ export default function HlsPlayer({
 
   useEffect(() => {
     const video = videoRef.current
+    // Vimeo 폴백 모드이거나 cloudflareUid 없으면 HLS 설정 불필요
     if (!video || !cloudflareUid) return
 
     // HLS URL 생성 (고화질 강제 시 clientBandwidthHint=10)
@@ -83,6 +88,17 @@ export default function HlsPlayer({
       }
     }
   }, [cloudflareUid, forceHighQuality, autoPlay])
+
+  // Vimeo 폴백: cloudflareUid 없고 vimeoId 있으면 VimeoPlayer 렌더링
+  if (!cloudflareUid && vimeoId) {
+    return (
+      <VimeoPlayer
+        vimeoId={vimeoId}
+        className={className}
+        autoplay={autoPlay}
+      />
+    )
+  }
 
   return (
     <video

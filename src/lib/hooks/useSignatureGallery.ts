@@ -22,6 +22,7 @@ export interface SignatureVideo {
   memberImage: string | null
   videoUrl: string
   cloudflareUid: string | null
+  vimeoId: string | null
   createdAt: string
 }
 
@@ -120,6 +121,7 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
             member_id,
             video_url,
             cloudflare_uid,
+            vimeo_id,
             created_at,
             organization!member_id(id, name, image_url)
           `
@@ -144,6 +146,7 @@ export function useSignatureGallery(): UseSignatureGalleryReturn {
           memberImage: member?.image_url || null,
           videoUrl: v.video_url,
           cloudflareUid: v.cloudflare_uid || null,
+          vimeoId: v.vimeo_id || null,
           createdAt: v.created_at,
         })
       })

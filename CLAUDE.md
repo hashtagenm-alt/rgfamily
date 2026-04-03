@@ -843,3 +843,10 @@ main이 업데이트된 경우 기존 PR 브랜치 리베이스 필요:
 - 주요 아키텍처 결정 10건 기록 (ADR-001 ~ ADR-010)
 - 새 결정 추가 시 docs/adr/TEMPLATE.md 사용
 ```
+
+## 문서 위치
+- ./_docs/
+  - overview.md        — 프로젝트 개요
+  - specs/             — 기획서, 요구사항, 디자인
+  - runbook/           — env, 셋업, 배포, 아키텍처
+  - worklogs/          — 작업 일지

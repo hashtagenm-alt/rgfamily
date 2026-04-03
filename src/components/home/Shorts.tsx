@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Film, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getShorts } from "@/lib/actions/media";
 import { getStreamThumbnailUrl } from "@/lib/cloudflare";
-import HlsPlayer from "@/components/common/HlsPlayer";
+import VimeoPlayer from "@/components/common/VimeoPlayer";
 import type { MediaContent } from "@/types/database";
 import styles from "./Shorts.module.css";
 
@@ -180,13 +180,11 @@ export default function Shorts() {
               <X size={20} />
             </button>
             <div className={styles.videoWrapper}>
-              {selectedShort.cloudflare_uid ? (
-                <HlsPlayer
-                  cloudflareUid={selectedShort.cloudflare_uid}
+              {selectedShort.vimeo_id ? (
+                <VimeoPlayer
+                  vimeoId={selectedShort.vimeo_id}
                   className={styles.videoFrame}
-                  autoPlay
-                  controls
-                  forceHighQuality
+                  autoplay
                 />
               ) : (
                 <iframe

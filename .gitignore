@@ -79,3 +79,6 @@ backups/
 
 # Vercel local tokens
 .env.vercel.local
+_docs
+media/
+scripts/migrate/cf-vimeo-mapping.json

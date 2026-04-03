@@ -1,18 +1,15 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import VimeoPlayer from '@/components/common/VimeoPlayer'
 import styles from '../../../shared.module.css'
 
 interface VideoPreviewModalProps {
   previewUrl: string | null
-  cloudflareUid: string | null
+  vimeoId: string | null
   onClose: () => void
 }
 
-function getEmbedUrl(url: string, cloudflareUid?: string | null) {
-  // Cloudflare Stream
-  if (cloudflareUid) {
-    return `https://iframe.videodelivery.net/${cloudflareUid}`
-  }
+function getEmbedUrl(url: string) {
   // YouTube
   const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
   if (youtubeMatch) {
@@ -21,7 +18,7 @@ function getEmbedUrl(url: string, cloudflareUid?: string | null) {
   return url
 }
 
-export function VideoPreviewModal({ previewUrl, cloudflareUid, onClose }: VideoPreviewModalProps) {
+export function VideoPreviewModal({ previewUrl, vimeoId, onClose }: VideoPreviewModalProps) {
   return (
     <AnimatePresence>
       {previewUrl && (
@@ -52,20 +49,26 @@ export function VideoPreviewModal({ previewUrl, cloudflareUid, onClose }: VideoP
                 <X size={20} />
               </button>
             </div>
-            <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
-              <iframe
-                src={getEmbedUrl(previewUrl, cloudflareUid)}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                }}
-                allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              />
+            <div style={{ padding: '0 16px 16px' }}>
+              {vimeoId ? (
+                <VimeoPlayer vimeoId={vimeoId} autoplay />
+              ) : (
+                <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
+                  <iframe
+                    src={getEmbedUrl(previewUrl)}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                    }}
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </div>
+              )}
             </div>
           </motion.div>
         </motion.div>
