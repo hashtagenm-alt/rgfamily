@@ -7,13 +7,13 @@ import { getEmbedUrl } from './types'
 
 interface MediaPreviewModalProps {
   previewUrl: string
-  previewCloudflareUid: string | null
+  previewVimeoId: string | null
   onClose: () => void
 }
 
 export default function MediaPreviewModal({
   previewUrl,
-  previewCloudflareUid,
+  previewVimeoId,
   onClose,
 }: MediaPreviewModalProps) {
   return (
@@ -46,7 +46,7 @@ export default function MediaPreviewModal({
         </div>
         <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
           <iframe
-            src={getEmbedUrl(previewUrl, previewCloudflareUid)}
+            src={getEmbedUrl(previewUrl, previewVimeoId)}
             style={{
               position: 'absolute',
               top: 0,

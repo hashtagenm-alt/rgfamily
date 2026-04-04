@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { Plus, ExternalLink, Play, Star, Cloud, Eye, EyeOff } from 'lucide-react'
+import { Plus, ExternalLink, Play, Star, Eye, EyeOff } from 'lucide-react'
 import { DataTable, Column } from '@/components/admin'
 import {
   toggleMediaFeatured,
@@ -84,7 +84,7 @@ export default function MediaTable({
 
   return (
     <ThumbnailCellManager alertHandler={alertHandler} refetch={refetch}>
-      {({ thumbnailInputRef, thumbnailUploadingId, handleThumbnailClick, handleCloudflareThumbailTimeChange, handleThumbnailFileChange }) => {
+      {({ thumbnailInputRef, thumbnailUploadingId, handleThumbnailClick, handleThumbnailFileChange }) => {
         const columns: Column<Media>[] = [
           {
             key: 'thumbnailUrl',
@@ -95,7 +95,6 @@ export default function MediaTable({
                 item={item}
                 thumbnailUploadingId={thumbnailUploadingId}
                 onThumbnailClick={handleThumbnailClick}
-                onTimeChange={handleCloudflareThumbailTimeChange}
               />
             ),
           },
@@ -107,8 +106,8 @@ export default function MediaTable({
             render: (item) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span>{item.title}</span>
-                {item.cloudflareUid && (
-                  <span title="Cloudflare Stream"><Cloud size={14} style={{ color: '#f6821f' }} /></span>
+                {item.vimeoId && (
+                  <span title="Vimeo" style={{ fontSize: '11px', color: '#1ab7ea', fontWeight: 600 }}>V</span>
                 )}
                 {item.isFeatured && (
                   <Star size={14} style={{ color: 'var(--color-warning)', fill: 'var(--color-warning)' }} />
@@ -231,7 +230,7 @@ export default function MediaTable({
                   <Play size={12} />
                   재생
                 </button>
-                {!item.cloudflareUid && item.videoUrl && (
+                {!item.vimeoId && item.videoUrl && (
                   <a
                     href={item.videoUrl} target="_blank" rel="noopener noreferrer"
                     style={{ color: 'var(--text-tertiary)' }}

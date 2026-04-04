@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { Video, Play, X, ChevronLeft, ChevronRight, SkipBack, SkipForward } from "lucide-react";
 import { getVODs, getVODParts } from "@/lib/actions/media";
-import { getStreamThumbnailUrl } from "@/lib/cloudflare";
 import VimeoPlayer from "@/components/common/VimeoPlayer";
 import type { MediaContent } from "@/types/database";
 import styles from "./VOD.module.css";
@@ -81,9 +80,6 @@ export default function VOD() {
   };
 
   const getEmbedUrl = (item: MediaContent) => {
-    if (item.cloudflare_uid) {
-      return `https://iframe.videodelivery.net/${item.cloudflare_uid}`;
-    }
     const url = item.video_url;
     const youtubeMatch = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/
@@ -96,10 +92,6 @@ export default function VOD() {
 
   const getThumbnail = (item: MediaContent) => {
     if (item.thumbnail_url) return item.thumbnail_url;
-    if (item.cloudflare_uid) {
-      // 인코딩 중에도 기본 썸네일이 표시되도록 파라미터 없이 사용
-      return getStreamThumbnailUrl(item.cloudflare_uid);
-    }
     const youtubeMatch = item.video_url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/
     );
@@ -237,15 +229,15 @@ export default function VOD() {
                   className={styles.videoFrame}
                   autoplay
                 />
-              ) : (
+              ) : currentPart ? (
                 <iframe
-                  key={currentPart?.id}
+                  key={currentPart.id}
                   src={getEmbedUrl(currentPart)}
                   className={styles.videoFrame}
                   allowFullScreen
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 />
-              )}
+              ) : null}
             </div>
 
             {/* Part Navigation */}

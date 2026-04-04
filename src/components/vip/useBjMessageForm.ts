@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { getStreamThumbnailUrl } from '@/lib/cloudflare'
-import { uploadVideoToStream } from './uploadVideoToStream'
+import { uploadToVimeo } from '@/components/admin/vimeo-upload/upload-vimeo'
 
 export type MessageType = 'image' | 'video'
 export type VideoUploadMode = 'file' | 'url'
@@ -52,7 +51,7 @@ export function useBjMessageForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [videoUploadMode, setVideoUploadMode] = useState<VideoUploadMode>('file')
   const [videoProcessingStatus, setVideoProcessingStatus] = useState<VideoProcessingStatus>('idle')
-  const [cloudflareUid, setCloudflareUid] = useState<string | null>(null)
+  const [vimeoId, setVimeoId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
@@ -72,7 +71,7 @@ export function useBjMessageForm({
     setSelectedMemberId(null)
     setVideoUploadMode('file')
     setVideoProcessingStatus('idle')
-    setCloudflareUid(null)
+    setVimeoId(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -150,20 +149,17 @@ export function useBjMessageForm({
     setVideoProcessingStatus('uploading')
 
     try {
-      const videoUid = await uploadVideoToStream(file, {
-        onProgress: (pct) => setUploadProgress(pct),
-        onProcessing: () => setVideoProcessingStatus('processing'),
+      const uploadedVimeoId = await uploadToVimeo(file, file.name, (pct) => {
+        setUploadProgress(pct)
       })
 
-      setCloudflareUid(videoUid)
-      const thumbnailUrl = getStreamThumbnailUrl(videoUid, { width: 320, height: 180, fit: 'crop' })
-      setPreviewUrl(thumbnailUrl)
-      setContentUrl(`cloudflare:${videoUid}`)
+      setVimeoId(uploadedVimeoId)
+      setContentUrl(`https://player.vimeo.com/video/${uploadedVimeoId}`)
       setVideoProcessingStatus('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : '업로드에 실패했습니다.')
       setVideoProcessingStatus('idle')
-      setCloudflareUid(null)
+      setVimeoId(null)
       setPreviewUrl(null)
     } finally {
       setIsUploading(false)
@@ -188,7 +184,7 @@ export function useBjMessageForm({
   const handleRemoveVideo = () => {
     setContentUrl('')
     setPreviewUrl(null)
-    setCloudflareUid(null)
+    setVimeoId(null)
     setVideoProcessingStatus('idle')
     if (videoInputRef.current) {
       videoInputRef.current.value = ''
@@ -280,7 +276,7 @@ export function useBjMessageForm({
     setVideoUploadMode(mode)
     setContentUrl('')
     setPreviewUrl(null)
-    setCloudflareUid(null)
+    setVimeoId(null)
     setVideoProcessingStatus('idle')
   }
 
@@ -297,7 +293,7 @@ export function useBjMessageForm({
     previewUrl,
     videoUploadMode,
     videoProcessingStatus,
-    cloudflareUid,
+    vimeoId,
     selectedMemberId,
     selectedMember,
 

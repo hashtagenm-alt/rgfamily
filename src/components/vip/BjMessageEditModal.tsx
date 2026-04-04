@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MessageSquare, ImageIcon, Video, Save, Loader2, Globe, Lock, Upload, Trash2, Film } from 'lucide-react'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
-import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import styles from './BjMessageForm.module.css'
 
 interface BjMessageEditModalProps {
@@ -136,8 +135,8 @@ export default function BjMessageEditModal({
         return false
       }
 
-      // Cloudflare Stream URL은 허용
-      if (contentUrl.startsWith('cloudflare:')) {
+      // Vimeo URL은 허용
+      if (contentUrl.includes('vimeo.com')) {
         return true
       }
 
@@ -146,7 +145,7 @@ export default function BjMessageEditModal({
         const isYouTube = parsedUrl.hostname.includes('youtube.com') || parsedUrl.hostname.includes('youtu.be')
 
         if (!isYouTube) {
-          setError('영상은 YouTube 링크 또는 Cloudflare 업로드만 지원합니다.')
+          setError('영상은 YouTube 링크 또는 Vimeo 업로드만 지원합니다.')
           return false
         }
       } catch {
@@ -354,22 +353,13 @@ export default function BjMessageEditModal({
                 <>
                   <div className={styles.inputGroup}>
                     <label className={styles.label}>영상</label>
-                    {contentUrl.startsWith('cloudflare:') ? (
-                      // Cloudflare Stream 영상 미리보기
+                    {contentUrl.includes('vimeo.com') ? (
+                      // Vimeo 영상 미리보기
                       <div className={styles.videoPreviewWrapper}>
                         <div className={styles.videoThumbnail}>
-                          <Image
-                            src={getStreamThumbnailUrl(contentUrl.replace('cloudflare:', ''), { time: '0s', width: 400, height: 225, fit: 'crop' })}
-                            alt="영상 썸네일"
-                            width={400}
-                            height={225}
-                            className={styles.imagePreview}
-                            style={{ objectFit: 'cover' }}
-                            unoptimized
-                          />
-                          <div className={styles.videoOverlay}>
+                          <div className={styles.videoOverlay} style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Film size={32} />
-                            <span>Cloudflare Stream 영상</span>
+                            <span>Vimeo 영상</span>
                           </div>
                         </div>
                         <p className={styles.videoNote}>

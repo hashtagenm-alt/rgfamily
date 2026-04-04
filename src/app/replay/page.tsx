@@ -9,7 +9,7 @@ import {
   SkipBack, SkipForward, Home
 } from "lucide-react";
 import { getVODs, getShorts, getVODParts } from "@/lib/actions/media";
-import { getStreamThumbnailUrl } from "@/lib/cloudflare";
+import VimeoPlayer from "@/components/common/VimeoPlayer";
 import Footer from "@/components/Footer";
 import type { MediaContent } from "@/types/database";
 import styles from "./page.module.css";
@@ -79,7 +79,7 @@ function ReplayContent() {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin.includes("videodelivery.net") || event.origin.includes("cloudflarestream.com")) {
+      if (event.origin.includes("player.vimeo.com")) {
         try {
           const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
           if (data.event === "ended" && videoParts.length > 1 && currentPartIndex < videoParts.length - 1) {
@@ -129,10 +129,6 @@ function ReplayContent() {
 
   const getEmbedUrl = (item: MediaContent | null) => {
     if (!item) return "";
-    if (item.cloudflare_uid) {
-      const autoplay = currentPartIndex > 0 ? "&autoplay=true" : "";
-      return `https://iframe.videodelivery.net/${item.cloudflare_uid}?preload=metadata${autoplay}`;
-    }
     const url = item.video_url;
     const youtubeMatch = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\s]+)/
@@ -143,19 +139,8 @@ function ReplayContent() {
     return url;
   };
 
-  const getThumbnail = (item: MediaContent, isVertical = false) => {
+  const getThumbnail = (item: MediaContent) => {
     if (item.thumbnail_url) return item.thumbnail_url;
-    if (item.cloudflare_uid) {
-      return getStreamThumbnailUrl(item.cloudflare_uid, isVertical ? {
-        width: 320,
-        height: 568,
-        fit: "crop",
-      } : {
-        width: 480,
-        height: 270,
-        fit: "crop",
-      });
-    }
     const youtubeMatch = item.video_url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\s]+)/
     );
@@ -332,7 +317,7 @@ function ReplayContent() {
                   <>
                     <div className={styles.shortsGrid}>
                       {paginatedShorts.map((item) => {
-                        const thumb = getThumbnail(item, true);
+                        const thumb = getThumbnail(item);
                         return (
                           <div
                             key={item.id}
@@ -402,10 +387,17 @@ function ReplayContent() {
             <div className={styles.videoWrapper}>
               {loadingParts ? (
                 <div className={styles.videoLoading}>파트 로딩 중...</div>
+              ) : currentPart?.vimeo_id ? (
+                <VimeoPlayer
+                  key={currentPart.vimeo_id}
+                  vimeoId={currentPart.vimeo_id}
+                  className={styles.videoFrame}
+                  autoplay={currentPartIndex > 0}
+                />
               ) : (
                 <iframe
                   ref={iframeRef}
-                  key={currentPart?.cloudflare_uid || currentPart?.id}
+                  key={currentPart?.id}
                   src={getEmbedUrl(currentPart)}
                   className={styles.videoFrame}
                   allowFullScreen

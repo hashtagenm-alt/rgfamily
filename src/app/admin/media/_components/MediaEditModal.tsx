@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { X, Save, Cloud } from 'lucide-react'
-import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
+import { X, Save } from 'lucide-react'
+import VimeoVideoUpload from '@/components/admin/VimeoVideoUpload'
 import styles from '../../shared.module.css'
 import { Media } from './types'
 import MediaThumbnailSection from './MediaThumbnailSection'
@@ -25,7 +25,7 @@ export default function MediaEditModal({
   onSave,
   alertHandler,
 }: MediaEditModalProps) {
-  const [uploadMode, setUploadMode] = useState<'url' | 'cloudflare'>('cloudflare')
+  const [uploadMode, setUploadMode] = useState<'url' | 'vimeo'>('vimeo')
 
   return (
     <motion.div
@@ -132,10 +132,10 @@ export default function MediaEditModal({
             <div className={styles.typeSelector} style={{ marginBottom: '12px' }}>
               <button
                 type="button"
-                onClick={() => setUploadMode('cloudflare')}
-                className={`${styles.typeButton} ${uploadMode === 'cloudflare' ? styles.active : ''}`}
+                onClick={() => setUploadMode('vimeo')}
+                className={`${styles.typeButton} ${uploadMode === 'vimeo' ? styles.active : ''}`}
               >
-                Cloudflare 업로드
+                Vimeo 업로드
               </button>
               <button
                 type="button"
@@ -146,15 +146,13 @@ export default function MediaEditModal({
               </button>
             </div>
 
-            {uploadMode === 'cloudflare' && (
-              <CloudflareVideoUpload
-                onUploadComplete={({ uid, thumbnailUrl, duration }) => {
+            {uploadMode === 'vimeo' && (
+              <VimeoVideoUpload
+                onUploadComplete={(vimeoId) => {
                   setEditingMedia({
                     ...editingMedia,
-                    cloudflareUid: uid,
-                    videoUrl: `https://iframe.videodelivery.net/${uid}`,
-                    thumbnailUrl: thumbnailUrl || editingMedia.thumbnailUrl,
-                    duration: duration || null,
+                    vimeoId,
+                    videoUrl: `https://player.vimeo.com/video/${vimeoId}`,
                   })
                 }}
                 onError={(error) => alertHandler.showError(error)}
@@ -166,17 +164,16 @@ export default function MediaEditModal({
                 type="text"
                 value={editingMedia.videoUrl || ''}
                 onChange={(e) =>
-                  setEditingMedia({ ...editingMedia, videoUrl: e.target.value, cloudflareUid: null })
+                  setEditingMedia({ ...editingMedia, videoUrl: e.target.value, vimeoId: null })
                 }
                 className={styles.input}
                 placeholder="https://youtube.com/..."
               />
             )}
 
-            {editingMedia.cloudflareUid && (
-              <div style={{ marginTop: '8px', fontSize: '13px', color: '#f6821f', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Cloud size={14} />
-                Cloudflare Stream: {editingMedia.cloudflareUid.slice(0, 12)}...
+            {editingMedia.vimeoId && (
+              <div style={{ marginTop: '8px', fontSize: '13px', color: '#1ab7ea', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                Vimeo ID: {editingMedia.vimeoId}
               </div>
             )}
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { getStreamThumbnailUrl } from '@/lib/cloudflare'
+import { uploadToVimeo } from '@/components/admin/vimeo-upload/upload-vimeo'
 
 export type MessageType = 'image' | 'video'
 export type UploadStatus = 'idle' | 'uploading' | 'processing' | 'success' | 'error'
@@ -102,72 +102,10 @@ export function useVipMessageForm({
   }
 
   const uploadVideo = async (file: File): Promise<string | null> => {
-    // 1. Upload URL 발급
-    const urlRes = await fetch('/api/vip/video-upload-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: file.name, maxDurationSeconds: 300 }),
+    const vimeoId = await uploadToVimeo(file, file.name, (pct) => {
+      setUploadProgress(pct)
     })
-
-    if (!urlRes.ok) {
-      const err = await urlRes.json()
-      throw new Error(err.error || '업로드 URL 발급 실패')
-    }
-
-    const { uploadURL, uid } = await urlRes.json()
-
-    // 2. Cloudflare에 직접 업로드
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
-      const fd = new FormData()
-      fd.append('file', file)
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const pct = Math.round((e.loaded / e.total) * 100)
-          setUploadProgress(pct)
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve()
-        } else {
-          reject(new Error(`업로드 실패 (${xhr.status})`))
-        }
-      })
-
-      xhr.addEventListener('error', () => reject(new Error('네트워크 오류')))
-      xhr.open('POST', uploadURL)
-      xhr.send(fd)
-    })
-
-    // 3. 영상 처리 대기 (최대 3분)
-    setUploadStatus('processing')
-    const maxAttempts = 36 // 5초 간격 x 36 = 3분
-    let attempts = 0
-
-    while (attempts < maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, 5000))
-      attempts++
-
-      const res = await fetch(`/api/cloudflare-stream/${uid}`)
-      if (!res.ok) continue
-
-      const data = await res.json()
-
-      if (data.status?.state === 'ready') {
-        return getStreamThumbnailUrl(uid, { width: 640, height: 360, fit: 'crop' })
-          ? `cloudflare:${uid}`
-          : null
-      }
-
-      if (data.status?.state === 'error') {
-        throw new Error(data.status.errorReasonText || '영상 처리 중 오류')
-      }
-    }
-
-    throw new Error('영상 처리 시간 초과')
+    return `https://player.vimeo.com/video/${vimeoId}`
   }
 
   const handleFile = useCallback(async (file: File) => {

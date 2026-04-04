@@ -106,7 +106,7 @@ export default function SignatureDetailPage() {
       signatureId,
       memberId: 0,
       videoUrl: '',
-      cloudflareUid: null,
+      vimeoId: null,
     })
     setIsModalOpen(true)
   }
@@ -119,7 +119,7 @@ export default function SignatureDetailPage() {
       signatureId: video.signatureId,
       memberId: video.memberId,
       videoUrl: video.videoUrl,
-      cloudflareUid: video.cloudflareUid,
+      vimeoId: video.vimeoId,
     })
     setIsModalOpen(true)
   }
@@ -151,7 +151,7 @@ export default function SignatureDetailPage() {
         signature_id: signatureId,
         member_id: editingVideo.memberId,
         video_url: editingVideo.videoUrl,
-        cloudflare_uid: editingVideo.cloudflareUid || null,
+        vimeo_id: editingVideo.vimeoId || null,
       })
 
       if (result.error) {
@@ -163,7 +163,7 @@ export default function SignatureDetailPage() {
       const result = await updateSignatureVideo(editingVideo.id!, {
         member_id: editingVideo.memberId,
         video_url: editingVideo.videoUrl,
-        cloudflare_uid: editingVideo.cloudflareUid || null,
+        vimeo_id: editingVideo.vimeoId || null,
       })
 
       if (result.error) {

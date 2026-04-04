@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import { MessageSquare, ImageIcon, Video, Play, ExternalLink, Lock, Crown, Sparkles, Pencil, Trash2 } from 'lucide-react'
 import type { BjMessageWithMember } from '@/lib/actions/bj-messages'
 import { getYouTubeThumbnail } from '@/lib/utils/youtube'
-import { getStreamThumbnailUrl } from '@/lib/cloudflare'
 import styles from './BjMessageCard.module.css'
 
 interface BjMessageCardProps {
@@ -233,20 +232,12 @@ export default function BjMessageCard({ message, onClick, canEdit, onEdit, onDel
 
       {message.message_type === 'video' && message.content_url && (
         <div className={styles.mediaContainer}>
-          {/* Cloudflare Stream 영상인 경우 */}
-          {message.content_url.startsWith('cloudflare:') ? (
+          {/* Vimeo 영상인 경우 */}
+          {message.content_url.includes('vimeo.com') ? (
             <>
-              <Image
-                src={getStreamThumbnailUrl(message.content_url.replace('cloudflare:', ''), { width: 320, height: 180, fit: 'crop' })}
-                alt="영상 썸네일"
-                width={320}
-                height={180}
-                className={styles.mediaImage}
-                style={{ width: '100%', height: 'auto' }}
-                unoptimized
-              />
-              <div className={styles.videoOverlay}>
+              <div className={styles.videoPlaceholder}>
                 <Play size={32} />
+                <span>Vimeo 영상</span>
               </div>
             </>
           ) : getYouTubeThumbnail(message.content_url) ? (

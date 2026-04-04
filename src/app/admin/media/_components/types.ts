@@ -7,7 +7,7 @@ export interface Media {
   contentType: ContentType
   videoUrl: string
   thumbnailUrl: string
-  cloudflareUid: string | null
+  vimeoId: string | null
   unit: 'excel' | 'crew' | null
   isFeatured: boolean
   isPublished: boolean
@@ -17,18 +17,6 @@ export interface Media {
   totalParts: number
   duration: number | null
 }
-
-// Cloudflare 썸네일 시간 옵션 (초 단위)
-export const THUMBNAIL_TIME_OPTIONS = [
-  { value: '0s', label: '시작 (0초)' },
-  { value: '5s', label: '5초' },
-  { value: '10s', label: '10초' },
-  { value: '15s', label: '15초' },
-  { value: '30s', label: '30초' },
-  { value: '60s', label: '1분' },
-  { value: '120s', label: '2분' },
-  { value: '300s', label: '5분' },
-]
 
 export const formatDuration = (seconds: number | null) => {
   if (!seconds) return '-'
@@ -47,10 +35,10 @@ export const formatDate = (dateStr: string) => {
   })
 }
 
-// Convert URL to embed URL (YouTube or Cloudflare)
-export const getEmbedUrl = (url: string, cloudflareUid?: string | null) => {
-  if (cloudflareUid) {
-    return `https://iframe.videodelivery.net/${cloudflareUid}`
+// Convert URL to embed URL (YouTube or Vimeo)
+export const getEmbedUrl = (url: string, vimeoId?: string | null) => {
+  if (vimeoId) {
+    return `https://player.vimeo.com/video/${vimeoId}`
   }
   const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/)
   if (youtubeMatch) {

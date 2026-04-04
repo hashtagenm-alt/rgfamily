@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Film, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getShorts } from "@/lib/actions/media";
-import { getStreamThumbnailUrl } from "@/lib/cloudflare";
 import VimeoPlayer from "@/components/common/VimeoPlayer";
 import type { MediaContent } from "@/types/database";
 import styles from "./Shorts.module.css";
@@ -38,9 +37,6 @@ export default function Shorts() {
   };
 
   const getEmbedUrl = (item: MediaContent) => {
-    if (item.cloudflare_uid) {
-      return `https://iframe.videodelivery.net/${item.cloudflare_uid}`;
-    }
     const url = item.video_url;
     const youtubeMatch = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\s]+)/
@@ -53,14 +49,6 @@ export default function Shorts() {
 
   const getThumbnail = (item: MediaContent) => {
     if (item.thumbnail_url) return item.thumbnail_url;
-    if (item.cloudflare_uid) {
-      return getStreamThumbnailUrl(item.cloudflare_uid, {
-        width: 320,
-        height: 568,
-        fit: "crop",
-      });
-    }
-    // YouTube 썸네일
     const youtubeMatch = item.video_url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\s]+)/
     );

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
-import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
+import VimeoVideoUpload from '@/components/admin/VimeoVideoUpload'
 import {
   getNextPartNumber,
   addVodPart,
@@ -56,8 +56,8 @@ export default function AddPartModal({
             다음 파트 영상을 업로드하면 자동으로 저장됩니다.
           </p>
 
-          <CloudflareVideoUpload
-            onUploadComplete={async ({ uid, thumbnailUrl, duration }) => {
+          <VimeoVideoUpload
+            onUploadComplete={async (vimeoId) => {
               // 현재 파트 수 조회하여 다음 part_number 계산
               const nextPartResult = await getNextPartNumber(addPartTarget.id)
               if (nextPartResult.error) {
@@ -68,20 +68,18 @@ export default function AddPartModal({
               const nextPartNumber = nextPartResult.data!
               const partTitle = `${addPartTarget.title} (Part ${nextPartNumber})`
 
-              const cfThumbUrl = thumbnailUrl || ''
-
               // 새 파트 DB 삽입 + total_parts 업데이트 (서버 액션)
               const addResult = await addVodPart({
                 parentId: addPartTarget.id,
                 title: partTitle,
                 description: addPartTarget.description || '',
-                cloudflareUid: uid,
-                thumbnailUrl: cfThumbUrl,
+                vimeoId,
+                thumbnailUrl: '',
                 unit: addPartTarget.unit,
                 isPublished: addPartTarget.isPublished,
                 partNumber: nextPartNumber,
                 currentTotalParts: addPartTarget.totalParts,
-                duration: duration || null,
+                duration: null,
               })
 
               if (addResult.error) {

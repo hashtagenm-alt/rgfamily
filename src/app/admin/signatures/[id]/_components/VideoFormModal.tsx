@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { AdminModal, VideoUpload, CloudflareVideoUpload } from '@/components/admin'
+import { AdminModal, VideoUpload } from '@/components/admin'
+import VimeoVideoUpload from '@/components/admin/VimeoVideoUpload'
 import styles from '../../../shared.module.css'
 import type { SignatureVideoWithMember, OrgMemberItem } from './types'
 
-type UploadMode = 'url' | 'upload' | 'cloudflare'
+type UploadMode = 'url' | 'upload' | 'vimeo'
 
 interface VideoFormModalProps {
   isOpen: boolean
@@ -75,11 +76,11 @@ export function VideoFormModal({
           </button>
           <button
             type="button"
-            onClick={() => setUploadMode('cloudflare')}
-            className={`${styles.typeButton} ${uploadMode === 'cloudflare' ? styles.active : ''}`}
-            style={{ background: uploadMode === 'cloudflare' ? '#f38020' : undefined }}
+            onClick={() => setUploadMode('vimeo')}
+            className={`${styles.typeButton} ${uploadMode === 'vimeo' ? styles.active : ''}`}
+            style={{ background: uploadMode === 'vimeo' ? '#1ab7ea' : undefined }}
           >
-            Cloudflare 업로드
+            Vimeo 업로드
           </button>
         </div>
 
@@ -89,7 +90,7 @@ export function VideoFormModal({
               type="text"
               value={editingVideo?.videoUrl || ''}
               onChange={(e) =>
-                onEditingVideoChange((prev) => (prev ? { ...prev, videoUrl: e.target.value, cloudflareUid: null } : null))
+                onEditingVideoChange((prev) => (prev ? { ...prev, videoUrl: e.target.value, vimeoId: null } : null))
               }
               className={styles.input}
               placeholder="https://youtube.com/watch?v=..."
@@ -101,21 +102,21 @@ export function VideoFormModal({
         ) : uploadMode === 'upload' ? (
           <VideoUpload
             onUploadComplete={(url) => {
-              onEditingVideoChange((prev) => (prev ? { ...prev, videoUrl: url, cloudflareUid: null } : null))
+              onEditingVideoChange((prev) => (prev ? { ...prev, videoUrl: url, vimeoId: null } : null))
             }}
             onError={(error) => onError(error)}
             bucketName="videos"
             folderPath="signature-videos"
           />
         ) : (
-          <CloudflareVideoUpload
-            onUploadComplete={(result) => {
+          <VimeoVideoUpload
+            onUploadComplete={(vimeoId) => {
               onEditingVideoChange((prev) =>
                 prev
                   ? {
                       ...prev,
-                      videoUrl: `https://customer-${process.env.NEXT_PUBLIC_CLOUDFLARE_CUSTOMER_SUBDOMAIN || 'stream'}.cloudflarestream.com/${result.uid}/manifest/video.m3u8`,
-                      cloudflareUid: result.uid,
+                      videoUrl: `https://player.vimeo.com/video/${vimeoId}`,
+                      vimeoId,
                     }
                   : null
               )
@@ -130,9 +131,9 @@ export function VideoFormModal({
           </div>
         )}
 
-        {editingVideo?.cloudflareUid && uploadMode === 'cloudflare' && (
+        {editingVideo?.vimeoId && uploadMode === 'vimeo' && (
           <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--success)' }}>
-            Cloudflare UID: {editingVideo.cloudflareUid}
+            Vimeo ID: {editingVideo.vimeoId}
           </div>
         )}
       </div>

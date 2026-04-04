@@ -2,8 +2,7 @@
 
 import Image from 'next/image'
 import { User, Play, Plus, Eye, EyeOff, Trash2, Link2, Upload } from 'lucide-react'
-import CloudflareVideoUpload from '@/components/admin/CloudflareVideoUpload'
-import { getStreamIframeUrl } from '@/lib/cloudflare'
+import VimeoVideoUpload from '@/components/admin/VimeoVideoUpload'
 import type { SignatureVideoWithMember, OrgMemberItem } from '@/lib/actions/signatures'
 import type { SignatureUI } from './types'
 
@@ -18,7 +17,7 @@ export interface MemberVideoCardProps {
   onSetAddingMemberId: (id: number | null) => void
   onSetNewVideoUrl: (url: string) => void
   onSetVideoUploadMode: (mode: 'url' | 'upload') => void
-  onAddVideo: (sigId: number, memberId: number, videoUrl: string, cloudflareUid?: string) => void
+  onAddVideo: (sigId: number, memberId: number, videoUrl: string, vimeoId?: string) => void
   onDeleteVideo: (video: SignatureVideoWithMember) => void
   onTogglePublished: (video: SignatureVideoWithMember) => void
   onPreviewVideo: (url: string) => void
@@ -271,13 +270,12 @@ export default function MemberVideoCard({
             </>
           ) : (
             <>
-              <CloudflareVideoUpload
-                onUploadComplete={(result) => {
-                  const videoUrl = getStreamIframeUrl(result.uid)
-                  onAddVideo(sig.id, member.id, videoUrl, result.uid)
+              <VimeoVideoUpload
+                onUploadComplete={(vimeoId) => {
+                  const videoUrl = `https://player.vimeo.com/video/${vimeoId}`
+                  onAddVideo(sig.id, member.id, videoUrl, vimeoId)
                 }}
                 onError={(error) => onError(error)}
-                skipThumbnailSelection
               />
               <button
                 onClick={() => {

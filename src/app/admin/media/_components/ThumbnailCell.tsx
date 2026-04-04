@@ -2,12 +2,9 @@
 
 import { useRef, useState } from 'react'
 import Image from 'next/image'
-import { Upload, Loader2, Clock } from 'lucide-react'
-import { Menu, ActionIcon } from '@mantine/core'
-import { getStreamThumbnailUrl } from '@/lib/cloudflare'
+import { Upload, Loader2 } from 'lucide-react'
 import { updateMediaThumbnail } from '@/lib/actions/media'
-import { logger } from '@/lib/utils/logger'
-import { Media, THUMBNAIL_TIME_OPTIONS } from './types'
+import { Media } from './types'
 
 interface ThumbnailCellManagerProps {
   alertHandler: { showSuccess: (msg: string) => void; showError: (msg: string) => void }
@@ -16,7 +13,6 @@ interface ThumbnailCellManagerProps {
     thumbnailInputRef: React.RefObject<HTMLInputElement | null>
     thumbnailUploadingId: number | null
     handleThumbnailClick: (mediaId: number, e: React.MouseEvent) => void
-    handleCloudflareThumbailTimeChange: (mediaId: number, cloudflareUid: string, time: string) => void
     handleThumbnailFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   }) => React.ReactNode
 }
@@ -77,33 +73,12 @@ export function ThumbnailCellManager({
     }
   }
 
-  const handleCloudflareThumbailTimeChange = async (mediaId: number, cloudflareUid: string, time: string) => {
-    const thumbnailUrl = getStreamThumbnailUrl(cloudflareUid, {
-      time,
-      width: 720,
-      height: 1280,
-      fit: 'crop',
-    })
-
-    const result = await updateMediaThumbnail(mediaId, thumbnailUrl)
-
-    if (result.error) {
-      logger.dbError('update', 'media_content', result.error)
-      alertHandler.showError('변경에 실패했습니다.')
-      return
-    }
-
-    alertHandler.showSuccess(`썸네일이 ${time} 시점으로 변경되었습니다.`)
-    refetch()
-  }
-
   return (
     <>
       {children({
         thumbnailInputRef,
         thumbnailUploadingId,
         handleThumbnailClick,
-        handleCloudflareThumbailTimeChange,
         handleThumbnailFileChange,
       })}
     </>
@@ -114,14 +89,12 @@ interface ThumbnailCellProps {
   item: Media
   thumbnailUploadingId: number | null
   onThumbnailClick: (mediaId: number, e: React.MouseEvent) => void
-  onTimeChange: (mediaId: number, cloudflareUid: string, time: string) => void
 }
 
 export default function ThumbnailCell({
   item,
   thumbnailUploadingId,
   onThumbnailClick,
-  onTimeChange,
 }: ThumbnailCellProps) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -182,31 +155,6 @@ export default function ThumbnailCell({
           <Upload size={20} style={{ color: 'var(--text-tertiary)' }} />
         )}
       </div>
-      {item.cloudflareUid && (
-        <Menu shadow="md" width={140}>
-          <Menu.Target>
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              title="썸네일 시간 선택"
-            >
-              <Clock size={14} />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Label>썸네일 시점</Menu.Label>
-            {THUMBNAIL_TIME_OPTIONS.map((opt) => (
-              <Menu.Item
-                key={opt.value}
-                onClick={() => onTimeChange(item.id, item.cloudflareUid!, opt.value)}
-              >
-                {opt.label}
-              </Menu.Item>
-            ))}
-          </Menu.Dropdown>
-        </Menu>
-      )}
     </div>
   )
 }

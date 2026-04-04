@@ -6,7 +6,6 @@ import { Film, Plus } from 'lucide-react'
 import { useAdminCRUD, useAlert } from '@/lib/hooks'
 import {
   updateChildPartsTotalParts,
-  getMediaChildren,
   deleteMediaChildren,
   getAdminVodParts,
 } from '@/lib/actions/media'
@@ -25,7 +24,7 @@ export default function MediaPage() {
   const alertHandler = useAlert()
   const [activeType, setActiveType] = useState<ContentType>('shorts')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [previewCloudflareUid, setPreviewCloudflareUid] = useState<string | null>(null)
+  const [previewVimeoId, setPreviewVimeoId] = useState<string | null>(null)
 
   // 멀티파트 VOD 상태
   const [expandedVodId, setExpandedVodId] = useState<number | null>(null)
@@ -55,7 +54,7 @@ export default function MediaPage() {
       contentType: activeType,
       videoUrl: '',
       thumbnailUrl: '',
-      cloudflareUid: null,
+      vimeoId: null,
       unit: null,
       isFeatured: false,
       isPublished: false,
@@ -72,7 +71,7 @@ export default function MediaPage() {
       contentType: row.content_type as ContentType,
       videoUrl: row.video_url as string,
       thumbnailUrl: (row.thumbnail_url as string) || '',
-      cloudflareUid: (row.cloudflare_uid as string) || null,
+      vimeoId: (row.vimeo_id as string) || null,
       unit: row.unit as 'excel' | 'crew' | null,
       isFeatured: row.is_featured as boolean,
       isPublished: row.is_published as boolean,
@@ -88,7 +87,7 @@ export default function MediaPage() {
       content_type: item.contentType,
       video_url: item.videoUrl,
       thumbnail_url: item.thumbnailUrl,
-      cloudflare_uid: item.cloudflareUid,
+      vimeo_id: item.vimeoId,
       unit: item.unit,
       is_featured: item.isFeatured,
       is_published: item.isPublished,
@@ -105,41 +104,17 @@ export default function MediaPage() {
     },
     validate: (item) => {
       if (!item.title) return '제목을 입력해주세요.'
-      if (!item.videoUrl && !item.cloudflareUid) return '영상을 업로드하거나 URL을 입력해주세요.'
+      if (!item.videoUrl && !item.vimeoId) return '영상을 업로드하거나 URL을 입력해주세요.'
       return null
     },
     alertHandler,
   })
 
-  // 삭제 시 Cloudflare 영상도 함께 삭제 (멀티파트인 경우 자식 파트도 연쇄 삭제)
+  // 삭제 시 멀티파트인 경우 자식 파트도 연쇄 삭제
   const handleDelete = async (media: Media) => {
     // 자식 파트 삭제 (멀티파트 부모인 경우)
     if (media.totalParts > 1) {
-      const childrenResult = await getMediaChildren(media.id)
-
-      if (childrenResult.data && childrenResult.data.length > 0) {
-        // 자식 파트들의 Cloudflare 영상 삭제
-        for (const child of childrenResult.data) {
-          if (child.cloudflare_uid) {
-            try {
-              await fetch(`/api/cloudflare-stream/${child.cloudflare_uid}`, { method: 'DELETE' })
-            } catch (e) {
-              logger.apiError(`cloudflare-stream/${child.id}`, e)
-            }
-          }
-        }
-        // 자식 파트 DB 레코드 삭제
-        await deleteMediaChildren(media.id)
-      }
-    }
-
-    // 부모 Cloudflare 영상 삭제
-    if (media.cloudflareUid) {
-      try {
-        await fetch(`/api/cloudflare-stream/${media.cloudflareUid}`, { method: 'DELETE' })
-      } catch (e) {
-        logger.apiError('cloudflare-stream/delete', e)
-      }
+      await deleteMediaChildren(media.id)
     }
 
     // 파트 목록 패널이 열려있으면 닫기
@@ -164,13 +139,13 @@ export default function MediaPage() {
   }
 
   const handlePreview = (media: Media) => {
-    setPreviewCloudflareUid(media.cloudflareUid)
+    setPreviewVimeoId(media.vimeoId)
     setPreviewUrl(media.videoUrl)
   }
 
   const closePreview = () => {
     setPreviewUrl(null)
-    setPreviewCloudflareUid(null)
+    setPreviewVimeoId(null)
   }
 
   // 멀티파트 VOD 파트 조회
@@ -187,7 +162,7 @@ export default function MediaPage() {
         contentType: row.content_type as ContentType,
         videoUrl: row.video_url,
         thumbnailUrl: row.thumbnail_url || '',
-        cloudflareUid: row.cloudflare_uid || null,
+        vimeoId: row.vimeo_id || null,
         unit: row.unit as 'excel' | 'crew' | null,
         isFeatured: row.is_featured,
         isPublished: row.is_published,
@@ -293,7 +268,7 @@ export default function MediaPage() {
         {previewUrl && (
           <MediaPreviewModal
             previewUrl={previewUrl}
-            previewCloudflareUid={previewCloudflareUid}
+            previewVimeoId={previewVimeoId}
             onClose={closePreview}
           />
         )}

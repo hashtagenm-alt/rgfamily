@@ -18,7 +18,7 @@ interface SignatureVideoPanelProps {
   onSetAddingMemberId: (id: number | null) => void
   onSetNewVideoUrl: (url: string) => void
   onSetVideoUploadMode: (mode: 'url' | 'upload') => void
-  onAddVideo: (sigId: number, memberId: number, videoUrl: string, cloudflareUid?: string) => void
+  onAddVideo: (sigId: number, memberId: number, videoUrl: string, vimeoId?: string) => void
   onDeleteVideo: (video: SignatureVideoWithMember) => void
   onTogglePublished: (video: SignatureVideoWithMember) => void
   onPreviewVideo: (url: string) => void

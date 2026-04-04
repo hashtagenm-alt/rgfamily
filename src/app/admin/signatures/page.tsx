@@ -129,7 +129,7 @@ export default function SignaturesPage() {
   // ── Video handlers ──
 
   const handleAddVideo = useCallback(
-    async (sigId: number, memberId: number, videoUrl: string, cloudflareUid?: string) => {
+    async (sigId: number, memberId: number, videoUrl: string, vimeoId?: string) => {
       if (!videoUrl.trim()) {
         alertHandler.showWarning('영상 URL을 입력해주세요.', '입력 오류')
         return
@@ -143,7 +143,7 @@ export default function SignaturesPage() {
         signature_id: sigId,
         member_id: memberId,
         video_url: videoUrl.trim(),
-        ...(cloudflareUid ? { cloudflare_uid: cloudflareUid } : {}),
+        ...(vimeoId ? { vimeo_id: vimeoId } : {}),
       })
       if (result.error) {
         alertHandler.showError(result.error, '오류')

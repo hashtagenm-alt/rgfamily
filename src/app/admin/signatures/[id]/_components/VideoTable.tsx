@@ -74,11 +74,11 @@ export function VideoTable({
       header: '영상 URL',
       render: (item) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {item.cloudflareUid && (
+          {item.vimeoId && (
             <span
               style={{
                 padding: '2px 6px',
-                background: '#f38020',
+                background: '#1ab7ea',
                 color: 'white',
                 borderRadius: '4px',
                 fontSize: '0.625rem',
@@ -86,12 +86,12 @@ export function VideoTable({
                 flexShrink: 0,
               }}
             >
-              CF
+              V
             </span>
           )}
           <span
             style={{
-              maxWidth: item.cloudflareUid ? '260px' : '300px',
+              maxWidth: '300px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -99,10 +99,10 @@ export function VideoTable({
               fontSize: '0.8125rem',
             }}
           >
-            {item.cloudflareUid ? `stream:${item.cloudflareUid.slice(0, 8)}...` : item.videoUrl}
+            {item.vimeoId ? `vimeo:${item.vimeoId}` : item.videoUrl}
           </span>
           <a
-            href={item.cloudflareUid ? `https://iframe.videodelivery.net/${item.cloudflareUid}` : item.videoUrl}
+            href={item.vimeoId ? `https://vimeo.com/${item.vimeoId}` : item.videoUrl}
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: 'var(--primary)', flexShrink: 0 }}

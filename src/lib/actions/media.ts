@@ -423,7 +423,7 @@ export async function addVodPart(params: {
   parentId: number
   title: string
   description: string
-  cloudflareUid: string
+  vimeoId?: string
   thumbnailUrl: string
   unit: 'excel' | 'crew' | null
   isPublished: boolean
@@ -438,9 +438,9 @@ export async function addVodPart(params: {
         title: params.title,
         description: params.description,
         content_type: 'vod',
-        video_url: `https://iframe.videodelivery.net/${params.cloudflareUid}`,
+        video_url: params.vimeoId ? `https://player.vimeo.com/video/${params.vimeoId}` : '',
         thumbnail_url: params.thumbnailUrl,
-        cloudflare_uid: params.cloudflareUid,
+        vimeo_id: params.vimeoId || null,
         unit: params.unit,
         is_featured: false,
         is_published: params.isPublished,

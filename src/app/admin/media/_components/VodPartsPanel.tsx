@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { X, Play, Cloud, Loader2 } from 'lucide-react'
+import { X, Play, Loader2 } from 'lucide-react'
 import { Media, formatDuration } from './types'
 
 interface VodPartsPanelProps {
@@ -41,7 +41,7 @@ export default function VodPartsPanel({
           파트 목록
           {vodParts.length > 0 && (
             <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: '8px' }}>
-              {vodParts.filter(p => p.cloudflareUid).length}/{vodParts[0]?.totalParts || vodParts.length}개 업로드됨
+              {vodParts.filter(p => p.vimeoId || p.videoUrl).length}/{vodParts[0]?.totalParts || vodParts.length}개 업로드됨
             </span>
           )}
         </h3>
@@ -91,15 +91,17 @@ export default function VodPartsPanel({
               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {part.title}
               </span>
-              {part.cloudflareUid ? (
-                <span title="Cloudflare Stream"><Cloud size={14} style={{ color: '#f6821f', flexShrink: 0 }} /></span>
+              {part.vimeoId ? (
+                <span title="Vimeo" style={{ fontSize: '11px', color: '#1ab7ea', fontWeight: 600, flexShrink: 0 }}>V</span>
+              ) : part.videoUrl ? (
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', flexShrink: 0 }}>URL</span>
               ) : (
                 <span style={{ fontSize: '11px', color: 'var(--color-warning)', flexShrink: 0 }}>미업로드</span>
               )}
               <span style={{ color: 'var(--text-tertiary)', minWidth: '60px', textAlign: 'right' }}>
                 {formatDuration(part.duration)}
               </span>
-              {part.cloudflareUid && (
+              {(part.vimeoId || part.videoUrl) && (
                 <button
                   onClick={() => onPreview(part)}
                   style={{
